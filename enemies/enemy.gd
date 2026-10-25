@@ -71,6 +71,11 @@ var _hurt_flash: float = 0.0
 var _windup_glow: float = 0.0
 var _telegraph: Node3D
 var _walk_t: float = 0.0
+# Обход препятствий: если долго не можем сдвинуться — идём вбок
+var _stuck_check_t: float = 0.0
+var _stuck_check_pos: Vector3 = Vector3.ZERO
+var _detour_left: float = 0.0
+var _detour_dir: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -163,6 +168,8 @@ func _think_chase() -> Vector3:
 			if _cooldown <= 0.0 and dist < keep_max_dist + 6.0 and _has_line_of_sight():
 				_begin_windup(false)
 				return Vector3.ZERO
+	if _detour_left > 0.0 and move != Vector3.ZERO:
+		move = (_detour_dir + move * 0.35).normalized()
 	return (move + _separation()).normalized() if move != Vector3.ZERO else _separation()
 
 func _separation() -> Vector3:
@@ -329,9 +336,36 @@ func _apply_movement(move_dir: Vector3, delta: float) -> void:
 		velocity.y = -0.5
 	var pre := Vector3(velocity.x, 0, velocity.z)
 	move_and_slide()
+	_push_props()
 	_check_wall_splat(pre)
+	_update_stuck(move_dir, delta)
 	if global_position.y < -30.0:
 		_die("fall")
+
+func _push_props() -> void:
+	for i in get_slide_collision_count():
+		var col := get_slide_collision(i)
+		var rb := col.get_collider() as RigidBody3D
+		if rb:
+			var dir := -col.get_normal()
+			dir.y = 0.1
+			rb.apply_central_impulse(dir.normalized() * 0.9 * model_scale * model_scale)
+
+func _update_stuck(move_dir: Vector3, delta: float) -> void:
+	if _detour_left > 0.0:
+		_detour_left -= delta
+	if state != State.CHASE or move_dir == Vector3.ZERO:
+		_stuck_check_t = 0.0
+		_stuck_check_pos = global_position
+		return
+	_stuck_check_t += delta
+	if _stuck_check_t >= 0.6:
+		var moved := Vector2(global_position.x - _stuck_check_pos.x, global_position.z - _stuck_check_pos.z).length()
+		if moved < move_speed * 0.6 * 0.25 and _detour_left <= 0.0:
+			_detour_dir = move_dir.cross(Vector3.UP).normalized() * (1.0 if randf() < 0.5 else -1.0)
+			_detour_left = 0.9
+		_stuck_check_t = 0.0
+		_stuck_check_pos = global_position
 
 func _check_wall_splat(pre_horiz: Vector3) -> void:
 	var kspeed := Vector2(knockback_velocity.x, knockback_velocity.z).length()
