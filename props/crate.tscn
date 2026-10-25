@@ -1,0 +1,79 @@
+[gd_scene format=3]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sgq63"]
+size = Vector3(0.9, 0.9, 0.9)
+
+[sub_resource type="Gradient" id="Gradient_pt5st"]
+colors = PackedColorArray(0.72, 0.72, 0.72, 1, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_h4owi"]
+frequency = 0.04
+fractal_octaves = 4
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_xegln"]
+width = 256
+height = 256
+noise = SubResource("FastNoiseLite_h4owi")
+color_ramp = SubResource("Gradient_pt5st")
+seamless = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_oqpc6"]
+albedo_color = Color(0.62, 0.45, 0.25, 1)
+albedo_texture = SubResource("NoiseTexture2D_xegln")
+roughness = 0.9
+uv1_scale = Vector3(0.35, 0.35, 0.35)
+uv1_triplanar = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_xgwhr"]
+size = Vector3(0.9, 0.9, 0.9)
+
+[sub_resource type="Gradient" id="Gradient_li8rx"]
+colors = PackedColorArray(0.72, 0.72, 0.72, 1, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_jr4dg"]
+frequency = 0.04
+fractal_octaves = 4
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_0ml8k"]
+width = 256
+height = 256
+noise = SubResource("FastNoiseLite_jr4dg")
+color_ramp = SubResource("Gradient_li8rx")
+seamless = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lnfno"]
+albedo_color = Color(0.35, 0.22, 0.12, 1)
+albedo_texture = SubResource("NoiseTexture2D_0ml8k")
+roughness = 0.9
+uv1_scale = Vector3(0.35, 0.35, 0.35)
+uv1_triplanar = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_qs7lf"]
+size = Vector3(0.95, 0.12, 0.95)
+
+[sub_resource type="BoxMesh" id="BoxMesh_cc4rr"]
+size = Vector3(0.95, 0.12, 0.95)
+
+[node name="Crate" type="RigidBody3D" unique_id=123379093 groups=["props"]]
+collision_layer = 8
+collision_mask = 79
+mass = 1.6
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=148544841]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("BoxShape3D_sgq63")
+
+[node name="Body" type="MeshInstance3D" parent="." unique_id=2130395593]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+material_override = SubResource("StandardMaterial3D_oqpc6")
+mesh = SubResource("BoxMesh_xgwhr")
+
+[node name="Plank1" type="MeshInstance3D" parent="." unique_id=61832303]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+material_override = SubResource("StandardMaterial3D_lnfno")
+mesh = SubResource("BoxMesh_qs7lf")
+
+[node name="Plank2" type="MeshInstance3D" parent="." unique_id=747132441]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.82, 0)
+material_override = SubResource("StandardMaterial3D_lnfno")
+mesh = SubResource("BoxMesh_cc4rr")

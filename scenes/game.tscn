@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/game.gd" id="1_dinhu"]
+[ext_resource type="Environment" path="res://scenes/game_environment.tres" id="2_kvuet"]
+[ext_resource type="PackedScene" path="res://player/player.tscn" id="3_trtic"]
+[ext_resource type="Script" path="res://player/player.gd" id="4_ir15t"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="5_ca42v"]
+[ext_resource type="Script" path="res://ui/hud.gd" id="6_rysoc"]
+[ext_resource type="PackedScene" path="res://ui/rune_pick.tscn" id="7_ssvqc"]
+[ext_resource type="Script" path="res://ui/rune_pick.gd" id="8_264po"]
+[ext_resource type="PackedScene" path="res://ui/pause_menu.tscn" id="9_1kice"]
+[ext_resource type="Script" path="res://ui/pause_menu.gd" id="10_5newe"]
+[ext_resource type="PackedScene" path="res://ui/end_screen.tscn" id="11_37s47"]
+[ext_resource type="Script" path="res://ui/end_screen.gd" id="12_bt5mj"]
+
+[node name="Game" type="Node3D" unique_id=125433916]
+script = ExtResource("1_dinhu")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=960407949]
+environment = ExtResource("2_kvuet")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=253885199]
+transform = Transform3D(0.81915206, 0.43938506, -0.36868784, 0, 0.64278764, 0.76604444, 0.57357645, -0.62750685, 0.5265408, 0, 0, 0)
+light_color = Color(1, 0.86, 0.7, 1)
+light_energy = 1.15
+shadow_enabled = true
+directional_shadow_max_distance = 60.0
+
+[node name="Level" type="Node3D" parent="." unique_id=916905858]
+
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1651753391 instance=ExtResource("3_trtic")]
+collision_layer = 2
+collision_mask = 13
+floor_max_angle = 0.87266463
+floor_snap_length = 0.35
+script = ExtResource("4_ir15t")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=272785788 instance=ExtResource("5_ca42v")]
+script = ExtResource("6_rysoc")
+
+[node name="RunePick" type="CanvasLayer" parent="." unique_id=1858016356 instance=ExtResource("7_ssvqc")]
+script = ExtResource("8_264po")
+
+[node name="PauseMenu" type="CanvasLayer" parent="." unique_id=1649925474 instance=ExtResource("9_1kice")]
+script = ExtResource("10_5newe")
+
+[node name="EndScreen" type="CanvasLayer" parent="." unique_id=968027378 instance=ExtResource("11_37s47")]
+script = ExtResource("12_bt5mj")

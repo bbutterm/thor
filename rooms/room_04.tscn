@@ -1,0 +1,528 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://rooms/room.gd" id="1_3qfyt"]
+[ext_resource type="PackedScene" path="res://props/barrel.tscn" id="2_a823l"]
+[ext_resource type="PackedScene" path="res://props/crate.tscn" id="3_4pxkb"]
+
+[sub_resource type="Gradient" id="Gradient_rkvq2"]
+colors = PackedColorArray(0.72, 0.72, 0.72, 1, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_11117"]
+frequency = 0.04
+fractal_octaves = 4
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_dhk51"]
+width = 256
+height = 256
+noise = SubResource("FastNoiseLite_11117")
+color_ramp = SubResource("Gradient_rkvq2")
+seamless = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r1ded"]
+albedo_color = Color(0.42, 0.4, 0.38, 1)
+albedo_texture = SubResource("NoiseTexture2D_dhk51")
+roughness = 0.95
+uv1_scale = Vector3(0.35, 0.35, 0.35)
+uv1_triplanar = true
+
+[sub_resource type="Gradient" id="Gradient_6peq8"]
+colors = PackedColorArray(0.72, 0.72, 0.72, 1, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_h3tsb"]
+frequency = 0.04
+fractal_octaves = 4
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_vg32c"]
+width = 256
+height = 256
+noise = SubResource("FastNoiseLite_h3tsb")
+color_ramp = SubResource("Gradient_6peq8")
+seamless = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cnn6p"]
+albedo_color = Color(0.55, 0.53, 0.5, 1)
+albedo_texture = SubResource("NoiseTexture2D_vg32c")
+roughness = 0.9
+uv1_scale = Vector3(0.35, 0.35, 0.35)
+uv1_triplanar = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ytqby"]
+albedo_color = Color(0.75, 0.55, 0.25, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tcalv"]
+albedo_color = Color(0.45, 0.8, 1, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.45, 0.8, 1, 1)
+emission_energy_multiplier = 2.5
+
+[sub_resource type="Gradient" id="Gradient_2pbdu"]
+colors = PackedColorArray(0.72, 0.72, 0.72, 1, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_mqfv4"]
+frequency = 0.04
+fractal_octaves = 4
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_12yh1"]
+width = 256
+height = 256
+noise = SubResource("FastNoiseLite_mqfv4")
+color_ramp = SubResource("Gradient_2pbdu")
+seamless = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_87ryc"]
+albedo_color = Color(0.36, 0.35, 0.36, 1)
+albedo_texture = SubResource("NoiseTexture2D_12yh1")
+roughness = 0.9
+uv1_scale = Vector3(0.35, 0.35, 0.35)
+uv1_triplanar = true
+
+[sub_resource type="Gradient" id="Gradient_jphew"]
+colors = PackedColorArray(0.72, 0.72, 0.72, 1, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_eefnk"]
+frequency = 0.04
+fractal_octaves = 4
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ygpdx"]
+width = 256
+height = 256
+noise = SubResource("FastNoiseLite_eefnk")
+color_ramp = SubResource("Gradient_jphew")
+seamless = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vbx4l"]
+albedo_color = Color(0.45, 0.16, 0.12, 1)
+albedo_texture = SubResource("NoiseTexture2D_ygpdx")
+roughness = 0.8
+uv1_scale = Vector3(0.35, 0.35, 0.35)
+uv1_triplanar = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7qpoq"]
+albedo_color = Color(1, 0.45, 0.2, 1)
+roughness = 0.5
+emission_enabled = true
+emission = Color(1, 0.45, 0.2, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_817be"]
+size = Vector3(4, 3, 2.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8dtq8"]
+albedo_color = Color(0.25, 0.22, 0.2, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_42yhg"]
+size = Vector3(0.15, 0.5, 0.15)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s7w5n"]
+albedo_color = Color(1, 0.6, 0.2, 1)
+roughness = 0.5
+emission_enabled = true
+emission = Color(1, 0.6, 0.2, 1)
+emission_energy_multiplier = 5.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_elhsh"]
+top_radius = 0.0
+bottom_radius = 0.15
+height = 0.35
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_o451u"]
+size = Vector3(0.15, 0.5, 0.15)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_imqgg"]
+top_radius = 0.0
+bottom_radius = 0.15
+height = 0.35
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_mbs2a"]
+size = Vector3(0.15, 0.5, 0.15)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_w287u"]
+top_radius = 0.0
+bottom_radius = 0.15
+height = 0.35
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_k017v"]
+size = Vector3(0.15, 0.5, 0.15)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_umnwk"]
+top_radius = 0.0
+bottom_radius = 0.15
+height = 0.35
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_l7ihp"]
+size = Vector3(0.15, 0.5, 0.15)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_l1s7b"]
+top_radius = 0.0
+bottom_radius = 0.15
+height = 0.35
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_rnovt"]
+size = Vector3(0.15, 0.5, 0.15)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_ehmog"]
+top_radius = 0.0
+bottom_radius = 0.15
+height = 0.35
+radial_segments = 12
+
+[node name="Room04" type="Node3D" unique_id=957798683]
+script = ExtResource("1_3qfyt")
+room_title = "Коридор Хель"
+
+[node name="Geometry" type="Node3D" parent="." unique_id=624873718]
+
+[node name="Floor" type="CSGBox3D" parent="Geometry" unique_id=597586217]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+use_collision = true
+collision_mask = 0
+size = Vector3(18, 1, 36)
+material = SubResource("StandardMaterial3D_r1ded")
+
+[node name="WallN_L" type="CSGBox3D" parent="Geometry" unique_id=1735965023]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3, -17.5)
+use_collision = true
+collision_mask = 0
+size = Vector3(6, 6, 1)
+material = SubResource("StandardMaterial3D_cnn6p")
+
+[node name="WallN_R" type="CSGBox3D" parent="Geometry" unique_id=825875456]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3, -17.5)
+use_collision = true
+collision_mask = 0
+size = Vector3(6, 6, 1)
+material = SubResource("StandardMaterial3D_cnn6p")
+
+[node name="WallS" type="CSGBox3D" parent="Geometry" unique_id=2071998910]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 17.5)
+use_collision = true
+collision_mask = 0
+size = Vector3(18, 6, 1)
+material = SubResource("StandardMaterial3D_cnn6p")
+
+[node name="WallW" type="CSGBox3D" parent="Geometry" unique_id=350841464]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 3, 0)
+use_collision = true
+collision_mask = 0
+size = Vector3(1, 6, 36)
+material = SubResource("StandardMaterial3D_cnn6p")
+
+[node name="WallE" type="CSGBox3D" parent="Geometry" unique_id=2079972464]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 3, 0)
+use_collision = true
+collision_mask = 0
+size = Vector3(1, 6, 36)
+material = SubResource("StandardMaterial3D_cnn6p")
+
+[node name="TrimS" type="CSGBox3D" parent="Geometry" unique_id=2094283524]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.1, 17.5)
+collision_mask = 0
+size = Vector3(18.2, 0.2, 1.2)
+material = SubResource("StandardMaterial3D_ytqby")
+
+[node name="TrimW" type="CSGBox3D" parent="Geometry" unique_id=1058310533]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 6.1, 0)
+collision_mask = 0
+size = Vector3(1.2, 0.2, 36.2)
+material = SubResource("StandardMaterial3D_ytqby")
+
+[node name="TrimE" type="CSGBox3D" parent="Geometry" unique_id=318387630]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 6.1, 0)
+collision_mask = 0
+size = Vector3(1.2, 0.2, 36.2)
+material = SubResource("StandardMaterial3D_ytqby")
+
+[node name="CorridorFloor" type="CSGBox3D" parent="Geometry" unique_id=1153110291]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -20)
+use_collision = true
+collision_mask = 0
+size = Vector3(6, 1, 5)
+material = SubResource("StandardMaterial3D_r1ded")
+
+[node name="CorridorL" type="CSGBox3D" parent="Geometry" unique_id=857231927]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 3, -20)
+use_collision = true
+collision_mask = 0
+size = Vector3(1, 6, 5)
+material = SubResource("StandardMaterial3D_cnn6p")
+
+[node name="CorridorR" type="CSGBox3D" parent="Geometry" unique_id=1982652954]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 3, -20)
+use_collision = true
+collision_mask = 0
+size = Vector3(1, 6, 5)
+material = SubResource("StandardMaterial3D_cnn6p")
+
+[node name="CorridorEnd" type="CSGBox3D" parent="Geometry" unique_id=413928926]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -23)
+use_collision = true
+collision_mask = 0
+size = Vector3(6, 6, 1)
+material = SubResource("StandardMaterial3D_cnn6p")
+
+[node name="Portal" type="CSGBox3D" parent="Geometry" unique_id=486955190]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, -22.45)
+collision_mask = 0
+size = Vector3(2.6, 3.6, 0.1)
+material = SubResource("StandardMaterial3D_tcalv")
+
+[node name="Block0" type="CSGBox3D" parent="Geometry" unique_id=2070804040]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.6, 6)
+use_collision = true
+collision_mask = 0
+size = Vector3(4, 1.2, 1)
+material = SubResource("StandardMaterial3D_87ryc")
+
+[node name="Block1" type="CSGBox3D" parent="Geometry" unique_id=1311366546]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.6, 0)
+use_collision = true
+collision_mask = 0
+size = Vector3(4, 1.2, 1)
+material = SubResource("StandardMaterial3D_87ryc")
+
+[node name="Block2" type="CSGBox3D" parent="Geometry" unique_id=312285580]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.6, -6)
+use_collision = true
+collision_mask = 0
+size = Vector3(4, 1.2, 1)
+material = SubResource("StandardMaterial3D_87ryc")
+
+[node name="Block3" type="CSGBox3D" parent="Geometry" unique_id=115659194]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -13)
+use_collision = true
+collision_mask = 0
+size = Vector3(10, 2, 3)
+material = SubResource("StandardMaterial3D_87ryc")
+
+[node name="Door" type="CSGBox3D" parent="." unique_id=1195067720]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -17.5)
+use_collision = true
+size = Vector3(4, 6, 0.6)
+material = SubResource("StandardMaterial3D_vbx4l")
+
+[node name="Rune" type="CSGBox3D" parent="Door" unique_id=545727783]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.33)
+collision_mask = 0
+size = Vector3(0.5, 2.2, 0.05)
+material = SubResource("StandardMaterial3D_7qpoq")
+
+[node name="RuneBar" type="CSGBox3D" parent="Door" unique_id=1317874050]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.33)
+collision_mask = 0
+size = Vector3(1.4, 0.3, 0.05)
+material = SubResource("StandardMaterial3D_7qpoq")
+
+[node name="Exit" type="Area3D" parent="." unique_id=1610455044]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -21)
+collision_layer = 32
+collision_mask = 2
+
+[node name="Shape" type="CollisionShape3D" parent="Exit" unique_id=653017061]
+shape = SubResource("BoxShape3D_817be")
+
+[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=523402741]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 14.5)
+
+[node name="Spawns" type="Node3D" parent="." unique_id=1627842948]
+
+[node name="thrower_0" type="Marker3D" parent="Spawns" unique_id=491746051]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 2.1499999, -13)
+metadata/kind = "thrower"
+metadata/wave = 0
+
+[node name="thrower_1" type="Marker3D" parent="Spawns" unique_id=2096774927]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 2.1499999, -13)
+metadata/kind = "thrower"
+metadata/wave = 0
+
+[node name="grunt_2" type="Marker3D" parent="Spawns" unique_id=1575881487]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.05, -3)
+metadata/kind = "grunt"
+metadata/wave = 0
+
+[node name="grunt_3" type="Marker3D" parent="Spawns" unique_id=1835340695]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.05, -9)
+metadata/kind = "grunt"
+metadata/wave = 0
+
+[node name="grunt_4" type="Marker3D" parent="Spawns" unique_id=93751442]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.05, -10)
+metadata/kind = "grunt"
+metadata/wave = 1
+
+[node name="grunt_5" type="Marker3D" parent="Spawns" unique_id=2080682047]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.05, -10)
+metadata/kind = "grunt"
+metadata/wave = 1
+
+[node name="grunt_6" type="Marker3D" parent="Spawns" unique_id=1562754924]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -8)
+metadata/kind = "grunt"
+metadata/wave = 1
+
+[node name="grunt_7" type="Marker3D" parent="Spawns" unique_id=1507236607]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 2)
+metadata/kind = "grunt"
+metadata/wave = 1
+
+[node name="Props" type="Node3D" parent="." unique_id=1104078144]
+
+[node name="barrel_0" type="RigidBody3D" parent="Props" unique_id=464618520 groups=["props"] instance=ExtResource("2_a823l")]
+transform = Transform3D(-0.23542438, 0, 0.97189265, 0, 1, 0, -0.97189265, 0, -0.23542438, -6, 0.02, 10)
+collision_layer = 8
+collision_mask = 79
+mass = 1.2
+
+[node name="barrel_1" type="RigidBody3D" parent="Props" unique_id=1647757256 groups=["props"] instance=ExtResource("2_a823l")]
+transform = Transform3D(-0.39497328, 0, -0.9186926, 0, 1, 0, 0.9186926, 0, -0.39497328, 6, 0.02, 4)
+collision_layer = 8
+collision_mask = 79
+mass = 1.2
+
+[node name="crate_2" type="RigidBody3D" parent="Props" unique_id=123379093 groups=["props"] instance=ExtResource("3_4pxkb")]
+transform = Transform3D(-0.11037795, 0, -0.9938897, 0, 1, 0, 0.9938897, 0, -0.11037795, -6, 0.02, -2)
+collision_layer = 8
+collision_mask = 79
+mass = 1.6
+
+[node name="crate_3" type="RigidBody3D" parent="Props" unique_id=127689299 groups=["props"] instance=ExtResource("3_4pxkb")]
+transform = Transform3D(0.40429902, 0, 0.9146269, 0, 1, 0, -0.9146269, 0, 0.40429902, 6, 0.02, -6)
+collision_layer = 8
+collision_mask = 79
+mass = 1.6
+
+[node name="barrel_4" type="RigidBody3D" parent="Props" unique_id=84538921 groups=["props"] instance=ExtResource("2_a823l")]
+transform = Transform3D(-0.7624321, 0, 0.64706826, 0, 1, 0, -0.64706826, 0, -0.7624321, 0, 0.02, -4)
+collision_layer = 8
+collision_mask = 79
+mass = 1.2
+
+[node name="Torches" type="Node3D" parent="." unique_id=1060874603]
+
+[node name="Torch0" type="Node3D" parent="Torches" unique_id=275680878]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.8, 3.2, -8.5)
+
+[node name="Holder" type="MeshInstance3D" parent="Torches/Torch0" unique_id=96936136]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+material_override = SubResource("StandardMaterial3D_8dtq8")
+mesh = SubResource("BoxMesh_42yhg")
+
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch0" unique_id=1733423833]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+material_override = SubResource("StandardMaterial3D_s7w5n")
+mesh = SubResource("CylinderMesh_elhsh")
+
+[node name="Light" type="OmniLight3D" parent="Torches/Torch0" unique_id=1179818806]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+light_color = Color(1, 0.62, 0.3, 1)
+light_energy = 2.2
+omni_range = 9.0
+
+[node name="Torch1" type="Node3D" parent="Torches" unique_id=345716702]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.8, 3.2, -8.5)
+
+[node name="Holder" type="MeshInstance3D" parent="Torches/Torch1" unique_id=1208666299]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+material_override = SubResource("StandardMaterial3D_8dtq8")
+mesh = SubResource("BoxMesh_o451u")
+
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch1" unique_id=282225310]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+material_override = SubResource("StandardMaterial3D_s7w5n")
+mesh = SubResource("CylinderMesh_imqgg")
+
+[node name="Light" type="OmniLight3D" parent="Torches/Torch1" unique_id=827210410]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+light_color = Color(1, 0.62, 0.3, 1)
+light_energy = 2.2
+omni_range = 9.0
+
+[node name="Torch2" type="Node3D" parent="Torches" unique_id=914757950]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.8, 3.2, 8.5)
+
+[node name="Holder" type="MeshInstance3D" parent="Torches/Torch2" unique_id=1894473645]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+material_override = SubResource("StandardMaterial3D_8dtq8")
+mesh = SubResource("BoxMesh_mbs2a")
+
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch2" unique_id=2017835947]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+material_override = SubResource("StandardMaterial3D_s7w5n")
+mesh = SubResource("CylinderMesh_w287u")
+
+[node name="Light" type="OmniLight3D" parent="Torches/Torch2" unique_id=1419703025]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+light_color = Color(1, 0.62, 0.3, 1)
+light_energy = 2.2
+omni_range = 9.0
+
+[node name="Torch3" type="Node3D" parent="Torches" unique_id=1735596974]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.8, 3.2, 8.5)
+
+[node name="Holder" type="MeshInstance3D" parent="Torches/Torch3" unique_id=1881107991]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+material_override = SubResource("StandardMaterial3D_8dtq8")
+mesh = SubResource("BoxMesh_k017v")
+
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch3" unique_id=1731993954]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+material_override = SubResource("StandardMaterial3D_s7w5n")
+mesh = SubResource("CylinderMesh_umnwk")
+
+[node name="Light" type="OmniLight3D" parent="Torches/Torch3" unique_id=667042834]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+light_color = Color(1, 0.62, 0.3, 1)
+light_energy = 2.2
+omni_range = 9.0
+
+[node name="Torch4" type="Node3D" parent="Torches" unique_id=730849470]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2, 3.6, -16.9)
+
+[node name="Holder" type="MeshInstance3D" parent="Torches/Torch4" unique_id=1897419173]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+material_override = SubResource("StandardMaterial3D_8dtq8")
+mesh = SubResource("BoxMesh_l7ihp")
+
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch4" unique_id=99990410]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+material_override = SubResource("StandardMaterial3D_s7w5n")
+mesh = SubResource("CylinderMesh_l1s7b")
+
+[node name="Light" type="OmniLight3D" parent="Torches/Torch4" unique_id=702635644]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+light_color = Color(1, 0.62, 0.3, 1)
+light_energy = 2.2
+omni_range = 9.0
+
+[node name="Torch5" type="Node3D" parent="Torches" unique_id=1274304992]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 3.6, -16.9)
+
+[node name="Holder" type="MeshInstance3D" parent="Torches/Torch5" unique_id=1030481061]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+material_override = SubResource("StandardMaterial3D_8dtq8")
+mesh = SubResource("BoxMesh_rnovt")
+
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch5" unique_id=1800549637]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+material_override = SubResource("StandardMaterial3D_s7w5n")
+mesh = SubResource("CylinderMesh_ehmog")
+
+[node name="Light" type="OmniLight3D" parent="Torches/Torch5" unique_id=1013472333]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+light_color = Color(1, 0.62, 0.3, 1)
+light_energy = 2.2
+omni_range = 9.0
+
+[node name="PortalLight" type="OmniLight3D" parent="." unique_id=1747347438]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -21.5)
+light_color = Color(0.45, 0.8, 1, 1)
+light_energy = 2.5
+omni_range = 7.0

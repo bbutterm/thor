@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://enemies/enemy.gd" id="1_lgq6k"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_qnocd"]
+radius = 0.45
+height = 1.8
+
+[node name="Thrower" type="CharacterBody3D" unique_id=1007672174]
+collision_layer = 4
+collision_mask = 15
+floor_snap_length = 0.3
+script = ExtResource("1_lgq6k")
+kind = 1
+max_health = 40.0
+move_speed = 3.8
+attack_range = 12.0
+attack_damage = 10.0
+windup_time = 0.55
+recover_time = 0.4
+attack_cooldown = 2.2
+body_color = Color(0.42, 0.33, 0.55, 1)
+
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=457860975]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_qnocd")
