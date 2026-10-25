@@ -363,6 +363,8 @@ func _die(source: String) -> void:
 		_telegraph.queue_free()
 	var now := Time.get_ticks_msec() / 1000.0
 	Run.register_kill(source == "axe_finisher", now - _last_splat_time < 0.6, kind == Kind.BOSS)
+	if player and is_instance_valid(player) and not player.is_dead:
+		player.heal(player.heal_per_kill)
 	Audio.play("sounds/enemy_destroy.ogg")
 	_spawn_debris()
 	died.emit(self)

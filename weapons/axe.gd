@@ -47,13 +47,13 @@ var _tween: Tween
 @onready var hitbox: ShapeCast3D = get_node_or_null(hitbox_path)
 @onready var hand_mesh: MeshInstance3D = get_node_or_null(hand_mesh_path)
 
-const REST_POS := Vector3(0.55, -0.48, -0.95)
-const REST_ROT := Vector3(-8, 12, -12)
+const REST_POS := Vector3(0.48, -0.5, -1.0)
+const REST_ROT := Vector3(-8, 12, -14)
 # Позы: [замах_поз, замах_рот, конец_поз, конец_рот] для каждой ступени комбо
 const POSES := [
-	[Vector3(0.95, -0.25, -0.75), Vector3(5, 75, -80), Vector3(-0.55, -0.4, -1.0), Vector3(-5, -75, -80)],
-	[Vector3(-0.5, -0.3, -0.8), Vector3(5, -70, 80), Vector3(0.85, -0.45, -1.0), Vector3(-5, 75, 80)],
-	[Vector3(0.35, 0.3, -0.55), Vector3(75, 10, -10), Vector3(0.1, -0.85, -1.15), Vector3(-85, 5, -10)],
+	[Vector3(0.8, -0.25, -0.85), Vector3(5, 75, -80), Vector3(-0.5, -0.4, -1.05), Vector3(-5, -75, -80)],
+	[Vector3(-0.45, -0.3, -0.9), Vector3(5, -70, 80), Vector3(0.75, -0.45, -1.05), Vector3(-5, 75, 80)],
+	[Vector3(0.3, 0.2, -0.75), Vector3(75, 10, -10), Vector3(0.1, -0.75, -1.15), Vector3(-85, 5, -10)],
 ]
 
 func _ready() -> void:

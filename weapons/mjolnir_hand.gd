@@ -36,7 +36,7 @@ var projectile: Node3D = null
 @onready var pivot: Node3D = get_node_or_null(pivot_path)
 @onready var hand_mesh: MeshInstance3D = get_node_or_null(hand_mesh_path)
 
-const REST_POS := Vector3(-0.6, -0.55, -1.0)
+const REST_POS := Vector3(-0.52, -0.52, -1.05)
 const REST_ROT := Vector3(-10, -15, 12)
 
 func _ready() -> void:

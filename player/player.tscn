@@ -71,27 +71,27 @@ emission_energy_multiplier = 3.0
 [sub_resource type="BoxMesh" id="BoxMesh_knn7v"]
 size = Vector3(0.14, 0.14, 0.3)
 
-[node name="Player" type="CharacterBody3D" unique_id=1651753391]
+[node name="Player" type="CharacterBody3D" unique_id=539421024]
 collision_layer = 2
 collision_mask = 13
 floor_max_angle = 0.87266463
 floor_snap_length = 0.35
 script = ExtResource("1_qjkh3")
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=2099295013]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=634044522]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_8t03j")
 
-[node name="Head" type="Node3D" parent="." unique_id=43572069]
+[node name="Head" type="Node3D" parent="." unique_id=1470075824]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 
-[node name="Camera" type="Camera3D" parent="Head" unique_id=340431184]
+[node name="Camera" type="Camera3D" parent="Head" unique_id=716275325]
 cull_mask = 1048573
 current = true
 fov = 85.0
 script = ExtResource("2_g6k8r")
 
-[node name="AxeHitbox" type="ShapeCast3D" parent="Head/Camera" unique_id=1489983306]
+[node name="AxeHitbox" type="ShapeCast3D" parent="Head/Camera" unique_id=1226792702]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, -0.9)
 enabled = false
 shape = SubResource("BoxShape3D_2ieo8")
@@ -100,108 +100,110 @@ max_results = 16
 collision_mask = 92
 collide_with_areas = true
 
-[node name="ViewmodelContainer" type="SubViewportContainer" parent="Head/Camera" unique_id=1674491759]
+[node name="ViewmodelContainer" type="SubViewportContainer" parent="Head/Camera" unique_id=1280433688]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="Head/Camera/ViewmodelContainer" unique_id=656080750]
+[node name="SubViewport" type="SubViewport" parent="Head/Camera/ViewmodelContainer" unique_id=878387325]
 transparent_bg = true
 handle_input_locally = false
 msaa_3d = 1
 size = Vector2i(1280, 720)
 render_target_update_mode = 4
 
-[node name="ViewCam" type="Camera3D" parent="Head/Camera/ViewmodelContainer/SubViewport" unique_id=704398406]
+[node name="ViewCam" type="Camera3D" parent="Head/Camera/ViewmodelContainer/SubViewport" unique_id=864353917]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -500, 0)
 cull_mask = 2
 fov = 60.0
 
-[node name="HandLight" type="OmniLight3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=1950928308]
+[node name="HandLight" type="OmniLight3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=607735359]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.6, 0.6)
 light_energy = 0.8
 light_cull_mask = 2
 omni_range = 4.0
 
-[node name="AxePivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=1729752659]
+[node name="AxePivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=2000904134]
+transform = Transform3D(0.62, 0, 0, 0, 0.62, 0, 0, 0, 0.62, 0, 0, 0)
 
-[node name="Hand" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=1357131091]
+[node name="Hand" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=573945708]
 layers = 2
 material_override = SubResource("StandardMaterial3D_ebec5")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_yllr7")
 
-[node name="Handle" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=469451781]
+[node name="Handle" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=715343535]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0)
 layers = 2
 material_override = SubResource("StandardMaterial3D_kb6p2")
 cast_shadow = 0
 mesh = SubResource("CylinderMesh_wodsf")
 
-[node name="Blade" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=1774733782]
+[node name="Blade" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=441425949]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, -0.2)
 layers = 2
 material_override = SubResource("StandardMaterial3D_32hag")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_tqiix")
 
-[node name="Edge" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=1240986174]
+[node name="Edge" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=477122177]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, -0.39)
 layers = 2
 material_override = SubResource("StandardMaterial3D_e7oew")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_c35mf")
 
-[node name="Spike" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=909860948]
+[node name="Spike" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=602664774]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.74, 0.07)
 layers = 2
 material_override = SubResource("StandardMaterial3D_32hag")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_65viv")
 
-[node name="HammerPivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=943391818]
+[node name="HammerPivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=630211681]
+transform = Transform3D(0.62, 0, 0, 0, 0.62, 0, 0, 0, 0.62, 0, 0, 0)
 
-[node name="Hand" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=951049582]
+[node name="Hand" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=560501467]
 layers = 2
 material_override = SubResource("StandardMaterial3D_ebec5")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_x7c3f")
 
-[node name="Handle" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=737198097]
+[node name="Handle" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=2115226607]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
 layers = 2
 material_override = SubResource("StandardMaterial3D_kb6p2")
 cast_shadow = 0
 mesh = SubResource("CylinderMesh_bjvpn")
 
-[node name="Head" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=1604371161]
+[node name="Head" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=318841245]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
 layers = 2
 material_override = SubResource("StandardMaterial3D_32hag")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_s7qer")
 
-[node name="Rune" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=13753749]
+[node name="Rune" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=161794352]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
 layers = 2
 material_override = SubResource("StandardMaterial3D_g4c7l")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_knn7v")
 
-[node name="Axe" type="Node" parent="." unique_id=1771616724]
+[node name="Axe" type="Node" parent="." unique_id=962985750]
 script = ExtResource("3_boad6")
 pivot_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot")
 hitbox_path = NodePath("../Head/Camera/AxeHitbox")
 hand_mesh_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot/Hand")
 
-[node name="Mjolnir" type="Node" parent="." unique_id=13758709]
+[node name="Mjolnir" type="Node" parent="." unique_id=249168298]
 script = ExtResource("4_rgyib")
 pivot_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot")
 hand_mesh_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot/Hand")
 
-[node name="Footsteps" type="AudioStreamPlayer" parent="." unique_id=726760103]
+[node name="Footsteps" type="AudioStreamPlayer" parent="." unique_id=493680043]
 stream = ExtResource("5_hg6s5")
 volume_db = -8.0
 autoplay = true

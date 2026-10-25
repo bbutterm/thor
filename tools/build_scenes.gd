@@ -77,31 +77,53 @@ func _mat(key: String, color: Color, rough: float = 0.85, noise: bool = true, em
 	_mats[key] = m
 	return m
 
-func _box(parent: Node, name: String, center: Vector3, size: Vector3, mat: Material, collide: bool = true) -> CSGBox3D:
-	var b := CSGBox3D.new()
-	b.name = name
-	b.size = size
-	b.position = center
-	b.material = mat
-	b.use_collision = collide
-	b.collision_layer = WORLD
-	b.collision_mask = 0
-	parent.add_child(b)
-	return b
+## Статичный блок: StaticBody3D + коробка-коллизия + меш. (Не CSG: CSG строит коллизию с задержкой,
+## и в первые кадры игрок и бочки проваливались сквозь пол.)
+func _box(parent: Node, name: String, center: Vector3, size: Vector3, mat: Material, collide: bool = true) -> Node3D:
+	var root: Node3D
+	if collide:
+		var sb := StaticBody3D.new()
+		sb.collision_layer = WORLD
+		sb.collision_mask = 0
+		var cs := CollisionShape3D.new()
+		cs.name = "Shape"
+		var bs := BoxShape3D.new()
+		bs.size = size
+		cs.shape = bs
+		sb.add_child(cs)
+		root = sb
+	else:
+		root = Node3D.new()
+	root.name = name
+	root.position = center
+	parent.add_child(root)
+	var mi := MeshInstance3D.new()
+	mi.name = "Mesh"
+	mi.mesh = _boxmesh(size)
+	mi.material_override = mat
+	root.add_child(mi)
+	return root
 
-func _cyl(parent: Node, name: String, center: Vector3, radius: float, height: float, mat: Material) -> CSGCylinder3D:
-	var c := CSGCylinder3D.new()
-	c.name = name
-	c.radius = radius
-	c.height = height
-	c.sides = 12
-	c.position = center
-	c.material = mat
-	c.use_collision = true
-	c.collision_layer = WORLD
-	c.collision_mask = 0
-	parent.add_child(c)
-	return c
+func _cyl(parent: Node, name: String, center: Vector3, radius: float, height: float, mat: Material) -> Node3D:
+	var sb := StaticBody3D.new()
+	sb.name = name
+	sb.collision_layer = WORLD
+	sb.collision_mask = 0
+	sb.position = center
+	var cs := CollisionShape3D.new()
+	cs.name = "Shape"
+	var shape := CylinderShape3D.new()
+	shape.radius = radius
+	shape.height = height
+	cs.shape = shape
+	sb.add_child(cs)
+	var mi := MeshInstance3D.new()
+	mi.name = "Mesh"
+	mi.mesh = _cylmesh(radius, radius, height)
+	mi.material_override = mat
+	sb.add_child(mi)
+	parent.add_child(sb)
+	return sb
 
 func _mesh(parent: Node, name: String, mesh: Mesh, pos: Vector3, mat: Material, rot_deg: Vector3 = Vector3.ZERO, layer: int = 1) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
@@ -338,6 +360,7 @@ func build_player() -> void:
 
 	var axe_pivot := Node3D.new()
 	axe_pivot.name = "AxePivot"
+	axe_pivot.scale = Vector3.ONE * 0.62
 	vcam.add_child(axe_pivot)
 	_mesh(axe_pivot, "Hand", _boxmesh(Vector3(0.16, 0.18, 0.2)), Vector3(0, 0, 0), skin, Vector3.ZERO, 2)
 	_mesh(axe_pivot, "Handle", _cylmesh(0.032, 0.04, 0.95), Vector3(0, 0.38, 0), wood, Vector3.ZERO, 2)
@@ -347,6 +370,7 @@ func build_player() -> void:
 
 	var ham_pivot := Node3D.new()
 	ham_pivot.name = "HammerPivot"
+	ham_pivot.scale = Vector3.ONE * 0.62
 	vcam.add_child(ham_pivot)
 	_mesh(ham_pivot, "Hand", _boxmesh(Vector3(0.16, 0.18, 0.2)), Vector3(0, 0, 0), skin, Vector3.ZERO, 2)
 	_mesh(ham_pivot, "Handle", _cylmesh(0.035, 0.04, 0.5), Vector3(0, 0.2, 0), wood, Vector3.ZERO, 2)
@@ -396,30 +420,30 @@ func room_defs() -> Array:
 			["grunt", Vector3(-8, 0, -8), 1], ["grunt", Vector3(8, 0, -8), 1], ["thrower", Vector3(-6, 1.6, -3), 1]],
 		"props": _ring_props(Vector3(0, 0, -3), 3.5, 6, "barrel") + [["crate", Vector3(-9, 0, 3)], ["crate", Vector3(-9, 0.95, 3)], ["crate", Vector3(9, 0, 7)], ["barrel", Vector3(8, 0, 8)]],
 	})
-	# 2. Ярусы — центральная платформа 3 м: нужен двойной или супер-прыжок
+	# 2. Ярусы — центральная платформа 2.6 м: нужен двойной или супер-прыжок
 	r.append({
 		"file": "room_02", "title": "Ярусы Ётунов", "w": 26.0, "d": 24.0,
 		"blocks": [
-			[Vector3(0, 1.5, -3), Vector3(7, 3, 7), "stone_dark"],
+			[Vector3(0, 1.3, -3), Vector3(7, 2.6, 7), "stone_dark"],
 			[Vector3(-10, 1.0, -6), Vector3(4, 2, 8), "stone_dark"],
 			[Vector3(10, 1.0, -6), Vector3(4, 2, 8), "stone_dark"],
 			[Vector3(-4.5, 0.5, 2.5), Vector3(2, 1, 2), "wood"],
 		],
 		"pillars": [Vector3(-7, 0, 6), Vector3(7, 0, 6)],
-		"enemies": [["grunt", Vector3(-5, 0, -8), 0], ["grunt", Vector3(5, 0, -8), 0], ["thrower", Vector3(0, 3.1, -4), 0],
+		"enemies": [["grunt", Vector3(-5, 0, -8), 0], ["grunt", Vector3(5, 0, -8), 0], ["thrower", Vector3(0, 2.7, -4), 0],
 			["thrower", Vector3(-10, 2.1, -7), 1], ["thrower", Vector3(10, 2.1, -7), 1], ["grunt", Vector3(-3, 0, 4), 1], ["grunt", Vector3(3, 0, 4), 1]],
-		"props": [["barrel", Vector3(-1, 3.0, -1)], ["barrel", Vector3(1, 3.0, -5)], ["crate", Vector3(-8, 0, 3)], ["crate", Vector3(8, 0, 3)], ["barrel", Vector3(0, 0, 3)]],
+		"props": [["barrel", Vector3(-1, 2.6, -1)], ["barrel", Vector3(1, 2.6, -5)], ["crate", Vector3(-8, 0, 3)], ["crate", Vector3(8, 0, 3)], ["barrel", Vector3(0, 0, 3)]],
 	})
-	# 3. Кольцо колонн — вокруг башни 6 м (супер-прыжок на неё)
+	# 3. Кольцо колонн — вокруг башни 5 м (супер-прыжок + двойной на неё)
 	r.append({
 		"file": "room_03", "title": "Кольцо колонн", "w": 28.0, "d": 28.0,
 		"blocks": [
-			[Vector3(0, 3.0, -2), Vector3(4, 6, 4), "stone_dark"],
+			[Vector3(0, 2.5, -2), Vector3(4, 5, 4), "stone_dark"],
 			[Vector3(0, 0.6, 4), Vector3(3, 1.2, 3), "wood"],
 		],
 		"pillars": _ring_points(Vector3(0, 0, -2), 9.0, 8),
 		"enemies": [["grunt", Vector3(-6, 0, -8), 0], ["grunt", Vector3(6, 0, -8), 0], ["grunt", Vector3(-8, 0, 0), 0], ["grunt", Vector3(8, 0, 0), 0],
-			["thrower", Vector3(0, 6.1, -2), 1], ["thrower", Vector3(-10, 0, -10), 1], ["grunt", Vector3(10, 0, -10), 1], ["grunt", Vector3(0, 0, -11), 1]],
+			["thrower", Vector3(0, 5.1, -2), 1], ["thrower", Vector3(-10, 0, -10), 1], ["grunt", Vector3(10, 0, -10), 1], ["grunt", Vector3(0, 0, -11), 1]],
 		"props": _ring_props(Vector3(0, 0, -2), 5.5, 8, "crate"),
 	})
 	# 4. Коридор Хель — длинный зал, метатели в конце, укрытия
@@ -487,14 +511,14 @@ func build_rooms() -> void:
 	_build_room({
 		"file": "boss_arena", "title": "Чертог Хримтурса", "w": 32.0, "d": 32.0,
 		"blocks": [
-			[Vector3(-12.5, 1.5, -12.5), Vector3(5, 3, 5), "stone_dark"],
-			[Vector3(12.5, 1.5, -12.5), Vector3(5, 3, 5), "stone_dark"],
-			[Vector3(-12.5, 1.5, 8), Vector3(5, 3, 5), "stone_dark"],
-			[Vector3(12.5, 1.5, 8), Vector3(5, 3, 5), "stone_dark"],
+			[Vector3(-12.5, 1.3, -12.5), Vector3(5, 2.6, 5), "stone_dark"],
+			[Vector3(12.5, 1.3, -12.5), Vector3(5, 2.6, 5), "stone_dark"],
+			[Vector3(-12.5, 1.3, 8), Vector3(5, 2.6, 5), "stone_dark"],
+			[Vector3(12.5, 1.3, 8), Vector3(5, 2.6, 5), "stone_dark"],
 		],
 		"pillars": [Vector3(-6, 0, -6), Vector3(6, 0, -6), Vector3(-6, 0, 4), Vector3(6, 0, 4)],
 		"enemies": [["boss", Vector3(0, 0, -8), 0], ["grunt", Vector3(-8, 0, -10), 0], ["grunt", Vector3(8, 0, -10), 0],
-			["thrower", Vector3(-12.5, 3.1, -12.5), 1], ["thrower", Vector3(12.5, 3.1, -12.5), 1]],
+			["thrower", Vector3(-12.5, 2.7, -12.5), 1], ["thrower", Vector3(12.5, 2.7, -12.5), 1]],
 		"props": _ring_props(Vector3(0, 0, -2), 11.0, 10, "barrel"),
 	}, true)
 
@@ -546,16 +570,10 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		var pp: Vector3 = d.pillars[i]
 		_cyl(geo, "Pillar%d" % i, pp + Vector3(0, h / 2, 0), 0.8, h, pillar_mat)
 		_cyl(geo, "PillarBase%d" % i, pp + Vector3(0, 0.25, 0), 1.05, 0.5, pillar_mat)
+		_cyl(geo, "PillarCap%d" % i, pp + Vector3(0, h - 0.2, 0), 1.0, 0.4, pillar_mat)
 
 	# Дверь
-	var door := CSGBox3D.new()
-	door.name = "Door"
-	door.size = Vector3(gap, h, 0.6)
-	door.position = Vector3(0, h / 2, -dep / 2 - 0.5)
-	door.material = _mat("door", Color(0.45, 0.16, 0.12), 0.8)
-	door.use_collision = true
-	door.collision_layer = WORLD
-	root.add_child(door)
+	var door := _box(root, "Door", Vector3(0, h / 2, -dep / 2 - 0.5), Vector3(gap, h, 0.6), _mat("door", Color(0.45, 0.16, 0.12), 0.8))
 	var door_rune := _mat("door_rune", Color(1.0, 0.45, 0.2), 0.5, false, 3.0)
 	_box(door, "Rune", Vector3(0, 0.3, 0.33), Vector3(0.5, 2.2, 0.05), door_rune, false)
 	_box(door, "RuneBar", Vector3(0, 0.9, 0.33), Vector3(1.4, 0.3, 0.05), door_rune, false)

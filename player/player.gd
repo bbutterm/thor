@@ -20,7 +20,7 @@ signal slammed(power: float)
 @export var ground_overspeed_drag: float = 18.0
 
 @export_group("Прыжок")
-@export var jump_velocity: float = 8.5
+@export var jump_velocity: float = 9.0
 @export var extra_jumps: int = 1
 @export var gravity: float = 24.0
 @export var fall_gravity_mult: float = 1.35
@@ -47,13 +47,15 @@ signal slammed(power: float)
 @export var slam_knockback_per_meter: float = 0.8
 @export var super_jump_window: float = 0.25
 ## Во сколько раз выше обычного прыжка (по высоте)
-@export var super_jump_height_mult: float = 2.0
+@export var super_jump_height_mult: float = 2.5
 
 @export_group("Физика толчков")
 @export var push_force: float = 1.6
 
 @export_group("Здоровье")
 @export var max_health: float = 100.0
+## Лечение за каждое убийство — поощряет агрессию
+@export var heal_per_kill: float = 3.0
 
 var health: float = 100.0
 var is_dead: bool = false

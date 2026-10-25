@@ -100,8 +100,6 @@ func open_door() -> void:
 		return
 	for c in door.find_children("*", "CollisionShape3D", true, false):
 		(c as CollisionShape3D).set_deferred("disabled", true)
-	if door is CSGShape3D:
-		(door as CSGShape3D).use_collision = false
 	var tw := create_tween()
 	tw.tween_property(door, "position:y", door.position.y - 6.0, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.tween_callback(func() -> void: door.visible = false)
