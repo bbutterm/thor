@@ -267,7 +267,7 @@ func _process_jump(on_floor: bool) -> void:
 		velocity.y = jump_velocity * sqrt(super_jump_height_mult)
 		camera_fx.kick_fov(10.0)
 		camera_fx.add_trauma(0.25)
-		Audio.play("sounds/jump_c.ogg")
+		Audio.play("sounds/sfx/super_jump.wav")
 		FX.ring(get_parent(), global_position, 2.0, Color(0.6, 0.85, 1.0, 0.8), 0.3)
 		return
 	if on_floor or _coyote_left > 0.0:
@@ -306,7 +306,7 @@ func _start_dash(wish: Vector3) -> void:
 	_dash_hit.clear()
 	camera_fx.kick_fov(14.0)
 	camera_fx.speed_lines_pulse()
-	Audio.play("sounds/weapon_change.ogg")
+	Audio.play("sounds/sfx/dash.wav")
 	dash_charges_changed.emit(dash_charges, dash_charges_max, 0.0)
 
 func _process_dash(delta: float) -> void:
@@ -393,9 +393,9 @@ func _do_slam_impact(height: float) -> void:
 	camera_fx.land_dip(0.25 + power * 0.2)
 	FX.ring(get_parent(), center, radius, Color(1.0, 0.85, 0.5, 0.9), 0.4)
 	FX.burst(get_parent(), center + Vector3(0, 0.3, 0), radius * 0.35, Color(1, 0.9, 0.6, 0.45), 0.25)
+	FX.sparks(get_parent(), center + Vector3(0, 0.2, 0), Color(0.55, 0.47, 0.4), 26 + int(power * 20), 7.0 + power * 6.0, 18.0, 0.14, 0.7)
 	FX.hitstop(0.06 + power * 0.04)
-	Audio.play("sounds/land.ogg")
-	Audio.play("sounds/enemy_destroy.ogg")
+	Audio.play("sounds/sfx/slam.wav")
 	slammed.emit(power)
 	if height >= 9.0:
 		Odin.say("big_slam")
@@ -434,7 +434,7 @@ func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln
 	Run.register_player_hit()
 	hurt.emit(amount)
 	health_changed.emit(maxf(health, 0.0), max_health)
-	Audio.play("sounds/enemy_attack.ogg")
+	Audio.play("sounds/sfx/player_hurt.wav")
 	if health <= 0.0:
 		_die()
 

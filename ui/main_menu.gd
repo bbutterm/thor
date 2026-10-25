@@ -70,7 +70,23 @@ func _ready() -> void:
 	vb.add_child(spacer2)
 	vb.add_child(controls)
 	start.grab_focus()
+	if "--selftest" in OS.get_cmdline_user_args():
+		_selftest.call_deferred()
 
 func _on_start() -> void:
 	Run.start_run()
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
+
+## Проверка собранной игры: ./Thor.exe -- --selftest  (печатает, что ресурсы на месте, и выходит)
+func _selftest() -> void:
+	print("SELFTEST bodies=%d runes=%d odin=%s" % [Run.all_bodies.size(), Run.all_runes.size(), Odin.pick("death") != ""])
+	get_tree().root.add_child(SelfTestRunner.new())
+	_on_start()
+
+class SelfTestRunner extends Node:
+	func _ready() -> void:
+		for i in 240:
+			await get_tree().process_frame
+		var g := get_tree().current_scene
+		print("SELFTEST scene=%s room=%s enemies=%d" % [g.name, Run.current_room_path(), get_tree().get_nodes_in_group("enemies").size()])
+		get_tree().quit()

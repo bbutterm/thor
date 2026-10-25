@@ -144,6 +144,40 @@ static func ring(parent: Node, pos: Vector3, radius: float, color: Color, lifeti
 	tw.tween_property(mat, "albedo_color:a", 0.0, lifetime)
 	tw.chain().tween_callback(mi.queue_free)
 
+## Разлёт частиц: искры от ударов, пыль от приземления, щепки.
+static func sparks(parent: Node, pos: Vector3, color: Color, amount: int = 14, speed: float = 6.0, gravity: float = 14.0, size: float = 0.07, lifetime: float = 0.45) -> void:
+	if parent == null or not parent.is_inside_tree():
+		return
+	var p := CPUParticles3D.new()
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = amount
+	p.lifetime = lifetime
+	p.direction = Vector3.UP
+	p.spread = 180.0
+	p.initial_velocity_min = speed * 0.4
+	p.initial_velocity_max = speed
+	p.gravity = Vector3(0, -gravity, 0)
+	p.scale_amount_min = 0.6
+	p.scale_amount_max = 1.2
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3.ONE * size
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = color
+	mat.vertex_color_use_as_albedo = false
+	mesh.material = mat
+	p.mesh = mesh
+	var curve := Curve.new()
+	curve.add_point(Vector2(0, 1))
+	curve.add_point(Vector2(1, 0))
+	p.scale_amount_curve = curve
+	parent.add_child(p)
+	p.global_position = pos
+	p.emitting = true
+	var t := p.get_tree().create_timer(lifetime + 0.3, true, false, true)
+	t.timeout.connect(p.queue_free)
+
 static func make_material(color: Color, roughness: float = 0.85, emission: float = 0.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = color

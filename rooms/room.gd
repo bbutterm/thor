@@ -103,7 +103,7 @@ func open_door() -> void:
 	var tw := create_tween()
 	tw.tween_property(door, "position:y", door.position.y - 6.0, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.tween_callback(func() -> void: door.visible = false)
-	Audio.play("sounds/land.ogg")
+	Audio.play("sounds/sfx/door_open.wav")
 
 func _on_exit_body_entered(body: Node) -> void:
 	if door_open and body is Player:

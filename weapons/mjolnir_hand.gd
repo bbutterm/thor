@@ -75,7 +75,7 @@ func throw_hammer() -> void:
 		tw.tween_property(pivot, "position", REST_POS + Vector3(0, -0.8, 0), 0.1)
 		tw.tween_callback(func() -> void: pivot.visible = false)
 	player.camera_fx.add_trauma(0.12)
-	Audio.play("sounds/weapon_change.ogg")
+	Audio.play("sounds/sfx/hammer_throw.wav")
 	state_changed.emit(false)
 
 ## Вызывается снарядом, когда молот вернулся в руку.
@@ -90,7 +90,7 @@ func on_caught() -> void:
 		tw.tween_property(pivot, "position", REST_POS, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tw.tween_property(pivot, "rotation_degrees", REST_ROT, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	player.camera_fx.add_trauma(catch_shake)
-	Audio.play("sounds/land.ogg")
+	Audio.play("sounds/sfx/hammer_catch.wav")
 	state_changed.emit(true)
 
 func current_damage() -> float:

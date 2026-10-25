@@ -133,6 +133,11 @@ func _test_axe(p: Player) -> void:
 
 func _test_hammer(p: Player) -> void:
 	print("-- Мьёльнир")
+	# Ставим игрока на свободную линию (без колонн и бочек между ним и манекенами)
+	p.global_position = game.room.global_position + Vector3(3, 0.1, 10)
+	p.velocity = Vector3.ZERO
+	p.rotation_target = Vector2(0, 0)
+	await wait(0.3)
 	var dummies: Array[Enemy] = []
 	for d in [4.0, 7.0, 10.0]:
 		dummies.append(_make_dummy(p, d))

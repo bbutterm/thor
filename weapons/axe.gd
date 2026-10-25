@@ -121,7 +121,7 @@ func _enter_active() -> void:
 	_phase_time = 0.0
 	var p: Array = POSES[stage]
 	_animate_to(p[2], p[3], stage_active[stage] * 1.15, Tween.TRANS_EXPO, Tween.EASE_OUT)
-	Audio.play("sounds/weapon_change.ogg")
+	Audio.play("sounds/sfx/axe_swing_%d.wav" % (stage + 1))
 	player.camera_fx.add_trauma(0.05)
 
 func _enter_recovery() -> void:
@@ -175,7 +175,10 @@ func _do_hitbox() -> void:
 		_hits_this_swing += new_hits
 		FX.hitstop(stage_hitstop[stage])
 		player.camera_fx.add_trauma(stage_shake[stage])
-		Audio.play("sounds/enemy_hurt.ogg")
+		if stage == 2:
+			Audio.play("sounds/sfx/axe_finisher.wav")
+		else:
+			Audio.play("sounds/sfx/axe_hit_1.wav, sounds/sfx/axe_hit_2.wav, sounds/sfx/axe_hit_3.wav")
 		hit_landed.emit(new_hits, stage)
 
 func is_busy() -> bool:

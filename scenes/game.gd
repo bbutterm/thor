@@ -96,6 +96,7 @@ func _on_rune_picked(rune: RuneDef) -> void:
 	if rune.id == "heal":
 		player.heal(50.0)
 	Odin.say("rune_pick")
+	Audio.play("sounds/sfx/rune_pick.wav")
 	room.open_door()
 	hud.toast("Дверь открыта — вперёд!")
 

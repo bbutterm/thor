@@ -148,18 +148,19 @@ func _build() -> void:
 
 	# Реплика Одина
 	_odin_panel = UIStyle.panel(Color(0.05, 0.05, 0.07, 0.82), Color(UIStyle.GOLD, 0.5))
-	_anchor(_odin_panel, Control.PRESET_CENTER_BOTTOM, -390, -210, 390, -120)
+	# Реплики Одина — сверху по центру, чтобы не закрывать бой
+	_anchor(_odin_panel, Control.PRESET_CENTER_TOP, -330, 100, 330, 160)
 	_odin_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_odin_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_odin_panel.grow_vertical = Control.GROW_DIRECTION_END
 	_odin_panel.modulate.a = 0.0
 	_odin_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_odin_panel)
 	var ob := VBoxContainer.new()
 	_odin_panel.add_child(ob)
 	ob.add_child(UIStyle.label("ОДИН", 15, UIStyle.GOLD, 4))
-	_odin_label = UIStyle.label("", 22, UIStyle.TEXT, 5)
+	_odin_label = UIStyle.label("", 19, UIStyle.TEXT, 5)
 	_odin_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_odin_label.custom_minimum_size = Vector2(720, 0)
+	_odin_label.custom_minimum_size = Vector2(620, 0)
 	ob.add_child(_odin_label)
 
 	# Короткая подсказка по центру

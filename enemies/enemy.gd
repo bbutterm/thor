@@ -70,6 +70,7 @@ var _base_colors: Array[Color] = []
 var _hurt_flash: float = 0.0
 var _windup_glow: float = 0.0
 var _telegraph: Node3D
+var _walk_t: float = 0.0
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -200,6 +201,8 @@ func _face_player(delta: float) -> void:
 func _begin_windup(slam: bool) -> void:
 	_doing_slam = slam
 	_set_state(State.WINDUP)
+	if kind != Kind.THROWER and (slam or randf() < 0.5):
+		Audio.play("sounds/sfx/enemy_growl.wav")
 	if slam:
 		_show_slam_telegraph()
 	if _visual:
@@ -242,7 +245,7 @@ func _do_boss_slam() -> void:
 		_telegraph.queue_free()
 	FX.ring(get_parent(), global_position, boss_slam_radius, Color(1, 0.35, 0.2, 0.9), 0.4)
 	FX.burst(get_parent(), global_position + Vector3(0, 0.5, 0), 1.5, Color(1, 0.4, 0.2, 0.4), 0.25)
-	Audio.play("sounds/land.ogg")
+	Audio.play("sounds/sfx/boss_slam.wav")
 	if player and not player.is_dead:
 		player.camera_fx.add_trauma(0.45)
 		var d := player.global_position - global_position
@@ -278,7 +281,7 @@ func _throw_projectile() -> void:
 	var proj: Node3D = preload("res://enemies/enemy_projectile.gd").new()
 	get_parent().add_child(proj)
 	proj.call("launch", origin, (target - origin).normalized() * projectile_speed, projectile_damage, self)
-	Audio.play("sounds/enemy_attack.ogg")
+	Audio.play("sounds/sfx/curse_throw.wav")
 
 # --- Урон ---
 
@@ -288,6 +291,8 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	health -= damage
 	_hurt_flash = 1.0
 	var big := source == "axe_finisher" or source == "slam"
+	if source != "fire":
+		FX.sparks(get_parent(), global_position + Vector3(0, 1.1 * model_scale, 0), Color(1, 0.85, 0.4) if source.begins_with("axe") else Color(0.6, 0.85, 1.0), 18 if big else 10, 7.0 if big else 5.0)
 	FX.damage_number(get_parent(), global_position + Vector3(0, 1.8 * model_scale, 0), damage,
 		Color(1, 0.55, 0.2) if big else (Color(0.6, 0.85, 1.0) if source in ["hammer", "lightning"] else Color(1, 0.92, 0.4)), big)
 	var k := knockback * (1.0 - knock_resist)
@@ -347,7 +352,7 @@ func _check_wall_splat(pre_horiz: Vector3) -> void:
 		FX.burst(get_parent(), col.get_position(), 0.8, Color(1, 1, 1, 0.6), 0.2)
 		if player:
 			player.camera_fx.add_trauma(0.2)
-		Audio.play("sounds/land.ogg")
+		Audio.play("sounds/sfx/wall_splat.wav")
 		if kind != Kind.BOSS:
 			_stun_left = wall_splat_stun
 			_set_state(State.STUNNED)
@@ -404,6 +409,21 @@ func _spawn_debris() -> void:
 
 func _update_visual_feedback(delta: float) -> void:
 	_hurt_flash = maxf(0.0, _hurt_flash - delta * 8.0)
+	# Процедурная «анимация»: покачивание при ходьбе, отклонение назад на замахе, рывок вперёд на ударе
+	if _visual and state != State.STUNNED:
+		var hs := Vector2(velocity.x, velocity.z).length()
+		var bob := 0.0
+		if hs > 0.5 and is_on_floor():
+			_walk_t += delta * hs * 2.4
+			bob = absf(sin(_walk_t)) * 0.09 * model_scale
+		_visual.position.y = lerpf(_visual.position.y, bob, clampf(delta * 14.0, 0.0, 1.0))
+		var lean := clampf(hs * 0.035, 0.0, 0.2)
+		if state == State.WINDUP:
+			lean = -0.28
+		elif state == State.RECOVER and _state_time < 0.18:
+			lean = 0.38
+		_visual.rotation.x = lerp_angle(_visual.rotation.x, lean, clampf(delta * 14.0, 0.0, 1.0))
+		_visual.rotation.z = sin(_walk_t) * 0.06 if hs > 0.5 else lerpf(_visual.rotation.z, 0.0, clampf(delta * 10.0, 0.0, 1.0))
 	for i in _flash_mats.size():
 		var m := _flash_mats[i]
 		var c := _base_colors[i]

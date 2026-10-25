@@ -1,47 +1,14 @@
-<p align="center"><img src="icon.png"/></p>
+# Тор: Достойная смерть
 
-# Starter Kit FPS
+Прототип рогалик-шутера от первого лица на Godot 4.6 (физика Jolt).
 
-This package includes a basic template for a first person shooter in Godot 4.6. Includes features like;
+Один выгнал обленившегося Тора из Асгарда. Дух Тора вселяется в случайных смертных — каждый забег новое тело. Пройди залы, набери Славу и умри достойно (или победи Хримтурса).
 
-- Character controller
-- Weapons, switching weapons
-- Enemies
-- Sprites and 3D Models _(CC0 licensed)_
+- Движение: двойной прыжок, рывок, удар-приземление, супер-прыжок
+- Топор с комбо из 3 ударов и Мьёльнир, который возвращается в руку
+- Физика: бочки, отбрасывание, оглушение об стену, разлетающиеся трупы
+- 6 залов + босс, руны, 3 тела, саркастичный Один
 
-### Screenshot
+Как запустить, управление и что сделано — в [PROGRESS.md](PROGRESS.md). Где крутить числа — [TUNING.md](TUNING.md). Источники — [CREDITS.md](CREDITS.md).
 
-<p align="center"><img src="screenshots/screenshot.png"/></p>
-
-### Controls
-
-| Key | Command |
-| --- | --- |
-| <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> | Movement |
-| <kbd>Spacebar</kbd> | Jump |
-| <kbd>Left mouse button</kbd> | Shoot |
-| <kbd>E</kbd> | Switch weapon |
-
-### Instructions
-
-1. How to add more weapons?
-
-Duplicate one of the existing resources in the 'weapons' folder, adjust the properties in the inspector. Select the 'Player' node in the scene and add your new resources to the 'Weapons' array.
-
-2. How to adjust properties like cooldown, damage and spread?
-
-Select the resource of the weapon you'd like to change in the 'weapons' folder, adjust the properties in the inspector.
-
-### License
-
-MIT License
-
-Copyright (c) 2026 Kenney
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-Assets included in this package (2D sprites, 3D models and sound effects) are [CC0 licensed](https://creativecommons.org/publicdomain/zero/1.0/)
+Основа — [Kenney Starter Kit FPS](https://github.com/KenneyNL/Starter-Kit-FPS) (MIT / CC0).
