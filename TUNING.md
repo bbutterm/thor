@@ -229,3 +229,15 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 **Товары** — `run/shop/*.tres` (`run/shop_item_def.gd`): `price` (шаурма 40, руна 60, заточка 80 / `price2` 120 для 2→3, патроны 30, обслуживание Мьёльнира 100, «Кот в мешке» 50, сдать руну +20), `amount` (шаурма — доля лечения 0.3), `by_eitri` (отвечает Эйтри: «Угу»), `odin_pool` (шаурма → «Ты опять за своё?»), `order`. Кузнец (пассивка `smith_level`) — заточка −50 %.
 «Кот в мешке» и реакции Брокка — константы в `run/shop.gd`: `BAG_OUTCOMES` (руна 25, оружие ур. 2–3 20, лечение 15, серебро 10, проклятие 15, пусто 15), `BAG_HEAL` 0.5, `BAG_SILVER` 80, `BAG_CURSE` 0.25 (доля текущего HP), `RICH_SILVER` 150 («много серебра»); «мало HP» — меньше 35 %.
 Ларёк в зале — `rooms/shop_stall.gd`: `DWARF_SCALE` 0.62, цвета навеса `CLOTH_A/B`.
+
+## Испытания (блок Ф, GDD 15.1)
+
+`run/trials/*.tres` (`run/trial_def.gd`, `TrialDef`): `host` (odin / hild / loki), `kind` (вид условия), `time_limit`, `target`, `allowed_sources` / `forbidden_sources`, `extra_waves`, награда `reward_glory` (GDD 15.2: 40–80) или `reward_rune` (руна 1 из 3 сразу на уровень выше), `weight`, пулы реплик (`<host>.trial_intro / trial_win / trial_fail`).
+| Испытание | Условие | Награда |
+|---|---|---|
+| `odin_no_ranged` | зачистить зал без единого выстрела ренжем | 50 Славы |
+| `odin_time` | зачистить зал за `time_limit` 40 с | 60 Славы |
+| `odin_slam_hammer` | добивать только ударом-приземлением и молотом (`forbidden_sources`: melee*, ranged, dash) | особая руна |
+| `hild_record` | `target` 10 убийств за 30 с, зал получает `extra_waves` 2 доп. волны | 80 Славы |
+| `loki_lava` | пол — лава: стоять на полу дольше `lava_grace` 0.4 с — ожог `lava_tick_damage` 6 HP каждые `lava_tick` 0.5 с; ожог суммарно больше `lava_max_burn` 4 с — провал | особая руна |
+Дверь «Испытание» — 10 % (`run/rewards/trial.tres`).

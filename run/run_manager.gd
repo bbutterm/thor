@@ -7,6 +7,8 @@ signal kill_streak(count: int)
 signal mjolnir_traits_changed(traits: Array)
 ## Серебро — валюта забега (блок К, GDD 15.2), сгорает после смерти
 signal silver_changed(total: int)
+## Убийство врага с источником добивания (испытания, блок Ф)
+signal enemy_killed(source: String)
 
 const BODIES_DIR := "res://run/bodies/"
 const RUNES_DIR := "res://run/runes/"
@@ -23,6 +25,8 @@ const MJOLNIR_TRAITS_DIR := "res://weapons/mjolnir_traits/"
 ## Двери-награды (блок И, GDD 15.1): награды и структура мира
 const REWARDS_DIR := "res://run/rewards/"
 const MAP_PATH := "res://run/maps/midgard.tres"
+## Испытания (блок Ф): run/trials/*.tres
+const TRIALS_DIR := "res://run/trials/"
 
 ## Залов до босса, если нет карты мира (с картой — RunMap.rooms, Мидгард: 7)
 @export var rooms_per_run: int = 7
@@ -62,6 +66,9 @@ var all_mjolnir_traits: Array[MjolnirTrait] = []
 ## Двери-награды (блок И): структура мира, награды залов
 var map: RunMap
 var all_rewards: Array[RewardDef] = []
+var all_trials: Array[TrialDef] = []
+## Для тестов: id испытания следующего зала «Испытание» ("" — случайное)
+var forced_trial: String = ""
 ## Награда каждого зала по индексу (id RewardDef); зал без записи — обычный бой
 var room_rewards: Array[String] = []
 ## Сколько раз в этом мире входили в зал с наградой (id → n): ларёк гарантирован shop_per_world раз
@@ -93,6 +100,7 @@ func _ready() -> void:
 	all_runes.assign(_load_dir(RUNES_DIR))
 	all_mjolnir_traits.assign(_load_dir(MJOLNIR_TRAITS_DIR))
 	all_rewards.assign(_load_dir(REWARDS_DIR))
+	all_trials.assign(_load_dir(TRIALS_DIR))
 	map = load(MAP_PATH) as RunMap if ResourceLoader.exists(MAP_PATH) else null
 	# Модели, анимации и звуки грузятся в фоне, пока игрок в меню (см. AssetCache)
 	AssetCache.start()
@@ -175,6 +183,7 @@ func add_glory(amount: int) -> void:
 
 ## Вызывается при убийстве врага. Считает мультикиллы и серии.
 func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: String = "", base_glory: int = -1) -> void:
+	enemy_killed.emit(source)
 	kills += 1
 	streak += 1
 	best_streak = maxi(best_streak, streak)

@@ -89,6 +89,8 @@ func _build() -> void:
 	coin.set_physics_process(false)
 	coin.remove_from_group("silver_coins")
 	coin.position = right * 0.9 + Vector3(0, 0.6, 0)
+	# Лава испытания Локи (блок Ф)
+	TrialRunner.warmup_samples(self, right)
 	var sign := ShopStall.make_sign_label()
 	add_child(sign)
 	sign.position = Vector3(0, 1.6, 0)

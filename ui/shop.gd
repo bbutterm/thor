@@ -217,7 +217,7 @@ func try_buy(it: ShopItemDef, arg: String = "") -> Dictionary:
 	if arg == "" and not subs.is_empty() and Shop.can_buy(game, it):
 		_sub_item = it
 		subs.append({"id": "", "title": "Передумал", "desc": "Брокк сделает вид, что не обиделся", "glyph": "ᚾ", "color": Color(0.6, 0.6, 0.6)})
-		visible = false
+		# Второй шаг — поверх ларька (слой 10), ларёк не прячем: вложенный слой мог бы скрыться вместе с ним
 		_sub.open(it.title.to_upper(), "Выбери", subs, "eitri" if it.by_eitri else "brokk", "smug")
 		return {"ok": false, "text": "выбор"}
 	var res := Shop.buy(game, it, arg)
@@ -250,7 +250,7 @@ func _on_sub_picked(id: String) -> void:
 	try_buy(it, id)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not visible:
+	if not visible or _sub.visible:
 		return
 	if event.is_action_pressed("pause") or event.is_action_pressed("interact"):
 		if Time.get_ticks_msec() / 1000.0 - _open_time > 0.25:

@@ -181,6 +181,16 @@ func _run() -> void:
 		await shot("14_shop_screen")
 		game.rewards.shop.close()
 		await wait(0.3)
+	# Испытание Локи «пол — лава» (блок Ф): лава, панель испытания, реплика
+	Run.room_rewards.assign(["combat", "trial"])
+	Run.forced_trial = "loki_lava"
+	game.call("_load_room")
+	await wait(2.4)
+	for en in game.room.alive_enemies():
+		en.set_physics_process(false)
+	p.rotation_target = Vector2(-0.25, 0.0)
+	await wait(0.3)
+	await shot("15_trial_lava")
 	p.take_damage(99999.0, Vector3.ZERO, true)
 	await wait(2.2)
 	await shot("09_death")

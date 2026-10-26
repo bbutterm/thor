@@ -84,3 +84,8 @@ godot --headless --path . --fixed-fps 60 res://tests/weapon_test.tscn  # ору�
 - Ларёк: зал `rooms/shop_room.tscn` (генератор: `shop_room_def()` + узел `ShopStall`), ларёк и гномы — `rooms/shop_stall.gd` (собирается при запуске, E у прилавка), товары — `run/shop/*.tres` (`ShopItemDef`), логика — `run/shop.gd` (`Shop.price/buy/reaction_pool`), экран — `ui/shop.gd` (`ShopScreen`, `RewardFlow.open_shop()`). Реплики — `data/dialogues/dwarves.json` (пулы `shop_*`, `eitri`, сцена `dwarves_shop_first`).
 - «Обслуживание Мьёльнира» без трейтов — `Run.trait_rerolls`, кнопка «ПЕРЕБРОС [R]» в `ui/trait_pick.gd`.
 - Проверка: `godot --headless --path . --fixed-fps 60 res://tests/shop_test.tscn`.
+
+## Испытания (блок Ф)
+- `run/trial_def.gd` + `run/trials/*.tres` (`TrialDef`: ведущий, вид условия, числа, награда, пулы реплик) — новое испытание = новый .tres. `run/trial_runner.gd` (`TrialRunner`, узел `Trial` в зале) — условие, таймер, лава, итог; `ui/trial_hud.gd` — панель испытания. Убийства с источником — сигнал `Run.enemy_killed(source)`.
+- `RewardFlow`: дверь «Испытание» → `TrialRunner.attach` при загрузке зала, `start` вместе с волнами, награда в `_grant_trial` (Слава или особая руна, провал — ничего). Тесты: `Run.forced_trial = "<id>"`.
+- Проверка: `godot --headless --path . --fixed-fps 60 res://tests/trial_test.tscn`.

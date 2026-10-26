@@ -15,10 +15,12 @@ var choice: ChoicePick
 var shop: ShopScreen
 ## Двери текущего зала
 var doors: Array[RewardDoor] = []
-## Что сейчас выбирается в RunePick: "rune" / "freya" / "upgrade"
+## Что сейчас выбирается в RunePick: "rune" / "freya" / "upgrade" (отдых) / "trial" (испытание) / "shop" (ларёк)
 var rune_mode: String = "rune"
 var _choice_kind: String = ""
 var _granted: bool = false
+## Испытание текущего зала (блок Ф), null — нет
+var trial: TrialRunner
 
 static func attach(g: Game) -> RewardFlow:
 	var f := RewardFlow.new()
@@ -57,6 +59,12 @@ func on_room_loaded(room: Room) -> void:
 	if id == "elite":
 		room.elite_chance = map().elite_room_chance
 		room.max_elites = map().elite_room_max
+	trial = null
+	if id == "trial":
+		var d := TrialRunner.pick(Run.forced_trial)
+		Run.forced_trial = ""
+		if d:
+			trial = TrialRunner.attach(room, d)
 
 ## Вместо room.start: тихий зал не будит врагов, награда — сразу.
 func start_room(room: Room, player: Player) -> void:
@@ -66,6 +74,8 @@ func start_room(room: Room, player: Player) -> void:
 		_start_peaceful(room)
 	else:
 		room.start(player)
+		if trial and is_instance_valid(trial):
+			trial.start(player)
 
 func _start_peaceful(room: Room) -> void:
 	match Run.current_reward():
@@ -123,6 +133,8 @@ func grant() -> void:
 			_offer_rest()
 		"loki":
 			_offer_loki()
+		"trial":
+			_grant_trial()
 		_:
 			_offer_runes("rune")
 
@@ -140,6 +152,8 @@ func _offer_runes(mode: String) -> void:
 	if mode == "freya":
 		title = "БЛАГОСЛОВЕНИЕ ФРЕЙИ — РУНА СРАЗУ УР. %d" % map().freya_rune_level
 		Dialogue.bark_pool("freya.blessing")
+	elif mode == "trial":
+		title = "РУНА ИСПЫТАНИЯ — СРАЗУ НА УРОВЕНЬ ВЫШЕ"
 	game.rune_pick.open(choices, title)
 
 ## Game._on_rune_picked уже добавил руну; Фрейя добавляет ещё уровни (повтор руны = уровень).
@@ -158,6 +172,10 @@ func on_rune_picked(rune: RuneDef) -> bool:
 			Run.add_rune(rune)
 		Dialogue.bark_pool("freya.blessing_pick")
 		game.hud.toast("ᛒ %s — уровень %d" % [rune.title, Run.rune_count(rune.id)])
+	elif rune_mode == "trial":
+		if Run.rune_count(rune.id) < map().rune_max_level:
+			Run.add_rune(rune)
+		game.hud.toast("%s %s — уровень %d" % [rune.glyph, rune.title, Run.rune_count(rune.id)])
 	elif rune_mode == "upgrade":
 		game.hud.toast("%s %s — уровень %d" % [rune.glyph, rune.title, Run.rune_count(rune.id)])
 	rune_mode = "rune"
@@ -187,6 +205,26 @@ func _grant_elite() -> void:
 ## Серебро (блок К): монеты рассыпаются перед Тором и летят к нему.
 func _give_silver(amount: int) -> void:
 	Silver.drop(game.room, _front_point(1.5), amount)
+
+# --- Испытание (блок Ф) ---
+
+## Испытание пройдено — Слава (40–80) или особая руна (сразу на уровень выше); провал — ничего.
+func _grant_trial() -> void:
+	var t := trial if trial and is_instance_valid(trial) else null
+	if t and t.is_running():
+		# Зал зачищен, а итог ещё не подведён (условие «до конца зала»)
+		t._on_room_cleared()
+	if t == null or not t.is_success():
+		game.hud.toast("ИСПЫТАНИЕ ПРОВАЛЕНО — БЕЗ НАГРАДЫ")
+		finish()
+		return
+	if t.def.reward_rune:
+		game.hud.toast("ИСПЫТАНИЕ ПРОЙДЕНО!")
+		_offer_runes("trial")
+		return
+	Run.add_glory(t.def.reward_glory)
+	game.hud.toast("ИСПЫТАНИЕ ПРОЙДЕНО: +%d СЛАВЫ" % t.def.reward_glory)
+	finish()
 
 # --- Отдых ---
 
