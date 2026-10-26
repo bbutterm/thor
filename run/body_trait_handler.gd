@@ -20,7 +20,7 @@ var def: PassiveDef
 ##   "ranged_move_mult" (float) — замедление ренжем; "air_dash" (bool) — рывок в воздухе;
 ##   "aim_wobble_deg" (float) — покачивание прицела; "start_weapon_level" (int) — уровень стартового оружия;
 ##   "parry_window_mult", "parry_heal" — окно парирования (TODO: парирования ещё нет);
-##   "sharpen_cost_mult" — заточка у Эйтри (TODO: ларька ещё нет).
+##   "sharpen_cost_mult" — заточка у Эйтри (run/shop.gd → Shop.price).
 func modify(_stat: StringName, value: Variant) -> Variant:
 	return value
 

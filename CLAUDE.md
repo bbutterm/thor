@@ -81,3 +81,20 @@ godot --headless --path . --fixed-fps 60 res://tests/rage_test.tscn    # Яро�
 - `scripts/save_game.gd` (автозагрузка `Save`) — `user://save.json` с версией и миграцией. Тесты (`res://tests/*`) и `--selftest` пишут в `user://test_save.json`.
 - `run/unlock_def.gd` + `run/unlocks/*.tres` — открытия «Плана тренировок» (GDD 15.3): `kind` weapon/trait/body/rune/perk, `target_id` (+`extra_target_ids`), цена. **Пулы:** `Save.is_in_pool(kind, id)` — закрытое не выпадает (руны и тела уже подключены в `run_manager.gd`; оружию и трейтам — подключить в своих пулах). Id целей: оружие `spear, scythe, pickaxe, knife, assault_rifle, smg, sawed_off, nailgun, rocket_launcher`; трейты `boomerang, ice_trail, heaviness, lightning_rod, storm, earthquake, two_hammers, sky_thunder`; тела `priest, soldier, skald, courier, smith, shieldmaiden`. Нет определения цели в игре (`weapons/defs/`, `weapons/mjolnir_traits/`, `run/bodies/`, `run/runes/`) — на экране «скоро». Перки: `Save.perk("catch_window")` и т. п.; +HP/+рывок/скорость применяет `Save.apply_permanent_to_body()` в `Game._ready`.
 - `ui/training_plan.gd` — экран «План тренировок Одина»: после диалога у дивана и из главного меню.
+
+## Структура забега (блок И)
+- Двери-награды (GDD 15.1): `run/run_map.gd` (`RunMap`) + `run/maps/midgard.tres` — структура мира (7 залов, мини-босс в 4-м, 2–3 двери, числа наград); `run/reward_def.gd` + `run/rewards/*.tres` (`RewardDef`) — награды дверей, частоты, иконки `sprites/ui/icons/door_<icon>.png`; `run/reward_flow.gd` (`RewardFlow`, узел `Game.rewards`) — выдача награды зала и показ дверей; `rooms/reward_door.gd` (`RewardDoor`) — арка с иконкой и триггером; `ui/choice_pick.gd` (`ChoicePick`) — выбор из 2–3 с портретом (отдых, Локи).
+- Состояние в `Run`: `room_order` (сцены залов на мир), `room_rewards` (награда каждого зала), `reward_visits`, `current_reward()`, `roll_door_offers()`, `choose_door(id)`, `is_peaceful_room()` (отдых/ларёк — без врагов, `room.start` не вызывается).
+- Тесты задают порядок залов через `Run.room_order` (после `Run.start_run`), наборы дверей — `Run.forced_offers`; `Run.doors_enabled = false` — старая одна дверь после руны. Общие шаги тестов — `tests/door_helper.gd` (`resolve_reward`, `take_door`).
+- Проверка: `godot --headless --path . --fixed-fps 60 res://tests/run_map_test.tscn`.
+
+## Серебро и ларёк (блок К)
+- Серебро — `Run.silver` (`add_silver`, `spend_silver`, сигнал `silver_changed`), сгорает с новым забегом. Источники — `run/silver.gd` (`Silver.drop/on_enemy_died`, числа в `run/economy.tres`): враги через `Loot.on_enemy_died`, бочки — `run/barrel_watch.gd` (узел в `RewardFlow`; бочка «разбита», если отброшена быстрее порога), сундук — строка в `weapons/chest.gd`. Монета — `run/silver_coin.gd` (общий меш-диск и материал `FX`). Счётчик — `ui/silver_hud.gd` (встраивается под Славу в HUD).
+- Ларёк: зал `rooms/shop_room.tscn` (генератор: `shop_room_def()` + узел `ShopStall`), ларёк и гномы — `rooms/shop_stall.gd` (собирается при запуске, E у прилавка), товары — `run/shop/*.tres` (`ShopItemDef`), логика — `run/shop.gd` (`Shop.price/buy/reaction_pool`), экран — `ui/shop.gd` (`ShopScreen`, `RewardFlow.open_shop()`). Реплики — `data/dialogues/dwarves.json` (пулы `shop_*`, `eitri`, сцена `dwarves_shop_first`).
+- «Обслуживание Мьёльнира» без трейтов — `Run.trait_rerolls`, кнопка «ПЕРЕБРОС [R]» в `ui/trait_pick.gd`.
+- Проверка: `godot --headless --path . --fixed-fps 60 res://tests/shop_test.tscn`.
+
+## Испытания (блок Ф)
+- `run/trial_def.gd` + `run/trials/*.tres` (`TrialDef`: ведущий, вид условия, числа, награда, пулы реплик) — новое испытание = новый .tres. `run/trial_runner.gd` (`TrialRunner`, узел `Trial` в зале) — условие, таймер, лава, итог; `ui/trial_hud.gd` — панель испытания. Убийства с источником — сигнал `Run.enemy_killed(source)`.
+- `RewardFlow`: дверь «Испытание» → `TrialRunner.attach` при загрузке зала, `start` вместе с волнами, награда в `_grant_trial` (Слава или особая руна, провал — ничего). Тесты: `Run.forced_trial = "<id>"`.
+- Проверка: `godot --headless --path . --fixed-fps 60 res://tests/trial_test.tscn`.

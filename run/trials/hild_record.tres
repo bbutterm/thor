@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TrialDef" format=3]
+
+[ext_resource type="Script" path="res://run/trial_def.gd" id="1_trial"]
+
+[resource]
+script = ExtResource("1_trial")
+id = "hild_record"
+host = "hild"
+title = "Рекорд Хильд"
+condition = "Побей рекорд Хильд: 10 убийств за 30 секунд"
+kind = "kill_count"
+time_limit = 30.0
+target = 10
+extra_waves = 2
+reward_glory = 80
+reward_rune = false
+weight = 1.0
+intro_pool = "hild.challenge"

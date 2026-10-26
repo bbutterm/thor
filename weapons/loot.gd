@@ -218,21 +218,11 @@ static func refresh_elite_label(enemy: Enemy) -> void:
 static func is_elite(enemy: Node) -> bool:
 	return enemy != null and enemy.has_meta("elite")
 
-## Серебро (блок К): если в игре уже есть кошелёк — Run.add_silver(n) или автозагрузка Silver.add(n).
+## Серебро элиты — монетами, как у остальных (Silver.drop, кошелёк Run.silver).
 static func give_silver(amount: int, pos: Vector3, parent: Node) -> bool:
-	var tree := Engine.get_main_loop() as SceneTree
-	var target: Object = null
-	var method := ""
-	if Run.has_method("add_silver"):
-		target = Run
-		method = "add_silver"
-	elif tree and tree.root.has_node("Silver") and tree.root.get_node("Silver").has_method("add"):
-		target = tree.root.get_node("Silver")
-		method = "add"
-	if target == null:
+	if amount <= 0 or parent == null:
 		return false
-	target.call(method, amount)
-	FX.damage_number(parent, pos + Vector3(0, 1.6, 0), amount, Color(0.85, 0.88, 0.95), true)
+	Silver.drop(parent, pos, amount)
 	return true
 
 ## Смерть врага: элита гарантированно роняет оружие (60 % мили / 40 % ренж) или 10 серебра (GDD 12.4),
@@ -246,10 +236,12 @@ static func on_enemy_died(enemy: Enemy, _source: String) -> void:
 	# Наёмник Локи роняет патроны всегда (GDD 12.1)
 	if enemy.kind == Enemy.Kind.MERC:
 		spawn_ammo(parent, pos)
+	# Серебро (блок К, GDD 15.2): корм 0–1, боец 2, особый 3, элита 10
+	Silver.on_enemy_died(enemy)
 	if is_elite(enemy):
 		var dropped := false
 		if randf() < elite_silver_chance:
-			dropped = give_silver(elite_silver, pos, parent)
+			dropped = give_silver(Silver.cfg().elite_silver, pos, parent)
 		if not dropped:
 			var cls := "melee" if randf() < 0.6 else "ranged"
 			var d := random_def(cls)
@@ -259,7 +251,7 @@ static func on_enemy_died(enemy: Enemy, _source: String) -> void:
 				spawn_weapon(parent, pos, WeaponItem.create(d, random_level()), pos + Vector3(0, 1.5, 0))
 				dropped = true
 		if not dropped:
-			dropped = give_silver(elite_silver, pos, parent)
+			dropped = give_silver(Silver.cfg().elite_silver, pos, parent)
 		if (not dropped or (h and h.ranged)) and enemy.kind != Enemy.Kind.MERC:
 			spawn_ammo(parent, pos + Vector3(0.6, 0, 0.3))
 		return
@@ -270,9 +262,8 @@ static func on_enemy_died(enemy: Enemy, _source: String) -> void:
 		if randf() < chance:
 			spawn_ammo(parent, pos)
 
-## Элита: доля дропа «10 серебра» вместо оружия (если серебро уже есть в игре) и сколько серебра
+## Элита: доля дропа «10 серебра» (сколько — Economy.elite_silver) вместо оружия
 static var elite_silver_chance: float = 0.4
-static var elite_silver: int = 10
 
 # --- Сундук ---
 
@@ -280,7 +271,11 @@ static var elite_silver: int = 10
 static func on_room_cleared(room: Node3D, pos: Vector3, chance: float) -> void:
 	if Run.is_boss_room():
 		return
-	if Run.room_index > 0 and randf() >= chance:
+	# Двери-награды (блок И): сундук — только в зале, куда вошли через дверь «Сундук»
+	if Run.doors_enabled:
+		if Run.current_reward() != "chest":
+			return
+	elif Run.room_index > 0 and randf() >= chance:
 		return
 	# Последний враг пал в низине/пропасти — ставим сундук рядом с игроком
 	var p := (Engine.get_main_loop() as SceneTree).get_first_node_in_group("player") as Player

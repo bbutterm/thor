@@ -1,6 +1,6 @@
 extends BodyTraitHandler
 ## «Своя наковальня» (Кузнец): стартовое оружие сразу +1 уровень; заточка у Эйтри −50 %.
-## TODO: заточки у Эйтри ещё нет (ларёк — блок К): ларёк должен брать цену × player.modify_stat("sharpen_cost_mult", 1.0).
+## Ларёк (run/shop.gd) берёт цену заточки × player.modify_stat("sharpen_cost_mult", 1.0).
 
 @export var level_bonus: int = 1
 @export var sharpen_cost_mult: float = 0.5

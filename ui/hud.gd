@@ -84,6 +84,8 @@ func bind_player(p: Player) -> void:
 	WeaponHUD.attach(self, p)
 	# Шкала Ярости и виньетка берсерка — ui/rage_hud.gd (блок П)
 	RageHUD.attach(self, p)
+	# Серебро под Славой — ui/silver_hud.gd (блок К)
+	SilverHUD.attach(self)
 
 func _build() -> void:
 	var root := Control.new()

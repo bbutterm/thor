@@ -69,3 +69,5 @@ func interact(_holder: WeaponHolder) -> void:
 		p.choice_group = group
 		i += 1
 	Loot.spawn_ammo(get_parent(), global_position + fwd * 1.6)
+	# Серебро из сундука (блок К, GDD 15.2: 20)
+	Silver.drop(get_parent(), global_position + Vector3(0, 0.4, 0), Silver.cfg().chest_silver)
