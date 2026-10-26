@@ -208,3 +208,9 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 - **Тела** — `run/bodies/*.tres` (`BodyDef`): + `movement_style`, `passive`, `flaw` (`run/passives/*.tres`, `PassiveDef`), `price`, `odin_comment`. 9 тел по GDD 6, закрытые открываются в «Плане тренировок».
 - Генератор сцен больше не перезаписывает существующие `run/bodies` и `run/runes` — это данные, правь их в инспекторе.
 
+## Музыка — автозагрузка `scripts/music.gd` (`Music`), треки `sounds/music/<трек>/<слой>.ogg`
+
+`bpm` 120, `beats_per_bar` 4 (переходы слоёв — на доле, треков — на такте), `volume_db` −6, `layer_fade` 0.6 с, `track_fade` 1.2 с, `muffle_cutoff_hz` 650 (пауза, диалог, смерть), `stinger_min_power` 0.6 (удар-приземление с такой силой — стингер), `stinger_duck_db` −18 / `stinger_duck_time` 0.18 с (провал музыки под стингер; во время hit-stop длится дольше).
+Слои: `base` (фон: бас и пэды) → `drums` (бой: есть живые враги) → `full` (Ярость: у игрока `is_berserk()`). Треки: `menu`, `plan` («План тренировок»), `midgard`, `miniboss`, `boss`, `shop` (включается `Music.play_track("shop")`).
+Заглушки синтезирует `python3 tools/make_sfx.py music` (нужен ffmpeg). Настоящие треки — положить файлы с теми же именами (.ogg или .wav), все слои трека одной длины.
+

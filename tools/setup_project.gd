@@ -60,6 +60,7 @@ func _init() -> void:
 	ProjectSettings.set_setting("autoload/Run", "*res://run/run_manager.gd")
 	ProjectSettings.set_setting("autoload/Odin", "*res://run/odin.gd")
 	ProjectSettings.set_setting("autoload/Perf", "*res://scripts/perf.gd")
+	ProjectSettings.set_setting("autoload/Music", "*res://scripts/music.gd")
 	ProjectSettings.set_setting("autoload/Save", "*res://scripts/save_game.gd")
 	ProjectSettings.set_setting("autoload/Dialogue", "*res://scripts/dialogue_manager.gd")
 	ProjectSettings.set_setting("autoload/ComicFX", "*res://scripts/comic_fx.gd")

@@ -258,4 +258,180 @@ hinge = bp(rng.standard_normal(n), 500, 1600) * np.sin(np.pi * np.linspace(0, 1,
 tt = t(0.8)
 chord = sum(np.sin(2 * np.pi * f * tt) * np.exp(-tt * (2.5 + i)) * np.clip((tt - 0.25) * 20, 0, 1) for i, f in enumerate([392.0, 493.9, 587.3]))
 save("chest_open", hinge * 0.5 + chord, 0.6)
+
+# ---------------- Музыка-заглушки (блок Р, GDD 21) ----------------
+# Петли 8 тактов на 120 BPM (16 с), слои одного трека одной длины: base (бас + пэд), drums (барабаны),
+# full (лид + «горловой» гул). Пишет OGG в sounds/music/<трек>/<слой>.ogg (нужен ffmpeg).
+# Настоящие треки — положить файлы с теми же именами, код не меняется.
+import subprocess
+MUSIC_OUT = os.path.join(os.path.dirname(__file__), "..", "sounds", "music")
+mrng = np.random.default_rng(2101)
+MSR = 32000
+BPM = 120.0
+BEAT = 60.0 / BPM
+BARS = 8
+LOOP = BEAT * 4 * BARS
+
+
+def mt(dur):
+    return np.linspace(0, dur, int(MSR * dur), endpoint=False)
+
+
+def mlp(sig, f, order=2):
+    return sosfilt(butter(order, f, btype="low", fs=MSR, output="sos"), sig)
+
+
+def mhp(sig, f, order=2):
+    return sosfilt(butter(order, f, btype="high", fs=MSR, output="sos"), sig)
+
+
+def note_hz(n):
+    """MIDI-номер → Гц."""
+    return 440.0 * 2 ** ((n - 69) / 12.0)
+
+
+def place(buf, sig, at):
+    i = int(at * MSR) % len(buf)
+    end = min(len(buf), i + len(sig))
+    buf[i:end] += sig[:end - i]
+    if i + len(sig) > len(buf):  # перенос хвоста в начало — петля бесшовная
+        rest = i + len(sig) - len(buf)
+        buf[:rest] += sig[end - i:end - i + rest]
+
+
+def saw(f, dur, detune=0.0):
+    tt = mt(dur)
+    out = 2 * ((tt * f) % 1.0) - 1
+    if detune:
+        out = 0.5 * out + 0.5 * (2 * ((tt * f * (1 + detune)) % 1.0) - 1)
+    return out
+
+
+def adsr(n, a=0.01, r=0.1):
+    e = np.ones(n)
+    ai, ri = max(1, int(MSR * a)), max(1, int(MSR * r))
+    e[:ai] = np.linspace(0, 1, ai)
+    e[-ri:] *= np.linspace(1, 0, ri)
+    return e
+
+
+def kick():
+    tt = mt(0.35)
+    ph = 2 * np.pi * np.cumsum(np.linspace(120, 42, len(tt))) / MSR
+    return np.sin(ph) * np.exp(-tt * 9) * 1.2
+
+
+def snare():
+    tt = mt(0.25)
+    return mhp(mrng.standard_normal(len(tt)), 1500) * np.exp(-tt * 16) * 0.6 + np.sin(2 * np.pi * 190 * tt) * np.exp(-tt * 25) * 0.5
+
+
+def hat():
+    tt = mt(0.06)
+    return mhp(mrng.standard_normal(len(tt)), 7000) * np.exp(-tt * 70) * 0.25
+
+
+def tom(f):
+    tt = mt(0.4)
+    ph = 2 * np.pi * np.cumsum(np.linspace(f, f * 0.6, len(tt))) / MSR
+    return np.sin(ph) * np.exp(-tt * 7) * 0.8
+
+
+def bass_line(roots, dist=2.5, cutoff=900):
+    """Восьмые ноты баса по корням тактов (MIDI), перегруз — как в darksynth."""
+    buf = np.zeros(int(MSR * LOOP))
+    for bar, root in enumerate(roots):
+        for k in range(8):
+            n = root + (12 if k in (3, 7) else 0)
+            sig = saw(note_hz(n), BEAT / 2 * 0.95, 0.006) * adsr(int(MSR * BEAT / 2 * 0.95), 0.003, 0.03)
+            place(buf, sig, (bar * 4 + k / 2) * BEAT)
+    return np.tanh(mlp(buf, cutoff) * dist)
+
+
+def pad(roots, third=3, cutoff=1400):
+    buf = np.zeros(int(MSR * LOOP))
+    for bar, root in enumerate(roots):
+        dur = BEAT * 4
+        n = int(MSR * dur)
+        chord = sum(saw(note_hz(root + 12 + iv), dur, 0.01) for iv in (0, third, 7))
+        place(buf, chord * adsr(n, 0.3, 0.4) * 0.25, bar * 4 * BEAT)
+    return mlp(buf, cutoff)
+
+
+def drums(pattern="drive", war=True):
+    buf = np.zeros(int(MSR * LOOP))
+    for bar in range(BARS):
+        for b in range(4):
+            at = (bar * 4 + b) * BEAT
+            place(buf, kick(), at)
+            if pattern == "drive" and b in (1, 3):
+                place(buf, snare(), at)
+            for h in range(2):
+                place(buf, hat(), at + h * BEAT / 2)
+        if war and bar % 2 == 1:  # боевые барабаны — дробь томов в конце каждого второго такта
+            for k, f in enumerate([140, 120, 100, 90]):
+                place(buf, tom(f), (bar * 4 + 3 + k / 4) * BEAT)
+    return buf
+
+
+def lead(roots, scale=(0, 3, 5, 7, 10), cutoff=3500):
+    """Арпеджио-лид шестнадцатыми + горловой гул (низкий пэд с формантой)."""
+    buf = np.zeros(int(MSR * LOOP))
+    step = BEAT / 4
+    for bar, root in enumerate(roots):
+        for k in range(16):
+            n = root + 24 + scale[(k * 2 + bar) % len(scale)] + (12 if k % 8 == 7 else 0)
+            dur = step * 0.9
+            place(buf, saw(note_hz(n), dur, 0.004) * adsr(int(MSR * dur), 0.002, 0.04) * 0.35, (bar * 4 + k / 4) * BEAT)
+    drone = np.zeros(int(MSR * LOOP))
+    tt = mt(LOOP)
+    root = roots[0]
+    drone += saw(note_hz(root - 12), LOOP, 0.003) * (0.6 + 0.4 * np.sin(2 * np.pi * tt / (BEAT * 8)))
+    drone = sosfilt(butter(2, [250, 700], btype="band", fs=MSR, output="sos"), drone) * 1.2
+    return mlp(buf, cutoff) + drone
+
+
+def save_music(track, layer, sig, gain=0.8):
+    if ONLY and not any(("music_" + track).startswith(p) or p == "music" for p in ONLY):
+        return
+    d = os.path.join(MUSIC_OUT, track)
+    os.makedirs(d, exist_ok=True)
+    sig = sig / (np.max(np.abs(sig)) + 1e-9) * gain
+    tmp = os.path.join(d, layer + ".tmp.wav")
+    wavfile.write(tmp, MSR, (sig * 32767).astype(np.int16))
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", tmp, "-c:a", "libvorbis", "-q:a", "3", os.path.join(d, layer + ".ogg")], check=True)
+    os.remove(tmp)
+    print("   music", track, layer)
+
+
+if not ONLY or any(p.startswith("music") for p in ONLY):
+    print("Музыка…")
+    # Мидгард: пульсирующий darksynth, ля минор, боевые барабаны (GDD 21)
+    mid = [45, 45, 41, 43, 45, 45, 48, 43]
+    save_music("midgard", "base", bass_line(mid) + pad(mid) * 0.6, 0.75)
+    save_music("midgard", "drums", drums("drive", True), 0.7)
+    save_music("midgard", "full", lead(mid), 0.55)
+    # Ярл Бьорн: тяжелее, ре минор, более злой бас
+    jarl = [38, 38, 41, 36, 38, 38, 34, 36]
+    save_music("boss", "base", bass_line(jarl, 4.0, 700) + pad(jarl) * 0.5, 0.8)
+    save_music("boss", "drums", drums("drive", True), 0.75)
+    save_music("boss", "full", lead(jarl, (0, 1, 5, 7, 8), 4000), 0.55)
+    # Мини-босс: короткая агрессивная петля
+    mb = [40, 40, 43, 38, 40, 40, 43, 45]
+    save_music("miniboss", "base", bass_line(mb, 3.5, 800), 0.8)
+    save_music("miniboss", "drums", drums("drive", True), 0.75)
+    # Меню: медленный ретровейв — только пэд и гул
+    menu = [45, 41, 48, 43, 45, 41, 48, 43]
+    save_music("menu", "base", pad(menu, 3, 900) + lead(menu, (0, 7, 12, 7, 3), 1200) * 0.25, 0.6)
+    # «План тренировок»: расслабленный лоу-фай — мягкий пэд в мажоре и тихие барабаны
+    plan = [48, 45, 41, 43, 48, 45, 41, 43]
+    save_music("plan", "base", pad(plan, 4, 1100) + mlp(drums("soft", False), 2500) * 0.35, 0.6)
+    # Ларёк: смешная «лифтовая» мелодия
+    shop = [48, 53, 55, 48, 48, 53, 55, 55]
+    save_music("shop", "base", pad(shop, 4, 2000) * 0.7 + lead(shop, (0, 4, 7, 12, 9), 2600) * 0.6, 0.6)
+    # Стингер удара-приземления: бас-удар + тарелка
+    tt = mt(1.6)
+    st = np.tanh(np.sin(2 * np.pi * np.cumsum(np.linspace(90, 35, len(tt))) / MSR) * np.exp(-tt * 3) * 3) + mhp(mrng.standard_normal(len(tt)), 5000) * np.exp(-tt * 2.5) * 0.3
+    save_music("stingers", "slam", st, 0.9)
+
 print("Готово:", OUT)

@@ -12,6 +12,7 @@
 - `run/run_manager.gd` (автозагрузка `Run`) — забег, Слава, руны; `run/odin.gd` (`Odin`) — короткие реплики Одина, обёртка над `Dialogue` (пулы `data/dialogues/odin.json`).
 - `ui/` — HUD, выбор рун, пауза, экран конца, меню (всё строится кодом, `.tscn` — пустые обёртки со скриптом).
 - `scripts/fx.gd` — hit-stop (тикает из `Run._process`), цифры урона, молнии, кольца, искры. Материалы эффектов — общие (`FX.fx_apply`, шейдеры `shaders/fx_*.gdshader`, цвет per-instance), меши — общие (`FX.shared_mesh`).
+- `scripts/music.gd` (автозагрузка `Music`) — адаптивная музыка: слои `base/drums/full` трека из `sounds/music/<трек>/`, переходы в такт, фильтр на паузе/в диалоге, стингер на удар-приземление; трек и слой выбираются сами по сцене (`Music.auto`).
 - `scripts/perf.gd` (автозагрузка `Perf`) — F3-оверлей, лог фризов `user://hitches.log`, `Perf.mark("событие")` в игровом коде, счётчики компиляций пайплайнов (`pso_draw` = фриз на отрисовке).
 - `scripts/asset_cache.gd` (`AssetCache`) — фоновая загрузка и удержание моделей/анимаций/звуков (старт в `Run._ready`, ожидание в `Game._ready`).
 - `scripts/shader_warmup.gd` (`ShaderWarmup`) — прогрев шейдеров при входе в каждый зал (под затемнением).

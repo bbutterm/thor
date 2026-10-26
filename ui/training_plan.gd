@@ -129,6 +129,7 @@ func _build() -> void:
 
 ## Показывает экран. back_text — подпись второй кнопки («В меню» / «Назад»).
 func open(back_text: String = "В меню") -> void:
+	add_to_group("training_plan")  # музыка «Плана тренировок» (scripts/music.gd)
 	visible = true
 	_was_paused = get_tree().paused
 	get_tree().paused = true
