@@ -1,18 +1,26 @@
 extends Node
 ## Автозагрузка «Save» — постоянное сохранение между забегами: user://save.json.
-## Счётчики забегов и смертей, причины смертей, просмотренные диалоги и выборы, рекорды.
+## Счётчики забегов и смертей, причины смертей, просмотренные диалоги и выборы, рекорды,
+## накопленная Слава и открытия «Плана тренировок» (run/unlocks/*.tres).
+## Для пулов других систем: Save.is_in_pool("weapon", "spear") — закрытое не выпадает.
 ## Формат версионирован: при изменении — подними CURRENT_VERSION и добавь шаг в _migrate().
 ## Тесты (сцены из res://tests/) и --selftest пишут в user://test_save.json и начинают с чистого листа,
 ## чтобы не портить настоящее сохранение. Явный путь: `-- --save=user://my.json` или use_path().
 
 signal changed
 
-const CURRENT_VERSION := 1
+const CURRENT_VERSION := 2
+const UNLOCKS_DIR := "res://run/unlocks/"
+## Где искать определения оружия/трейтов (для «скоро» на экране плана)
+const TARGET_DIRS := {"weapon": "res://weapons/defs/", "trait": "res://weapons/mjolnir_traits/"}
 const DEFAULT_PATH := "user://save.json"
 const TEST_PATH := "user://test_save.json"
 
 var path: String = DEFAULT_PATH
 var data: Dictionary = {}
+## Все открытия (UnlockDef), по порядку
+var all_unlocks: Array[UnlockDef] = []
+var _target_ids: Dictionary = {}
 ## Сохранение тестовое (не пользовательское)
 var is_test: bool = false
 
@@ -27,6 +35,7 @@ func _ready() -> void:
 	for a in user_args:
 		if a.begins_with("--save="):
 			path = a.substr(7)
+	_load_unlocks()
 	if is_test and path == DEFAULT_PATH:
 		path = TEST_PATH
 		reset()
@@ -61,6 +70,9 @@ static func defaults() -> Dictionary:
 		"choices": {},
 		"events": {},
 		"records": {"best_glory": 0, "best_kills": 0, "best_streak": 0, "best_rooms": 0, "fastest_win": 0.0, "longest_run": 0.0},
+		"glory": {"bank": 0, "earned": 0, "spent": 0},
+		"unlocks": {},
+		"purchases": [],
 	}
 
 func load_game() -> bool:
@@ -110,6 +122,12 @@ func _migrate(d: Dictionary) -> Dictionary:
 				s.stats[k] = int(d[k])
 		d = s
 		v = 1
+	if v < 2:
+		# v2: накопленная Слава и открытия «Плана тренировок»
+		d["glory"] = {"bank": 0, "earned": 0, "spent": 0}
+		d["unlocks"] = {}
+		d["purchases"] = []
+		v = 2
 	d["version"] = v
 	return d
 
@@ -166,6 +184,9 @@ func end_run(result: Dictionary) -> void:
 	rec.longest_run = maxf(float(rec.longest_run), t)
 	if won and (float(rec.fastest_win) <= 0.0 or t < float(rec.fastest_win)):
 		rec.fastest_win = t
+	var g := maxi(0, int(result.get("glory", 0)))
+	data.glory.bank = glory_bank() + g
+	data.glory.earned = int(data.glory.earned) + g
 	data.last_run = result.duplicate(true)
 	changed.emit()
 	save_game()
@@ -223,4 +244,127 @@ func context() -> Dictionary:
 		"last_kills": int(lr.get("kills", 0)),
 		"body": str(lr.get("body", data.get("current_body", ""))),
 		"best_glory": int(data.records.best_glory),
+		"glory_bank": glory_bank(),
+		"unlocks_count": data.unlocks.size(),
 	}
+
+# --- Слава и открытия ---
+
+func glory_bank() -> int:
+	return int(data.glory.bank)
+
+func add_glory_bank(amount: int) -> void:
+	data.glory.bank = maxi(0, glory_bank() + amount)
+	changed.emit()
+
+func _load_unlocks() -> void:
+	all_unlocks.clear()
+	var dir := DirAccess.open(UNLOCKS_DIR)
+	if dir == null:
+		return
+	for f in dir.get_files():
+		var clean := f.trim_suffix(".remap")
+		if clean.ends_with(".tres"):
+			var u := load(UNLOCKS_DIR + clean) as UnlockDef
+			if u and u.id != "":
+				all_unlocks.append(u)
+	all_unlocks.sort_custom(func(a: UnlockDef, b: UnlockDef) -> bool: return a.order < b.order)
+
+func get_unlock(id: String) -> UnlockDef:
+	for u in all_unlocks:
+		if u.id == id:
+			return u
+	return null
+
+func is_unlocked(id: String) -> bool:
+	return data.unlocks.has(id)
+
+## Можно ли этому оружию / трейту / телу / руне выпадать. Нет открытия на этот id — значит, открыто с начала.
+func is_in_pool(kind: String, id: String) -> bool:
+	var locked := false
+	for u in all_unlocks:
+		if u.kind == kind and id in u.targets():
+			if is_unlocked(u.id):
+				return true
+			locked = true
+	return not locked
+
+## Сумма эффектов купленных перков (move_speed_pct, max_health, dash_charges, catch_window…).
+func perk(key: String) -> float:
+	var total := 0.0
+	for u in all_unlocks:
+		if u.kind == "perk" and u.target_id == key and is_unlocked(u.id):
+			total += u.amount
+	return total
+
+## Есть ли в игре то, что открывает открытие (иначе — «скоро»).
+func target_exists(u: UnlockDef) -> bool:
+	match u.kind:
+		"perk":
+			return u.available
+		"rune":
+			for r in Run.all_runes:
+				if r.id == u.target_id:
+					return true
+			return false
+		"body":
+			for b in Run.all_bodies:
+				if b.id == u.target_id:
+					return true
+			return false
+		_:
+			if not _target_ids.has(u.kind):
+				_target_ids[u.kind] = _scan_ids(str(TARGET_DIRS.get(u.kind, "")))
+			return u.target_id in _target_ids[u.kind]
+
+func _scan_ids(dir_path: String) -> Array:
+	var out: Array = []
+	if dir_path == "" or not DirAccess.dir_exists_absolute(dir_path):
+		return out
+	for f in DirAccess.get_files_at(dir_path):
+		var clean := f.trim_suffix(".remap")
+		if clean.ends_with(".tres"):
+			var r := load(dir_path + clean)
+			if r and r.get("id") != null:
+				out.append(str(r.get("id")))
+	return out
+
+## Почему нельзя купить ("" — можно): unknown, owned, soon, requires, no_glory.
+func buy_block_reason(id: String) -> String:
+	var u := get_unlock(id)
+	if u == null:
+		return "unknown"
+	if is_unlocked(id):
+		return "owned"
+	if not target_exists(u):
+		return "soon"
+	if u.requires != "" and not is_unlocked(u.requires):
+		return "requires"
+	if glory_bank() < u.price:
+		return "no_glory"
+	return ""
+
+## Покупка открытия за Славу. Возвращает "" при успехе или причину отказа.
+func buy(id: String) -> String:
+	var reason := buy_block_reason(id)
+	if reason != "":
+		return reason
+	var u := get_unlock(id)
+	data.glory.bank = glory_bank() - u.price
+	data.glory.spent = int(data.glory.spent) + u.price
+	data.unlocks[id] = runs()
+	data.purchases.append({"id": id, "price": u.price, "run": runs()})
+	changed.emit()
+	save_game()
+	return ""
+
+## Эффекты «навсегда» для тела забега: копия BodyDef с +HP, +рывком и скоростью.
+func apply_permanent_to_body(body: BodyDef) -> BodyDef:
+	if body == null or body.has_meta("perma_applied"):
+		return body
+	var b := body.duplicate() as BodyDef
+	b.max_health += perk("max_health")
+	b.move_speed *= 1.0 + perk("move_speed_pct")
+	b.dash_charges += int(perk("dash_charges"))
+	b.set_meta("perma_applied", true)
+	return b

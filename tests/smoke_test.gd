@@ -92,7 +92,7 @@ func _run() -> void:
 	await _test_after_death()
 	_finish()
 
-## После смерти: «К Одину» → диалог у дивана → новый забег (Dialogue, блок А)
+## После смерти: «К Одину» → диалог у дивана → «План тренировок» → «В бой» → новый забег
 func _test_after_death() -> void:
 	print("-- После смерти")
 	var deaths := Save.deaths()
@@ -102,6 +102,12 @@ func _test_after_death() -> void:
 	var box := Dialogue.box()
 	check(box.visible, "диалог Одина после смерти")
 	box.skip()
+	await wait(0.4)
+	var plan := game.get_node_or_null("TrainingPlan") as TrainingPlan
+	check(plan != null and plan.visible, "после диалога — «План тренировок»")
+	check(Save.glory_bank() > 0, "Слава забегов в копилке (%d)" % Save.glory_bank())
+	if plan:
+		plan._fight_btn.pressed.emit()
 	await wait(1.0)
 	var g2 := get_tree().current_scene as Game
 	check(g2 != null and g2 != game, "новый забег после диалога")

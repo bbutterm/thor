@@ -20,6 +20,7 @@ func _ready() -> void:
 	get_tree().paused = false
 	if Run.body == null or Run.room_order.is_empty():
 		Run.start_run()
+	Run.body = Save.apply_permanent_to_body(Run.body)  # открытия «навсегда»: +HP, +рывок, скорость
 	player.apply_body_and_runes(Run.body, Run)
 	player.died.connect(_on_player_died)
 	Run.kill_streak.connect(_on_kill_streak)
@@ -141,14 +142,22 @@ func _show_end(victory: bool) -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	end_screen.show_result(victory)
 
-## После итога забега: диалог у дивана (Dialogue.after_run), затем новый забег.
+## После итога забега: диалог у дивана (Dialogue.after_run) → «План тренировок» → новый забег.
 func _after_run() -> void:
 	if _after_run_started:
 		return
 	_after_run_started = true
 	end_screen.visible = false
 	await Dialogue.after_run(Run.won)
-	restart_run()
+	var plan := TrainingPlan.new()
+	plan.name = "TrainingPlan"
+	add_child(plan)
+	plan.open("В меню")
+	var start: bool = await plan.closed
+	if start:
+		restart_run()
+	else:
+		go_to_menu()
 
 func restart_run() -> void:
 	FX.reset_time()

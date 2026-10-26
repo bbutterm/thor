@@ -109,6 +109,14 @@ func _run() -> void:
 		await wait(0.2)
 		await shot("11_dialogue_choice")
 	box.skip()
-	await wait(1.0)
+	await wait(0.6)
+	# «План тренировок» (блок В): немного Славы для наглядности и одна покупка
+	var plan := game.get_node_or_null("TrainingPlan") as TrainingPlan
+	if plan:
+		Save.add_glory_bank(420)
+		plan._rebuild()
+		plan.buy("belly")
+		await wait(0.6)
+		await shot("12_training_plan")
 	FX.reset_time()
 	get_tree().quit(0)

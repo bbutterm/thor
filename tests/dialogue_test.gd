@@ -1,7 +1,7 @@
 extends Node
 ## Тест системы диалогов: все JSON грузятся, у каждой реплики есть id, говорящий и эмоция, условия
 ## разбираются; выбор по приоритету и «просмотрено»; пул; окно новеллы с выбором; сценарий
-## «смерть → диалог → новый забег». Пишет в отдельное сохранение (user://dialogue_test_save.json).
+## «смерть → диалог → (план тренировок) → новый забег». Пишет в отдельное сохранение (user://dialogue_test_save.json).
 ## godot --headless --path . --fixed-fps 60 res://tests/dialogue_test.tscn
 
 var _fails: Array[String] = []
@@ -299,6 +299,11 @@ func _test_death_flow() -> void:
 			box.advance()
 		await wait(0.05)
 	check(not box.visible, "диалог пройден")
+	await wait(0.3)
+	var plan := game.get_node_or_null("TrainingPlan") as TrainingPlan
+	check(plan != null and plan.visible, "затем «План тренировок» (блок В)")
+	if plan:
+		plan._fight_btn.pressed.emit()
 	await wait(1.0)
 	var g2 := get_tree().current_scene as Game
 	check(g2 != null and g2 != game, "начался новый забег")
