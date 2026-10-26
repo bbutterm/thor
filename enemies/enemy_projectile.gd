@@ -12,6 +12,8 @@ var _light: OmniLight3D
 
 const RADIUS := 0.35
 const MAX_LIFE := 6.0
+## Отражённый снаряд бьёт врагов сильнее (GDD 8)
+const REFLECT_DAMAGE_MULT := 1.8
 
 func launch(origin: Vector3, velocity_: Vector3, damage_: float, shooter_: Node) -> void:
 	add_to_group("reflectable")
@@ -48,7 +50,7 @@ func reflect(new_velocity: Vector3) -> void:
 		return
 	reflected = true
 	vel = new_velocity.normalized() * maxf(vel.length() * 2.2, 18.0)
-	damage *= 3.0
+	damage *= REFLECT_DAMAGE_MULT
 	_life = 0.0
 	_color = Color(0.4, 0.85, 1.0)
 	_mi.set_instance_shader_parameter("color", _color)

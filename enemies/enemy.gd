@@ -96,6 +96,12 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var wall_splat_damage: float = 12.0
 @export var wall_splat_stun: float = 1.0
 
+## Падение с высоты (GDD 8): сброшенный (после удара/отбрасывания) с > fall_kill_height м — корм умирает, остальным fall_damage
+@export var fall_kill_height: float = 6.0
+@export var fall_damage: float = 44.0
+## Падение считается «сброшенным», если враг получил удар не раньше стольких секунд до отрыва от земли
+@export var fall_hit_window: float = 1.5
+
 @export_group("Вид")
 ## Сколько трупов-«рэгдоллов» может лежать одновременно (каждый — физтело с анимацией)
 @export var max_debris: int = 10
@@ -146,6 +152,10 @@ var _state_time: float = 0.0
 var _cooldown: float = 0.0
 var _stun_left: float = 0.0
 var _last_splat_time: float = -10.0
+var _last_hit_time: float = -10.0
+var _airborne: bool = false
+var _fall_peak_y: float = 0.0
+var _fall_forced: bool = false
 var _last_knock: Vector3 = Vector3.ZERO
 var _attack_count: int = 0
 var _doing_slam: bool = false
@@ -768,6 +778,7 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 		if damage <= 0.0:
 			return
 	health -= damage
+	_last_hit_time = Time.get_ticks_msec() / 1000.0
 	ComicFX.on_enemy_hit(self, damage, source)
 	_hurt_flash = 1.0
 	var big := source == "melee_finisher" or source == "melee_heavy" or source == "slam"
@@ -840,9 +851,30 @@ func _apply_movement(move_dir: Vector3, delta: float) -> void:
 	move_and_slide()
 	_push_props()
 	_check_wall_splat(pre)
+	_check_fall()
 	_update_stuck(move_dir, delta)
 	if global_position.y < -30.0:
 		_die("fall")
+
+## Сброшенный с высоты враг (GDD 8): корм — насмерть, остальные — fall_damage. Босса не касается.
+func _check_fall() -> void:
+	var on_floor := is_on_floor()
+	if not on_floor:
+		if not _airborne:
+			_airborne = true
+			_fall_peak_y = global_position.y
+			_fall_forced = state != State.SPAWNING and Time.get_ticks_msec() / 1000.0 - _last_hit_time <= fall_hit_window
+		_fall_peak_y = maxf(_fall_peak_y, global_position.y)
+		return
+	if not _airborne:
+		return
+	_airborne = false
+	var h := _fall_peak_y - global_position.y
+	if not _fall_forced or h < fall_kill_height or kind == Kind.BOSS or is_dead:
+		return
+	Perf.mark("enemy_fall")
+	var dmg := health + 1.0 if kind == Kind.FODDER else fall_damage
+	take_hit(dmg, Vector3.ZERO, "fall")
 
 func _push_props() -> void:
 	for i in get_slide_collision_count():

@@ -101,6 +101,7 @@ func _run() -> void:
 	await _test_shaman()
 	await _test_merc()
 	await _test_waves()
+	await _test_fall_and_reflect()
 	_finish()
 
 func _test_fodder() -> void:
@@ -287,6 +288,51 @@ func _test_waves() -> void:
 		if room._is_cleared:
 			break
 	check(room._is_cleared, "зал зачищен после всех волн")
+
+func _ready_enemy(kind: String, offset: Vector3) -> Enemy:
+	# Зал уже «зачищен» прошлыми проверками (открыт выбор руны, пауза) — подселяем напрямую
+	room._is_cleared = false
+	var g := get_tree().current_scene as Game
+	if g and g.rune_pick.visible:
+		g.rune_pick.visible = false
+	get_tree().paused = false
+	var e := _spawn(kind, offset)
+	await wait_until(3.0, func() -> bool: return e.state != Enemy.State.SPAWNING)
+	return e
+
+func _test_fall_and_reflect() -> void:
+	print("-- Падение с высоты и отражённый снаряд (GDD 8)")
+	await _clear()
+	var f := await _ready_enemy("fodder", Vector3(3, 0, -8))
+	var g := await _ready_enemy("grunt", Vector3(-3, 0, -8))
+	g.max_health = 200.0
+	g.health = 200.0
+	for e in [f, g]:
+		e._last_hit_time = Time.get_ticks_msec() / 1000.0
+		e.global_position += Vector3(0, 9.0, 0)
+	await wait_until(3.0, func() -> bool: return (not is_instance_valid(f) or f.is_dead) and g.health < 200.0)
+	check(not is_instance_valid(f) or f.is_dead, "сброшенный с 9 м корм разбился")
+	check(absf((200.0 - g.health) - g.fall_damage) < 0.5, "боец получил 2 У за падение (%.0f)" % (200.0 - g.health))
+	var s := await _ready_enemy("fodder", Vector3(0, 0, -8))
+	s._last_hit_time = -10.0
+	s.global_position += Vector3(0, 9.0, 0)
+	await frames(10)
+	await wait_until(3.0, func() -> bool: return s.is_on_floor())
+	await frames(5)
+	check(not s.is_dead, "просто спрыгнувший (без удара) корм жив")
+	await _clear()
+	var d := await _ready_enemy("grunt", Vector3(0, 0, -6))
+	d.set_physics_process(false)
+	d.max_health = 500.0
+	d.health = 500.0
+	var pr := preload("res://enemies/enemy_projectile.gd").new()
+	get_tree().current_scene.add_child(pr)
+	pr.launch(d.global_position + Vector3(0, 1.0, 1.3), Vector3(0, 0, 6), 10.0, null)
+	pr.reflect(Vector3(0, 0, -1))
+	pr.process_mode = Node.PROCESS_MODE_ALWAYS  # выбор руны после зачистки ставит паузу
+	await wait_until(1.5, func() -> bool: return d.health < 500.0)
+	check(absf((500.0 - d.health) - 18.0) < 0.5, "отражённый снаряд — ×1.8 урона (%.1f)" % (500.0 - d.health))
+	await _clear()
 
 func _finish() -> void:
 	print("=== ИТОГ ENEMY: %d OK, %d FAIL ===" % [_passes, _fails.size()])

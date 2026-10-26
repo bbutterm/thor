@@ -90,7 +90,7 @@
 | `windup_time` (телеграф) | 0.6 | 0.55 | 0.8 / 1.0 |
 | `knock_resist` | 0 | 0 | 0.75 |
 
-Ещё: `wall_splat_speed` 8.5 (с какой скорости отбрасывания враг «шмякается» об стену), `wall_splat_damage` 12, `wall_splat_stun` 1.0, `keep_min_dist`/`keep_max_dist` 8/12 (метатель), `boss_slam_radius` 6.5. **Удар босса по площади попадает, только если ты на земле — прыгай!**
+Ещё: `wall_splat_speed` 8.5 (с какой скорости отбрасывания враг «шмякается» об стену), `wall_splat_damage` 12, `wall_splat_stun` 1.0, `keep_min_dist`/`keep_max_dist` 8/12 (метатель), `boss_slam_radius` 6.5, `fall_kill_height` 6 / `fall_damage` 44 / `fall_hit_window` 1.5 с (сброшенный после удара с 6+ м: корм насмерть, остальным 2 У; сам спрыгнувший — без урона), отражённый снаряд — ×1.8 (`REFLECT_DAMAGE_MULT` в `enemy_projectile.gd`). **Удар босса по площади попадает, только если ты на земле — прыгай!**
 
 Трупы: `max_debris` 10 (сколько «рэгдоллов» лежит одновременно, лишние исчезают), `debris_lifetime` 4 с.
 
