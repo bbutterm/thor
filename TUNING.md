@@ -127,7 +127,7 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 ## Забег — автозагрузка `run/run_manager.gd`
 
-`rooms_per_run` 4. **Слава по GDD 15.2** (блок Г): база — Слава врага из `enemies/defs/*.tres` (корм 1, боец 3, особый 5), элита `glory_elite_kill` 15, босс `glory_boss_kill` 150, мини-босс — 50 (в `MinibossDef`); враг без описания — `glory_per_kill` 3. Множители: добивание мили ×1.5 (`glory_melee_kill_mult`), ренжем ×0.5 (`glory_ranged_kill_mult`), тело (`BodyDef.glory_mult`: Трэлл ×2, Солдат ×0.7). Бонусы: серия 10 убийств `glory_streak_bonus` +10, мультикилл `glory_multikill_bonus` +1 за каждого, шмяк об стену `glory_wall_splat_bonus` +1, зал зачищен `glory_room_clear` +5, финишер `glory_combo_finisher_bonus` 0. Вердикт — `verdict()` (80 «Сойдёт», 200 «Вальхалла»).
+`rooms_per_run` 7 (запасной вариант без карты мира; с картой — `RunMap.rooms`), `miniboss_rooms` [3] (берётся из карты). **Слава по GDD 15.2** (блок Г): база — Слава врага из `enemies/defs/*.tres` (корм 1, боец 3, особый 5), элита `glory_elite_kill` 15, босс `glory_boss_kill` 150, мини-босс — 50 (в `MinibossDef`); враг без описания — `glory_per_kill` 3. Множители: добивание мили ×1.5 (`glory_melee_kill_mult`), ренжем ×0.5 (`glory_ranged_kill_mult`), тело (`BodyDef.glory_mult`: Трэлл ×2, Солдат ×0.7). Бонусы: серия 10 убийств `glory_streak_bonus` +10, мультикилл `glory_multikill_bonus` +1 за каждого, шмяк об стену `glory_wall_splat_bonus` +1, зал зачищен `glory_room_clear` +5, финишер `glory_combo_finisher_bonus` 0. Вердикт — `verdict()` (80 «Сойдёт», 200 «Вальхалла»).
 
 ## Тела и руны — ресурсы `run/bodies/*.tres`, `run/runes/*.tres`
 
@@ -199,7 +199,7 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 - Камера: `recoil_return_speed` 14 (как быстро гаснет отдача).
 - Игрок: `melee_kill_heal` 2 (добивание мили лечит 3 + 2 HP).
 - Забег: `glory_melee_kill_mult` 1.5, `glory_ranged_kill_mult` 0.5 (Слава за убийство мили/ренжем).
-- Залы: `elite_chance` 0.1, `max_elites` 1 (элита: ×2.5 HP, урон ×1.5, золотая метка, роняет оружие 60 % мили / 40 % ренж), `chest_chance` 0.5 (сундук после зачистки; в первом зале всегда, у босса нет).
+- Залы: `elite_chance` 0.1, `max_elites` 1 (элита: ×2.5 HP, урон ×1.5, золотая метка, роняет оружие 60 % мили / 40 % ренж), `chest_chance` 0.5 (сундук после зачистки; в первом зале всегда, у босса нет) — **только при выключенных дверях** (`Run.doors_enabled = false`); с дверями сундук — награда двери «Сундук».
 
 ## Данные по GDD (блок Г)
 
@@ -208,3 +208,14 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 - **Тела** — `run/bodies/*.tres` (`BodyDef`): + `movement_style`, `passive`, `flaw` (`run/passives/*.tres`, `PassiveDef`), `price`, `odin_comment`. 9 тел по GDD 6, закрытые открываются в «Плане тренировок».
 - Генератор сцен больше не перезаписывает существующие `run/bodies` и `run/runes` — это данные, правь их в инспекторе.
 
+
+## Структура забега и двери-награды (блок И, GDD 15.1)
+
+**Мир** — `run/maps/midgard.tres` (`run/run_map.gd`, `RunMap`):
+- `rooms` 7 (залов до босса), `miniboss_room` 4 (мини-босс — последней волной 4-го зала, за него трейт), `first_room_reward` combat.
+- Двери: `doors_min` 2 / `doors_max` 3, `shop_per_world` 1 (ларёк гарантирован: дверь ларька в каждом наборе, пока не зайдёшь), `shop_earliest_room` 3, `no_peaceful_twice` (отдых и ларёк не подряд), `shop_scene`.
+- Награды: элитный бой `elite_room_chance` 0.45 / `elite_room_max` 3 (обычный зал 0.1 / 1), `elite_reward_silver` 30, `elite_reward_glory` 20; отдых `rest_heal_fraction` 0.4; `rune_max_level` 3; Фрейя `freya_rune_level` 2; Локи `loki_hp_cost` 0.5, «кости» `loki_dice_win_chance` 0.5 / `loki_dice_hp_loss` 0.3.
+
+**Награды** — `run/rewards/*.tres` (`run/reward_def.gd`, `RewardDef`): `weight` — частота в % (GDD 15.1: бой 45, элита 15, сундук 10, испытание 10, отдых 8, Фрейя 7, Локи 5; ларёк, мини-босс и босс — 0, по особым правилам), `combat` (false — тихий зал без врагов), `enabled` (false — механики ещё нет, не предлагается), `glyph`/`color` (заглушка иконки), `icon_name` → `sprites/ui/icons/door_<icon_name>.png`.
+
+**Дверь** — `rooms/reward_door.gd`: `FRAME_SCALE` 1.55 (арка Quaternius), `ICON_HEIGHT` 4.95.

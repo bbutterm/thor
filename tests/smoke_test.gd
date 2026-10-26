@@ -6,6 +6,8 @@ extends Node
 var _fails: Array[String] = []
 var _passes: int = 0
 var game: Game
+var _visited: Array[String] = []
+const DoorHelper := preload("res://tests/door_helper.gd")
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -71,12 +73,13 @@ func _run() -> void:
 	# Проходим все залы
 	var total := Run.total_rooms()
 	for i in total:
-		var ok := await _clear_room_and_exit(i == total - 1)
+		var ok := await _clear_room_and_exit(i == total - 1, i)
 		if not ok:
 			break
 	await wait(2.5)
 	check(game.end_screen.visible, "после босса показан экран победы")
 	check(Run.won, "Run.won = true")
+	print("  Залы по наградам: ", ", ".join(_visited))
 	print("  Слава за забег: ", Run.glory, ", убито: ", Run.kills, ", рун: ", Run.runes.size(), ", вердикт: ", Run.verdict())
 
 	# Смерть
@@ -229,15 +232,21 @@ func _make_dummy(p: Player, dist: float) -> Enemy:
 	e.health = 500
 	return e
 
-func _clear_room_and_exit(is_last: bool) -> bool:
+func _clear_room_and_exit(is_last: bool, door_pick: int = 0) -> bool:
 	var room := game.room
-	print("-- Зал %d: %s" % [Run.room_index + 1, room.room_title])
+	var reward := Run.current_reward()
+	_visited.append(reward)
+	print("-- Зал %d: %s [награда: %s]" % [Run.room_index + 1, room.room_title, reward])
 	var waves := room.wave_count()
 	var safety := 0
 	var seen_boss := false
 	var seen_miniboss := false
 	var miniboss_room := Run.is_miniboss_room()
-	while not room._is_cleared and safety < 40:
+	var peaceful := Run.is_peaceful_room()
+	if peaceful:
+		await wait(1.5)
+		check(room.alive_count() == 0 and not room._started, "тихий зал (%s) — без врагов" % reward)
+	while not peaceful and not room._is_cleared and safety < 40:
 		safety += 1
 		await wait(1.2)
 		for e in room.alive_enemies().duplicate():
@@ -248,13 +257,14 @@ func _clear_room_and_exit(is_last: bool) -> bool:
 					seen_miniboss = true
 				e.take_hit(9999, Vector3(0, 3, -5), "melee_finisher")
 		game.player.heal(999)
-	check(room._is_cleared, "зал зачищен (%d волн)" % waves)
+	if not peaceful:
+		check(room._is_cleared, "зал зачищен (%d волн)" % waves)
 	if is_last:
 		check(seen_boss, "босс появился в финальном зале")
 		return true
 	await wait(1.2)
 	if miniboss_room:
-		# Мини-босс → выбор трейта Мьёльнира → выбор руны
+		# Мини-босс → выбор трейта Мьёльнира → награда (руна)
 		check(seen_miniboss, "мини-босс появился последней волной")
 		check(game.trait_pick.visible, "показан выбор трейта Мьёльнира")
 		check(get_tree().paused, "игра на паузе во время выбора трейта")
@@ -270,23 +280,42 @@ func _clear_room_and_exit(is_last: bool) -> bool:
 		check(levels_after == levels_before + 1, "трейт взят (%s)" % ", ".join(Run.mjolnir_traits.map(func(t: MjolnirTrait) -> String: return str(t.id))))
 		check(game.player.mjolnir.traits.size() == Run.mjolnir_traits.size(), "обработчики трейтов у молота (%d)" % game.player.mjolnir.traits.size())
 		await wait(1.0)
-	check(game.rune_pick.visible, "показан выбор руны")
-	check(get_tree().paused, "игра на паузе во время выбора")
-	await wait(0.4)
-	var idx_before := Run.room_index
-	game.rune_pick._open_time = -10.0
-	game.rune_pick.choose(randi() % 3)
-	await wait(0.2)
+	if reward in ["combat", "miniboss", "freya"]:
+		check(game.rune_pick.visible, "показан выбор руны")
+		check(get_tree().paused, "игра на паузе во время выбора")
+		await wait(0.4)
+	elif reward in ["rest", "loki"]:
+		check(game.rewards.choice.visible, "показан выбор награды «%s»" % reward)
+	var runes_before := Run.runes.size()
+	var did := await DoorHelper.resolve_reward(get_tree(), game)
+	print("    награда: ", did)
+	await wait(0.3)
 	check(not get_tree().paused, "пауза снята после выбора")
-	check(room.door_open, "дверь открыта")
-	await wait(1.0)
-	var exit_pos := room.exit_area.global_position
-	game.player.global_position = exit_pos + Vector3(0, 0.2, 1.5)
-	game.player.velocity = Vector3(0, 0, -6)
-	await wait(1.2)
-	check(Run.room_index == idx_before + 1, "переход в следующий зал (%d)" % (Run.room_index + 1))
+	if reward in ["combat", "miniboss"]:
+		check(Run.runes.size() == runes_before + 1, "руна взята")
+	elif reward == "freya":
+		check(Run.runes.size() >= runes_before + 1, "Фрейя: руна сразу уровня 2 (%d → %d)" % [runes_before, Run.runes.size()])
+	elif reward == "chest":
+		check(not game.room.find_children("*", "Chest", true, false).is_empty() or _has_chest(), "сундук после зачистки")
+	var doors := game.rewards.doors
+	var next_boss := Run.room_index + 1 >= Run.room_order.size() - 1
+	check(doors.size() >= 1 and doors.size() <= 3, "двери после награды (%s)" % ", ".join(doors.map(func(d: RewardDoor) -> String: return d.reward_id)))
+	if next_boss or Run.room_index + 1 in Run.miniboss_rooms:
+		check(doors.size() == 1, "к боссу/мини-боссу — одна дверь")
+	else:
+		check(doors.size() >= 2, "2–3 двери на выбор")
+	var idx_before := Run.room_index
+	var took := await DoorHelper.take_door(get_tree(), game, door_pick)
+	check(Run.room_index == idx_before + 1, "переход в следующий зал через дверь «%s» (%d)" % [took, Run.room_index + 1])
 	check(game.room != room, "загружен новый зал")
+	check(Run.current_reward() == took, "награда зала = награда двери (%s)" % took)
 	return game.room != room
+
+func _has_chest() -> bool:
+	for c in game.room.get_children():
+		if c is Chest:
+			return true
+	return false
 
 func _finish() -> void:
 	print("=== ИТОГ: %d OK, %d FAIL ===" % [_passes, _fails.size()])

@@ -8,6 +8,8 @@ var _choices: Array[RuneDef] = []
 var _cards: HBoxContainer
 var _root: Control
 var _open_time: float = 0.0
+var _title: Label
+const DEFAULT_TITLE := "НОРНЫ ПРЕДЛАГАЮТ РУНУ"
 
 func _ready() -> void:
 	layer = 10
@@ -27,9 +29,9 @@ func _ready() -> void:
 	vb.add_theme_constant_override("separation", 24)
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(vb)
-	var title := UIStyle.label("НОРНЫ ПРЕДЛАГАЮТ РУНУ", 40, UIStyle.GOLD, 10)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vb.add_child(title)
+	_title = UIStyle.label(DEFAULT_TITLE, 40, UIStyle.GOLD, 10)
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vb.add_child(_title)
 	var hint := UIStyle.label("Кликни по руне или нажми 1 / 2 / 3", 18, UIStyle.TEXT_DIM, 4)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(hint)
@@ -38,9 +40,11 @@ func _ready() -> void:
 	_cards.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_child(_cards)
 
-func open(choices: Array[RuneDef]) -> void:
+## title — заголовок (Благословение Фрейи, улучшение руны на отдыхе); пусто — обычный.
+func open(choices: Array[RuneDef], title: String = "") -> void:
 	Perf.mark("rune_pick")
 	_choices = choices
+	_title.text = title if title != "" else DEFAULT_TITLE
 	for c in _cards.get_children():
 		c.queue_free()
 	for i in choices.size():

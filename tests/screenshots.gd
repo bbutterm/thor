@@ -94,10 +94,18 @@ func _run() -> void:
 		en.take_hit(9999, Vector3(0, 2, -6), "melee_finisher")
 	await wait(2.0)
 	await shot("06_rune_pick")
+	Run.forced_offers.assign([["elite", "rest", "freya"]])
 	game.rune_pick._open_time = -10.0
 	game.rune_pick.choose(0)
-	await wait(1.0)
-	await shot("07_door_open")
+	await wait(1.6)
+	# Двери-награды (блок И): встаём посреди зала лицом к северной стене
+	if not game.rewards.doors.is_empty():
+		var dz := game.rewards.doors[0].global_position
+		p.global_position = Vector3(game.room.global_position.x, dz.y + 0.1, dz.z + 8.5)
+		p.velocity = Vector3.ZERO
+		p.rotation_target = Vector2(0.12, 0.0)
+		await wait(0.4)
+	await shot("07_doors")
 	game.pause_menu.toggle()
 	await wait(0.2)
 	await shot("07b_pause")

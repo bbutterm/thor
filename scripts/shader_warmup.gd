@@ -81,6 +81,8 @@ func _build() -> void:
 		wi += 1
 	# Оружие этапа 1: ренж, подбор, сундук, трассеры, гильзы, вспышка; и то же во вьюмодели рук
 	Loot.warmup_samples(self, right)
+	# Двери-награды: арка, проём, иконка-глиф и подписи (Label3D), котёл привала
+	RewardFlow.warmup_samples(self, right)
 	var pl := game_node.get("player") as Player if game_node else null
 	if pl and pl.weapons:
 		pl.weapons.warmup_viewmodel(FRAMES)

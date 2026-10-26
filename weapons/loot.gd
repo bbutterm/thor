@@ -172,7 +172,11 @@ static func on_enemy_died(enemy: Enemy, _source: String) -> void:
 static func on_room_cleared(room: Node3D, pos: Vector3, chance: float) -> void:
 	if Run.is_boss_room():
 		return
-	if Run.room_index > 0 and randf() >= chance:
+	# Двери-награды (блок И): сундук — только в зале, куда вошли через дверь «Сундук»
+	if Run.doors_enabled:
+		if Run.current_reward() != "chest":
+			return
+	elif Run.room_index > 0 and randf() >= chance:
 		return
 	# Последний враг пал в низине/пропасти — ставим сундук рядом с игроком
 	var p := (Engine.get_main_loop() as SceneTree).get_first_node_in_group("player") as Player
