@@ -163,6 +163,24 @@ func _run() -> void:
 		await wait(2.0)
 		sven.set_physics_process(false)
 		await shot("12_miniboss")
+	# Ларёк Брокка и Эйтри (блок К): зал-ларёк, прилавок, экран покупки
+	Run.room_index = 1
+	Run.room_rewards.assign(["combat", "shop"])
+	game.call("_load_room")
+	await wait(1.6)
+	var stall := game.room.get_node_or_null("ShopStall") as Node3D
+	if stall:
+		p.global_position = stall.global_position + Vector3(1.2, 0.1, 5.2)
+		p.velocity = Vector3.ZERO
+		p.rotation_target = Vector2(0.05, 0.22)
+		Run.add_silver(230)
+		await wait(1.0)
+		await shot("13_shop_stall")
+		game.rewards.open_shop()
+		await wait(0.6)
+		await shot("14_shop_screen")
+		game.rewards.shop.close()
+		await wait(0.3)
 	p.take_damage(99999.0, Vector3.ZERO, true)
 	await wait(2.2)
 	await shot("09_death")

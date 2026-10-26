@@ -5,6 +5,8 @@ signal glory_changed(total: int)
 signal runes_changed(runes: Array)
 signal kill_streak(count: int)
 signal mjolnir_traits_changed(traits: Array)
+## Серебро — валюта забега (блок К, GDD 15.2), сгорает после смерти
+signal silver_changed(total: int)
 
 const BODIES_DIR := "res://run/bodies/"
 const RUNES_DIR := "res://run/runes/"
@@ -66,6 +68,13 @@ var room_rewards: Array[String] = []
 var reward_visits: Dictionary = {}
 ## Двери с наградами после зачистки (false — старый линейный порядок: руна → одна дверь)
 var doors_enabled: bool = true
+## Серебро забега (GDD 15.2): с врагов, бочек, сундуков; тратится в ларьке; новый забег — с нуля
+## (или со стартовыми 30 у открытия «Жадность»)
+var silver: int = 0
+## Всего собрано за забег (итог, реакции Брокка)
+var silver_earned: int = 0
+## «Обслуживание Мьёльнира» без трейтов: переброс выбора трейта у следующего мини-босса
+var trait_rerolls: int = 0
 ## Для тестов: наборы дверей по очереди (каждый — массив id наград); пусто — случайно по GDD
 var forced_offers: Array = []
 ## Активные трейты Мьёльнира (не больше одного на группу) и их уровни (id → 1..2)
@@ -126,6 +135,10 @@ func start_run(forced_body_id: String = "") -> void:
 	room_rewards.append(map.first_room_reward if map else "combat")
 	reward_visits.clear()
 	forced_offers.clear()
+	silver = int(Save.perk("start_silver"))
+	silver_earned = 0
+	trait_rerolls = 0
+	silver_changed.emit(silver)
 	runes.clear()
 	glory = 0
 	kills = 0
@@ -350,3 +363,29 @@ func choose_door(id: String) -> void:
 		room_rewards.append("")
 	room_rewards[next] = id
 	reward_visits[id] = int(reward_visits.get(id, 0)) + 1
+
+# --- Серебро (блок К) ---
+
+func add_silver(amount: int) -> void:
+	if amount <= 0:
+		return
+	silver += amount
+	silver_earned += amount
+	silver_changed.emit(silver)
+
+## Списать серебро; false — не хватает (ничего не списано).
+func spend_silver(amount: int) -> bool:
+	if amount > silver:
+		return false
+	silver -= maxi(0, amount)
+	silver_changed.emit(silver)
+	return true
+
+## Убрать одну копию руны (уровень −1; «Сдать руну» в ларьке).
+func remove_rune(id: String) -> bool:
+	for i in range(runes.size() - 1, -1, -1):
+		if runes[i].id == id:
+			runes.remove_at(i)
+			runes_changed.emit(runes)
+			return true
+	return false

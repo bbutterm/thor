@@ -151,6 +151,8 @@ static func on_enemy_died(enemy: Enemy, _source: String) -> void:
 		return
 	var pos := enemy.global_position
 	var h := _holder()
+	# Серебро (блок К, GDD 15.2): корм 0–1, боец 2, особый 3, элита 10
+	Silver.on_enemy_died(enemy)
 	if is_elite(enemy):
 		var cls := "melee" if randf() < 0.6 else "ranged"
 		var d := random_def(cls)

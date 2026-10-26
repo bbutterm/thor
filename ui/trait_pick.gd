@@ -6,6 +6,8 @@ class_name TraitPick
 ## Строится кодом; в game.gd создаётся как TraitPick.new().
 
 signal picked(t: MjolnirTrait)
+## «Обслуживание Мьёльнира» в ларьке без трейтов → переброс выбора (Run.trait_rerolls); обработчик — RewardFlow
+signal reroll_requested
 
 const STORM := Color(0.03, 0.06, 0.12, 0.86)
 const CARD := Color(0.07, 0.12, 0.2, 0.97)
@@ -19,6 +21,7 @@ var _root: Control
 var _status_labels: Array[Label] = []
 var _open_time: float = 0.0
 var _confirm_index: int = -1
+var _reroll_btn: Button
 
 func _ready() -> void:
 	layer = 11
@@ -48,6 +51,11 @@ func _ready() -> void:
 	_cards.add_theme_constant_override("separation", 30)
 	_cards.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_child(_cards)
+	_reroll_btn = UIStyle.button("ПЕРЕБРОС  [R]", 20)
+	_reroll_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_reroll_btn.visible = false
+	_reroll_btn.pressed.connect(func() -> void: reroll_requested.emit())
+	vb.add_child(_reroll_btn)
 
 func open(choices: Array[MjolnirTrait]) -> void:
 	Perf.mark("trait_pick_open")
@@ -58,6 +66,8 @@ func open(choices: Array[MjolnirTrait]) -> void:
 		c.queue_free()
 	for i in choices.size():
 		_cards.add_child(_make_card(choices[i], i))
+	_reroll_btn.visible = Run.trait_rerolls > 0
+	_reroll_btn.text = "ПЕРЕБРОС ОТ ЭЙТРИ (%d)  [R]" % Run.trait_rerolls
 	visible = true
 	_open_time = Time.get_ticks_msec() / 1000.0
 	get_tree().paused = true
@@ -150,6 +160,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.is_action_pressed("pick_%d" % (i + 1)):
 			choose(i)
 			get_viewport().set_input_as_handled()
+	if event.is_action_pressed("reload") and _reroll_btn.visible:
+		reroll_requested.emit()
+		get_viewport().set_input_as_handled()
 
 ## Выбрать карточку. Замена трейта той же группы — только со второго нажатия.
 func choose(index: int, confirmed: bool = false) -> void:

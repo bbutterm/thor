@@ -619,6 +619,8 @@ func build_rooms() -> void:
 	print("Залы…")
 	for d in room_defs():
 		_build_room(d, false)
+	# Зал-ларёк Брокка и Эйтри (блок К): без врагов, сам ларёк собирает rooms/shop_stall.gd
+	_build_room(shop_room_def(), false)
 	_build_room({
 		"file": "boss_arena", "title": "Чертог Хримтурса", "w": 32.0, "d": 32.0,
 		"blocks": [
@@ -792,7 +794,26 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	pl.position = Vector3(0, 2.0, -dep / 2 - 4.5)
 	root.add_child(pl)
 
+	# Ларёк (зал-ларёк): узел со скриптом, модели собираются при запуске
+	if d.has("stall"):
+		var stall := Node3D.new()
+		stall.name = "ShopStall"
+		stall.set_script(load("res://rooms/shop_stall.gd"))
+		stall.position = d.stall
+		root.add_child(stall)
+
 	_save(root, "res://rooms/%s.tscn" % d.file)
+
+## Зал-ларёк (блок К, GDD 13): тихий зал без волн, ларёк посередине, ящики по углам.
+func shop_room_def() -> Dictionary:
+	return {
+		"file": "shop_room", "title": "Ларёк Брокка и Эйтри", "w": 22.0, "d": 20.0,
+		"blocks": [],
+		"pillars": [Vector3(-7.5, 0, -5), Vector3(7.5, 0, -5)],
+		"enemies": [],
+		"props": _stack_props(Vector3(-9.5, 0, 6.5)) + _stack_props(Vector3(8.5, 0, 6.5)) + [["crate", Vector3(-9.5, 0, -8.5)], ["crate", Vector3(9.5, 0, -8.5)]],
+		"stall": Vector3(0, 0, 0.5),
+	}
 
 # ---------------- UI ----------------
 

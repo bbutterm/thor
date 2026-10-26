@@ -78,3 +78,9 @@ godot --headless --path . --fixed-fps 60 res://tests/weapon_test.tscn  # ору�
 - Состояние в `Run`: `room_order` (сцены залов на мир), `room_rewards` (награда каждого зала), `reward_visits`, `current_reward()`, `roll_door_offers()`, `choose_door(id)`, `is_peaceful_room()` (отдых/ларёк — без врагов, `room.start` не вызывается).
 - Тесты задают порядок залов через `Run.room_order` (после `Run.start_run`), наборы дверей — `Run.forced_offers`; `Run.doors_enabled = false` — старая одна дверь после руны. Общие шаги тестов — `tests/door_helper.gd` (`resolve_reward`, `take_door`).
 - Проверка: `godot --headless --path . --fixed-fps 60 res://tests/run_map_test.tscn`.
+
+## Серебро и ларёк (блок К)
+- Серебро — `Run.silver` (`add_silver`, `spend_silver`, сигнал `silver_changed`), сгорает с новым забегом. Источники — `run/silver.gd` (`Silver.drop/on_enemy_died`, числа в `run/economy.tres`): враги через `Loot.on_enemy_died`, бочки — `run/barrel_watch.gd` (узел в `RewardFlow`; бочка «разбита», если отброшена быстрее порога), сундук — строка в `weapons/chest.gd`. Монета — `run/silver_coin.gd` (общий меш-диск и материал `FX`). Счётчик — `ui/silver_hud.gd` (встраивается под Славу в HUD).
+- Ларёк: зал `rooms/shop_room.tscn` (генератор: `shop_room_def()` + узел `ShopStall`), ларёк и гномы — `rooms/shop_stall.gd` (собирается при запуске, E у прилавка), товары — `run/shop/*.tres` (`ShopItemDef`), логика — `run/shop.gd` (`Shop.price/buy/reaction_pool`), экран — `ui/shop.gd` (`ShopScreen`, `RewardFlow.open_shop()`). Реплики — `data/dialogues/dwarves.json` (пулы `shop_*`, `eitri`, сцена `dwarves_shop_first`).
+- «Обслуживание Мьёльнира» без трейтов — `Run.trait_rerolls`, кнопка «ПЕРЕБРОС [R]» в `ui/trait_pick.gd`.
+- Проверка: `godot --headless --path . --fixed-fps 60 res://tests/shop_test.tscn`.

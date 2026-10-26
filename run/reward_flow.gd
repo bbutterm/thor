@@ -11,6 +11,8 @@ signal reward_granted(id: String)
 
 var game: Game
 var choice: ChoicePick
+## Экран ларька (блок К), создаётся при первом открытии
+var shop: ShopScreen
 ## Двери текущего зала
 var doors: Array[RewardDoor] = []
 ## Что сейчас выбирается в RunePick: "rune" / "freya" / "upgrade"
@@ -31,12 +33,18 @@ func _ready() -> void:
 	choice.name = "ChoicePick"
 	add_child(choice)
 	choice.picked.connect(_on_choice_picked)
+	# Бочки, которые разбили, роняют серебро (блок К)
+	var bw := BarrelWatch.new()
+	bw.name = "BarrelWatch"
+	add_child(bw)
+	if game and game.trait_pick:
+		game.trait_pick.reroll_requested.connect(_on_trait_reroll)
 
 func map() -> RunMap:
 	return Run.map if Run.map else RunMap.new()
 
 func is_screen_open() -> bool:
-	return choice.visible
+	return choice.visible or (shop != null and shop.is_open())
 
 # --- Зал загружен / начат ---
 
@@ -67,6 +75,9 @@ func _start_peaceful(room: Room) -> void:
 			get_tree().create_timer(0.7, false).timeout.connect(func() -> void:
 				if not game.player.is_dead:
 					grant())
+		"shop":
+			Dialogue.bark_pool("dwarves.shop_enter")
+			grant()
 		_:
 			grant()
 
@@ -105,8 +116,8 @@ func grant() -> void:
 			_offer_runes("freya")
 		"elite":
 			_grant_elite()
-		"chest":
-			# Сундук ставит Loot.on_room_cleared там, где пал последний враг
+		"chest", "shop":
+			# Сундук ставит Loot.on_room_cleared там, где пал последний враг; ларёк — подойти к прилавку (E)
 			finish()
 		"rest":
 			_offer_rest()
@@ -132,7 +143,15 @@ func _offer_runes(mode: String) -> void:
 	game.rune_pick.open(choices, title)
 
 ## Game._on_rune_picked уже добавил руну; Фрейя добавляет ещё уровни (повтор руны = уровень).
-func on_rune_picked(rune: RuneDef) -> void:
+## false — награда зала не закончена (руна куплена в ларьке: вернуться в ларёк, двери не трогать).
+func on_rune_picked(rune: RuneDef) -> bool:
+	if rune_mode == "shop":
+		rune_mode = "rune"
+		game.hud.toast("%s %s — уровень %d" % [rune.glyph, rune.title, Run.rune_count(rune.id)])
+		if shop:
+			shop.reopen()
+			shop.say("Руна «%s». Почти не проклятая." % rune.title, "smug")
+		return false
 	if rune_mode == "freya":
 		var target := mini(map().freya_rune_level, map().rune_max_level)
 		while Run.rune_count(rune.id) < target:
@@ -142,6 +161,7 @@ func on_rune_picked(rune: RuneDef) -> void:
 	elif rune_mode == "upgrade":
 		game.hud.toast("%s %s — уровень %d" % [rune.glyph, rune.title, Run.rune_count(rune.id)])
 	rune_mode = "rune"
+	return true
 
 func _front_point(dist: float = 2.5) -> Vector3:
 	var p := game.player
@@ -164,10 +184,9 @@ func _grant_elite() -> void:
 	game.hud.toast("ЭЛИТА ПОВЕРЖЕНА: ОРУЖИЕ + СЛАВА")
 	finish()
 
-## Серебро (блок К) — если в Run уже есть кошелёк.
+## Серебро (блок К): монеты рассыпаются перед Тором и летят к нему.
 func _give_silver(amount: int) -> void:
-	if amount > 0 and Run.has_method("add_silver"):
-		Run.call("add_silver", amount)
+	Silver.drop(game.room, _front_point(1.5), amount)
 
 # --- Отдых ---
 
@@ -253,6 +272,36 @@ func _on_choice_picked(id: String) -> void:
 		"loki":
 			_loki_result(id)
 	finish()
+
+# --- Ларёк (блок К) ---
+
+## Открыть экран ларька (E у прилавка). Первый раз — сцена знакомства (если сцены в забеге разрешены).
+func open_shop() -> void:
+	if shop == null:
+		shop = ShopScreen.new()
+		shop.name = "Shop"
+		shop.game = game
+		add_child(shop)
+	if shop.is_open():
+		return
+	if Dialogue.in_run_scenes:
+		await Dialogue.run_trigger("shop_enter")
+	else:
+		Save.bump_event("shop_enter")
+	shop.open()
+	var stall := get_tree().get_first_node_in_group("shop_stall") as ShopStall
+	if stall:
+		stall.nod("brokk")
+
+## Переброс выбора трейта (заказан в ларьке): новые 3 карточки.
+func _on_trait_reroll() -> void:
+	if Run.trait_rerolls <= 0:
+		return
+	Run.trait_rerolls -= 1
+	Perf.mark("trait_reroll")
+	var traits := Run.random_mjolnir_trait_choices(3)
+	if not traits.is_empty():
+		game.trait_pick.open(traits)
 
 # --- Двери ---
 

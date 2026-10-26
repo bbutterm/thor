@@ -83,6 +83,16 @@ func _build() -> void:
 	Loot.warmup_samples(self, right)
 	# Двери-награды: арка, проём, иконка-глиф и подписи (Label3D), котёл привала
 	RewardFlow.warmup_samples(self, right)
+	# Серебро (монета) и вывеска ларька (блок К)
+	var coin := SilverCoin.new()
+	add_child(coin)
+	coin.set_physics_process(false)
+	coin.remove_from_group("silver_coins")
+	coin.position = right * 0.9 + Vector3(0, 0.6, 0)
+	var sign := ShopStall.make_sign_label()
+	add_child(sign)
+	sign.position = Vector3(0, 1.6, 0)
+	sign.scale = Vector3.ONE * 0.3
 	var pl := game_node.get("player") as Player if game_node else null
 	if pl and pl.weapons:
 		pl.weapons.warmup_viewmodel(FRAMES)

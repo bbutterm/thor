@@ -219,3 +219,13 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 **Награды** — `run/rewards/*.tres` (`run/reward_def.gd`, `RewardDef`): `weight` — частота в % (GDD 15.1: бой 45, элита 15, сундук 10, испытание 10, отдых 8, Фрейя 7, Локи 5; ларёк, мини-босс и босс — 0, по особым правилам), `combat` (false — тихий зал без врагов), `enabled` (false — механики ещё нет, не предлагается), `glyph`/`color` (заглушка иконки), `icon_name` → `sprites/ui/icons/door_<icon_name>.png`.
 
 **Дверь** — `rooms/reward_door.gd`: `FRAME_SCALE` 1.55 (арка Quaternius), `ICON_HEIGHT` 4.95.
+
+## Серебро и ларёк (блок К, GDD 13, 15.2)
+
+**Серебро** — `run/economy.tres` (`run/economy.gd`, `Economy`): сундук `chest_silver` 20, бочка `barrel_silver_min` 3 / `barrel_silver_max` 8, бочка «разбита», если её отбросило быстрее `barrel_break_speed` 8 м/с (удар-приземление, молот, сильный удар, таран, падение с высоты), элита `elite_silver` 10, мини-босс `miniboss_silver` 0 (в GDD нет). С врагов — `enemies/defs/*.tres` (`silver_min/max`: корм 0–1, боец 2, особый 3). Элитный бой — ещё `RunMap.elite_reward_silver` 30.
+Монеты: `max_coins_per_drop` 5, разлёт `coin_spread_speed` 3 / `coin_up_speed` 5 / `coin_gravity` 18, магнит через `magnet_delay` 0.45 с в радиусе `magnet_radius` 8 м (после `magnet_any_after` 2 с — с любого расстояния), скорость `magnet_speed_start` 5 → `magnet_speed_max` 26 (разгон `magnet_accel` 40), `collect_radius` 0.8.
+Перки «Плана тренировок»: «Жадность» — старт с 30 серебра (`start_silver`), «Скидка у Брокка» — −15 % в ларьке (`shop_discount`).
+
+**Товары** — `run/shop/*.tres` (`run/shop_item_def.gd`): `price` (шаурма 40, руна 60, заточка 80 / `price2` 120 для 2→3, патроны 30, обслуживание Мьёльнира 100, «Кот в мешке» 50, сдать руну +20), `amount` (шаурма — доля лечения 0.3), `by_eitri` (отвечает Эйтри: «Угу»), `odin_pool` (шаурма → «Ты опять за своё?»), `order`. Кузнец (пассивка `smith_level`) — заточка −50 %.
+«Кот в мешке» и реакции Брокка — константы в `run/shop.gd`: `BAG_OUTCOMES` (руна 25, оружие ур. 2–3 20, лечение 15, серебро 10, проклятие 15, пусто 15), `BAG_HEAL` 0.5, `BAG_SILVER` 80, `BAG_CURSE` 0.25 (доля текущего HP), `RICH_SILVER` 150 («много серебра»); «мало HP» — меньше 35 %.
+Ларёк в зале — `rooms/shop_stall.gd`: `DWARF_SCALE` 0.62, цвета навеса `CLOTH_A/B`.

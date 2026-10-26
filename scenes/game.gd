@@ -144,13 +144,14 @@ func _on_trait_picked(t: MjolnirTrait) -> void:
 
 func _on_rune_picked(rune: RuneDef) -> void:
 	Run.add_rune(rune)
-	rewards.on_rune_picked(rune)
+	var reward_done := rewards.on_rune_picked(rune)
 	player.recalc_from_runes(Run)
 	if rune.id == "heal":
 		player.heal(50.0)
 	Odin.say("rune_pick")
 	Audio.play("sounds/sfx/rune_pick.wav")
-	_after_reward()
+	if reward_done:
+		_after_reward()
 
 ## Награда зала выдана: двери с наградами (блок И) или старая единственная дверь.
 func _after_reward() -> void:

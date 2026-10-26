@@ -54,6 +54,8 @@ func bind_player(p: Player) -> void:
 		_body_label.text = "Тело: " + Run.body.display_name
 	# Слоты оружия, патроны, подсказка подбора — ui/weapon_hud.gd
 	WeaponHUD.attach(self, p)
+	# Серебро под Славой — ui/silver_hud.gd (блок К)
+	SilverHUD.attach(self)
 
 func _build() -> void:
 	var root := Control.new()
