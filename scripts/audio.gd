@@ -3,12 +3,14 @@ extends Node
 # Code adapted from KidsCanCode
 
 var num_players = 12
-var bus = "master"
+## Шина эффектов (громкость — GameSettings [audio] sfx; шину создаёт GameSettings.bus_index)
+var bus = "SFX"
 
 var available = []  # The available players.
 var queue = []  # The queue of sounds to play.
 
 func _ready():
+	GameSettings.bus_index(bus)
 	for i in num_players:
 		var p = AudioStreamPlayer.new()
 		add_child(p)

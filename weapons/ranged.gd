@@ -11,6 +11,8 @@ signal reload_changed(active: bool, progress: float)
 signal ran_dry
 
 const HIT_MASK := 1 | (1 << 2) | (1 << 3)
+## Помощь в прицеливании (настройки «Доступность»): полуугол конуса доводки, градусы
+@export var aim_assist_cone_deg: float = 6.0
 
 var holder: WeaponHolder
 var player: Player
@@ -114,6 +116,10 @@ func _fire() -> void:
 	var basis := player.camera.global_transform.basis
 	var muzzle := muzzle_world_position()
 	var dmg := d.damage * item.damage_mult()
+	# Помощь в прицеливании (настройки, GDD 22): центр разброса — на ближайшего врага в узком конусе
+	var fwd := -basis.z
+	if GameSettings.aim_assist():
+		fwd = assisted_aim(player, origin, fwd, d.max_range, aim_assist_cone_deg)
 	if d.special == "rocket":
 		# Ракетница: снаряд вместо луча, взрыв по площади, рокет-джамп (weapons/rocket.gd)
 		var rk := Rocket.new()
@@ -122,12 +128,12 @@ func _fire() -> void:
 		rk.radius = holder.rocket_radius
 		rk.self_push_up = holder.rocket_jump_up
 		rk.self_push_side = holder.rocket_jump_side
-		rk.launch(player, muzzle, -basis.z * d.tracer_speed, dmg)
+		rk.launch(player, muzzle, fwd * d.tracer_speed, dmg)
 	for p in (0 if d.special == "rocket" else maxi(1, d.pellets)):
 		var spread := deg_to_rad(d.spread_deg + _spread_extra)
 		var a := randf() * TAU
 		var r := sqrt(randf()) * tan(spread)
-		var dir := (-basis.z + basis.x * cos(a) * r + basis.y * sin(a) * r).normalized()
+		var dir := (fwd + basis.x * cos(a) * r + basis.y * sin(a) * r).normalized()
 		var end := _ray(origin, dir, dmg, d.pierce)
 		_spawn_tracer(muzzle, end, d)
 	_spread_extra = minf(d.spread_max_deg, _spread_extra + d.spread_per_shot_deg)
@@ -147,6 +153,31 @@ func _fire() -> void:
 		get_tree().create_timer(0.12, false).timeout.connect(func() -> void:
 			if active and item and item.mag <= 0:
 				start_reload())
+
+## Направление на ближайшего видимого врага внутри конуса cone_deg вокруг fwd (иначе fwd).
+static func assisted_aim(p: Node3D, origin: Vector3, fwd: Vector3, max_range: float, cone_deg: float) -> Vector3:
+	var best := fwd
+	var best_cos := cos(deg_to_rad(cone_deg))
+	var space := p.get_world_3d().direct_space_state
+	for n in p.get_tree().get_nodes_in_group("enemies"):
+		var e := n as Enemy
+		if e == null or e.is_dead:
+			continue
+		var target := e.global_position + Vector3.UP * 1.1
+		var to := target - origin
+		var dist := to.length()
+		if dist < 0.5 or dist > max_range:
+			continue
+		var c := fwd.dot(to / dist)
+		if c <= best_cos:
+			continue
+		# Сквозь стены не доводим
+		var q := PhysicsRayQueryParameters3D.create(origin, target, 1)
+		if not space.intersect_ray(q).is_empty():
+			continue
+		best_cos = c
+		best = to / dist
+	return best
 
 ## Луч с пробитием: по врагам урон "ranged", по бочкам — толчок, по стенам — искры. Возвращает конечную точку.
 func _ray(origin: Vector3, dir: Vector3, dmg: float, pierce: int) -> Vector3:

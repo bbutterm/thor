@@ -10,6 +10,8 @@ var _root: Control
 var _open_time: float = 0.0
 var _title: Label
 const DEFAULT_TITLE := "НОРНЫ ПРЕДЛАГАЮТ РУНУ"
+## Видимая ширина карточки (высота — по пропорциям card_rune)
+@export var card_width: float = 300.0
 
 func _ready() -> void:
 	layer = 10
@@ -17,6 +19,7 @@ func _ready() -> void:
 	visible = false
 	_root = Control.new()
 	UIStyle.full_rect(_root)
+	UISkin.apply(_root)
 	add_child(_root)
 	var dim := ColorRect.new()
 	dim.color = Color(0.02, 0.02, 0.04, 0.72)
@@ -26,7 +29,7 @@ func _ready() -> void:
 	UIStyle.full_rect(center)
 	_root.add_child(center)
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 24)
+	vb.add_theme_constant_override("separation", 14)
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(vb)
 	_title = UIStyle.label(DEFAULT_TITLE, 40, UIStyle.GOLD, 10)
@@ -57,48 +60,23 @@ func open(choices: Array[RuneDef], title: String = "") -> void:
 	var tw := _root.create_tween()
 	tw.tween_property(_root, "modulate:a", 1.0, 0.2)
 
+## Карточка руны на графике комплекта (card_rune): иконка категории в круге, руна в углу круга,
+## название и описание следующего уровня в окне; проклятые — рамка «epic», с уровнем — «legendary».
 func _make_card(rune: RuneDef, index: int) -> Button:
-	var b := Button.new()
-	b.custom_minimum_size = Vector2(250, 300)
-	b.focus_mode = Control.FOCUS_ALL
-	b.add_theme_stylebox_override("normal", UIStyle.panel_style(UIStyle.STONE_LIGHT, Color(rune.color, 0.5), 12))
-	b.add_theme_stylebox_override("hover", UIStyle.panel_style(Color(0.2, 0.19, 0.22, 0.98), rune.color, 12, 3))
-	b.add_theme_stylebox_override("focus", UIStyle.panel_style(Color(0.2, 0.19, 0.22, 0.98), rune.color, 12, 3))
-	b.add_theme_stylebox_override("pressed", UIStyle.panel_style(Color(0.26, 0.24, 0.28, 1.0), rune.color, 12, 3))
-	var vb := VBoxContainer.new()
-	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vb.alignment = BoxContainer.ALIGNMENT_CENTER
-	vb.add_theme_constant_override("separation", 12)
-	UIStyle.full_rect(vb)
-	vb.offset_left = 18
-	vb.offset_right = -18
-	vb.offset_top = 18
-	vb.offset_bottom = -18
-	b.add_child(vb)
-	var key := UIStyle.label("[%d]" % (index + 1), 16, UIStyle.TEXT_DIM, 4)
-	key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vb.add_child(key)
-	var glyph := UIStyle.label(rune.glyph, 72, rune.color, 10)
-	glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vb.add_child(glyph)
-	# Уровень (GDD 11: повторная руна повышает уровень 1–3) и описание следующего уровня
 	var lvl := Run.rune_level(rune.id)
-	var title_txt := rune.title + ("  ур. %d → %d" % [lvl, lvl + 1] if lvl > 0 else "")
-	var t := UIStyle.label(title_txt, 22, UIStyle.TEXT, 6)
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vb.add_child(t)
+	var rarity := "epic" if rune.cursed else ("legendary" if lvl > 0 else "rare")
+	var b := SkinCard.make("card_rune", card_width, rune.color, rarity)
+	b.key_label.text = "[%d]" % (index + 1)
+	b.set_icon(UISkin.rune_category_icon(rune.category), rune.glyph, rune.color.lightened(0.25))
+	# Уровень (GDD 11: повторная руна повышает уровень 1–3) и описание следующего уровня
+	var title_txt := rune.title + ("  %d → %d" % [lvl, lvl + 1] if lvl > 0 else "")
+	b.add_text(title_txt, 19, rune.color.lightened(0.45), 5)
 	var desc := rune.description
 	if lvl < rune.level_descriptions.size():
 		desc = rune.level_descriptions[lvl]
 	if rune.cursed:
 		desc = "☠ Проклятие Локи\n" + desc
-	var d := UIStyle.label(desc, 16, UIStyle.TEXT_DIM, 3)
-	d.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vb.add_child(d)
-	for c in vb.find_children("*", "Control", true, false):
-		(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_text(desc, 15, UIStyle.TEXT, 3)
 	b.pressed.connect(func() -> void: choose(index))
 	return b
 

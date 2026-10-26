@@ -200,6 +200,11 @@ var body_handlers: Array[BodyTraitHandler] = []
 var rotation_target: Vector2 = Vector2.ZERO
 var mouse_sensitivity: float = 0.0022
 var gamepad_sensitivity: float = 3.0
+## Инверсия вертикали (настройки, GDD 22; ставит GameSettings.apply_to_player)
+var invert_y: bool = false
+## Помощь «замедление при ударе-приземлении» (GDD 22): масштаб времени на падение и окно супер-прыжка
+@export var slam_assist_time_scale: float = 0.5
+var _slam_assist_on: bool = false
 
 var axe_damage_mult: float = 1.0
 var hammer_damage_mult: float = 1.0
@@ -233,6 +238,8 @@ func _ready() -> void:
 	rotation_target = Vector2(head.rotation.x, rotation.y)
 	if Run.has_signal("kill_registered"):
 		Run.kill_registered.connect(_on_kill_registered)
+	# Настройки игрока: чувствительность, инверсия, FOV, тряска, покачивание (scripts/settings.gd)
+	GameSettings.apply_to_player(self)
 	_emit_all()
 
 ## Применяет параметры тела (BodyDef) и руны забега.
@@ -284,7 +291,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var motion := event as InputEventMouseMotion
 		rotation_target.y -= motion.relative.x * mouse_sensitivity
-		rotation_target.x -= motion.relative.y * mouse_sensitivity
+		rotation_target.x -= motion.relative.y * mouse_sensitivity * (-1.0 if invert_y else 1.0)
 		rotation_target.x = clampf(rotation_target.x, deg_to_rad(-89), deg_to_rad(89))
 
 func _process(delta: float) -> void:
@@ -293,7 +300,7 @@ func _process(delta: float) -> void:
 	var look := Input.get_vector("camera_left", "camera_right", "camera_up", "camera_down")
 	if look != Vector2.ZERO:
 		rotation_target.y -= look.x * gamepad_sensitivity * delta
-		rotation_target.x -= look.y * gamepad_sensitivity * delta
+		rotation_target.x -= look.y * gamepad_sensitivity * delta * (-1.0 if invert_y else 1.0)
 		rotation_target.x = clampf(rotation_target.x, deg_to_rad(-89), deg_to_rad(89))
 	rotation.y = rotation_target.y
 	head.rotation.x = rotation_target.x
@@ -317,6 +324,7 @@ func _physics_process(delta: float) -> void:
 
 	_update_timers(delta)
 	_rune_tick(delta)
+	_slam_assist_tick()
 	if is_climbing:
 		_process_climb(delta)
 		camera_fx.update_motion(self, input_dir, false, delta)
@@ -1229,6 +1237,20 @@ func refill_shield() -> void:
 	if shield_max > 0.0 and shield < shield_max:
 		shield = shield_max
 		health_changed.emit(health, max_health)
+
+## Помощь «замедление при ударе-приземлении» (GDD 22, облегчённый режим без штрафа к Славе):
+## пока падаешь ударом-приземлением и в окне супер-прыжка/отскока после него — время идёт медленнее.
+## Hit-stop главнее: пока он идёт, масштаб не трогаем (FX вернёт 1.0 сам).
+func _slam_assist_tick() -> void:
+	var want := GameSettings.slam_slowmo() and not is_dead and (is_slamming or _super_jump_left > 0.0 or _bounce_window_left > 0.0)
+	if FX._hitstop_left > 0.0:
+		return
+	if want and not is_equal_approx(Engine.time_scale, slam_assist_time_scale):
+		FX._set_time_scale(slam_assist_time_scale)
+		_slam_assist_on = true
+	elif not want and _slam_assist_on:
+		_slam_assist_on = false
+		FX._set_time_scale(1.0)
 
 ## Проклятые руны Локи: икота (подпрыгивает сам) и «вертушка» (камера крутится на 180°).
 func _rune_tick(delta: float) -> void:

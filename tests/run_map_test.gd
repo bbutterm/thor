@@ -248,9 +248,10 @@ func _test_run_through_doors() -> void:
 	await _kill_all(game.room)
 	await wait(1.4)
 	check(game.rewards.choice.visible, "Локи предлагает сделку")
-	# Случайные руны прошлых залов (Щит Сиф, Шкура медведя…) срезают «половину» — для проверки снимаем
+	# Случайные руны прошлых залов (Щит Сиф, Шкура медведя) съедают часть «крови» — без них ровно половина
 	Run.runes.clear()
 	p.recalc_from_runes(Run)
+	p.shield = 0.0
 	p.health = 100.0
 	var picks1 := _pickups_in_room().size()
 	await DoorHelper.resolve_reward(get_tree(), game, "blood")

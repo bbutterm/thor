@@ -18,6 +18,7 @@ func _ready() -> void:
 	visible = false
 	_root = Control.new()
 	UIStyle.full_rect(_root)
+	UISkin.apply(_root)
 	add_child(_root)
 	var dim := ColorRect.new()
 	dim.color = Color(0.03, 0.02, 0.02, 0.85)
@@ -40,7 +41,7 @@ func _ready() -> void:
 	_quote.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(_quote)
-	var panel := UIStyle.panel()
+	var panel := UIStyle.panel(UIStyle.STONE, Color(UIStyle.GOLD, 0.6), "wood")
 	vb.add_child(panel)
 	_stats = UIStyle.label("", 20, UIStyle.TEXT, 4)
 	panel.add_child(_stats)

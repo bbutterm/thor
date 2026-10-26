@@ -296,7 +296,7 @@ func _run() -> void:
 	GameSettings.set_comic_scale(1.3)
 	GameSettings.set_comic_enabled(false)
 	var cf := ConfigFile.new()
-	check(cf.load(GameSettings.PATH) == OK and is_equal_approx(float(cf.get_value("comic", "scale", 0.0)), 1.3) and cf.get_value("comic", "enabled", true) == false, "настройки записаны в user://settings.cfg [comic]")
+	check(cf.load(GameSettings.path) == OK and is_equal_approx(float(cf.get_value("comic", "scale", 0.0)), 1.3) and cf.get_value("comic", "enabled", true) == false, "настройки записаны в settings.cfg [comic]")
 	GameSettings.set_comic_scale(saved_scale)
 	GameSettings.set_comic_enabled(saved_enabled)
 	_finish()

@@ -1,7 +1,7 @@
 extends CanvasLayer
 class_name TraitPick
 ## Выбор 1 из 3 трейтов Мьёльнира после мини-босса (GDD 10). Мышь или 1/2/3, игра на паузе.
-## Визуально отдельно от рун: грозовой синий фон, скошенные «ледяные» карточки, руна в круге.
+## Визуально отдельно от рун: грозовой синий фон, карточки card_trait комплекта (золото и молнии).
 ## Трейт той же группы заменяет старый — требует второго нажатия (подтверждение).
 ## Строится кодом; в game.gd создаётся как TraitPick.new().
 
@@ -14,6 +14,8 @@ const CARD := Color(0.07, 0.12, 0.2, 0.97)
 const CARD_HOVER := Color(0.1, 0.18, 0.3, 0.99)
 const REPLACE := Color(1.0, 0.5, 0.4)
 const NEW := Color(0.55, 1.0, 0.65)
+## Видимая ширина карточки (высота — по пропорциям card_trait)
+@export var card_width: float = 300.0
 
 var _choices: Array[MjolnirTrait] = []
 var _cards: HBoxContainer
@@ -29,6 +31,7 @@ func _ready() -> void:
 	visible = false
 	_root = Control.new()
 	UIStyle.full_rect(_root)
+	UISkin.apply(_root)
 	add_child(_root)
 	var dim := ColorRect.new()
 	dim.color = STORM
@@ -38,7 +41,7 @@ func _ready() -> void:
 	UIStyle.full_rect(center)
 	_root.add_child(center)
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 22)
+	vb.add_theme_constant_override("separation", 14)
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(vb)
 	var title := UIStyle.label("ᛗ  МЬЁЛЬНИР ЖАЖДЕТ СИЛЫ  ᛗ", 40, UIStyle.ICE, 10)
@@ -76,13 +79,6 @@ func open(choices: Array[MjolnirTrait]) -> void:
 	var tw := _root.create_tween()
 	tw.tween_property(_root, "modulate:a", 1.0, 0.25)
 
-func _card_style(bg: Color, border: Color, w: int) -> StyleBoxFlat:
-	var sb := UIStyle.panel_style(bg, border, 4, w)
-	sb.skew = Vector2(0.08, 0)
-	sb.shadow_color = Color(0.2, 0.5, 1.0, 0.25)
-	sb.shadow_size = 12
-	return sb
-
 func _status(t: MjolnirTrait) -> Array:
 	var lv := Run.mjolnir_trait_level(t.id)
 	if lv > 0:
@@ -92,64 +88,22 @@ func _status(t: MjolnirTrait) -> Array:
 		return ["ЗАМЕНИТ: %s" % old.title, REPLACE]
 	return ["НОВЫЙ", NEW]
 
+## Карточка трейта — card_trait из UI-комплекта (SkinCard, золотые молнии — отличие от рун):
+## иконка трейта в круге, название, группа, описание и статус (новый / уровень / заменит).
 func _make_card(t: MjolnirTrait, index: int) -> Button:
-	var b := Button.new()
-	b.custom_minimum_size = Vector2(270, 360)
-	b.focus_mode = Control.FOCUS_ALL
-	b.add_theme_stylebox_override("normal", _card_style(CARD, Color(t.color, 0.55), 2))
-	b.add_theme_stylebox_override("hover", _card_style(CARD_HOVER, t.color, 3))
-	b.add_theme_stylebox_override("focus", _card_style(CARD_HOVER, t.color, 3))
-	b.add_theme_stylebox_override("pressed", _card_style(CARD_HOVER.lightened(0.1), t.color, 3))
-	var vb := VBoxContainer.new()
-	vb.alignment = BoxContainer.ALIGNMENT_CENTER
-	vb.add_theme_constant_override("separation", 10)
-	UIStyle.full_rect(vb)
-	vb.offset_left = 20
-	vb.offset_right = -20
-	vb.offset_top = 16
-	vb.offset_bottom = -16
-	b.add_child(vb)
-	var key := UIStyle.label("[%d]" % (index + 1), 16, UIStyle.TEXT_DIM, 4)
-	key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vb.add_child(key)
-	# Руна в круге — отличие от карточек рун (там руна без рамки)
-	var ring := PanelContainer.new()
-	var rs := StyleBoxFlat.new()
-	rs.bg_color = Color(0, 0, 0, 0.35)
-	rs.border_color = t.color
-	rs.set_border_width_all(3)
-	rs.set_corner_radius_all(48)
-	rs.set_content_margin_all(6)
-	ring.add_theme_stylebox_override("panel", rs)
-	ring.custom_minimum_size = Vector2(96, 96)
-	ring.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	vb.add_child(ring)
-	var glyph := UIStyle.label(t.glyph, 56, t.color, 8)
-	glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	glyph.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	ring.add_child(glyph)
-	var name_l := UIStyle.label(t.title, 22, UIStyle.TEXT, 6)
-	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vb.add_child(name_l)
-	if t.group != "":
-		var g := UIStyle.label("группа: " + t.group, 14, Color(t.color, 0.8), 3)
-		g.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		vb.add_child(g)
 	var lv := Run.mjolnir_trait_level(t.id)
-	var d := UIStyle.label(t.description_lvl2 if lv > 0 and t.description_lvl2 != "" else t.description, 15, UIStyle.TEXT_DIM, 3)
-	d.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vb.add_child(d)
+	var b := SkinCard.make("card_trait", card_width, t.color, "legendary" if lv > 0 else "rare")
+	b.key_label.text = "[%d]" % (index + 1)
+	b.set_icon(UISkin.trait_icon(str(t.id)), "", t.color)
+	if UISkin.trait_icon(str(t.id)) == null:
+		b.set_icon(null, t.glyph, t.color)
+	b.add_text(t.title, 19, t.color.lightened(0.45), 5)
+	if t.group != "":
+		b.add_text("группа: " + t.group, 13, Color(t.color, 0.85), 3)
+	b.add_text(t.description_lvl2 if lv > 0 and t.description_lvl2 != "" else t.description, 13, UIStyle.TEXT, 3)
 	var st := _status(t)
-	var s := UIStyle.label(st[0], 16, st[1], 4)
-	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vb.add_child(s)
+	var s := b.add_text(st[0], 15, st[1], 4)
 	_status_labels.append(s)
-	for c in vb.find_children("*", "Control", true, false):
-		(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.pressed.connect(func() -> void: choose(index))
 	return b
 

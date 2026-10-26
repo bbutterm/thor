@@ -109,6 +109,8 @@ func _ready() -> void:
 	map = load(MAP_PATH) as RunMap if ResourceLoader.exists(MAP_PATH) else null
 	# Модели, анимации и звуки грузятся в фоне, пока игрок в меню (см. AssetCache)
 	AssetCache.start()
+	# Настройки игрока (звук, окно, клавиши) — после остальных автозагрузок (шина Music)
+	GameSettings.apply_startup.call_deferred()
 
 func _process(delta: float) -> void:
 	# delta здесь уже умножен на Engine.time_scale — возвращаем реальное время для hit-stop

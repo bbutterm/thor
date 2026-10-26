@@ -22,6 +22,7 @@ func _ready() -> void:
 	visible = false
 	_root = Control.new()
 	UIStyle.full_rect(_root)
+	UISkin.apply(_root)
 	add_child(_root)
 	var dim := ColorRect.new()
 	dim.color = Color(0.02, 0.02, 0.04, 0.74)
@@ -83,44 +84,16 @@ func open(title: String, hint: String, choices: Array, speaker: String = "", emo
 	var tw := _root.create_tween()
 	tw.tween_property(_root, "modulate:a", 1.0, 0.2)
 
+## Карточка варианта — card_rune из UI-комплекта (SkinCard): руна в круге, название и описание в окне.
 func _make_card(ch: Dictionary, index: int) -> Button:
 	var col: Color = ch.get("color", UIStyle.GOLD)
 	var enabled: bool = ch.get("enabled", true)
-	var b := Button.new()
-	b.custom_minimum_size = Vector2(250, 290)
-	b.focus_mode = Control.FOCUS_ALL
+	var b := SkinCard.make("card_rune", 260.0, col, "legendary")
 	b.disabled = not enabled
-	b.add_theme_stylebox_override("normal", UIStyle.panel_style(UIStyle.STONE_LIGHT, Color(col, 0.5), 12))
-	b.add_theme_stylebox_override("disabled", UIStyle.panel_style(Color(0.1, 0.1, 0.11, 0.9), Color(0.4, 0.4, 0.4, 0.4), 12))
-	for st in ["hover", "focus"]:
-		b.add_theme_stylebox_override(st, UIStyle.panel_style(Color(0.2, 0.19, 0.22, 0.98), col, 12, 3))
-	b.add_theme_stylebox_override("pressed", UIStyle.panel_style(Color(0.26, 0.24, 0.28, 1.0), col, 12, 3))
-	var vb := VBoxContainer.new()
-	vb.alignment = BoxContainer.ALIGNMENT_CENTER
-	vb.add_theme_constant_override("separation", 10)
-	UIStyle.full_rect(vb)
-	vb.offset_left = 16
-	vb.offset_right = -16
-	vb.offset_top = 16
-	vb.offset_bottom = -16
-	b.add_child(vb)
-	var key := UIStyle.label("[%d]" % (index + 1), 16, UIStyle.TEXT_DIM, 4)
-	key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vb.add_child(key)
-	var glyph := UIStyle.label(str(ch.get("glyph", "ᚱ")), 64, col if enabled else Color(0.45, 0.45, 0.45), 10)
-	glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vb.add_child(glyph)
-	var t := UIStyle.label(str(ch.get("title", "")), 22, UIStyle.TEXT if enabled else UIStyle.TEXT_DIM, 6)
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vb.add_child(t)
-	var d := UIStyle.label(str(ch.get("desc", "")), 16, UIStyle.TEXT_DIM, 3)
-	d.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vb.add_child(d)
-	for c in vb.find_children("*", "Control", true, false):
-		(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.key_label.text = "[%d]" % (index + 1)
+	b.set_icon(null, str(ch.get("glyph", "ᚱ")), col if enabled else Color(0.45, 0.45, 0.45))
+	b.add_text(str(ch.get("title", "")), 19, col.lightened(0.45) if enabled else UIStyle.TEXT_DIM, 5)
+	b.add_text(str(ch.get("desc", "")), 14, UIStyle.TEXT if enabled else UIStyle.TEXT_DIM, 3)
 	b.pressed.connect(func() -> void: choose(index))
 	return b
 

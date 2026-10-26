@@ -40,6 +40,7 @@ func _ready() -> void:
 func _build() -> void:
 	_root = Control.new()
 	UIStyle.full_rect(_root)
+	UISkin.apply(_root)
 	add_child(_root)
 	var bg := ColorRect.new()
 	bg.color = Color(0.045, 0.04, 0.06, 1.0)
@@ -68,9 +69,9 @@ func _build() -> void:
 	tv.add_child(UIStyle.label("ПЛАН ТРЕНИРОВОК ОДИНА", 40, UIStyle.GOLD, 10))
 	_stats_label = UIStyle.label("", 17, UIStyle.TEXT_DIM, 4)
 	tv.add_child(_stats_label)
-	var gp := UIStyle.panel(Color(0.1, 0.08, 0.05, 0.95), Color(UIStyle.GOLD, 0.8))
+	var gp := UIStyle.panel(Color(0.1, 0.08, 0.05, 0.95), Color(UIStyle.GOLD, 0.8), "plate")
 	head.add_child(gp)
-	_glory_label = UIStyle.label("", 34, UIStyle.GOLD, 8)
+	_glory_label = UIStyle.label("", 30, UIStyle.GOLD, 8)
 	_glory_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	gp.add_child(_glory_label)
 
@@ -87,7 +88,7 @@ func _build() -> void:
 	_odin = Portrait.new()
 	_odin.custom_minimum_size = Vector2(300, 330)
 	left.add_child(_odin)
-	var sp := UIStyle.panel(Color(0.06, 0.055, 0.08, 0.95), Color(0.3, 0.42, 0.85, 0.8))
+	var sp := UIStyle.panel(Color(0.06, 0.055, 0.08, 0.95), Color(0.3, 0.42, 0.85, 0.8), "wood")
 	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(sp)
 	var sv := VBoxContainer.new()
@@ -99,7 +100,7 @@ func _build() -> void:
 	sv.add_child(_odin_text)
 
 	# Список открытий справа
-	var lp := UIStyle.panel(Color(0.07, 0.065, 0.08, 0.9), Color(UIStyle.GOLD, 0.35))
+	var lp := UIStyle.panel(Color(0.07, 0.065, 0.08, 0.9), Color(UIStyle.GOLD, 0.35), "wood")
 	lp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(lp)
 	_scroll = ScrollContainer.new()
@@ -242,7 +243,7 @@ func _make_card(u: UnlockDef, glyph: String, col: Color) -> PanelContainer:
 	tv.add_child(title)
 	var desc := UIStyle.label(u.description, 14, UIStyle.TEXT_DIM, 2)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.custom_minimum_size = Vector2(200, 0)
+	desc.custom_minimum_size = Vector2(150, 0)
 	tv.add_child(desc)
 	var btn := Button.new()
 	btn.custom_minimum_size = Vector2(108, 48)
@@ -273,11 +274,15 @@ func _make_card(u: UnlockDef, glyph: String, col: Color) -> PanelContainer:
 			btn.add_theme_color_override("font_color", UIStyle.GOLD)
 	if not owned:
 		btn.add_theme_color_override("font_disabled_color", Color(0.55, 0.53, 0.5))
-	btn.add_theme_stylebox_override("normal", UIStyle.panel_style(Color(0.16, 0.13, 0.08, 0.95), Color(UIStyle.GOLD, 0.5), 8, 2))
-	btn.add_theme_stylebox_override("hover", UIStyle.panel_style(Color(0.26, 0.2, 0.1, 1.0), UIStyle.GOLD, 8, 2))
-	btn.add_theme_stylebox_override("focus", UIStyle.panel_style(Color(0.26, 0.2, 0.1, 1.0), UIStyle.GOLD, 8, 2))
-	btn.add_theme_stylebox_override("pressed", UIStyle.panel_style(Color(0.32, 0.24, 0.1, 1.0), UIStyle.GOLD, 8, 2))
-	btn.add_theme_stylebox_override("disabled", UIStyle.panel_style(Color(0.1, 0.1, 0.11, 0.9), Color(1, 1, 1, 0.08), 8, 2))
+	if UISkin.texture("button_secondary_normal"):
+		UISkin.style_button(btn, "secondary", 0.18)
+		btn.custom_minimum_size = Vector2(112, 46)
+	else:
+		btn.add_theme_stylebox_override("normal", UIStyle.panel_style(Color(0.16, 0.13, 0.08, 0.95), Color(UIStyle.GOLD, 0.5), 8, 2))
+		btn.add_theme_stylebox_override("hover", UIStyle.panel_style(Color(0.26, 0.2, 0.1, 1.0), UIStyle.GOLD, 8, 2))
+		btn.add_theme_stylebox_override("focus", UIStyle.panel_style(Color(0.26, 0.2, 0.1, 1.0), UIStyle.GOLD, 8, 2))
+		btn.add_theme_stylebox_override("pressed", UIStyle.panel_style(Color(0.32, 0.24, 0.1, 1.0), UIStyle.GOLD, 8, 2))
+		btn.add_theme_stylebox_override("disabled", UIStyle.panel_style(Color(0.1, 0.1, 0.11, 0.9), Color(1, 1, 1, 0.08), 8, 2))
 	btn.pressed.connect(buy.bind(u.id))
 	hb.add_child(btn)
 	card.set_meta("button", btn)

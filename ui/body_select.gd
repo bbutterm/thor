@@ -11,8 +11,6 @@ signal closed(body_id: String)
 ## Колонок в сетке тел
 @export var columns: int = 3
 @export var card_size: Vector2 = Vector2(230, 100)
-## Иконка замка (UI_PROMPTS 4.6); нет файла — надпись
-const LOCK_ICON := "res://sprites/ui/icons/icon_lock.png"
 const STYLE_GLYPH := {"base": "ᚱ", "nimble": "ᚹ", "nimble_plus": "ᚹ", "ram": "ᚦ", "jumper": "ᛇ", "heavy": "ᛟ", "slider": "ᛚ"}
 
 var bodies: Array[BodyDef] = []
@@ -41,8 +39,8 @@ func _ready() -> void:
 	layer = 36
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
-	if ResourceLoader.exists(LOCK_ICON):
-		_lock_tex = load(LOCK_ICON) as Texture2D
+	# Иконка замка из UI-комплекта (icon_lock); нет — руна-заглушка
+	_lock_tex = UISkin.texture("icon_lock")
 	bodies.assign(Run.all_bodies)
 	# Порядок: открытые с начала, потом по цене
 	bodies.sort_custom(func(a: BodyDef, b: BodyDef) -> bool:
@@ -66,6 +64,7 @@ static func price_of(b: BodyDef) -> int:
 func _build() -> void:
 	_root = Control.new()
 	UIStyle.full_rect(_root)
+	UISkin.apply(_root)
 	add_child(_root)
 	var bg := ColorRect.new()
 	bg.color = Color(0.045, 0.04, 0.06, 1.0)
@@ -92,7 +91,7 @@ func _build() -> void:
 	head.add_child(tv)
 	tv.add_child(UIStyle.label("В КОГО ВСЕЛИТЬСЯ?", 40, UIStyle.GOLD, 10))
 	tv.add_child(UIStyle.label("Один подобрал смертных. Выбирай тело на забег.", 17, UIStyle.TEXT_DIM, 4))
-	var gp := UIStyle.panel(Color(0.1, 0.08, 0.05, 0.95), Color(UIStyle.GOLD, 0.8))
+	var gp := UIStyle.panel(Color(0.1, 0.08, 0.05, 0.95), Color(UIStyle.GOLD, 0.8), "plate")
 	head.add_child(gp)
 	_glory_label = UIStyle.label("", 30, UIStyle.GOLD, 8)
 	gp.add_child(_glory_label)
@@ -107,7 +106,7 @@ func _build() -> void:
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.add_theme_constant_override("separation", 12)
 	body.add_child(left)
-	var lp := UIStyle.panel(Color(0.07, 0.065, 0.08, 0.9), Color(UIStyle.GOLD, 0.35))
+	var lp := UIStyle.panel(Color(0.07, 0.065, 0.08, 0.9), Color(UIStyle.GOLD, 0.35), "wood")
 	lp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(lp)
 	var scroll := ScrollContainer.new()
@@ -120,19 +119,24 @@ func _build() -> void:
 	scroll.add_child(_grid)
 
 	# Карточка выбранного тела
-	var rp := UIStyle.panel(Color(0.06, 0.055, 0.08, 0.95), Color(UIStyle.GOLD, 0.6))
-	rp.custom_minimum_size = Vector2(470, 0)
+	var rp := UIStyle.panel(Color(0.06, 0.055, 0.08, 0.95), Color(UIStyle.GOLD, 0.6), "wood")
+	rp.custom_minimum_size = Vector2(450, 0)
 	body.add_child(rp)
 	var rv := VBoxContainer.new()
 	rv.add_theme_constant_override("separation", 6)
-	rp.add_child(rv)
+	# Описание тела может не влезть по высоте (720p) — прокрутка, кнопки внизу всегда видны
+	var rscroll := ScrollContainer.new()
+	rscroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	rp.add_child(rscroll)
+	rv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rscroll.add_child(rv)
 	_name_label = UIStyle.label("", 30, UIStyle.GOLD, 8)
 	_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_name_label.custom_minimum_size = Vector2(420, 0)
+	_name_label.custom_minimum_size = Vector2(380, 0)
 	rv.add_child(_name_label)
 	_stats_label = UIStyle.label("", 17, UIStyle.TEXT, 4)
 	_stats_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_stats_label.custom_minimum_size = Vector2(420, 0)
+	_stats_label.custom_minimum_size = Vector2(380, 0)
 	rv.add_child(_stats_label)
 	_start_label = UIStyle.label("", 18, UIStyle.TEXT, 4)
 	_start_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -191,7 +195,7 @@ func _section(parent: Control, caption: String, col: Color) -> Array:
 	parent.add_child(t)
 	var d := UIStyle.label("", 16, UIStyle.TEXT_DIM, 3)
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	d.custom_minimum_size = Vector2(420, 0)
+	d.custom_minimum_size = Vector2(380, 0)
 	parent.add_child(d)
 	return [t, d]
 
