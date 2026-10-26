@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MjolnirTrait" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/mjolnir_trait.gd" id="1_trait"]
+[ext_resource type="Script" path="res://weapons/mjolnir_traits/ricochet.gd" id="2_handler"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("2_handler")
+
+[resource]
+script = ExtResource("1_trait")
+id = &"ricochet"
+title = "Рикошет"
+description = "Отскакивает от стен и врагов до 3 раз — сам ищет следующую цель."
+description_lvl2 = "5 раз."
+glyph = "ᛉ"
+color = Color(0.95, 0.95, 1, 1)
+group = "воткнулся"
+handler = SubResource("Resource_handler")

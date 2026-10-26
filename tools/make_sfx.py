@@ -179,4 +179,12 @@ save("boss_slam", thump(1.2, 70, 22) * 1.6 + lp(rng.standard_normal(n), 400) * e
 
 # Игрок получил урон
 save("player_hurt", thump(0.2, 220, 90) + bp(rng.standard_normal(int(SR * 0.2)), 500, 2000) * env(int(SR * 0.2), 0.001, 3) * 0.5, 0.7)
+# Молот воткнулся в стену/пол — глухой удар с каменным хрустом
+n = int(SR * 0.35)
+save("hammer_stick", thump(0.35, 130, 40) * 1.3 + bp(rng.standard_normal(n), 400, 3000) * env(n, 0.001, 4.0) * 0.6 + metal(0.35, 260) * 0.25, 0.85)
+
+# Идеальный хват — звонкое «дзынь»
+tt = t(0.7)
+ding = sum(np.sin(2 * np.pi * f * tt) * np.exp(-tt * (5 + 3 * i)) / (1 + i) for i, f in enumerate([1568.0, 2349.3, 3136.0]))
+save("perfect_catch", mix(ding, metal(0.4, 900) * 0.3), 0.6)
 print("Готово:", OUT)

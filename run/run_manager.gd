@@ -4,6 +4,7 @@ extends Node
 signal glory_changed(total: int)
 signal runes_changed(runes: Array)
 signal kill_streak(count: int)
+signal mjolnir_traits_changed(traits: Array)
 
 const BODIES_DIR := "res://run/bodies/"
 const RUNES_DIR := "res://run/runes/"
@@ -16,6 +17,7 @@ const ROOM_SCENES := [
 	"res://rooms/room_06.tscn",
 ]
 const BOSS_SCENE := "res://rooms/boss_arena.tscn"
+const MJOLNIR_TRAITS_DIR := "res://weapons/mjolnir_traits/"
 
 @export var rooms_per_run: int = 4
 @export var glory_per_kill: int = 10
@@ -25,6 +27,11 @@ const BOSS_SCENE := "res://rooms/boss_arena.tscn"
 @export var glory_room_clear: int = 25
 @export var glory_boss_kill: int = 150
 @export var multikill_window: float = 0.6
+@export_group("Мини-боссы и трейты Мьёльнира")
+## После каких залов (индекс с 0) в зале появляется мини-босс — последней волной; за него выбор трейта
+@export var miniboss_rooms: PackedInt32Array = [1, 3]
+## Какой мини-босс (MinibossDef)
+@export var miniboss_def_path: String = "res://enemies/minibosses/fat_sven.tres"
 
 var body: BodyDef
 var room_order: Array[String] = []
@@ -38,6 +45,10 @@ var won: bool = false
 
 var all_bodies: Array[BodyDef] = []
 var all_runes: Array[RuneDef] = []
+var all_mjolnir_traits: Array[MjolnirTrait] = []
+## Активные трейты Мьёльнира (не больше одного на группу) и их уровни (id → 1..2)
+var mjolnir_traits: Array[MjolnirTrait] = []
+var mjolnir_trait_levels: Dictionary = {}
 var _recent_kill_times: Array[float] = []
 
 func _ready() -> void:
@@ -49,6 +60,7 @@ func _ready() -> void:
 		main_font.fallbacks = [runic]
 	all_bodies.assign(_load_dir(BODIES_DIR))
 	all_runes.assign(_load_dir(RUNES_DIR))
+	all_mjolnir_traits.assign(_load_dir(MJOLNIR_TRAITS_DIR))
 	# Модели, анимации и звуки грузятся в фоне, пока игрок в меню (см. AssetCache)
 	AssetCache.start()
 
@@ -94,6 +106,9 @@ func start_run(forced_body_id: String = "") -> void:
 	best_streak = 0
 	won = false
 	_recent_kill_times.clear()
+	mjolnir_traits.clear()
+	mjolnir_trait_levels.clear()
+	mjolnir_traits_changed.emit(mjolnir_traits)
 	runes_changed.emit(runes)
 	glory_changed.emit(glory)
 
@@ -166,3 +181,58 @@ func verdict() -> String:
 	if glory >= 150:
 		return "Сойдёт"
 	return "Недостоин"
+
+# --- Мини-боссы и трейты Мьёльнира (GDD 10, 14.1) ---
+
+## В текущем зале есть мини-босс (финальный босс — не мини-босс)
+func is_miniboss_room() -> bool:
+	return not is_boss_room() and room_index in miniboss_rooms
+
+func miniboss_def() -> Resource:
+	return load(miniboss_def_path) if miniboss_def_path != "" and ResourceLoader.exists(miniboss_def_path) else null
+
+func mjolnir_trait_level(id: StringName) -> int:
+	return int(mjolnir_trait_levels.get(id, 0))
+
+## Активный трейт той же группы (его заменит t), или null
+func mjolnir_trait_conflict(t: MjolnirTrait) -> MjolnirTrait:
+	if t.group == "":
+		return null
+	for o in mjolnir_traits:
+		if o.id != t.id and o.group == t.group:
+			return o
+	return null
+
+## Выбор 1 из count: в одном предложении нет двух трейтов одной группы; трейты на макс. уровне не выпадают.
+## Уже взятый трейт может выпасть — это повышение уровня; трейт группы, которая занята, — замена.
+func random_mjolnir_trait_choices(count: int = 3) -> Array[MjolnirTrait]:
+	var pool: Array[MjolnirTrait] = []
+	for t in all_mjolnir_traits:
+		if mjolnir_trait_level(t.id) < t.max_level:
+			pool.append(t)
+	pool.shuffle()
+	var out: Array[MjolnirTrait] = []
+	var groups: Dictionary = {}
+	for t in pool:
+		if out.size() >= count:
+			break
+		if t.group != "" and groups.has(t.group):
+			continue
+		out.append(t)
+		if t.group != "":
+			groups[t.group] = true
+	return out
+
+## Взять трейт: новый — уровень 1 (трейт той же группы уходит), повтор — уровень выше.
+func add_mjolnir_trait(t: MjolnirTrait) -> void:
+	Perf.mark("trait_pick")
+	if mjolnir_trait_levels.has(t.id):
+		mjolnir_trait_levels[t.id] = mini(mjolnir_trait_level(t.id) + 1, t.max_level)
+	else:
+		var old := mjolnir_trait_conflict(t)
+		if old:
+			mjolnir_traits.erase(old)
+			mjolnir_trait_levels.erase(old.id)
+		mjolnir_traits.append(t)
+		mjolnir_trait_levels[t.id] = 1
+	mjolnir_traits_changed.emit(mjolnir_traits)
