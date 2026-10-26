@@ -212,8 +212,11 @@ func _run() -> void:
 	check(elite.max_health >= 60.0 * 2.5 - 0.1 and Loot.is_elite(elite), "элита: ×2.5 HP (%.0f)" % elite.max_health)
 	check(elite.get_node_or_null("EliteMark") != null, "у элиты видимая метка")
 	var before := get_tree().get_nodes_in_group("pickups").size()
+	var silver_chance := Loot.elite_silver_chance
+	Loot.elite_silver_chance = 0.0  # элита роняет оружие или серебро — здесь проверяем оружие
 	elite.take_hit(9999, Vector3.ZERO, "melee")
 	await wait(0.2)
+	Loot.elite_silver_chance = silver_chance
 	check(get_tree().get_nodes_in_group("pickups").size() == before + 1, "элита уронила оружие")
 	for n in get_tree().get_nodes_in_group("pickups"):
 		n.queue_free()

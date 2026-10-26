@@ -193,6 +193,33 @@ func _run() -> void:
 	check(p.velocity.y > 5.0 and p.velocity.z > 3.0, "отскок от стены: вверх и от стены (v=%s)" % [p.velocity])
 	check(p._wall_jumps_left == p.wall_jumps - 1, "потрачен 1 отскок от стены")
 	wall2.queue_free()
+	await wait(0.3)
+
+	print("-- Пике и отмена удара-приземления")
+	p.global_position = floor_pos + Vector3(-6, 7.0, 0)
+	p.velocity = Vector3.ZERO
+	await wait(0.1)
+	await press("dash")
+	await wait(0.05)
+	await press("slam")
+	await get_tree().physics_frame
+	var hv := Vector2(p.velocity.x, p.velocity.z).length()
+	check(p.is_slamming and p.is_diving and hv > 10.0 and p.velocity.y < -10.0, "пике: удар-приземление после рывка в воздухе — наклонно (гориз. %.1f, верт. %.1f)" % [hv, p.velocity.y])
+	for i in 120:
+		await get_tree().physics_frame
+		if not p.is_slamming:
+			break
+	check(not p.is_slamming and p.is_on_floor(), "пике приземлилось")
+	await wait(0.6)
+	p.dash_charges = p.dash_charges_max
+	p.global_position = floor_pos + Vector3(-6, 8.0, 0)
+	p.velocity = Vector3.ZERO
+	await wait(0.6)  # окно пике после прошлого рывка истекло
+	await press("slam")
+	await get_tree().physics_frame
+	check(p.is_slamming and not p.is_diving and absf(p.velocity.x) + absf(p.velocity.z) < 0.5, "обычный удар-приземление — вертикально")
+	await press("dash")
+	check(not p.is_slamming and p.is_dashing(), "рывок во время падения отменил удар-приземление")
 	_finish()
 
 func _finish() -> void:

@@ -3,7 +3,7 @@
 Прототип рогалик-шутера от первого лица. Godot **4.6.3** (не .NET), физика Jolt, GDScript со статической типизацией. Общение с владельцем — на русском.
 
 ## Где что
-- `player/player.gd` — движение (рывок, двойной прыжок, удар-приземление, супер-прыжок; GDD 7.2: отскок от удара-приземления, прыжок по головам, залезание на уступ, отскок от стены — блок «Прыжки по GDD 7.2»), урон; `player/camera_fx.gd` — тряска/FOV/наклон.
+- `player/player.gd` — движение (рывок, двойной прыжок, удар-приземление, супер-прыжок; GDD 7.2: отскок от удара-приземления, прыжок по головам, залезание на уступ, отскок от стены, пике, отмена удара-приземления рывком — блок «Прыжки по GDD 7.2»), урон; `player/camera_fx.gd` — тряска/FOV/наклон.
 - `weapons/` — топор (`axe.gd`), Мьёльнир (`mjolnir_hand.gd` + `mjolnir_projectile.gd`: состояния OUT / HOVER / STUCK «воткнулся» / RETURN, идеальный хват), огонь (`fire_zone.gd`).
 - Трейты Мьёльнира: `weapons/mjolnir_trait.gd` (`MjolnirTrait`, данные + группа) и `weapons/mjolnir_trait_handler.gd` (`MjolnirTraitHandler`, хуки `on_throw`/`on_flight_tick`/`on_hit_enemy`/`on_hit_world`/`on_stuck_tick`/`on_recall_start`/`on_recall_tick`/`on_caught`/`on_player_slam`/`on_perfect_catch`, `modify(stat)`); сами трейты — `weapons/mjolnir_traits/<id>.tres` + `<id>.gd`. Активные — `Run.mjolnir_traits`, рука собирает копии обработчиков. Выбор — `ui/trait_pick.gd`, иконки — `ui/mjolnir_traits_hud.gd`.
 - Мини-босс: `enemies/miniboss_def.gd` (`MinibossDef`, `enemies/minibosses/*.tres`) — обычный враг с переопределёнными числами и `Kind.BOSS`; добавляется последней волной (`Room.add_wave`) в залах `Run.miniboss_rooms`, после него `Game` открывает выбор трейта, потом руны.

@@ -277,9 +277,12 @@ func _test_drop_and_rules() -> void:
 	var picks0 := get_tree().get_nodes_in_group("pickups").size()
 	var e := _elite("grunt", Loot.get_elite_modifier("fast"), Vector3(0, 0, -6))
 	await frames(10)
+	var silver_chance := Loot.elite_silver_chance
+	Loot.elite_silver_chance = 0.0  # «или 10 серебра» проверяет shop_test
 	e.take_hit(9999.0, Vector3.ZERO, "melee_finisher")
 	await frames(5)
-	check(get_tree().get_nodes_in_group("pickups").size() > picks0, "элита гарантированно роняет оружие")
+	Loot.elite_silver_chance = silver_chance
+	check(get_tree().get_nodes_in_group("pickups").size() > picks0, "элита гарантированно роняет оружие (при выпадении не-серебра)")
 	await _clear()
 	# Корм элитой не бывает, особый — бывает
 	var f := room._make_enemy("fodder")

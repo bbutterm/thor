@@ -75,6 +75,12 @@ signal slammed(power: float)
 @export var wall_jumps: int = 2
 @export var wall_jump_push: float = 7.0
 @export var wall_jump_up: float = 8.5
+## Пике: удар-приземление во время рывка в воздухе или сразу после (окно, с) — наклонное падение по взгляду
+@export var dive_window: float = 0.35
+@export var dive_horizontal_speed: float = 20.0
+@export var dive_down_speed: float = 24.0
+## Отмена удара-приземления рывком во время падения
+@export var slam_cancel_by_dash: bool = true
 
 @export_group("Стиль движения (GDD 7.3, 7.4)")
 ## Эти поля ставит Player.apply_movement_profile() из run/movement/<стиль>.tres (Базовый — значения ниже).
@@ -156,6 +162,11 @@ var _jump_buffer_left: float = 0.0
 var _was_on_floor: bool = true
 
 var is_slamming: bool = false
+## Пике: удар-приземление летит наклонно (скорость падения задаёт _slam_velocity)
+var is_diving: bool = false
+var _slam_velocity: Vector3 = Vector3.ZERO
+var _dash_in_air: bool = false
+var _dive_window_left: float = 0.0
 ## Сколько врагов задел последний удар-приземление (для отскока)
 var _last_slam_hits: int = 0
 var _bounce_window_left: float = 0.0
@@ -320,8 +331,12 @@ func _physics_process(delta: float) -> void:
 		_jump_buffer_left = jump_buffer
 
 	# Рывок (на земле с зажатым Ctrl — подкат)
-	if input_enabled and Input.is_action_just_pressed("dash") and dash_charges > 0 and not is_slamming:
-		_try_dash(wish, on_floor)
+	if input_enabled and Input.is_action_just_pressed("dash") and dash_charges > 0:
+		if is_slamming and slam_cancel_by_dash and not on_floor:
+			_cancel_slam()
+		if not is_slamming:
+			_try_dash(wish, on_floor)
+	_dive_window_left = maxf(0.0, _dive_window_left - delta)
 
 	# Удар-приземление
 	if input_enabled and Input.is_action_just_pressed("slam") and not on_floor and not is_slamming:
@@ -330,7 +345,7 @@ func _physics_process(delta: float) -> void:
 	if _dash_time_left > 0.0:
 		_process_dash(delta)
 	elif is_slamming:
-		velocity = Vector3(0, -slam_speed, 0)
+		velocity = _slam_velocity
 	elif is_sliding:
 		_process_slide(wish, on_floor, delta)
 		_process_jump(on_floor)
@@ -500,6 +515,7 @@ func _start_dash(wish: Vector3) -> void:
 	is_sliding = false
 	_dash_dir = _dir_or_forward(wish)
 	_dash_time_left = dash_duration
+	_dash_in_air = not is_on_floor()
 	_invuln_left = dash_invuln
 	_dash_hit.clear()
 	if dash_ram:
@@ -522,6 +538,8 @@ func _process_dash(delta: float) -> void:
 		_ram_tick()
 	if _dash_time_left <= 0.0:
 		_end_ram()
+		if _dash_in_air:
+			_dive_window_left = dive_window
 		# Импульс складывается: к скорости до рывка добавляется бонус, но не ниже обычного выхода и не выше предела
 		var exit_speed := minf(maxf(dash_speed * dash_exit_keep, _dash_entry_speed + dash_momentum_bonus), momentum_limit())
 		velocity = _dash_dir * exit_speed
@@ -624,6 +642,17 @@ func _dash_damage_tick() -> void:
 # --- Удар-приземление ---
 
 func _start_slam() -> void:
+	# Пике (GDD 7.2): сразу после рывка в воздухе — наклонно по направлению взгляда
+	is_diving = (_dash_time_left > 0.0 and _dash_in_air) or _dive_window_left > 0.0
+	_dive_window_left = 0.0
+	_slam_velocity = Vector3(0, -slam_speed, 0)
+	if is_diving:
+		var f := get_aim_forward()
+		f.y = 0.0
+		f = f.normalized() if f.length() > 0.01 else _dash_dir
+		_slam_velocity = f * dive_horizontal_speed + Vector3.DOWN * dive_down_speed
+		camera_fx.speed_lines_pulse()
+		Perf.mark("dive")
 	is_slamming = true
 	_dash_time_left = 0.0
 	_end_ram()
@@ -631,10 +660,18 @@ func _start_slam() -> void:
 	camera_fx.kick_fov(-6.0)
 	Audio.play("sounds/jump_c.ogg")
 
+## Отмена удара-приземления (GDD 7.2): рывок во время падения — дальше обычное падение
+func _cancel_slam() -> void:
+	is_slamming = false
+	is_diving = false
+	velocity = Vector3(velocity.x, maxf(velocity.y, -4.0), velocity.z)
+	Perf.mark("slam_cancel")
+
 func _on_landed() -> void:
 	var fall := maxf(0.0, _air_peak_y - global_position.y)
 	if is_slamming:
 		is_slamming = false
+		is_diving = false
 		_do_slam_impact(fall)
 		velocity.x = 0
 		velocity.z = 0
