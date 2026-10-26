@@ -102,7 +102,8 @@ static func spawn_ammo(parent: Node, pos: Vector3) -> Node3D:
 
 ## Решить при спавне, станет ли враг элитой (до add_child: меняет здоровье, урон, вид).
 static func maybe_make_elite(room: Node, enemy: Enemy, chance: float, max_per_room: int) -> void:
-	if enemy.kind == Enemy.Kind.BOSS or chance <= 0.0:
+	# GDD 12.4: элитой бывает боец или особый враг — не корм и не босс
+	if enemy.kind == Enemy.Kind.BOSS or enemy.kind == Enemy.Kind.FODDER or chance <= 0.0:
 		return
 	var n: int = room.get_meta("elites", 0)
 	if n >= max_per_room or randf() >= chance:
@@ -110,14 +111,52 @@ static func maybe_make_elite(room: Node, enemy: Enemy, chance: float, max_per_ro
 	room.set_meta("elites", n + 1)
 	make_elite(enemy)
 
-## Элита (GDD 12.4): светится, ×2.5 HP, урон ×1.5, гарантированно роняет оружие.
-static func make_elite(enemy: Enemy) -> void:
+## Модификаторы элиты (enemies/elite/mods/*.tres, EliteModifier) — новый .tres подхватывается сам.
+const ELITE_MODS_DIR := "res://enemies/elite/mods/"
+static var _elite_mods: Array[EliteModifier] = []
+
+static func elite_modifiers() -> Array[EliteModifier]:
+	if _elite_mods.is_empty():
+		for f in ResourceLoader.list_directory(ELITE_MODS_DIR):
+			var clean := f.trim_suffix(".remap")
+			if clean.ends_with(".tres"):
+				var m := load(ELITE_MODS_DIR + clean) as EliteModifier
+				if m and m.enabled:
+					_elite_mods.append(m)
+	return _elite_mods
+
+static func get_elite_modifier(id: String) -> EliteModifier:
+	for m in elite_modifiers():
+		if m.id == id:
+			return m
+	return null
+
+static func random_elite_modifier() -> EliteModifier:
+	var mods := elite_modifiers()
+	var total := 0.0
+	for m in mods:
+		total += maxf(0.0, m.weight)
+	var r := randf() * total
+	for m in mods:
+		r -= maxf(0.0, m.weight)
+		if r <= 0.0:
+			return m
+	return mods[mods.size() - 1] if not mods.is_empty() else null
+
+## Элита (GDD 12.4): светится цветом модификатора, ×2.5 HP, урон ×1.5, подпись модификатора над головой,
+## гарантированный дроп. mod = null — случайный модификатор. Вызывать до add_child врага.
+static func make_elite(enemy: Enemy, mod: EliteModifier = null) -> void:
+	Perf.mark("elite_make")
+	if mod == null:
+		mod = random_elite_modifier()
+	var color := mod.color if mod else ELITE_COLOR
 	enemy.set_meta("elite", true)
 	enemy.max_health *= 2.5
 	enemy.attack_damage *= 1.5
 	enemy.projectile_damage *= 1.5
 	enemy.model_scale *= 1.12
 	enemy.eye_glow = Color(1.0, 0.6, 0.15, 1.0)
+	enemy.elite_glow = Color(color, 0.22)
 	# Метка над головой: вращающийся золотой ромб (общий меш и материал эффектов)
 	var mark := Node3D.new()
 	mark.name = "EliteMark"
@@ -130,7 +169,7 @@ static func make_elite(enemy: Enemy) -> void:
 	mark.add_child(mi)
 	var ring := MeshInstance3D.new()
 	ring.mesh = FX.shared_mesh("ring")
-	FX.fx_apply(ring, "alpha", Color(ELITE_COLOR, 0.8), 1.0)
+	FX.fx_apply(ring, "alpha", Color(color, 0.8), 1.0)
 	ring.name = "EliteRing"
 	ring.scale = Vector3(0.75, 0.3, 0.75) * enemy.model_scale
 	ring.position.y = 0.08
@@ -140,31 +179,100 @@ static func make_elite(enemy: Enemy) -> void:
 	mark.position = Vector3(0, 2.45 * enemy.model_scale, 0)
 	var tw := mark.create_tween().set_loops()
 	tw.tween_property(mark, "rotation:y", TAU, 1.6).from(0.0)
+	if mod == null:
+		return
+	enemy.set_meta("elite_mod", mod.id)
+	# Подпись модификатора — как цифры урона (тот же шрифт и флаги Label3D: уже прогретый шейдер)
+	var label := Label3D.new()
+	label.name = "EliteLabel"
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.fixed_size = true
+	label.pixel_size = 0.0011
+	label.font_size = 48
+	label.outline_size = 12
+	label.modulate = color
+	label.outline_modulate = Color(0, 0, 0, 0.8)
+	var font: Font = load("res://fonts/RussoOne-Regular.ttf")
+	if font:
+		label.font = font
+	label.position = Vector3(0, 2.8 * enemy.model_scale, 0)
+	enemy.add_child(label)
+	if mod.handler:
+		var h := mod.handler.new() as EliteHandler
+		if h:
+			h.setup(enemy, mod)
+	refresh_elite_label(enemy)
+
+## Подпись над элитой: название модификатора + состояние (остаток брони).
+static func refresh_elite_label(enemy: Enemy) -> void:
+	var label := enemy.get_node_or_null("EliteLabel") as Label3D
+	if label == null:
+		return
+	var mod := get_elite_modifier(str(enemy.get_meta("elite_mod", "")))
+	var text := mod.title if mod else "Элита"
+	for h in enemy.elite_handlers:
+		text += (h as EliteHandler).label_suffix()
+	label.text = text
 
 static func is_elite(enemy: Node) -> bool:
 	return enemy != null and enemy.has_meta("elite")
 
-## Смерть врага: элита роняет оружие (60 % мили / 40 % ренж), иногда — патроны.
+## Серебро (блок К): если в игре уже есть кошелёк — Run.add_silver(n) или автозагрузка Silver.add(n).
+static func give_silver(amount: int, pos: Vector3, parent: Node) -> bool:
+	var tree := Engine.get_main_loop() as SceneTree
+	var target: Object = null
+	var method := ""
+	if Run.has_method("add_silver"):
+		target = Run
+		method = "add_silver"
+	elif tree and tree.root.has_node("Silver") and tree.root.get_node("Silver").has_method("add"):
+		target = tree.root.get_node("Silver")
+		method = "add"
+	if target == null:
+		return false
+	target.call(method, amount)
+	FX.damage_number(parent, pos + Vector3(0, 1.6, 0), amount, Color(0.85, 0.88, 0.95), true)
+	return true
+
+## Смерть врага: элита гарантированно роняет оружие (60 % мили / 40 % ренж) или 10 серебра (GDD 12.4),
+## Наёмник — патроны всегда, остальные — иногда патроны.
 static func on_enemy_died(enemy: Enemy, _source: String) -> void:
 	var parent := enemy.get_parent()
 	if parent == null:
 		return
 	var pos := enemy.global_position
 	var h := _holder()
+	# Наёмник Локи роняет патроны всегда (GDD 12.1)
+	if enemy.kind == Enemy.Kind.MERC:
+		spawn_ammo(parent, pos)
 	if is_elite(enemy):
-		var cls := "melee" if randf() < 0.6 else "ranged"
-		var d := random_def(cls)
-		if d == null:
-			d = random_def()
-		if d:
-			spawn_weapon(parent, pos, WeaponItem.create(d, random_level()), pos + Vector3(0, 1.5, 0))
-		if h and h.ranged:
+		var dropped := false
+		if randf() < elite_silver_chance:
+			dropped = give_silver(elite_silver, pos, parent)
+		if not dropped:
+			var cls := "melee" if randf() < 0.6 else "ranged"
+			var d := random_def(cls)
+			if d == null:
+				d = random_def()
+			if d:
+				spawn_weapon(parent, pos, WeaponItem.create(d, random_level()), pos + Vector3(0, 1.5, 0))
+				dropped = true
+		if not dropped:
+			dropped = give_silver(elite_silver, pos, parent)
+		if (not dropped or (h and h.ranged)) and enemy.kind != Enemy.Kind.MERC:
 			spawn_ammo(parent, pos + Vector3(0.6, 0, 0.3))
+		return
+	if enemy.kind == Enemy.Kind.MERC:
 		return
 	if h and h.wants_ammo():
 		var chance := h.ammo_drop_chance * (2.0 if enemy.kind == Enemy.Kind.THROWER else 1.0)
 		if randf() < chance:
 			spawn_ammo(parent, pos)
+
+## Элита: доля дропа «10 серебра» вместо оружия (если серебро уже есть в игре) и сколько серебра
+static var elite_silver_chance: float = 0.4
+static var elite_silver: int = 10
 
 # --- Сундук ---
 

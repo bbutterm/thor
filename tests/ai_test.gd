@@ -46,6 +46,35 @@ func _run() -> void:
 		print("[%s] %s: попаданий по игроку %d (урон %.0f за 15 с), снарядов в воздухе (сэмплы) %d, грунтов далеко от игрока %d" % ["OK" if ok else "FAIL", room.get_file(), hits[0], dmg[0], projectiles, stuck])
 		if not ok:
 			fails += 1
+	# Враги Мидгарда (GDD 12.1) по одному в пустом зале: доходят и бьют / стреляют / взрываются;
+	# Шаман сам не бьёт — поднимает корм, и корм доходит и бьёт
+	for kind in ["fodder", "bloated", "shieldbearer", "merc", "shaman"]:
+		Run.start_run("berserker")
+		Run.room_order.assign([Run.ROOM_SCENES[0], Run.BOSS_SCENE])
+		get_tree().change_scene_to_file("res://scenes/game.tscn")
+		await frames(20)
+		var gk := get_tree().current_scene as Game
+		gk.room.set_physics_process(false)
+		gk.room._spawn_queue.clear()
+		for e in gk.room.alive_enemies().duplicate():
+			e.queue_free()
+		gk.room._alive.clear()
+		await frames(2)
+		var pk := gk.player
+		var khits := [0]
+		pk.hurt.connect(func(_a: float) -> void: khits[0] += 1)
+		var ek := gk.room.spawn_extra(kind, pk.global_position + Vector3(3, 0, -11))
+		var raised := 0
+		for i in 60 * 15:
+			await get_tree().physics_frame
+			pk.health = pk.max_health
+			if kind == "bloated" and khits[0] > 0:
+				break
+		raised = gk.room.alive_count() - (1 if is_instance_valid(ek) and not ek.is_dead else 0)
+		var kok: bool = khits[0] > 0 and (kind != "shaman" or raised > 0)
+		print("[%s] %s: попаданий по игроку %d за 15 с%s" % ["OK" if kok else "FAIL", kind, khits[0], (", поднято корма %d" % raised) if kind == "shaman" else ""])
+		if not kok:
+			fails += 1
 	# Мини-босс (Толстый Свен — заглушка): доходит и бьёт, полоса HP с его именем
 	Run.start_run("berserker")
 	Run.room_order.assign([Run.ROOM_SCENES[0], Run.BOSS_SCENE])

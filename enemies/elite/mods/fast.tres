@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EliteModifier" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://enemies/elite/elite_modifier.gd" id="1_m"]
+[ext_resource type="Script" path="res://enemies/elite/fast.gd" id="2_h"]
+
+[resource]
+script = ExtResource("1_m")
+id = "fast"
+title = "Быстрый"
+color = Color(1.0, 0.95, 0.4, 1)
+handler = ExtResource("2_h")
+speed_mult = 1.5

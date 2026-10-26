@@ -289,6 +289,17 @@ func build_enemies() -> void:
 		"grunt": {"kind": Enemy.Kind.GRUNT, "hp": 60.0, "speed": 4.4, "range": 2.0, "dmg": 12.0, "windup": 0.6, "recover": 0.7, "cd": 0.9, "color": Color(0.36, 0.48, 0.38), "scale": 1.0, "resist": 0.0},
 		"thrower": {"kind": Enemy.Kind.THROWER, "hp": 40.0, "speed": 3.8, "range": 12.0, "dmg": 10.0, "windup": 0.55, "recover": 0.4, "cd": 2.2, "color": Color(0.42, 0.33, 0.55), "scale": 1.0, "resist": 0.0},
 		"boss": {"kind": Enemy.Kind.BOSS, "hp": 480.0, "speed": 3.6, "range": 3.6, "dmg": 20.0, "windup": 0.8, "recover": 0.9, "cd": 1.1, "color": Color(0.5, 0.26, 0.2), "scale": 2.1, "resist": 0.75},
+		# Мидгард (GDD 12.1). HP/скорость/урон перекрывает EnemyDef (enemies/defs) при спавне в зале.
+		"fodder": {"kind": Enemy.Kind.FODDER, "hp": 17.6, "speed": 3.5, "range": 1.8, "dmg": 5.0, "windup": 0.55, "recover": 0.6, "cd": 1.1, "color": Color(0.4, 0.5, 0.45), "scale": 0.95, "resist": 0.0,
+			"extra": {"max_debris": 10}},
+		"bloated": {"kind": Enemy.Kind.BLOATED, "hp": 22.0, "speed": 5.0, "range": 2.4, "dmg": 44.0, "windup": 0.7, "recover": 0.5, "cd": 0.5, "color": Color(0.6, 0.65, 0.35), "scale": 1.05, "resist": 0.2,
+			"extra": {"boss_slam_radius": 3.0, "boss_slam_windup": 0.7, "bloat_trigger_range": 2.4}},
+		"shieldbearer": {"kind": Enemy.Kind.SHIELD, "hp": 88.0, "speed": 3.0, "range": 2.0, "dmg": 15.0, "windup": 0.75, "recover": 0.8, "cd": 1.4, "color": Color(0.4, 0.45, 0.55), "scale": 1.08, "resist": 0.6,
+			"extra": {"turn_speed": 2.6, "lunge_speed": 9.0}},
+		"shaman": {"kind": Enemy.Kind.SHAMAN, "hp": 44.0, "speed": 3.0, "range": 0.0, "dmg": 15.0, "windup": 1.0, "recover": 0.6, "cd": 1.0, "color": Color(0.3, 0.5, 0.35), "scale": 1.0, "resist": 0.1,
+			"extra": {}},
+		"merc": {"kind": Enemy.Kind.MERC, "hp": 44.0, "speed": 4.0, "range": 14.0, "dmg": 15.0, "windup": 0.8, "recover": 0.9, "cd": 2.4, "color": Color(0.35, 0.3, 0.3), "scale": 1.0, "resist": 0.0,
+			"extra": {"keep_min_dist": 7.0, "keep_max_dist": 13.0}},
 	}
 	var script := load("res://enemies/enemy.gd")
 	for key in defs:
@@ -310,6 +321,9 @@ func build_enemies() -> void:
 		if key == "boss":
 			e.set("lunge_speed", 5.0)
 			e.set("wall_splat_speed", 99.0)
+		var extra: Dictionary = d.get("extra", {})
+		for prop in extra:
+			e.set(prop, extra[prop])
 		var look: Dictionary = MODEL_LOOKS[key]
 		for prop in look:
 			e.set(prop, look[prop])
@@ -350,6 +364,46 @@ const MODEL_LOOKS := {
 		"hand_weapon": "club",
 		"anim_spawn": "LayToIdle", "anim_idle": "Sword_Idle", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.6,
 		"anim_attack": "Sword_Regular_C", "anim_attack_hit_at": 0.35, "anim_slam": "Sword_Regular_C", "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
+	# Корм — облегчённый: одно тело + один комплект одежды, без оружия, волос и случайной сборки
+	"fodder": {
+		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Peasant.gltf", "model_hair": "",
+		"skin_tint": Color(0.5, 0.6, 0.62), "cloth_tint": Color(0.42, 0.4, 0.36), "eye_glow": Color(0.35, 0.75, 1.0, 1.0),
+		"hand_weapon": "", "randomize_look": false, "shield_chance": 0.0,
+		"anim_spawn": "LayToIdle", "anim_idle": "Zombie_Idle_Loop", "anim_move": "Zombie_Walk_Fwd_Loop", "anim_move_ref_speed": 1.6,
+		"anim_attack": "Zombie_Scratch", "anim_attack_hit_at": 0.45, "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
+	# Раздутый: толстый (bloat_fatness), желчно-зелёный, раздувается к взрыву
+	"bloated": {
+		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Peasant.gltf", "model_hair": "",
+		"skin_tint": Color(0.78, 0.9, 0.5), "cloth_tint": Color(0.5, 0.42, 0.3), "eye_glow": Color(1.0, 0.55, 0.1, 1.0),
+		"hand_weapon": "", "randomize_look": false, "shield_chance": 0.0,
+		"anim_spawn": "LayToIdle", "anim_idle": "Zombie_Idle_Loop", "anim_move": "Jog_Fwd_Loop", "anim_move_ref_speed": 3.2,
+		"anim_attack": "Zombie_Scratch", "anim_attack_hit_at": 0.9, "anim_slam": "Zombie_Scratch", "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
+	# Щитоносец: круглый щит в левой руке всегда, меч в правой
+	"shieldbearer": {
+		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Ranger.gltf", "model_hair": "",
+		"skin_tint": Color(0.45, 0.55, 0.66), "cloth_tint": Color(0.5, 0.52, 0.58), "eye_glow": Color(0.4, 0.85, 1.0, 1.0),
+		"hand_weapon": "q_sword", "randomize_look": false, "shield_chance": 0.0,
+		"anim_spawn": "LayToIdle", "anim_idle": "Idle_Shield_Loop", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.5,
+		"anim_attack": "Shield_OneShot", "anim_attack_hit_at": 0.4, "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
+	# Шаман: зелёное свечение, посох
+	"shaman": {
+		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Ranger.gltf", "model_hair": "hair/Hair_Long.gltf",
+		"skin_tint": Color(0.55, 0.68, 0.58), "cloth_tint": Color(0.32, 0.5, 0.36), "eye_glow": Color(0.4, 1.0, 0.5, 1.0),
+		"hand_weapon": "q_staff", "randomize_look": false, "shield_chance": 0.0,
+		"anim_spawn": "LayToIdle", "anim_idle": "Spell_Simple_Idle_Loop", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.5,
+		"anim_attack": "Spell_Simple_Shoot", "anim_attack_hit_at": 0.6, "anim_hit": "Hit_Head", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
+	# Наёмник Локи — смертный (обычная кожа, без свечения глаз), с автоматом
+	"merc": {
+		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Ranger.gltf", "model_hair": "hair/Hair_Buzzed.gltf",
+		"skin_tint": Color(1.0, 0.9, 0.82), "cloth_tint": Color(0.3, 0.3, 0.32), "eye_glow": Color(0, 0, 0, 0),
+		"hand_weapon": "gun_smg", "randomize_look": false, "shield_chance": 0.0,
+		"anim_spawn": "LayToIdle", "anim_idle": "Pistol_Idle_Loop", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.5,
+		"anim_attack": "Pistol_Aim_Neutral", "anim_attack_hit_at": 0.95, "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
 	},
 }
 
@@ -516,7 +570,8 @@ func build_player() -> void:
 # ---------------- Залы ----------------
 
 ## Описание залов. Координаты в метрах; y — высота центра блока.
-## Блоки: [центр, размер, материал]; врагов: [kind, позиция, волна]; пропсы: [тип, позиция].
+## Блоки: [центр, размер, материал]; врагов: [kind, позиция, волна, (сколько, разброс м)]; пропсы: [тип, позиция].
+## Волны по GDD 12.5: корм толпой (60–70 %), бойцы, 1–2 особых на волну.
 func room_defs() -> Array:
 	var r: Array = []
 	# 1. Зал Бочек — разминка, много физики
@@ -527,8 +582,9 @@ func room_defs() -> Array:
 			[Vector3(6, 0.75, 2), Vector3(4, 1.5, 4), "wood"],
 		],
 		"pillars": [Vector3(-6, 0, 6), Vector3(6, 0, -6), Vector3(0, 0, 0)],
-		"enemies": [["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(4, 0, -7), 0], ["grunt", Vector3(0, 0, -9), 0],
-			["grunt", Vector3(-8, 0, -8), 1], ["grunt", Vector3(8, 0, -8), 1], ["thrower", Vector3(-6, 1.6, -3), 1]],
+		"enemies": [["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(4, 0, -7), 0], ["grunt", Vector3(0, 0, -9), 0], ["fodder", Vector3(0, 0, -7), 0, 5, 2.0],
+			["grunt", Vector3(-8, 0, -8), 1], ["grunt", Vector3(8, 0, -8), 1], ["thrower", Vector3(-6, 1.6, -3), 1], ["fodder", Vector3(-3, 0, -9), 1, 6, 2.0], ["bloated", Vector3(7, 0, -9), 1],
+			["shieldbearer", Vector3(0, 0, -9), 2], ["fodder", Vector3(5, 0, -6), 2, 6, 2.0]],
 		"props": _ring_props(Vector3(0, 0, -3), 3.5, 6, "barrel") + [["crate", Vector3(-9, 0, 3)], ["crate", Vector3(-9, 0.95, 3)], ["crate", Vector3(9, 0, 7)], ["barrel", Vector3(8, 0, 8)]],
 	})
 	# 2. Ярусы — центральная платформа 2.6 м: нужен двойной или супер-прыжок
@@ -541,8 +597,10 @@ func room_defs() -> Array:
 			[Vector3(-4.5, 0.5, 2.5), Vector3(2, 1, 2), "wood"],
 		],
 		"pillars": [Vector3(-7, 0, 6), Vector3(7, 0, 6)],
-		"enemies": [["grunt", Vector3(-5, 0, -8), 0], ["grunt", Vector3(5, 0, -8), 0], ["thrower", Vector3(0, 2.7, -4), 0],
-			["thrower", Vector3(-10, 2.1, -7), 1], ["thrower", Vector3(10, 2.1, -7), 1], ["grunt", Vector3(-3, 0, 4), 1], ["grunt", Vector3(3, 0, 4), 1]],
+		"enemies": [["grunt", Vector3(-5, 0, -8), 0], ["grunt", Vector3(5, 0, -8), 0], ["thrower", Vector3(0, 2.7, -4), 0], ["fodder", Vector3(-6, 0, 0), 0, 5, 1.5],
+			["thrower", Vector3(-10, 2.1, -7), 1], ["thrower", Vector3(10, 2.1, -7), 1], ["grunt", Vector3(-3, 0, 4), 1], ["grunt", Vector3(3, 0, 4), 1],
+			["shaman", Vector3(0, 2.7, -2), 1], ["fodder", Vector3(5, 0, 2), 1, 6, 1.5],
+			["merc", Vector3(-8, 0, 0), 2], ["bloated", Vector3(6, 0, -10), 2], ["fodder", Vector3(0, 0, -10), 2, 6, 2.0]],
 		"props": [["barrel", Vector3(-1, 2.6, -1)], ["barrel", Vector3(1, 2.6, -5)], ["crate", Vector3(-8, 0, 3)], ["crate", Vector3(8, 0, 3)], ["barrel", Vector3(0, 0, 3)]],
 	})
 	# 3. Кольцо колонн — вокруг башни 5 м (супер-прыжок + двойной на неё)
@@ -553,8 +611,10 @@ func room_defs() -> Array:
 			[Vector3(0, 0.6, 4), Vector3(3, 1.2, 3), "wood"],
 		],
 		"pillars": _ring_points(Vector3(0, 0, -2), 9.0, 8),
-		"enemies": [["grunt", Vector3(-6, 0, -8), 0], ["grunt", Vector3(6, 0, -8), 0], ["grunt", Vector3(-8, 0, 0), 0], ["grunt", Vector3(8, 0, 0), 0],
-			["thrower", Vector3(0, 5.1, -2), 1], ["thrower", Vector3(-10, 0, -10), 1], ["grunt", Vector3(10, 0, -10), 1], ["grunt", Vector3(0, 0, -11), 1]],
+		"enemies": [["grunt", Vector3(-6, 0, -8), 0], ["grunt", Vector3(6, 0, -8), 0], ["grunt", Vector3(-8, 0, 0), 0], ["grunt", Vector3(8, 0, 0), 0], ["fodder", Vector3(0, 0, -10), 0, 6, 1.5],
+			["thrower", Vector3(0, 5.1, -2), 1], ["thrower", Vector3(-10, 0, -10), 1], ["grunt", Vector3(10, 0, -10), 1], ["grunt", Vector3(0, 0, -11), 1],
+			["bloated", Vector3(-10, 0, -6), 1], ["fodder", Vector3(7, 0, -6), 1, 5, 1.5],
+			["shaman", Vector3(0.5, 5.1, -1.5), 2], ["shieldbearer", Vector3(0, 0, -8), 2], ["fodder", Vector3(-7, 0, -6), 2, 6, 1.5]],
 		"props": _ring_props(Vector3(0, 0, -2), 5.5, 8, "crate"),
 	})
 	# 4. Коридор Хель — длинный зал, метатели в конце, укрытия
@@ -567,8 +627,10 @@ func room_defs() -> Array:
 			[Vector3(0, 1.0, -13), Vector3(10, 2, 3), "stone_dark"],
 		],
 		"pillars": [],
-		"enemies": [["thrower", Vector3(-3, 2.1, -13), 0], ["thrower", Vector3(3, 2.1, -13), 0], ["grunt", Vector3(-4, 0, -3), 0], ["grunt", Vector3(4, 0, -9), 0],
-			["grunt", Vector3(-5, 0, -10), 1], ["grunt", Vector3(5, 0, -10), 1], ["grunt", Vector3(0, 0, -8), 1], ["grunt", Vector3(0, 0, 2), 1]],
+		"enemies": [["thrower", Vector3(-3, 2.1, -13), 0], ["thrower", Vector3(3, 2.1, -13), 0], ["grunt", Vector3(-4, 0, -3), 0], ["grunt", Vector3(4, 0, -9), 0], ["fodder", Vector3(0, 0, -9), 0, 6, 1.5],
+			["grunt", Vector3(-5, 0, -10), 1], ["grunt", Vector3(5, 0, -10), 1], ["grunt", Vector3(0, 0, -8), 1], ["grunt", Vector3(0, 0, 2), 1],
+			["merc", Vector3(0, 2.1, -13), 1], ["fodder", Vector3(-2, 0, -3), 1, 5, 1.2],
+			["shieldbearer", Vector3(0, 0, -8), 2], ["bloated", Vector3(-5, 0, -10), 2], ["bloated", Vector3(5, 0, -10), 2], ["fodder", Vector3(0, 0, -4), 2, 6, 1.2]],
 		"props": [["barrel", Vector3(-6, 0, 10)], ["barrel", Vector3(6, 0, 4)], ["crate", Vector3(-6, 0, -2)], ["crate", Vector3(6, 0, -6)], ["barrel", Vector3(0, 0, -4)]],
 	})
 	# 5. Мост — пониженная середина, два «берега»
@@ -580,8 +642,10 @@ func room_defs() -> Array:
 			[Vector3(0, 1.75, -2), Vector3(12, 0.5, 2.5), "wood"],
 		],
 		"pillars": [Vector3(-3, 0, 6), Vector3(3, 0, -7)],
-		"enemies": [["grunt", Vector3(-10, 2, -6), 0], ["grunt", Vector3(10, 2, -6), 0], ["grunt", Vector3(0, 0, -6), 0], ["thrower", Vector3(10, 2, 6), 0],
-			["grunt", Vector3(-10, 2, 4), 1], ["grunt", Vector3(10, 2, 2), 1], ["thrower", Vector3(-11, 2, -8), 1], ["grunt", Vector3(0, 0, 3), 1]],
+		"enemies": [["grunt", Vector3(-10, 2, -6), 0], ["grunt", Vector3(10, 2, -6), 0], ["grunt", Vector3(0, 0, -6), 0], ["thrower", Vector3(10, 2, 6), 0], ["fodder", Vector3(10, 2, -2), 0, 6, 1.5],
+			["grunt", Vector3(-10, 2, 4), 1], ["grunt", Vector3(10, 2, 2), 1], ["thrower", Vector3(-11, 2, -8), 1], ["grunt", Vector3(0, 0, 3), 1],
+			["merc", Vector3(12, 2, -8), 1], ["fodder", Vector3(0, 0, 5), 1, 6, 1.5],
+			["shaman", Vector3(12, 2, -5), 2], ["shieldbearer", Vector3(2, 2.1, -2), 2], ["fodder", Vector3(0, 0, -8), 2, 6, 1.5]],
 		"props": [["barrel", Vector3(-12, 2, 3)], ["barrel", Vector3(12, 2, -3)], ["crate", Vector3(0, 2.0, -2)], ["crate", Vector3(2, 0, 6)], ["barrel", Vector3(-2, 0, -8)]],
 		"spawn_y": 2.0,
 	})
@@ -593,8 +657,10 @@ func room_defs() -> Array:
 			[Vector3(7, 1.0, 1), Vector3(5, 2, 3), "wood"],
 		],
 		"pillars": [Vector3(0, 0, -4)],
-		"enemies": [["grunt", Vector3(-4, 0, -9), 0], ["grunt", Vector3(4, 0, -9), 0], ["grunt", Vector3(0, 0, -10), 0],
-			["thrower", Vector3(-7, 2.1, -5), 1], ["thrower", Vector3(7, 2.1, 1), 1], ["grunt", Vector3(-6, 0, 4), 1], ["grunt", Vector3(6, 0, -6), 1]],
+		"enemies": [["grunt", Vector3(-4, 0, -9), 0], ["grunt", Vector3(4, 0, -9), 0], ["grunt", Vector3(0, 0, -10), 0], ["fodder", Vector3(0, 0, -7), 0, 6, 1.5],
+			["thrower", Vector3(-7, 2.1, -5), 1], ["thrower", Vector3(7, 2.1, 1), 1], ["grunt", Vector3(-6, 0, 4), 1], ["grunt", Vector3(6, 0, -6), 1],
+			["bloated", Vector3(-4, 0, -9), 1], ["fodder", Vector3(6, 0, -9), 1, 5, 1.5],
+			["shaman", Vector3(-7.5, 2.1, -5.5), 2], ["merc", Vector3(8, 0, -9), 2], ["shieldbearer", Vector3(0, 0, -9), 2], ["fodder", Vector3(-6, 0, 7), 2, 6, 1.2]],
 		"props": _stack_props(Vector3(-3, 0, 3)) + _stack_props(Vector3(3, 0, -8)) + _stack_props(Vector3(-9, 0, 5)) + [["barrel", Vector3(9, 0, 8)], ["barrel", Vector3(10, 0, 7)], ["barrel", Vector3(-10, 0, -10)]],
 	})
 	return r
@@ -629,7 +695,7 @@ func build_rooms() -> void:
 		],
 		"pillars": [Vector3(-6, 0, -6), Vector3(6, 0, -6), Vector3(-6, 0, 4), Vector3(6, 0, 4)],
 		"enemies": [["boss", Vector3(0, 0, -8), 0], ["grunt", Vector3(-8, 0, -10), 0], ["grunt", Vector3(8, 0, -10), 0],
-			["thrower", Vector3(-12.5, 2.7, -12.5), 1], ["thrower", Vector3(12.5, 2.7, -12.5), 1]],
+			["thrower", Vector3(-12.5, 2.7, -12.5), 1], ["thrower", Vector3(12.5, 2.7, -12.5), 1], ["fodder", Vector3(0, 0, -13), 1, 6, 2.0]],
 		"props": _ring_props(Vector3(0, 0, -2), 11.0, 10, "barrel"),
 	}, true)
 
@@ -729,6 +795,9 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		m.position = e[1] + Vector3(0, 0.05, 0)
 		m.set_meta("kind", e[0])
 		m.set_meta("wave", e[2])
+		if e.size() > 3:
+			m.set_meta("count", e[3])
+			m.set_meta("spread", e[4] if e.size() > 4 else 1.5)
 		spawns.add_child(m)
 
 	# Бочки и ящики

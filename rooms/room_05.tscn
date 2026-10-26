@@ -261,781 +261,817 @@ bottom_radius = 0.11
 height = 0.3
 radial_segments = 12
 
-[node name="Room05" type="Node3D" unique_id=420375027]
+[node name="Room05" type="Node3D" unique_id=1425582985]
 script = ExtResource("1_glsqa")
 room_title = "Мост Биврёст (сломан)"
 
-[node name="Geometry" type="Node3D" parent="." unique_id=276718152]
+[node name="Geometry" type="Node3D" parent="." unique_id=940089496]
 
-[node name="Floor" type="StaticBody3D" parent="Geometry" unique_id=585466167]
+[node name="Floor" type="StaticBody3D" parent="Geometry" unique_id=223269552]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Floor" unique_id=182288013]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Floor" unique_id=1523815413]
 shape = SubResource("BoxShape3D_bnk3f")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Floor" unique_id=461541058]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Floor" unique_id=2098925773]
 material_override = SubResource("StandardMaterial3D_td0yq")
 mesh = SubResource("BoxMesh_m25h3")
 
-[node name="WallN_L" type="StaticBody3D" parent="Geometry" unique_id=357703500]
+[node name="WallN_L" type="StaticBody3D" parent="Geometry" unique_id=1383098712]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 3, -11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_L" unique_id=2036698487]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_L" unique_id=362534999]
 shape = SubResource("BoxShape3D_a20k5")
 
-[node name="WallN_R" type="StaticBody3D" parent="Geometry" unique_id=981274835]
+[node name="WallN_R" type="StaticBody3D" parent="Geometry" unique_id=1442034728]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 3, -11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_R" unique_id=1304387628]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_R" unique_id=1604327486]
 shape = SubResource("BoxShape3D_ikp1t")
 
-[node name="WallS" type="StaticBody3D" parent="Geometry" unique_id=1218955182]
+[node name="WallS" type="StaticBody3D" parent="Geometry" unique_id=1903928178]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallS" unique_id=1200416826]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallS" unique_id=1154533888]
 shape = SubResource("BoxShape3D_h7hai")
 
-[node name="WallW" type="StaticBody3D" parent="Geometry" unique_id=1119404]
+[node name="WallW" type="StaticBody3D" parent="Geometry" unique_id=1195311254]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.5, 3, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallW" unique_id=1326544635]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallW" unique_id=336249513]
 shape = SubResource("BoxShape3D_5kp86")
 
-[node name="WallE" type="StaticBody3D" parent="Geometry" unique_id=668381642]
+[node name="WallE" type="StaticBody3D" parent="Geometry" unique_id=1345034749]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 3, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallE" unique_id=621638211]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallE" unique_id=1543239321]
 shape = SubResource("BoxShape3D_d0kft")
 
-[node name="WallModels" type="Node3D" parent="Geometry" unique_id=331892536]
+[node name="WallModels" type="Node3D" parent="Geometry" unique_id=1994037420]
 
-[node name="N_L_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1542342827 instance=ExtResource("5_wdtfo")]
+[node name="N_L_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=109029631 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -14.071428, 0, -11.1)
 
-[node name="N_L_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1953319190 instance=ExtResource("5_wdtfo")]
+[node name="N_L_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1259749102 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -12.214286, 0, -11.1)
 
-[node name="N_L_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1524561242 instance=ExtResource("5_wdtfo")]
+[node name="N_L_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1623799004 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -10.357143, 0, -11.1)
 
-[node name="N_L_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=764956531 instance=ExtResource("5_wdtfo")]
+[node name="N_L_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=201120694 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 0, -11.1)
 
-[node name="N_L_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=376597964 instance=ExtResource("5_wdtfo")]
+[node name="N_L_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=867529819 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -6.6428576, 0, -11.1)
 
-[node name="N_L_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=1465489677 instance=ExtResource("5_wdtfo")]
+[node name="N_L_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=1718269584 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -4.785714, 0, -11.1)
 
-[node name="N_L_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=2103313469 instance=ExtResource("5_wdtfo")]
+[node name="N_L_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=416045324 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -2.9285717, 0, -11.1)
 
-[node name="N_L_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=841434799 instance=ExtResource("5_wdtfo")]
+[node name="N_L_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1555213366 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -14.071428, 3.12, -11.1)
 
-[node name="N_L_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1291699700 instance=ExtResource("5_wdtfo")]
+[node name="N_L_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1932213864 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -12.214286, 3.12, -11.1)
 
-[node name="N_L_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1869458641 instance=ExtResource("5_wdtfo")]
+[node name="N_L_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=290471487 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -10.357143, 3.12, -11.1)
 
-[node name="N_L_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=1108230894 instance=ExtResource("5_wdtfo")]
+[node name="N_L_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=2103833845 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 3.12, -11.1)
 
-[node name="N_L_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=1383470653 instance=ExtResource("5_wdtfo")]
+[node name="N_L_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=446411103 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -6.6428576, 3.12, -11.1)
 
-[node name="N_L_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=786885130 instance=ExtResource("5_wdtfo")]
+[node name="N_L_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=2120588491 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -4.785714, 3.12, -11.1)
 
-[node name="N_L_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=1774873685 instance=ExtResource("5_wdtfo")]
+[node name="N_L_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=903670983 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -2.9285717, 3.12, -11.1)
 
-[node name="N_R_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=360359845 instance=ExtResource("5_wdtfo")]
+[node name="N_R_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1504914191 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 2.9285715, 0, -11.1)
 
-[node name="N_R_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1362892979 instance=ExtResource("5_wdtfo")]
+[node name="N_R_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=205571108 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 4.785714, 0, -11.1)
 
-[node name="N_R_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1399309659 instance=ExtResource("5_wdtfo")]
+[node name="N_R_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=272392920 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 6.642857, 0, -11.1)
 
-[node name="N_R_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=777818481 instance=ExtResource("5_wdtfo")]
+[node name="N_R_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=312330490 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, -11.1)
 
-[node name="N_R_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=2098509528 instance=ExtResource("5_wdtfo")]
+[node name="N_R_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=593686379 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 10.357142, 0, -11.1)
 
-[node name="N_R_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=274965371 instance=ExtResource("5_wdtfo")]
+[node name="N_R_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=1703934092 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 12.214286, 0, -11.1)
 
-[node name="N_R_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=111685820 instance=ExtResource("5_wdtfo")]
+[node name="N_R_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=1876097957 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 14.071428, 0, -11.1)
 
-[node name="N_R_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=365887260 instance=ExtResource("5_wdtfo")]
+[node name="N_R_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=518707823 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 2.9285715, 3.12, -11.1)
 
-[node name="N_R_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=781074625 instance=ExtResource("5_wdtfo")]
+[node name="N_R_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1330429433 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 4.785714, 3.12, -11.1)
 
-[node name="N_R_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=127507785 instance=ExtResource("5_wdtfo")]
+[node name="N_R_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1003775857 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 6.642857, 3.12, -11.1)
 
-[node name="N_R_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=1605191750 instance=ExtResource("5_wdtfo")]
+[node name="N_R_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=38288298 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 3.12, -11.1)
 
-[node name="N_R_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=2011779928 instance=ExtResource("5_wdtfo")]
+[node name="N_R_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=995203912 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 10.357142, 3.12, -11.1)
 
-[node name="N_R_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=1782622783 instance=ExtResource("5_wdtfo")]
+[node name="N_R_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=590806655 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 12.214286, 3.12, -11.1)
 
-[node name="N_R_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=1675420440 instance=ExtResource("5_wdtfo")]
+[node name="N_R_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=588368130 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 14.071428, 3.12, -11.1)
 
-[node name="S_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=2083976285 instance=ExtResource("5_wdtfo")]
+[node name="S_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=785033807 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 14, 0, 11.1)
 
-[node name="S_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=575566694 instance=ExtResource("5_wdtfo")]
+[node name="S_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=120288266 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 12, 0, 11.1)
 
-[node name="S_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1370078146 instance=ExtResource("5_wdtfo")]
+[node name="S_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1263335189 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 10, 0, 11.1)
 
-[node name="S_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=897997313 instance=ExtResource("5_wdtfo")]
+[node name="S_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=1553068065 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 8, 0, 11.1)
 
-[node name="S_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=1160276732 instance=ExtResource("5_wdtfo")]
+[node name="S_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=806109093 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6, 0, 11.1)
 
-[node name="S_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=836132908 instance=ExtResource("5_wdtfo")]
+[node name="S_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=1309198029 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 4, 0, 11.1)
 
-[node name="S_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=124160551 instance=ExtResource("5_wdtfo")]
+[node name="S_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=65363936 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 2, 0, 11.1)
 
-[node name="S_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=662135706 instance=ExtResource("5_wdtfo")]
+[node name="S_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=263434285 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 11.1)
 
-[node name="S_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=1762259750 instance=ExtResource("5_wdtfo")]
+[node name="S_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=137164675 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -2, 0, 11.1)
 
-[node name="S_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=1977612634 instance=ExtResource("5_wdtfo")]
+[node name="S_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=370289878 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -4, 0, 11.1)
 
-[node name="S_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=1842713605 instance=ExtResource("5_wdtfo")]
+[node name="S_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=1242181080 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -6, 0, 11.1)
 
-[node name="S_0_11" type="Node3D" parent="Geometry/WallModels" unique_id=234031840 instance=ExtResource("5_wdtfo")]
+[node name="S_0_11" type="Node3D" parent="Geometry/WallModels" unique_id=1648408269 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -8, 0, 11.1)
 
-[node name="S_0_12" type="Node3D" parent="Geometry/WallModels" unique_id=1048644780 instance=ExtResource("5_wdtfo")]
+[node name="S_0_12" type="Node3D" parent="Geometry/WallModels" unique_id=1027507944 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -10, 0, 11.1)
 
-[node name="S_0_13" type="Node3D" parent="Geometry/WallModels" unique_id=2089228096 instance=ExtResource("5_wdtfo")]
+[node name="S_0_13" type="Node3D" parent="Geometry/WallModels" unique_id=1343081665 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -12, 0, 11.1)
 
-[node name="S_0_14" type="Node3D" parent="Geometry/WallModels" unique_id=2015246335 instance=ExtResource("5_wdtfo")]
+[node name="S_0_14" type="Node3D" parent="Geometry/WallModels" unique_id=932640211 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -14, 0, 11.1)
 
-[node name="S_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=232364615 instance=ExtResource("5_wdtfo")]
+[node name="S_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1053540236 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 14, 3.12, 11.1)
 
-[node name="S_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=497612416 instance=ExtResource("5_wdtfo")]
+[node name="S_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1840352182 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 12, 3.12, 11.1)
 
-[node name="S_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1130332751 instance=ExtResource("5_wdtfo")]
+[node name="S_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1521591051 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 10, 3.12, 11.1)
 
-[node name="S_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=733651461 instance=ExtResource("5_wdtfo")]
+[node name="S_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=792783875 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 8, 3.12, 11.1)
 
-[node name="S_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=512734140 instance=ExtResource("5_wdtfo")]
+[node name="S_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=984000455 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6, 3.12, 11.1)
 
-[node name="S_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=873976087 instance=ExtResource("5_wdtfo")]
+[node name="S_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=1419331763 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 4, 3.12, 11.1)
 
-[node name="S_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=823805673 instance=ExtResource("5_wdtfo")]
+[node name="S_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=166042024 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 2, 3.12, 11.1)
 
-[node name="S_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=198866844 instance=ExtResource("5_wdtfo")]
+[node name="S_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=442573705 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 3.12, 11.1)
 
-[node name="S_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=492591584 instance=ExtResource("5_wdtfo")]
+[node name="S_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=1471440427 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -2, 3.12, 11.1)
 
-[node name="S_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=105442257 instance=ExtResource("5_wdtfo")]
+[node name="S_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=1068942586 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -4, 3.12, 11.1)
 
-[node name="S_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=1573958176 instance=ExtResource("5_wdtfo")]
+[node name="S_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=1915627319 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -6, 3.12, 11.1)
 
-[node name="S_1_11" type="Node3D" parent="Geometry/WallModels" unique_id=652477761 instance=ExtResource("5_wdtfo")]
+[node name="S_1_11" type="Node3D" parent="Geometry/WallModels" unique_id=2142254853 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -8, 3.12, 11.1)
 
-[node name="S_1_12" type="Node3D" parent="Geometry/WallModels" unique_id=1682272055 instance=ExtResource("5_wdtfo")]
+[node name="S_1_12" type="Node3D" parent="Geometry/WallModels" unique_id=1347682469 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -10, 3.12, 11.1)
 
-[node name="S_1_13" type="Node3D" parent="Geometry/WallModels" unique_id=1196584275 instance=ExtResource("5_wdtfo")]
+[node name="S_1_13" type="Node3D" parent="Geometry/WallModels" unique_id=1859108742 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -12, 3.12, 11.1)
 
-[node name="S_1_14" type="Node3D" parent="Geometry/WallModels" unique_id=152996914 instance=ExtResource("5_wdtfo")]
+[node name="S_1_14" type="Node3D" parent="Geometry/WallModels" unique_id=98505515 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -14, 3.12, 11.1)
 
-[node name="W_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1114542025 instance=ExtResource("5_wdtfo")]
+[node name="W_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=67190573 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 10)
 
-[node name="W_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=2078103656 instance=ExtResource("5_wdtfo")]
+[node name="W_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1486498741 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 8)
 
-[node name="W_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=976995713 instance=ExtResource("5_wdtfo")]
+[node name="W_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1931443135 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 6)
 
-[node name="W_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=572899148 instance=ExtResource("5_wdtfo")]
+[node name="W_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=1393958953 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 4)
 
-[node name="W_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=682399093 instance=ExtResource("5_wdtfo")]
+[node name="W_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=397571335 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 2)
 
-[node name="W_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=1795416253 instance=ExtResource("5_wdtfo")]
+[node name="W_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=838533159 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 0)
 
-[node name="W_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=877303922 instance=ExtResource("5_wdtfo")]
+[node name="W_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=2043717220 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, -2)
 
-[node name="W_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=554455997 instance=ExtResource("5_wdtfo")]
+[node name="W_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=1810573063 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, -4)
 
-[node name="W_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=1476730744 instance=ExtResource("5_wdtfo")]
+[node name="W_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=818845969 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, -6)
 
-[node name="W_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=993949852 instance=ExtResource("5_wdtfo")]
+[node name="W_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=597805309 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, -8)
 
-[node name="W_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=1732364296 instance=ExtResource("5_wdtfo")]
+[node name="W_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=1859479824 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, -10)
 
-[node name="W_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=457971397 instance=ExtResource("5_wdtfo")]
+[node name="W_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=512210858 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 3.12, 10)
 
-[node name="W_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=25116536 instance=ExtResource("5_wdtfo")]
+[node name="W_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=721646194 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 3.12, 8)
 
-[node name="W_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=2006350700 instance=ExtResource("5_wdtfo")]
+[node name="W_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1540772607 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 3.12, 6)
 
-[node name="W_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=1666510229 instance=ExtResource("5_wdtfo")]
+[node name="W_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=1685698116 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 3.12, 4)
 
-[node name="W_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=235611313 instance=ExtResource("5_wdtfo")]
+[node name="W_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=354081289 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 3.12, 2)
 
-[node name="W_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=922333089 instance=ExtResource("5_wdtfo")]
+[node name="W_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=780343520 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 3.12, 0)
 
-[node name="W_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=22971325 instance=ExtResource("5_wdtfo")]
+[node name="W_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=1881752280 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 3.12, -2)
 
-[node name="W_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=1556464498 instance=ExtResource("5_wdtfo")]
+[node name="W_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=253071467 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 3.12, -4)
 
-[node name="W_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=1524020781 instance=ExtResource("5_wdtfo")]
+[node name="W_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=104109109 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 3.12, -6)
 
-[node name="W_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=1365635149 instance=ExtResource("5_wdtfo")]
+[node name="W_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=1845571479 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 3.12, -8)
 
-[node name="W_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=1982977540 instance=ExtResource("5_wdtfo")]
+[node name="W_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=218967149 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 3.12, -10)
 
-[node name="E_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1139759609 instance=ExtResource("5_wdtfo")]
+[node name="E_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=953616198 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, -10)
 
-[node name="E_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=263528867 instance=ExtResource("5_wdtfo")]
+[node name="E_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=982427812 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, -8)
 
-[node name="E_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=2117355598 instance=ExtResource("5_wdtfo")]
+[node name="E_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=399150167 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, -6)
 
-[node name="E_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=1781126260 instance=ExtResource("5_wdtfo")]
+[node name="E_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=824882006 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, -4)
 
-[node name="E_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=308484595 instance=ExtResource("5_wdtfo")]
+[node name="E_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=834861240 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, -2)
 
-[node name="E_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=1988748673 instance=ExtResource("5_wdtfo")]
+[node name="E_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=434851183 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 0)
 
-[node name="E_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=940952847 instance=ExtResource("5_wdtfo")]
+[node name="E_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=2057226059 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 2)
 
-[node name="E_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=2015137535 instance=ExtResource("5_wdtfo")]
+[node name="E_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=1110074602 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 4)
 
-[node name="E_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=2068025332 instance=ExtResource("5_wdtfo")]
+[node name="E_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=1284118974 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 6)
 
-[node name="E_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=1720316966 instance=ExtResource("5_wdtfo")]
+[node name="E_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=456242992 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 8)
 
-[node name="E_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=1273857349 instance=ExtResource("5_wdtfo")]
+[node name="E_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=1857256590 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 10)
 
-[node name="E_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1267161642 instance=ExtResource("5_wdtfo")]
+[node name="E_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=942211504 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 3.12, -10)
 
-[node name="E_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1480556839 instance=ExtResource("5_wdtfo")]
+[node name="E_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=14255623 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 3.12, -8)
 
-[node name="E_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=697979269 instance=ExtResource("5_wdtfo")]
+[node name="E_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=628379950 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 3.12, -6)
 
-[node name="E_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=239044203 instance=ExtResource("5_wdtfo")]
+[node name="E_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=678757909 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 3.12, -4)
 
-[node name="E_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=733963894 instance=ExtResource("5_wdtfo")]
+[node name="E_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=231277298 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 3.12, -2)
 
-[node name="E_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=1032362248 instance=ExtResource("5_wdtfo")]
+[node name="E_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=1715340701 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 3.12, 0)
 
-[node name="E_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=414228130 instance=ExtResource("5_wdtfo")]
+[node name="E_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=1366215362 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 3.12, 2)
 
-[node name="E_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=1439231463 instance=ExtResource("5_wdtfo")]
+[node name="E_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=1176947288 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 3.12, 4)
 
-[node name="E_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=140196153 instance=ExtResource("5_wdtfo")]
+[node name="E_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=1225908420 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 3.12, 6)
 
-[node name="E_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=1077188651 instance=ExtResource("5_wdtfo")]
+[node name="E_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=492812495 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 3.12, 8)
 
-[node name="E_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=1908448463 instance=ExtResource("5_wdtfo")]
+[node name="E_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=127026706 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 3.12, 10)
 
-[node name="CL_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=438566854 instance=ExtResource("5_wdtfo")]
+[node name="CL_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=764413067 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -12.333333)
 
-[node name="CL_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1953562934 instance=ExtResource("5_wdtfo")]
+[node name="CL_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=103359123 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -14)
 
-[node name="CL_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=2024902062 instance=ExtResource("5_wdtfo")]
+[node name="CL_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=533994442 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -15.666666)
 
-[node name="CL_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=173991617 instance=ExtResource("5_wdtfo")]
+[node name="CL_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1514674987 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 3.12, -12.333333)
 
-[node name="CL_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1036910979 instance=ExtResource("5_wdtfo")]
+[node name="CL_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=475484838 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 3.12, -14)
 
-[node name="CL_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=2024203088 instance=ExtResource("5_wdtfo")]
+[node name="CL_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=598533335 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 3.12, -15.666666)
 
-[node name="CR_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1300126628 instance=ExtResource("5_wdtfo")]
+[node name="CR_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=121276103 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -15.666667)
 
-[node name="CR_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=112915464 instance=ExtResource("5_wdtfo")]
+[node name="CR_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=2040012296 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -14)
 
-[node name="CR_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=646297990 instance=ExtResource("5_wdtfo")]
+[node name="CR_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=662723830 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -12.333334)
 
-[node name="CR_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1702912021 instance=ExtResource("5_wdtfo")]
+[node name="CR_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1603926411 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 3.12, -15.666667)
 
-[node name="CR_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=622225843 instance=ExtResource("5_wdtfo")]
+[node name="CR_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1787464208 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 3.12, -14)
 
-[node name="CR_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1136813953 instance=ExtResource("5_wdtfo")]
+[node name="CR_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1452203023 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 3.12, -12.333334)
 
-[node name="CE_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=605996351 instance=ExtResource("5_wdtfo")]
+[node name="CE_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1423781879 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -16.6)
 
-[node name="CE_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1511365106 instance=ExtResource("5_wdtfo")]
+[node name="CE_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1714886520 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -16.6)
 
-[node name="CE_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=610843057 instance=ExtResource("5_wdtfo")]
+[node name="CE_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1619302233 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -16.6)
 
-[node name="CE_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=2023962501 instance=ExtResource("5_wdtfo")]
+[node name="CE_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=744711602 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 3.12, -16.6)
 
-[node name="CE_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=799605666 instance=ExtResource("5_wdtfo")]
+[node name="CE_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1678234023 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.12, -16.6)
 
-[node name="CE_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1214053793 instance=ExtResource("5_wdtfo")]
+[node name="CE_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1959699496 instance=ExtResource("5_wdtfo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 3.12, -16.6)
 
-[node name="CorridorFloor" type="StaticBody3D" parent="Geometry" unique_id=1101848308]
+[node name="CorridorFloor" type="StaticBody3D" parent="Geometry" unique_id=1116730231]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -14)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorFloor" unique_id=640927451]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorFloor" unique_id=2023228302]
 shape = SubResource("BoxShape3D_nnyu1")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/CorridorFloor" unique_id=1289526191]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CorridorFloor" unique_id=1774546415]
 material_override = SubResource("StandardMaterial3D_td0yq")
 mesh = SubResource("BoxMesh_buhw1")
 
-[node name="CorridorL" type="StaticBody3D" parent="Geometry" unique_id=808152916]
+[node name="CorridorL" type="StaticBody3D" parent="Geometry" unique_id=1338027107]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 3, -14)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorL" unique_id=510057912]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorL" unique_id=2138795924]
 shape = SubResource("BoxShape3D_geol0")
 
-[node name="CorridorR" type="StaticBody3D" parent="Geometry" unique_id=1760681173]
+[node name="CorridorR" type="StaticBody3D" parent="Geometry" unique_id=1975115340]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 3, -14)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorR" unique_id=603128112]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorR" unique_id=1978030988]
 shape = SubResource("BoxShape3D_ogsha")
 
-[node name="CorridorEnd" type="StaticBody3D" parent="Geometry" unique_id=6988902]
+[node name="CorridorEnd" type="StaticBody3D" parent="Geometry" unique_id=425948689]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -17)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorEnd" unique_id=1876884129]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorEnd" unique_id=50416770]
 shape = SubResource("BoxShape3D_u435m")
 
-[node name="Portal" type="Node3D" parent="Geometry" unique_id=1247083284]
+[node name="Portal" type="Node3D" parent="Geometry" unique_id=1535810613]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, -16.45)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Portal" unique_id=64567610]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Portal" unique_id=291468753]
 material_override = SubResource("StandardMaterial3D_8v5ge")
 mesh = SubResource("BoxMesh_5022y")
 
-[node name="Block0" type="StaticBody3D" parent="Geometry" unique_id=671459785]
+[node name="Block0" type="StaticBody3D" parent="Geometry" unique_id=1121533589]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 1, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Block0" unique_id=168342921]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Block0" unique_id=1823365306]
 shape = SubResource("BoxShape3D_s05jj")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block0" unique_id=2129473674]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block0" unique_id=1277601383]
 material_override = SubResource("StandardMaterial3D_oqmus")
 mesh = SubResource("BoxMesh_ldkl3")
 
-[node name="Block1" type="StaticBody3D" parent="Geometry" unique_id=1125199901]
+[node name="Block1" type="StaticBody3D" parent="Geometry" unique_id=522939605]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 1, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Block1" unique_id=289881024]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Block1" unique_id=519795562]
 shape = SubResource("BoxShape3D_l87mj")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block1" unique_id=926205265]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block1" unique_id=1312854958]
 material_override = SubResource("StandardMaterial3D_oqmus")
 mesh = SubResource("BoxMesh_gvt3v")
 
-[node name="Block2" type="StaticBody3D" parent="Geometry" unique_id=1257668133]
+[node name="Block2" type="StaticBody3D" parent="Geometry" unique_id=508609663]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, -2)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Block2" unique_id=1482848872]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Block2" unique_id=1603251368]
 shape = SubResource("BoxShape3D_p5q5q")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block2" unique_id=1764300291]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block2" unique_id=1618877239]
 material_override = SubResource("StandardMaterial3D_wxcjj")
 mesh = SubResource("BoxMesh_owja3")
 
-[node name="Pillar0" type="StaticBody3D" parent="Geometry" unique_id=1315197989]
+[node name="Pillar0" type="StaticBody3D" parent="Geometry" unique_id=247000100]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 3, 6)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar0" unique_id=1528149944]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar0" unique_id=1357054069]
 shape = SubResource("CylinderShape3D_opsan")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar0" unique_id=716092742]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar0" unique_id=817364740]
 material_override = SubResource("StandardMaterial3D_03887")
 mesh = SubResource("CylinderMesh_d01fm")
 
-[node name="PillarBase0" type="StaticBody3D" parent="Geometry" unique_id=1948352489]
+[node name="PillarBase0" type="StaticBody3D" parent="Geometry" unique_id=1306366606]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.25, 6)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase0" unique_id=699976878]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase0" unique_id=1379719728]
 shape = SubResource("CylinderShape3D_rfht8")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase0" unique_id=733326618]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase0" unique_id=28233410]
 material_override = SubResource("StandardMaterial3D_03887")
 mesh = SubResource("CylinderMesh_o11gi")
 
-[node name="PillarCap0" type="StaticBody3D" parent="Geometry" unique_id=715157816]
+[node name="PillarCap0" type="StaticBody3D" parent="Geometry" unique_id=925533796]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 5.8, 6)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap0" unique_id=1352155346]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap0" unique_id=604489339]
 shape = SubResource("CylinderShape3D_4hnrg")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap0" unique_id=1320747147]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap0" unique_id=1150587661]
 material_override = SubResource("StandardMaterial3D_03887")
 mesh = SubResource("CylinderMesh_80lxu")
 
-[node name="Pillar1" type="StaticBody3D" parent="Geometry" unique_id=141643668]
+[node name="Pillar1" type="StaticBody3D" parent="Geometry" unique_id=842590664]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 3, -7)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar1" unique_id=1656669010]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar1" unique_id=910251779]
 shape = SubResource("CylinderShape3D_it5rq")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar1" unique_id=670957283]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar1" unique_id=1171949090]
 material_override = SubResource("StandardMaterial3D_03887")
 mesh = SubResource("CylinderMesh_85djy")
 
-[node name="PillarBase1" type="StaticBody3D" parent="Geometry" unique_id=1968560746]
+[node name="PillarBase1" type="StaticBody3D" parent="Geometry" unique_id=791001377]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.25, -7)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase1" unique_id=500938612]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase1" unique_id=119808618]
 shape = SubResource("CylinderShape3D_mwwdj")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase1" unique_id=403956935]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase1" unique_id=248560415]
 material_override = SubResource("StandardMaterial3D_03887")
 mesh = SubResource("CylinderMesh_6fugi")
 
-[node name="PillarCap1" type="StaticBody3D" parent="Geometry" unique_id=568350260]
+[node name="PillarCap1" type="StaticBody3D" parent="Geometry" unique_id=775648169]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 5.8, -7)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap1" unique_id=105713234]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap1" unique_id=1685888206]
 shape = SubResource("CylinderShape3D_32yyi")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap1" unique_id=1437211465]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap1" unique_id=962700111]
 material_override = SubResource("StandardMaterial3D_03887")
 mesh = SubResource("CylinderMesh_wudyh")
 
-[node name="Door" type="StaticBody3D" parent="." unique_id=1358659436]
+[node name="Door" type="StaticBody3D" parent="." unique_id=1137243759]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Door" unique_id=1578471945]
+[node name="Shape" type="CollisionShape3D" parent="Door" unique_id=586595917]
 shape = SubResource("BoxShape3D_b468w")
 
-[node name="Mesh" type="MeshInstance3D" parent="Door" unique_id=3723253]
+[node name="Mesh" type="MeshInstance3D" parent="Door" unique_id=1321748868]
 material_override = SubResource("StandardMaterial3D_d5xpv")
 mesh = SubResource("BoxMesh_fqftu")
 
-[node name="Rune" type="Node3D" parent="Door" unique_id=1297466621]
+[node name="Rune" type="Node3D" parent="Door" unique_id=1279741511]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.33)
 
-[node name="Mesh" type="MeshInstance3D" parent="Door/Rune" unique_id=1041201044]
+[node name="Mesh" type="MeshInstance3D" parent="Door/Rune" unique_id=1672571672]
 material_override = SubResource("StandardMaterial3D_aymm2")
 mesh = SubResource("BoxMesh_n1sv5")
 
-[node name="RuneBar" type="Node3D" parent="Door" unique_id=1489717099]
+[node name="RuneBar" type="Node3D" parent="Door" unique_id=1390305531]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.33)
 
-[node name="Mesh" type="MeshInstance3D" parent="Door/RuneBar" unique_id=1694835151]
+[node name="Mesh" type="MeshInstance3D" parent="Door/RuneBar" unique_id=738970387]
 material_override = SubResource("StandardMaterial3D_aymm2")
 mesh = SubResource("BoxMesh_86mk2")
 
-[node name="Exit" type="Area3D" parent="." unique_id=1776249952]
+[node name="Exit" type="Area3D" parent="." unique_id=2123370608]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -15)
 collision_layer = 32
 collision_mask = 2
 
-[node name="Shape" type="CollisionShape3D" parent="Exit" unique_id=799320576]
+[node name="Shape" type="CollisionShape3D" parent="Exit" unique_id=1368892414]
 shape = SubResource("BoxShape3D_0m04e")
 
-[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=187303584]
+[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=1343748879]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 2.1, 8.5)
 
-[node name="Spawns" type="Node3D" parent="." unique_id=1474890754]
+[node name="Spawns" type="Node3D" parent="." unique_id=978544772]
 
-[node name="grunt_0" type="Marker3D" parent="Spawns" unique_id=1529817238]
+[node name="grunt_0" type="Marker3D" parent="Spawns" unique_id=2098762454]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="grunt_1" type="Marker3D" parent="Spawns" unique_id=877973998]
+[node name="grunt_1" type="Marker3D" parent="Spawns" unique_id=1813199797]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="grunt_2" type="Marker3D" parent="Spawns" unique_id=717460861]
+[node name="grunt_2" type="Marker3D" parent="Spawns" unique_id=427882814]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="thrower_3" type="Marker3D" parent="Spawns" unique_id=346673922]
+[node name="thrower_3" type="Marker3D" parent="Spawns" unique_id=688929364]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, 6)
 metadata/kind = "thrower"
 metadata/wave = 0
 
-[node name="grunt_4" type="Marker3D" parent="Spawns" unique_id=1903100572]
+[node name="fodder_4" type="Marker3D" parent="Spawns" unique_id=1811777475]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, -2)
+metadata/kind = "fodder"
+metadata/wave = 0
+metadata/count = 6
+metadata/spread = 1.5
+
+[node name="grunt_5" type="Marker3D" parent="Spawns" unique_id=424788520]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, 4)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="grunt_5" type="Marker3D" parent="Spawns" unique_id=2070423522]
+[node name="grunt_6" type="Marker3D" parent="Spawns" unique_id=595910067]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, 2)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="thrower_6" type="Marker3D" parent="Spawns" unique_id=1364010452]
+[node name="thrower_7" type="Marker3D" parent="Spawns" unique_id=2124815331]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 2.05, -8)
 metadata/kind = "thrower"
 metadata/wave = 1
 
-[node name="grunt_7" type="Marker3D" parent="Spawns" unique_id=421659729]
+[node name="grunt_8" type="Marker3D" parent="Spawns" unique_id=298393676]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 3)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="Props" type="Node3D" parent="." unique_id=2076186840]
+[node name="merc_9" type="Marker3D" parent="Spawns" unique_id=1095674341]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2.05, -8)
+metadata/kind = "merc"
+metadata/wave = 1
 
-[node name="barrel_0" type="RigidBody3D" parent="Props" unique_id=662548241 groups=["props"] instance=ExtResource("14_8a2c1")]
-transform = Transform3D(-0.8221646, 0, 0.5692498, 0, 1, 0, -0.5692498, 0, -0.8221646, -12, 2.02, 3)
+[node name="fodder_10" type="Marker3D" parent="Spawns" unique_id=989142863]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 5)
+metadata/kind = "fodder"
+metadata/wave = 1
+metadata/count = 6
+metadata/spread = 1.5
+
+[node name="shaman_11" type="Marker3D" parent="Spawns" unique_id=627976757]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2.05, -5)
+metadata/kind = "shaman"
+metadata/wave = 2
+
+[node name="shieldbearer_12" type="Marker3D" parent="Spawns" unique_id=1150868347]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.1499999, -2)
+metadata/kind = "shieldbearer"
+metadata/wave = 2
+
+[node name="fodder_13" type="Marker3D" parent="Spawns" unique_id=431175943]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -8)
+metadata/kind = "fodder"
+metadata/wave = 2
+metadata/count = 6
+metadata/spread = 1.5
+
+[node name="Props" type="Node3D" parent="." unique_id=2033162992]
+
+[node name="barrel_0" type="RigidBody3D" parent="Props" unique_id=66140929 groups=["props"] instance=ExtResource("14_8a2c1")]
+transform = Transform3D(-0.058123995, 0, 0.9983094, 0, 1, 0, -0.9983094, 0, -0.058123995, -12, 2.02, 3)
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
 
-[node name="barrel_1" type="RigidBody3D" parent="Props" unique_id=998663779 groups=["props"] instance=ExtResource("14_8a2c1")]
-transform = Transform3D(-0.82260036, 0, -0.56861997, 0, 1, 0, 0.56861997, 0, -0.82260036, 12, 2.02, -3)
+[node name="barrel_1" type="RigidBody3D" parent="Props" unique_id=405811048 groups=["props"] instance=ExtResource("14_8a2c1")]
+transform = Transform3D(-0.9983715, 0, 0.057047047, 0, 1, 0, -0.057047047, 0, -0.9983715, 12, 2.02, -3)
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
 
-[node name="crate_2" type="RigidBody3D" parent="Props" unique_id=2029659275 groups=["props"] instance=ExtResource("15_apjnd")]
-transform = Transform3D(-0.7136878, 0, 0.70046395, 0, 1, 0, -0.70046395, 0, -0.7136878, 0, 2.02, -2)
+[node name="crate_2" type="RigidBody3D" parent="Props" unique_id=670191707 groups=["props"] instance=ExtResource("15_apjnd")]
+transform = Transform3D(-0.9539837, 0, -0.29985848, 0, 1, 0, 0.29985848, 0, -0.9539837, 0, 2.02, -2)
 collision_layer = 8
 collision_mask = 79
 mass = 1.6
 
-[node name="crate_3" type="RigidBody3D" parent="Props" unique_id=1150229697 groups=["props"] instance=ExtResource("15_apjnd")]
-transform = Transform3D(-0.66411793, 0, -0.74762785, 0, 1, 0, 0.74762785, 0, -0.66411793, 2, 0.02, 6)
+[node name="crate_3" type="RigidBody3D" parent="Props" unique_id=1993353439 groups=["props"] instance=ExtResource("15_apjnd")]
+transform = Transform3D(-0.6543497, 0, 0.7561921, 0, 1, 0, -0.7561921, 0, -0.6543497, 2, 0.02, 6)
 collision_layer = 8
 collision_mask = 79
 mass = 1.6
 
-[node name="barrel_4" type="RigidBody3D" parent="Props" unique_id=1939959247 groups=["props"] instance=ExtResource("14_8a2c1")]
-transform = Transform3D(0.804979, 0, 0.59330326, 0, 1, 0, -0.59330326, 0, 0.804979, -2, 0.02, -8)
+[node name="barrel_4" type="RigidBody3D" parent="Props" unique_id=1164889928 groups=["props"] instance=ExtResource("14_8a2c1")]
+transform = Transform3D(-0.97662246, 0, 0.21496187, 0, 1, 0, -0.21496187, 0, -0.97662246, -2, 0.02, -8)
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
 
-[node name="Torches" type="Node3D" parent="." unique_id=894782136]
+[node name="Torches" type="Node3D" parent="." unique_id=2082415857]
 
-[node name="Torch0" type="Node3D" parent="Torches" unique_id=108527034]
+[node name="Torch0" type="Node3D" parent="Torches" unique_id=879651130]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.8, 3.2, -5.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch0" unique_id=968308759 instance=ExtResource("16_v4eyg")]
+[node name="Model" type="Node3D" parent="Torches/Torch0" unique_id=769694599 instance=ExtResource("16_v4eyg")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch0" unique_id=1560561823]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch0" unique_id=2109087866]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_854pd")
 mesh = SubResource("CylinderMesh_x8oqm")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch0" unique_id=568338924]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch0" unique_id=818257327]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch1" type="Node3D" parent="Torches" unique_id=1526161511]
+[node name="Torch1" type="Node3D" parent="Torches" unique_id=1827649420]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.8, 3.2, -5.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch1" unique_id=1987280172 instance=ExtResource("16_v4eyg")]
+[node name="Model" type="Node3D" parent="Torches/Torch1" unique_id=1585999327 instance=ExtResource("16_v4eyg")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch1" unique_id=1983597376]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch1" unique_id=450160234]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_854pd")
 mesh = SubResource("CylinderMesh_mlk3l")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch1" unique_id=1037607256]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch1" unique_id=1360933830]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch2" type="Node3D" parent="Torches" unique_id=193619097]
+[node name="Torch2" type="Node3D" parent="Torches" unique_id=1766655915]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.8, 3.2, 5.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch2" unique_id=1959065866 instance=ExtResource("16_v4eyg")]
+[node name="Model" type="Node3D" parent="Torches/Torch2" unique_id=1101352080 instance=ExtResource("16_v4eyg")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch2" unique_id=1723204043]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch2" unique_id=1278413399]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_854pd")
 mesh = SubResource("CylinderMesh_hlqx7")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch2" unique_id=71411147]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch2" unique_id=30090783]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch3" type="Node3D" parent="Torches" unique_id=2008877897]
+[node name="Torch3" type="Node3D" parent="Torches" unique_id=353725479]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.8, 3.2, 5.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch3" unique_id=352335754 instance=ExtResource("16_v4eyg")]
+[node name="Model" type="Node3D" parent="Torches/Torch3" unique_id=1347224769 instance=ExtResource("16_v4eyg")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch3" unique_id=1266526446]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch3" unique_id=76080800]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_854pd")
 mesh = SubResource("CylinderMesh_jh611")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch3" unique_id=727617840]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch3" unique_id=1141719936]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch4" type="Node3D" parent="Torches" unique_id=15981471]
+[node name="Torch4" type="Node3D" parent="Torches" unique_id=1984782634]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2, 3.6, -10.9)
 
-[node name="Model" type="Node3D" parent="Torches/Torch4" unique_id=1207702861 instance=ExtResource("16_v4eyg")]
+[node name="Model" type="Node3D" parent="Torches/Torch4" unique_id=1079174679 instance=ExtResource("16_v4eyg")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch4" unique_id=1902649371]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch4" unique_id=381841601]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_854pd")
 mesh = SubResource("CylinderMesh_p23bt")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch4" unique_id=1035613629]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch4" unique_id=1149398922]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch5" type="Node3D" parent="Torches" unique_id=1138446600]
+[node name="Torch5" type="Node3D" parent="Torches" unique_id=1419988547]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 3.6, -10.9)
 
-[node name="Model" type="Node3D" parent="Torches/Torch5" unique_id=1813985470 instance=ExtResource("16_v4eyg")]
+[node name="Model" type="Node3D" parent="Torches/Torch5" unique_id=1468360548 instance=ExtResource("16_v4eyg")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch5" unique_id=2138192281]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch5" unique_id=1305196861]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_854pd")
 mesh = SubResource("CylinderMesh_puj16")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch5" unique_id=543449082]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch5" unique_id=504084125]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Banners" type="Node3D" parent="." unique_id=1327396630]
+[node name="Banners" type="Node3D" parent="." unique_id=1254015199]
 
-[node name="BannerW0" type="Node3D" parent="Banners" unique_id=1610331362 instance=ExtResource("17_7dnnj")]
+[node name="BannerW0" type="Node3D" parent="Banners" unique_id=404881953 instance=ExtResource("17_7dnnj")]
 transform = Transform3D(-5.6824803e-08, 0, 1.3, 0, 1.3, 0, -1.3, 0, -5.6824803e-08, -14.95, 4.6, 0.8)
 
-[node name="BannerE0" type="Node3D" parent="Banners" unique_id=2099021787 instance=ExtResource("17_7dnnj")]
+[node name="BannerE0" type="Node3D" parent="Banners" unique_id=365091183 instance=ExtResource("17_7dnnj")]
 transform = Transform3D(-5.6824803e-08, 0, -1.3, 0, 1.3, 0, 1.3, 0, -5.6824803e-08, 14.95, 4.6, -0.8)
 
-[node name="PortalLight" type="OmniLight3D" parent="." unique_id=2072319545]
+[node name="PortalLight" type="OmniLight3D" parent="." unique_id=698437259]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -15.5)
 light_color = Color(0.45, 0.8, 1, 1)
 light_energy = 2.5

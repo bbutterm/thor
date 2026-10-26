@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EliteModifier" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://enemies/elite/elite_modifier.gd" id="1_m"]
+[ext_resource type="Script" path="res://enemies/elite/summoner.gd" id="2_h"]
+
+[resource]
+script = ExtResource("1_m")
+id = "summoner"
+title = "Призыватель"
+color = Color(0.7, 0.35, 1.0, 1)
+handler = ExtResource("2_h")
+summon_interval = 8.0
+summon_count = 3
+summon_kind = "fodder"
+summon_windup = 1.0
+summon_cap = 30

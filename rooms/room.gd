@@ -3,7 +3,11 @@ class_name Room
 ## Зал-арена. Враги появляются волнами из маркеров в узле Spawns (метаданные kind/wave),
 ## дверь Door открывается после зачистки, триггер Exit переводит в следующий зал.
 ## Комнаты собираются скриптом tools/build_scenes.gd, но их можно править в редакторе руками:
-## двигать маркеры, блоки, бочки. Тип врага маркера — метаданные "kind": grunt / thrower / boss; "wave": 0, 1...
+## двигать маркеры, блоки, бочки. Тип врага маркера — метаданные "kind": grunt / thrower / boss / fodder / bloated /
+## shieldbearer / shaman / merc; "wave": 0, 1...; "count" (необяз.) — сколько врагов из одного маркера (толпа корма),
+## "spread" — радиус разброса толпы, м.
+## Волны (GDD 12.5): поток по spawn_batch врагов за раз, следующая волна — когда живых меньше next_wave_fraction
+## текущей волны или прошло next_wave_timeout секунд.
 
 signal cleared
 signal exit_reached
@@ -14,8 +18,14 @@ signal wave_started(index: int)
 
 @export var room_title: String = "Зал"
 @export var wave_delay: float = 0.9
-## Пауза между появлением врагов одной волны (с)
+## Пауза между пачками врагов одной волны (с)
 @export var spawn_interval: float = 0.12
+## Сколько врагов появляется за раз (GDD 12.5: 2–3 за кадр)
+@export var spawn_batch: int = 3
+## Следующая волна, когда живых меньше этой доли текущей волны (GDD 12.5: 30 %)...
+@export_range(0.0, 1.0) var next_wave_fraction: float = 0.3
+## ...или через столько секунд после её начала
+@export var next_wave_timeout: float = 25.0
 
 @export_group("Оружие и элита")
 ## Шанс, что враг (не босс) появится элитой: светится, ×2.5 HP, роняет оружие
@@ -28,6 +38,11 @@ const ENEMY_SCENES := {
 	"grunt": "res://enemies/grunt.tscn",
 	"thrower": "res://enemies/thrower.tscn",
 	"boss": "res://enemies/boss.tscn",
+	"fodder": "res://enemies/fodder.tscn",
+	"bloated": "res://enemies/bloated.tscn",
+	"shieldbearer": "res://enemies/shieldbearer.tscn",
+	"shaman": "res://enemies/shaman.tscn",
+	"merc": "res://enemies/merc.tscn",
 }
 
 var _player: Player
@@ -40,6 +55,10 @@ var door_open: bool = false
 var _spawn_queue: Array = []
 var _spawn_timer: float = 0.0
 var _last_death_pos: Vector3 = Vector3.INF
+## Размер текущей волны и сколько она идёт (для перехода к следующей по GDD 12.5)
+var _wave_size: int = 0
+var _wave_time: float = 0.0
+var _advance_pending: bool = false
 
 @onready var spawns: Node3D = $Spawns
 @onready var door: Node3D = get_node_or_null("Door")
@@ -85,24 +104,52 @@ func _spawn_wave(index: int) -> void:
 	Perf.mark("spawn_wave")
 	wave_started.emit(index)
 	var markers: Array = _waves.get(index, [])
+	_advance_pending = false
 	if markers.is_empty():
 		_check_clear()
 		return
-	# Враги волны появляются по одному: сборка персонажа дорогая, все сразу в одном кадре давали фриз
-	_spawn_queue.append_array(markers)
+	# Поток пачками по spawn_batch (сборка персонажа дорогая: вся волна в одном кадре давала фриз).
+	# Маркер с "count" — толпа: ставится в очередь count раз.
+	var n := 0
+	for m in markers:
+		var c := maxi(1, int(m.get_meta("count", 1)))
+		for k in c:
+			_spawn_queue.append(m)
+		n += c
+	_wave_size = n
+	_wave_time = 0.0
+	_advance_pending = false
 	_spawn_timer = 0.0
 
 func _physics_process(delta: float) -> void:
+	if _started and not _is_cleared:
+		_wave_time += delta
+		_check_next_wave()
 	if _spawn_queue.is_empty():
 		return
 	_spawn_timer -= delta
 	if _spawn_timer > 0.0:
 		return
 	_spawn_timer = spawn_interval
-	_spawn_enemy(_spawn_queue.pop_front() as Node3D)
+	for i in maxi(1, spawn_batch):
+		if _spawn_queue.is_empty():
+			break
+		_spawn_enemy(_spawn_queue.pop_front() as Node3D)
 
-func _spawn_enemy(marker: Node3D) -> void:
-	var kind: String = str(marker.get_meta("kind", "grunt"))
+## GDD 12.5: следующая волна, не дожидаясь полной зачистки — когда осталось меньше 30 % или прошло 25 с.
+func _check_next_wave() -> void:
+	if _advance_pending or not _spawn_queue.is_empty() or not _waves.has(_wave_index + 1):
+		return
+	if _alive.size() < _wave_size * next_wave_fraction or _wave_time >= next_wave_timeout:
+		_advance_wave()
+
+func _advance_wave() -> void:
+	_advance_pending = true
+	_wave_index += 1
+	var idx := _wave_index
+	get_tree().create_timer(wave_delay, false).timeout.connect(func() -> void: _spawn_wave(idx))
+
+func _make_enemy(kind: String) -> Enemy:
 	var path: String = ENEMY_SCENES.get(kind, ENEMY_SCENES["grunt"])
 	var enemy := (load(path) as PackedScene).instantiate() as Enemy
 	Perf.mark("spawn_" + kind)
@@ -110,6 +157,32 @@ func _spawn_enemy(marker: Node3D) -> void:
 	var def := EnemyDef.for_kind(kind)
 	if def:
 		enemy.apply_def(def)
+	return enemy
+
+func _register(enemy: Enemy) -> void:
+	enemy.player = _player
+	enemy.died.connect(_on_enemy_died)
+	_alive.append(enemy)
+	if enemy.kind == Enemy.Kind.BOSS:
+		boss_spawned.emit(enemy)
+	enemy_count_changed.emit(_alive.size() + _spawn_queue.size())
+
+## Враг сверх волн (Шаман поднимает корм, элита-Призыватель): сразу в зал, считается в зачистке.
+func spawn_extra(kind: String, global_pos: Vector3) -> Enemy:
+	if _is_cleared:
+		return null
+	var enemy := _make_enemy(kind)
+	enemy.position = to_local(global_pos) + Vector3(0, 0.05, 0)
+	if _player:
+		var to := _player.global_position - global_pos
+		enemy.rotation.y = atan2(to.x, to.z) - global_rotation.y
+	add_child(enemy)
+	_register(enemy)
+	return enemy
+
+func _spawn_enemy(marker: Node3D) -> void:
+	var kind: String = str(marker.get_meta("kind", "grunt"))
+	var enemy := _make_enemy(kind)
 	# Маркер может переопределить характеристики врага до _ready (мини-босс — см. MinibossDef)
 	if marker.has_meta("setup"):
 		var setup: Variant = marker.get_meta("setup")
@@ -117,15 +190,14 @@ func _spawn_enemy(marker: Node3D) -> void:
 			(setup as Callable).call(enemy)
 	# Позиция до add_child: в _ready враг рисует кольцо появления там, где стоит
 	enemy.position = to_local(marker.global_position)
+	var spread := float(marker.get_meta("spread", 0.0))
+	if spread > 0.0:
+		var a := randf() * TAU
+		enemy.position += Vector3(cos(a), 0, sin(a)) * sqrt(randf()) * spread
 	enemy.rotation.y = marker.global_rotation.y - global_rotation.y
 	Loot.maybe_make_elite(self, enemy, elite_chance, max_elites)
 	add_child(enemy)
-	enemy.player = _player
-	enemy.died.connect(_on_enemy_died)
-	_alive.append(enemy)
-	if enemy.kind == Enemy.Kind.BOSS:
-		boss_spawned.emit(enemy)
-	enemy_count_changed.emit(_alive.size() + _spawn_queue.size())
+	_register(enemy)
 
 ## Враги волны, которые ещё не появились.
 func pending_spawns() -> int:
@@ -138,12 +210,10 @@ func _on_enemy_died(enemy: Enemy) -> void:
 	_check_clear()
 
 func _check_clear() -> void:
-	if _is_cleared or not _alive.is_empty() or not _spawn_queue.is_empty():
+	if _is_cleared or not _alive.is_empty() or not _spawn_queue.is_empty() or _advance_pending:
 		return
-	_wave_index += 1
-	if _waves.has(_wave_index):
-		var idx := _wave_index
-		get_tree().create_timer(wave_delay, false).timeout.connect(func() -> void: _spawn_wave(idx))
+	if _waves.has(_wave_index + 1):
+		_advance_wave()
 	else:
 		_is_cleared = true
 		_spawn_chest()

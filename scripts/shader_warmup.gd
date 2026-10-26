@@ -38,17 +38,25 @@ func _build() -> void:
 	var center := global_position
 	# Враги: по одному каждого вида, со вспышкой урона и свечением замаха (общий оверлей на скин-мешах)
 	var i := 0
-	for path in ["res://enemies/grunt.tscn", "res://enemies/thrower.tscn", "res://enemies/boss.tscn"]:
+	for path in ["res://enemies/grunt.tscn", "res://enemies/thrower.tscn", "res://enemies/boss.tscn",
+			"res://enemies/fodder.tscn", "res://enemies/bloated.tscn", "res://enemies/shieldbearer.tscn", "res://enemies/shaman.tscn", "res://enemies/merc.tscn"]:
 		var e := (load(path) as PackedScene).instantiate() as Enemy
 		e.process_mode = Node.PROCESS_MODE_DISABLED
 		if i == 0:
 			Loot.make_elite(e)
-		e.position = right * (i - 1) * 0.9
+		e.position = right * ((i - 1) * 0.9 if i < 3 else (i - 5.5) * 0.7) + (Vector3.ZERO if i < 3 else Vector3(0, 0, -1.2))
 		add_child(e)
 		e.remove_from_group("enemies")
 		e.collision_layer = 0
 		e.collision_mask = 0
 		e._set_overlay(1.0, 1.0)
+		# Лазер наёмника (общие материалы эффектов)
+		if e._laser:
+			e._laser.visible = true
+			e._laser_dot.visible = true
+			e._laser.global_position = e.global_position + Vector3(0, 1.3, 0.6)
+			e._laser.scale = Vector3(0.018, 0.018, 1.0)
+			e._laser_dot.global_position = e.global_position + Vector3(0, 1.3, 1.1)
 		_enemies.append(e)
 		i += 1
 	# Все части одежды и волос на двух скелетах: случайная внешность драугров собирается из них,
@@ -101,6 +109,8 @@ func _build() -> void:
 	proj.call("launch", p, Vector3.ZERO, 0.0, null)
 	proj.remove_from_group("reflectable")
 	proj.set_physics_process(false)
+	# Телеграф взрыва (Раздутый, элита «Взрывной»)
+	Blast.warmup_sample(self, Vector3(0, 0.1, 0.5))
 	var hammer := WeaponMeshes.hammer()
 	add_child(hammer)
 	hammer.position = right * 0.6 + Vector3(0, 1.0, 0)

@@ -91,7 +91,11 @@ func _physics_process(delta: float) -> void:
 			var center := player.global_position + Vector3(0, 0.9, 0)
 			if center.distance_to(global_position) < RADIUS + 0.55:
 				RunTracker.note_hit(shooter)
+				var h0 := player.health
 				player.take_damage(damage, vel.normalized() * 4.0)
+				# Модификаторы элиты (Ледяной, Вампир) слушают удары, дошедшие до Тора
+				if is_instance_valid(shooter) and shooter.has_signal("struck_player") and player.health < h0:
+					shooter.emit_signal("struck_player", h0 - player.health)
 				_pop(global_position)
 
 func _pop(pos: Vector3) -> void:

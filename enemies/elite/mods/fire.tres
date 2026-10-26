@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EliteModifier" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://enemies/elite/elite_modifier.gd" id="1_m"]
+[ext_resource type="Script" path="res://enemies/elite/fire.gd" id="2_h"]
+
+[resource]
+script = ExtResource("1_m")
+id = "fire"
+title = "Огненный"
+color = Color(1.0, 0.45, 0.15, 1)
+handler = ExtResource("2_h")
+trail_interval = 0.45
+trail_radius = 1.2
+trail_duration = 3.0
+trail_dps = 12.0
+trail_max = 6

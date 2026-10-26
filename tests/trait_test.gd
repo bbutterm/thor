@@ -229,7 +229,9 @@ func _test_base() -> void:
 	check(_hurt(d), "попал по манекену на пути")
 	var back := await _wait_in_hand(3.0)
 	check(back, "воткнутый молот сам вернулся (stuck_auto_return %.1f с)" % hand.stuck_auto_return)
-	# Рывок перезаряжается быстрее, пока молота нет
+	# Рывок перезаряжается быстрее, пока молота нет (без манекена: hit-stop от крита съедал время)
+	_clear_dummies()
+	await frames(2)
 	p.dash_charges = p.dash_charges_max - 1
 	p.set("_dash_recharge_timer", 0.0)
 	hand.throw_hammer()
