@@ -947,6 +947,18 @@ func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln
 	if health <= 0.0 and not _rune_second_wind():
 		_die()
 
+## Подброс прыжковой руной (rooms/jump_pad.gd): на height метров, прыжки в воздухе восстановлены, удар-приземление прерван.
+func launch_up(height: float) -> void:
+	if is_slamming:
+		_cancel_slam()
+	_dash_time_left = 0.0
+	velocity.y = sqrt(2.0 * gravity * maxf(height, 0.5))
+	_jumps_left = extra_jumps
+	_wall_jumps_left = wall_jumps
+	_coyote_left = 0.0
+	camera_fx.kick_fov(10.0)
+	camera_fx.speed_lines_pulse()
+
 ## Плата здоровьем (сделка Локи, «Кот в мешке»): без защиты рун/тела, не убивает (остаётся ≥ 1 HP).
 func pay_health(amount: float) -> void:
 	if is_dead or amount <= 0.0:

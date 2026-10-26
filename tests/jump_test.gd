@@ -220,6 +220,29 @@ func _run() -> void:
 	check(p.is_slamming and not p.is_diving and absf(p.velocity.x) + absf(p.velocity.z) < 0.5, "обычный удар-приземление — вертикально")
 	await press("dash")
 	check(not p.is_slamming and p.is_dashing(), "рывок во время падения отменил удар-приземление")
+	await wait(1.5)
+
+	print("-- Прыжковая руна")
+	var pad := JumpPad.new()
+	pad.height = 9.0
+	game.add_child(pad)
+	pad.global_position = floor_pos + Vector3(-6, 0, 3)
+	p.global_position = floor_pos + Vector3(-6, 0.05, 0)
+	p.velocity = Vector3.ZERO
+	await wait(0.4)
+	var y0 := p.global_position.y
+	p.global_position = pad.global_position + Vector3(0, 0.05, 0)
+	var top := y0
+	for i in 120:
+		await get_tree().physics_frame
+		top = maxf(top, p.global_position.y)
+	check(top - y0 > 7.5, "руна подбросила на %.1f м (8–12 по GDD)" % (top - y0))
+	check(get_tree().get_nodes_in_group("jump_pads").size() >= 1, "руна в группе jump_pads")
+	pad.queue_free()
+	var r3 := load("res://rooms/room_03.tscn") as PackedScene
+	var inst := r3.instantiate()
+	check(inst.get_node_or_null("JumpPads/JumpPad0") != null and inst.get_node("JumpPads/JumpPad0").get_child_count() == 0, "в зале 3 стоят прыжковые руны (вид собирается при запуске)")
+	inst.free()
 	_finish()
 
 func _finish() -> void:

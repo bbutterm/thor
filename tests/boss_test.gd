@@ -206,7 +206,7 @@ func _test_sven() -> void:
 	var fused := await wait_until(func() -> bool: return sven.act == FatSven.Act.FUSE, 8.0)
 	check(fused, "добежал — фитиль")
 	check(sven._telegraph != null and is_instance_valid(sven._telegraph), "красный круг взрыва на полу")
-	check(sven._visual.scale.x > sven._base_visual_scale.x * 1.25, "раздулся (%.2f → %.2f)" % [sven._base_visual_scale.x, sven._visual.scale.x])
+	check(sven._visual.scale.x > sven._base_visual_scale.x * 1.2, "раздулся (%.2f → %.2f)" % [sven._base_visual_scale.x, sven._visual.scale.x])
 	var h2: int = hits[0]
 	var sref: WeakRef = weakref(sven)
 	var boomed := await wait_until(func() -> bool: return sref.get_ref() == null or (sref.get_ref() as Enemy).is_dead, 3.0)

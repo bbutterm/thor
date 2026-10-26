@@ -660,6 +660,7 @@ func room_defs() -> Array:
 			[Vector3(-4.5, 0.5, 2.5), Vector3(2, 1, 2), "wood"],
 		],
 		"pillars": [Vector3(-7, 0, 6), Vector3(7, 0, 6)],
+		"jump_pads": [[Vector3(0, 0, 5), 8.0]],
 		"enemies": [["grunt", Vector3(-5, 0, -8), 0], ["grunt", Vector3(5, 0, -8), 0], ["thrower", Vector3(0, 2.7, -4), 0], ["fodder", Vector3(-6, 0, 0), 0, 5, 1.5],
 			["thrower", Vector3(-10, 2.1, -7), 1], ["thrower", Vector3(10, 2.1, -7), 1], ["grunt", Vector3(-3, 0, 4), 1], ["grunt", Vector3(3, 0, 4), 1],
 			["shaman", Vector3(0, 2.7, -2), 1], ["fodder", Vector3(5, 0, 2), 1, 6, 1.5],
@@ -674,6 +675,7 @@ func room_defs() -> Array:
 			[Vector3(0, 0.6, 4), Vector3(3, 1.2, 3), "wood"],
 		],
 		"pillars": _ring_points(Vector3(0, 0, -2), 9.0, 8),
+		"jump_pads": [[Vector3(-3.5, 0, 6.5), 9.0], [Vector3(3.5, 0, 6.5), 9.0]],
 		"enemies": [["grunt", Vector3(-6, 0, -8), 0], ["grunt", Vector3(6, 0, -8), 0], ["grunt", Vector3(-8, 0, 0), 0], ["grunt", Vector3(8, 0, 0), 0], ["fodder", Vector3(0, 0, -10), 0, 6, 1.5],
 			["thrower", Vector3(0, 5.1, -2), 1], ["thrower", Vector3(-10, 0, -10), 1], ["grunt", Vector3(10, 0, -10), 1], ["grunt", Vector3(0, 0, -11), 1],
 			["bloated", Vector3(-10, 0, -6), 1], ["fodder", Vector3(7, 0, -6), 1, 5, 1.5],
@@ -917,6 +919,20 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 				mk2.name = "%s%d" % [mname.trim_suffix("s"), k]
 				mk2.position = (v as Array)[k] + Vector3(0, 0.05, 0)
 				grp.add_child(mk2)
+
+	# Прыжковые руны (GDD 7.2): [позиция на полу, высота подброса]
+	var pads: Array = d.get("jump_pads", [])
+	if not pads.is_empty():
+		var pnode := Node3D.new()
+		pnode.name = "JumpPads"
+		root.add_child(pnode)
+		for i in pads.size():
+			var jp := Area3D.new()
+			jp.name = "JumpPad%d" % i
+			jp.set_script(load("res://rooms/jump_pad.gd"))
+			jp.position = (pads[i] as Array)[0]
+			jp.set("height", (pads[i] as Array)[1])
+			pnode.add_child(jp)
 
 	# Бочки и ящики
 	var props := Node3D.new()
