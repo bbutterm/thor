@@ -4,6 +4,9 @@ class_name FX
 
 static var _hitstop_left: float = 0.0
 static var _hitstop_scale: float = 1.0
+## Кадр, в котором последний раз менялся Engine.time_scale, и масштаб, бывший до этого в начале кадра
+static var _scale_frame: int = -1
+static var _scale_before: float = 1.0
 
 static func tree() -> SceneTree:
 	return Engine.get_main_loop() as SceneTree
@@ -15,22 +18,37 @@ static func hitstop(duration: float, scale: float = 0.05) -> void:
 		return
 	_hitstop_left = maxf(_hitstop_left, duration)
 	_hitstop_scale = minf(_hitstop_scale, scale) if _hitstop_left > 0.0 else scale
-	Engine.time_scale = _hitstop_scale
+	_set_time_scale(_hitstop_scale)
 
-## Вызывается каждый кадр с НЕмасштабированной дельтой.
-static func tick(real_delta: float) -> void:
+## Вызывается каждый кадр. Run передаёт delta / текущий time_scale; пересчитываем по масштабу,
+## с которым движок на самом деле умножил delta этого кадра (см. real_delta).
+static func tick(passed_real_delta: float) -> void:
 	if _hitstop_left <= 0.0:
 		return
-	_hitstop_left -= real_delta
+	_hitstop_left -= real_delta(passed_real_delta * maxf(Engine.time_scale, 0.0001))
 	if _hitstop_left <= 0.0:
 		_hitstop_left = 0.0
 		_hitstop_scale = 1.0
-		Engine.time_scale = 1.0
+		_set_time_scale(1.0)
+
+## Реальная длительность кадра по delta из _process. Движок умножает delta на time_scale, каким он был
+## В НАЧАЛЕ кадра; удары (и hit-stop) случаются в физике этого же кадра. Если делить на новый 0.05,
+## первый же тик насчитывал 1/60 / 0.05 = 0.33 с и стоп заканчивался в кадре, где начался.
+static func real_delta(scaled_delta: float) -> float:
+	var s := _scale_before if Engine.get_process_frames() == _scale_frame else Engine.time_scale
+	return scaled_delta / maxf(s, 0.0001)
+
+static func _set_time_scale(s: float) -> void:
+	var f := Engine.get_process_frames()
+	if f != _scale_frame:
+		_scale_frame = f
+		_scale_before = Engine.time_scale
+	Engine.time_scale = s
 
 static func reset_time() -> void:
 	_hitstop_left = 0.0
 	_hitstop_scale = 1.0
-	Engine.time_scale = 1.0
+	_set_time_scale(1.0)
 
 ## Всплывающая цифра урона в мире.
 static func damage_number(parent: Node, pos: Vector3, amount: float, color: Color = Color(1, 0.9, 0.3), big: bool = false) -> void:
