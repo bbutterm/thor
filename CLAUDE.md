@@ -11,6 +11,14 @@
 - `ui/` — HUD, выбор рун, пауза, экран конца, меню (всё строится кодом, `.tscn` — пустые обёртки со скриптом).
 - `scripts/fx.gd` — hit-stop (тикает из `Run._process`), цифры урона, молнии, кольца, искры.
 
+## Модели (Quaternius, CC0)
+- `assets/quaternius/characters/` — тела, одежда, волосы, анимации (`gaits.glb` = UAL1, `animations.glb` = UAL2). Скелет у всех один (65 костей, правая кисть `hand_r`).
+- `enemies/humanoid_model.gd` собирает персонажа: тело + одежда + волосы на одном скелете, красит, добавляет библиотеки анимаций `ual1/…`, `ual2/…`. Godot при импорте отрезает суффикс `_Loop` — `HumanoidModel.resolve()` ищет оба варианта.
+- Вид и анимации врагов — `MODEL_LOOKS` в `tools/build_scenes.gd` (поля групп «Модель»/«Анимации» в `enemy.gd`). Замена на Synty: положить в сцену врага узел `Visual` со своим `AnimationPlayer` или поменять пути/имена анимаций там.
+- `assets/quaternius/village/` — стены 2×3.12 м (`_wall_row` в генераторе ставит их в 2 ряда), текстуры для трипланарных материалов (`_tex_mat`). `assets/quaternius/props/` — бочки, факелы, знамёна.
+- Оружие — `scripts/weapon_meshes.gd` (процедурное, текстуры Quaternius). Слой 2 = вьюмодель.
+- Витрина ассетов: `xvfb-run -a godot --path . --rendering-method gl_compatibility --resolution 1280x720 res://tools/preview_assets.tscn -- out.png lineup|characters|village|props`.
+
 ## Важно
 - Сцены игрока, врагов, бочек, залов, UI и `scenes/game.tscn` **генерирует** `tools/build_scenes.gd`. Меняешь структуру сцены — правь генератор и перезапускай его. ⚠️ Если владелец правил залы руками в редакторе, генератор их перезапишет — спроси сначала.
 - Блоки уровней — StaticBody3D, не CSG (CSG давал провалы сквозь пол в первые кадры).

@@ -1,209 +1,290 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://player/player.gd" id="1_qjkh3"]
-[ext_resource type="Script" path="res://player/camera_fx.gd" id="2_g6k8r"]
-[ext_resource type="Script" path="res://weapons/axe.gd" id="3_boad6"]
-[ext_resource type="Script" path="res://weapons/mjolnir_hand.gd" id="4_rgyib"]
-[ext_resource type="AudioStream" path="res://sounds/walking.ogg" id="5_hg6s5"]
+[ext_resource type="Script" path="res://player/player.gd" id="1_rgyib"]
+[ext_resource type="Script" path="res://player/camera_fx.gd" id="2_hg6s5"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_WoodTrim_BaseColor.png" id="3_8t03j"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_WoodTrim_Normal.png" id="4_2ieo8"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_BrushedNoise.png" id="5_ebec5"]
+[ext_resource type="Script" path="res://weapons/axe.gd" id="6_yllr7"]
+[ext_resource type="Script" path="res://weapons/mjolnir_hand.gd" id="7_kb6p2"]
+[ext_resource type="AudioStream" path="res://sounds/walking.ogg" id="8_wodsf"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8t03j"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_32hag"]
 radius = 0.4
 height = 1.8
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_2ieo8"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_tqiix"]
 size = Vector3(2.6, 2, 1.6)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ebec5"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_e7oew"]
 albedo_color = Color(0.85, 0.65, 0.5, 1)
 roughness = 0.9
 
-[sub_resource type="BoxMesh" id="BoxMesh_yllr7"]
-size = Vector3(0.16, 0.18, 0.2)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kb6p2"]
-albedo_color = Color(0.36, 0.22, 0.12, 1)
-roughness = 0.9
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_wodsf"]
-top_radius = 0.032
-bottom_radius = 0.04
-height = 0.95
-radial_segments = 12
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_32hag"]
-albedo_color = Color(0.7, 0.72, 0.76, 1)
-metallic = 0.85
-roughness = 0.3
-
-[sub_resource type="BoxMesh" id="BoxMesh_tqiix"]
-size = Vector3(0.04, 0.34, 0.36)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_e7oew"]
-albedo_color = Color(0.92, 0.93, 0.95, 1)
-metallic = 1.0
-roughness = 0.15
-
 [sub_resource type="BoxMesh" id="BoxMesh_c35mf"]
-size = Vector3(0.045, 0.42, 0.06)
-
-[sub_resource type="BoxMesh" id="BoxMesh_65viv"]
-size = Vector3(0.05, 0.1, 0.14)
-
-[sub_resource type="BoxMesh" id="BoxMesh_x7c3f"]
 size = Vector3(0.16, 0.18, 0.2)
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_bjvpn"]
-top_radius = 0.035
-bottom_radius = 0.04
-height = 0.5
-radial_segments = 12
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_65viv"]
+albedo_color = Color(0.75, 0.6, 0.5, 1)
+albedo_texture = ExtResource("3_8t03j")
+roughness = 0.85
+normal_enabled = true
+normal_texture = ExtResource("4_2ieo8")
+uv1_scale = Vector3(1.5, 1.5, 1.5)
+uv1_triplanar = true
 
-[sub_resource type="BoxMesh" id="BoxMesh_s7qer"]
-size = Vector3(0.48, 0.28, 0.28)
+[sub_resource type="CylinderMesh" id="CylinderMesh_x7c3f"]
+top_radius = 0.028
+bottom_radius = 0.034
+height = 0.95
+radial_segments = 10
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bjvpn"]
+albedo_color = Color(0.35, 0.22, 0.15, 1)
+albedo_texture = ExtResource("3_8t03j")
+roughness = 0.9
+uv1_scale = Vector3(4, 4, 4)
+uv1_triplanar = true
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_s7qer"]
+top_radius = 0.04
+bottom_radius = 0.04
+height = 0.16
+radial_segments = 10
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g4c7l"]
-albedo_color = Color(0.45, 0.8, 1, 1)
-roughness = 0.4
-emission_enabled = true
-emission = Color(0.45, 0.8, 1, 1)
-emission_energy_multiplier = 3.0
+albedo_color = Color(0.34, 0.35, 0.38, 1)
+metallic = 0.9
+roughness = 0.5
+roughness_texture = ExtResource("5_ebec5")
+uv1_scale = Vector3(2, 2, 2)
+uv1_triplanar = true
 
 [sub_resource type="BoxMesh" id="BoxMesh_knn7v"]
-size = Vector3(0.14, 0.14, 0.3)
+size = Vector3(0.035, 0.16, 0.12)
 
-[node name="Player" type="CharacterBody3D" unique_id=539421024]
+[sub_resource type="BoxMesh" id="BoxMesh_7pqkx"]
+size = Vector3(0.03, 0.34, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uw77l"]
+albedo_color = Color(0.8, 0.82, 0.86, 1)
+metallic = 1.0
+roughness = 0.3
+roughness_texture = ExtResource("5_ebec5")
+uv1_scale = Vector3(3, 3, 3)
+uv1_triplanar = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_rptt4"]
+size = Vector3(0.034, 0.4, 0.05)
+
+[sub_resource type="BoxMesh" id="BoxMesh_r7pn3"]
+size = Vector3(0.06, 0.08, 0.08)
+
+[sub_resource type="BoxMesh" id="BoxMesh_b8hi5"]
+size = Vector3(0.16, 0.18, 0.2)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2uvqg"]
+top_radius = 0.034
+bottom_radius = 0.04
+height = 0.5
+radial_segments = 10
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1s1yo"]
+top_radius = 0.05
+bottom_radius = 0.05
+height = 0.05
+radial_segments = 10
+
+[sub_resource type="BoxMesh" id="BoxMesh_5ejfk"]
+size = Vector3(0.5, 0.27, 0.27)
+
+[sub_resource type="BoxMesh" id="BoxMesh_jd2rm"]
+size = Vector3(0.06, 0.31, 0.31)
+
+[sub_resource type="BoxMesh" id="BoxMesh_q28gw"]
+size = Vector3(0.06, 0.31, 0.31)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ge24q"]
+albedo_color = Color(0.3, 0.65, 0.95, 1)
+emission_enabled = true
+emission = Color(0.3, 0.7, 1, 1)
+emission_energy_multiplier = 1.6
+uv1_triplanar = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_pnw6m"]
+size = Vector3(0.16, 0.12, 0.285)
+
+[node name="Player" type="CharacterBody3D" unique_id=1861678668]
 collision_layer = 2
 collision_mask = 13
 floor_max_angle = 0.87266463
 floor_snap_length = 0.35
-script = ExtResource("1_qjkh3")
+script = ExtResource("1_rgyib")
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=634044522]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=476554954]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-shape = SubResource("CapsuleShape3D_8t03j")
+shape = SubResource("CapsuleShape3D_32hag")
 
-[node name="Head" type="Node3D" parent="." unique_id=1470075824]
+[node name="Head" type="Node3D" parent="." unique_id=371779653]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 
-[node name="Camera" type="Camera3D" parent="Head" unique_id=716275325]
+[node name="Camera" type="Camera3D" parent="Head" unique_id=1438231422]
 cull_mask = 1048573
 current = true
 fov = 85.0
-script = ExtResource("2_g6k8r")
+script = ExtResource("2_hg6s5")
 
-[node name="AxeHitbox" type="ShapeCast3D" parent="Head/Camera" unique_id=1226792702]
+[node name="AxeHitbox" type="ShapeCast3D" parent="Head/Camera" unique_id=802788708]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, -0.9)
 enabled = false
-shape = SubResource("BoxShape3D_2ieo8")
+shape = SubResource("BoxShape3D_tqiix")
 target_position = Vector3(0, 0, -1)
 max_results = 16
 collision_mask = 92
 collide_with_areas = true
 
-[node name="ViewmodelContainer" type="SubViewportContainer" parent="Head/Camera" unique_id=1280433688]
+[node name="ViewmodelContainer" type="SubViewportContainer" parent="Head/Camera" unique_id=1812210540]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="Head/Camera/ViewmodelContainer" unique_id=878387325]
+[node name="SubViewport" type="SubViewport" parent="Head/Camera/ViewmodelContainer" unique_id=83513358]
 transparent_bg = true
 handle_input_locally = false
 msaa_3d = 1
 size = Vector2i(1280, 720)
 render_target_update_mode = 4
 
-[node name="ViewCam" type="Camera3D" parent="Head/Camera/ViewmodelContainer/SubViewport" unique_id=864353917]
+[node name="ViewCam" type="Camera3D" parent="Head/Camera/ViewmodelContainer/SubViewport" unique_id=1454359041]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -500, 0)
 cull_mask = 2
 fov = 60.0
 
-[node name="HandLight" type="OmniLight3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=607735359]
+[node name="HandLight" type="OmniLight3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=1761567389]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.6, 0.6)
 light_energy = 0.8
 light_cull_mask = 2
 omni_range = 4.0
 
-[node name="AxePivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=2000904134]
+[node name="AxePivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=302333858]
 transform = Transform3D(0.62, 0, 0, 0, 0.62, 0, 0, 0, 0.62, 0, 0, 0)
 
-[node name="Hand" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=573945708]
-layers = 2
-material_override = SubResource("StandardMaterial3D_ebec5")
-cast_shadow = 0
-mesh = SubResource("BoxMesh_yllr7")
-
-[node name="Handle" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=715343535]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0)
-layers = 2
-material_override = SubResource("StandardMaterial3D_kb6p2")
-cast_shadow = 0
-mesh = SubResource("CylinderMesh_wodsf")
-
-[node name="Blade" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=441425949]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, -0.2)
-layers = 2
-material_override = SubResource("StandardMaterial3D_32hag")
-cast_shadow = 0
-mesh = SubResource("BoxMesh_tqiix")
-
-[node name="Edge" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=477122177]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, -0.39)
+[node name="Hand" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=1182495147]
 layers = 2
 material_override = SubResource("StandardMaterial3D_e7oew")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_c35mf")
 
-[node name="Spike" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=602664774]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.74, 0.07)
+[node name="Axe" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=348425382]
+
+[node name="@MeshInstance3D@14" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot/Axe" unique_id=1476850603]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0)
 layers = 2
-material_override = SubResource("StandardMaterial3D_32hag")
+material_override = SubResource("StandardMaterial3D_65viv")
 cast_shadow = 0
-mesh = SubResource("BoxMesh_65viv")
+mesh = SubResource("CylinderMesh_x7c3f")
 
-[node name="HammerPivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=630211681]
-transform = Transform3D(0.62, 0, 0, 0, 0.62, 0, 0, 0, 0.62, 0, 0, 0)
-
-[node name="Hand" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=560501467]
+[node name="@MeshInstance3D@15" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot/Axe" unique_id=666556602]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
 layers = 2
-material_override = SubResource("StandardMaterial3D_ebec5")
+material_override = SubResource("StandardMaterial3D_bjvpn")
 cast_shadow = 0
-mesh = SubResource("BoxMesh_x7c3f")
+mesh = SubResource("CylinderMesh_s7qer")
 
-[node name="Handle" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=2115226607]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
-layers = 2
-material_override = SubResource("StandardMaterial3D_kb6p2")
-cast_shadow = 0
-mesh = SubResource("CylinderMesh_bjvpn")
-
-[node name="Head" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=318841245]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
-layers = 2
-material_override = SubResource("StandardMaterial3D_32hag")
-cast_shadow = 0
-mesh = SubResource("BoxMesh_s7qer")
-
-[node name="Rune" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=161794352]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
+[node name="@MeshInstance3D@16" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot/Axe" unique_id=912871328]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, -0.08)
 layers = 2
 material_override = SubResource("StandardMaterial3D_g4c7l")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_knn7v")
 
-[node name="Axe" type="Node" parent="." unique_id=962985750]
-script = ExtResource("3_boad6")
+[node name="@MeshInstance3D@17" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot/Axe" unique_id=889472675]
+transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0.7, -0.23)
+layers = 2
+material_override = SubResource("StandardMaterial3D_g4c7l")
+cast_shadow = 0
+mesh = SubResource("BoxMesh_7pqkx")
+
+[node name="@MeshInstance3D@18" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot/Axe" unique_id=2116163933]
+transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0.68, -0.34)
+layers = 2
+material_override = SubResource("StandardMaterial3D_uw77l")
+cast_shadow = 0
+mesh = SubResource("BoxMesh_rptt4")
+
+[node name="@MeshInstance3D@19" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot/Axe" unique_id=2110735049]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, 0.05)
+layers = 2
+material_override = SubResource("StandardMaterial3D_g4c7l")
+cast_shadow = 0
+mesh = SubResource("BoxMesh_r7pn3")
+
+[node name="HammerPivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=1208254755]
+transform = Transform3D(0.62, 0, 0, 0, 0.62, 0, 0, 0, 0.62, 0, 0, 0)
+
+[node name="Hand" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=150312856]
+layers = 2
+material_override = SubResource("StandardMaterial3D_e7oew")
+cast_shadow = 0
+mesh = SubResource("BoxMesh_b8hi5")
+
+[node name="Mjolnir" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=1693224126]
+
+[node name="@MeshInstance3D@20" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot/Mjolnir" unique_id=1100395116]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
+layers = 2
+material_override = SubResource("StandardMaterial3D_bjvpn")
+cast_shadow = 0
+mesh = SubResource("CylinderMesh_2uvqg")
+
+[node name="@MeshInstance3D@21" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot/Mjolnir" unique_id=1854825804]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08, 0)
+layers = 2
+material_override = SubResource("StandardMaterial3D_g4c7l")
+cast_shadow = 0
+mesh = SubResource("CylinderMesh_1s1yo")
+
+[node name="@MeshInstance3D@22" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot/Mjolnir" unique_id=4157073]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+layers = 2
+material_override = SubResource("StandardMaterial3D_g4c7l")
+cast_shadow = 0
+mesh = SubResource("BoxMesh_5ejfk")
+
+[node name="@MeshInstance3D@23" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot/Mjolnir" unique_id=292381597]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0.55, 0)
+layers = 2
+material_override = SubResource("StandardMaterial3D_uw77l")
+cast_shadow = 0
+mesh = SubResource("BoxMesh_jd2rm")
+
+[node name="@MeshInstance3D@24" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot/Mjolnir" unique_id=147636926]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0.55, 0)
+layers = 2
+material_override = SubResource("StandardMaterial3D_uw77l")
+cast_shadow = 0
+mesh = SubResource("BoxMesh_q28gw")
+
+[node name="@MeshInstance3D@25" type="MeshInstance3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot/Mjolnir" unique_id=1083745089]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+layers = 2
+material_override = SubResource("StandardMaterial3D_ge24q")
+cast_shadow = 0
+mesh = SubResource("BoxMesh_pnw6m")
+
+[node name="Axe" type="Node" parent="." unique_id=504845829]
+script = ExtResource("6_yllr7")
 pivot_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot")
 hitbox_path = NodePath("../Head/Camera/AxeHitbox")
 hand_mesh_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot/Hand")
 
-[node name="Mjolnir" type="Node" parent="." unique_id=249168298]
-script = ExtResource("4_rgyib")
+[node name="Mjolnir" type="Node" parent="." unique_id=399426843]
+script = ExtResource("7_kb6p2")
 pivot_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot")
 hand_mesh_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot/Hand")
 
-[node name="Footsteps" type="AudioStreamPlayer" parent="." unique_id=493680043]
-stream = ExtResource("5_hg6s5")
+[node name="Footsteps" type="AudioStreamPlayer" parent="." unique_id=1759718818]
+stream = ExtResource("8_wodsf")
 volume_db = -8.0
 autoplay = true

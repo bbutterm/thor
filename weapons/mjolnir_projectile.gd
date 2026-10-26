@@ -23,30 +23,10 @@ func launch(owner_hand: MjolnirHand, origin: Vector3, velocity_: Vector3) -> voi
 func _build_visual() -> void:
 	_mesh_root = Node3D.new()
 	add_child(_mesh_root)
-	var steel := FX.make_material(Color(0.62, 0.64, 0.7), 0.35)
-	steel.metallic = 0.8
-	var head := MeshInstance3D.new()
-	var hb := BoxMesh.new()
-	hb.size = Vector3(0.62, 0.36, 0.36)
-	head.mesh = hb
-	head.material_override = steel
-	head.position = Vector3(0, 0.3, 0)
-	_mesh_root.add_child(head)
-	var handle := MeshInstance3D.new()
-	var hc := CylinderMesh.new()
-	hc.top_radius = 0.06
-	hc.bottom_radius = 0.07
-	hc.height = 0.55
-	handle.mesh = hc
-	handle.material_override = FX.make_material(Color(0.35, 0.2, 0.1), 0.9)
-	_mesh_root.add_child(handle)
-	var rune := MeshInstance3D.new()
-	var rb := BoxMesh.new()
-	rb.size = Vector3(0.18, 0.18, 0.38)
-	rune.mesh = rb
-	rune.material_override = FX.make_material(Color(0.45, 0.8, 1.0), 0.5, 3.0)
-	rune.position = Vector3(0, 0.3, 0)
-	_mesh_root.add_child(rune)
+	var hm := WeaponMeshes.hammer()
+	hm.position = Vector3(0, -0.3, 0)
+	hm.scale = Vector3.ONE * 1.15
+	_mesh_root.add_child(hm)
 	_light = OmniLight3D.new()
 	_light.light_color = Color(0.5, 0.8, 1.0)
 	_light.light_energy = 1.5

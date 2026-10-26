@@ -6,7 +6,7 @@
 radius = 0.45
 height = 1.8
 
-[node name="Grunt" type="CharacterBody3D" unique_id=1985637670]
+[node name="Grunt" type="CharacterBody3D" unique_id=1416954495]
 collision_layer = 4
 collision_mask = 15
 floor_snap_length = 0.3
@@ -14,7 +14,16 @@ script = ExtResource("1_7liby")
 max_health = 60.0
 move_speed = 4.4
 body_color = Color(0.36, 0.48, 0.38, 1)
+model_outfit = "outfits/Male_Peasant.gltf"
+skin_tint = Color(0.45, 0.58, 0.66, 1)
+cloth_tint = Color(0.55, 0.55, 0.52, 1)
+eye_glow = Color(0.4, 0.85, 1, 1)
+hand_weapon = "axe"
+anim_idle = "Zombie_Idle_Loop"
+anim_move = "Zombie_Walk_Fwd_Loop"
+anim_attack = "Zombie_Scratch"
+anim_attack_hit_at = 0.45
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=34455101]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=954664648]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_1ydv4")

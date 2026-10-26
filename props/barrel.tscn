@@ -1,72 +1,19 @@
 [gd_scene format=3]
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_d046q"]
+[ext_resource type="PackedScene" path="res://assets/quaternius/props/Barrel.gltf" id="1_27cr2"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1nefx"]
 height = 1.0
-radius = 0.45
+radius = 0.4
 
-[sub_resource type="Gradient" id="Gradient_27cr2"]
-colors = PackedColorArray(0.72, 0.72, 0.72, 1, 1, 1, 1, 1)
-
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_1nefx"]
-frequency = 0.04
-fractal_octaves = 4
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ha3p0"]
-width = 256
-height = 256
-noise = SubResource("FastNoiseLite_1nefx")
-color_ramp = SubResource("Gradient_27cr2")
-seamless = true
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fuhws"]
-albedo_color = Color(0.5, 0.3, 0.16, 1)
-albedo_texture = SubResource("NoiseTexture2D_ha3p0")
-roughness = 0.9
-uv1_scale = Vector3(0.35, 0.35, 0.35)
-uv1_triplanar = true
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_x6aq3"]
-top_radius = 0.42
-bottom_radius = 0.42
-height = 1.0
-radial_segments = 12
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g2lkx"]
-albedo_color = Color(0.3, 0.3, 0.33, 1)
-roughness = 0.5
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_4qacc"]
-top_radius = 0.45
-bottom_radius = 0.45
-height = 0.07
-radial_segments = 12
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_tdc2r"]
-top_radius = 0.45
-bottom_radius = 0.45
-height = 0.07
-radial_segments = 12
-
-[node name="Barrel" type="RigidBody3D" unique_id=458391631 groups=["props"]]
+[node name="Barrel" type="RigidBody3D" unique_id=1310683631 groups=["props"]]
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
 
-[node name="Shape" type="CollisionShape3D" parent="." unique_id=1823431423]
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=821157423]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-shape = SubResource("CylinderShape3D_d046q")
+shape = SubResource("CylinderShape3D_1nefx")
 
-[node name="Body" type="MeshInstance3D" parent="." unique_id=795837645]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-material_override = SubResource("StandardMaterial3D_fuhws")
-mesh = SubResource("CylinderMesh_x6aq3")
-
-[node name="Hoop1" type="MeshInstance3D" parent="." unique_id=1109216103]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
-material_override = SubResource("StandardMaterial3D_g2lkx")
-mesh = SubResource("CylinderMesh_4qacc")
-
-[node name="Hoop2" type="MeshInstance3D" parent="." unique_id=975599523]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
-material_override = SubResource("StandardMaterial3D_g2lkx")
-mesh = SubResource("CylinderMesh_tdc2r")
+[node name="Model" type="Node3D" parent="." unique_id=917105538 instance=ExtResource("1_27cr2")]
+transform = Transform3D(1.15, 0, 0, 0, 1.12, 0, 0, 0, 1.15, 0, 0, 0)

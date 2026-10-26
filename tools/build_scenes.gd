@@ -79,6 +79,50 @@ func _mat(key: String, color: Color, rough: float = 0.85, noise: bool = true, em
 
 ## Статичный блок: StaticBody3D + коробка-коллизия + меш. (Не CSG: CSG строит коллизию с задержкой,
 ## и в первые кадры игрок и бочки проваливались сквозь пол.)
+const QV := "res://assets/quaternius/village/"
+const QP := "res://assets/quaternius/props/"
+
+## Материал из текстур Quaternius Medieval Village с трипланарной развёрткой (для блоков, пола, колонн).
+func _tex_mat(key: String, tex: String, tint: Color = Color.WHITE, uv: float = 0.5, rough: float = 0.9) -> StandardMaterial3D:
+	if _mats.has(key):
+		return _mats[key]
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load(QV + "T_%s_BaseColor.png" % tex)
+	if ResourceLoader.exists(QV + "T_%s_Normal.png" % tex):
+		m.normal_enabled = true
+		m.normal_texture = load(QV + "T_%s_Normal.png" % tex)
+	if ResourceLoader.exists(QV + "T_%s_Roughness.png" % tex):
+		m.roughness_texture = load(QV + "T_%s_Roughness.png" % tex)
+	m.albedo_color = tint
+	m.roughness = rough
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3(uv, uv, uv)
+	_mats[key] = m
+	return m
+
+## Экземпляр модели (gltf) как обычный узел сцены.
+func _model(parent: Node, name: String, path: String, pos: Vector3, rot_deg: Vector3 = Vector3.ZERO, scl: Vector3 = Vector3.ONE) -> Node3D:
+	var n := (load(path) as PackedScene).instantiate() as Node3D
+	n.name = name
+	n.position = pos
+	n.rotation_degrees = rot_deg
+	n.scale = scl
+	parent.add_child(n)
+	return n
+
+## Ряд стеновых секций Quaternius (2 м шириной, 3.12 м высотой) вдоль отрезка, в 2 ряда по высоте.
+## yaw: 0 — стена вдоль X, лицом к +Z; 180 — к -Z; 90 — вдоль Z, лицом к +X; -90 — к -X.
+func _wall_row(parent: Node, prefix: String, start: Vector3, length: float, yaw: float, rows: int = 2, piece: String = "Wall_UnevenBrick_Straight") -> void:
+	var n := maxi(1, int(ceil(length / 2.0 - 0.01)))
+	var sx := length / (2.0 * n)
+	var dir := Vector3(cos(deg_to_rad(yaw)), 0, -sin(deg_to_rad(yaw)))
+	for row in rows:
+		for i in n:
+			var c := start + dir * (2.0 * sx * (i + 0.5))
+			c.y = start.y + row * 3.12
+			_model(parent, "%s_%d_%d" % [prefix, row, i], QV + piece + ".gltf", c, Vector3(0, yaw, 0), Vector3(sx, 1, 1))
+
 func _box(parent: Node, name: String, center: Vector3, size: Vector3, mat: Material, collide: bool = true) -> Node3D:
 	var root: Node3D
 	if collide:
@@ -97,6 +141,8 @@ func _box(parent: Node, name: String, center: Vector3, size: Vector3, mat: Mater
 	root.name = name
 	root.position = center
 	parent.add_child(root)
+	if mat == null:
+		return root
 	var mi := MeshInstance3D.new()
 	mi.name = "Mesh"
 	mi.mesh = _boxmesh(size)
@@ -205,28 +251,22 @@ func build_props() -> void:
 		shape.name = "Shape"
 		rb.add_child(shape)
 		if kind == "barrel":
+			# Quaternius Fantasy Props: Barrel (0.7 × 0.9 м), чуть увеличен
 			rb.mass = 1.2
 			var cs := CylinderShape3D.new()
-			cs.radius = 0.45
+			cs.radius = 0.4
 			cs.height = 1.0
 			shape.shape = cs
 			shape.position.y = 0.5
-			var wood := _mat("barrel_wood", Color(0.5, 0.3, 0.16), 0.9)
-			var iron := _mat("iron", Color(0.3, 0.3, 0.33), 0.5, false)
-			_mesh(rb, "Body", _cylmesh(0.42, 0.42, 1.0), Vector3(0, 0.5, 0), wood)
-			_mesh(rb, "Hoop1", _cylmesh(0.45, 0.45, 0.07), Vector3(0, 0.2, 0), iron)
-			_mesh(rb, "Hoop2", _cylmesh(0.45, 0.45, 0.07), Vector3(0, 0.8, 0), iron)
+			_model(rb, "Model", QP + "Barrel.gltf", Vector3.ZERO, Vector3.ZERO, Vector3(1.15, 1.12, 1.15))
 		else:
+			# Quaternius Medieval Village: Prop_Crate (1.08 м) → 0.9 м
 			rb.mass = 1.6
 			var bs := BoxShape3D.new()
-			bs.size = Vector3(0.9, 0.9, 0.9)
+			bs.size = Vector3(0.9, 0.88, 0.9)
 			shape.shape = bs
-			shape.position.y = 0.45
-			var wood2 := _mat("crate_wood", Color(0.62, 0.45, 0.25), 0.9)
-			var dark := _mat("crate_dark", Color(0.35, 0.22, 0.12), 0.9)
-			_mesh(rb, "Body", _boxmesh(Vector3(0.9, 0.9, 0.9)), Vector3(0, 0.45, 0), wood2)
-			_mesh(rb, "Plank1", _boxmesh(Vector3(0.95, 0.12, 0.95)), Vector3(0, 0.08, 0), dark)
-			_mesh(rb, "Plank2", _boxmesh(Vector3(0.95, 0.12, 0.95)), Vector3(0, 0.82, 0), dark)
+			shape.position.y = 0.44
+			_model(rb, "Model", QV + "Prop_Crate.gltf", Vector3.ZERO, Vector3.ZERO, Vector3.ONE * 0.83)
 		_save(rb, "res://props/%s.tscn" % kind)
 
 # ---------------- Враги ----------------
@@ -258,6 +298,9 @@ func build_enemies() -> void:
 		if key == "boss":
 			e.set("lunge_speed", 5.0)
 			e.set("wall_splat_speed", 99.0)
+		var look: Dictionary = MODEL_LOOKS[key]
+		for prop in look:
+			e.set(prop, look[prop])
 		e.collision_layer = ENEMY_L
 		e.collision_mask = WORLD | PLAYER_L | ENEMY_L | PROPS_L
 		e.floor_snap_length = 0.3
@@ -270,6 +313,32 @@ func build_enemies() -> void:
 		shape.position = Vector3(0, 0.9 * d.scale, 0)
 		e.add_child(shape)
 		_save(e, "res://enemies/%s.tscn" % key)
+
+## Вид врагов: персонажи Quaternius (Universal Base Characters + одежда) и анимации UAL.
+## Чтобы поменять модели — меняй здесь или прямо в сценах enemies/*.tscn (группы «Модель» и «Анимации»).
+const MODEL_LOOKS := {
+	"grunt": {
+		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Peasant.gltf", "model_hair": "",
+		"skin_tint": Color(0.45, 0.58, 0.66), "cloth_tint": Color(0.55, 0.55, 0.52), "eye_glow": Color(0.4, 0.85, 1.0, 1.0),
+		"hand_weapon": "axe",
+		"anim_spawn": "LayToIdle", "anim_idle": "Zombie_Idle_Loop", "anim_move": "Zombie_Walk_Fwd_Loop", "anim_move_ref_speed": 1.6,
+		"anim_attack": "Zombie_Scratch", "anim_attack_hit_at": 0.45, "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
+	"thrower": {
+		"model_body": "base/Superhero_Female_FullBody.gltf", "model_outfit": "outfits/Female_Ranger.gltf", "model_hair": "",
+		"skin_tint": Color(0.5, 0.58, 0.66), "cloth_tint": Color(0.5, 0.42, 0.68), "eye_glow": Color(0.75, 0.4, 1.0, 1.0),
+		"hand_weapon": "staff",
+		"anim_spawn": "LayToIdle", "anim_idle": "Spell_Simple_Idle_Loop", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.5,
+		"anim_attack": "Spell_Simple_Shoot", "anim_attack_hit_at": 0.6, "anim_hit": "Hit_Head", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
+	"boss": {
+		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Peasant.gltf", "model_hair": "hair/Hair_Beard.gltf",
+		"skin_tint": Color(0.5, 0.72, 1.0), "cloth_tint": Color(0.55, 0.7, 1.0), "eye_glow": Color(0.5, 0.95, 1.0, 1.0),
+		"hand_weapon": "club",
+		"anim_spawn": "LayToIdle", "anim_idle": "Sword_Idle", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.6,
+		"anim_attack": "Sword_Regular_C", "anim_attack_hit_at": 0.35, "anim_slam": "Sword_Regular_C", "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
+}
 
 # ---------------- Игрок ----------------
 
@@ -363,19 +432,14 @@ func build_player() -> void:
 	axe_pivot.scale = Vector3.ONE * 0.62
 	vcam.add_child(axe_pivot)
 	_mesh(axe_pivot, "Hand", _boxmesh(Vector3(0.16, 0.18, 0.2)), Vector3(0, 0, 0), skin, Vector3.ZERO, 2)
-	_mesh(axe_pivot, "Handle", _cylmesh(0.032, 0.04, 0.95), Vector3(0, 0.38, 0), wood, Vector3.ZERO, 2)
-	_mesh(axe_pivot, "Blade", _boxmesh(Vector3(0.04, 0.34, 0.36)), Vector3(0, 0.72, -0.2), steel, Vector3.ZERO, 2)
-	_mesh(axe_pivot, "Edge", _boxmesh(Vector3(0.045, 0.42, 0.06)), Vector3(0, 0.72, -0.39), edge, Vector3.ZERO, 2)
-	_mesh(axe_pivot, "Spike", _boxmesh(Vector3(0.05, 0.1, 0.14)), Vector3(0, 0.74, 0.07), steel, Vector3.ZERO, 2)
+	axe_pivot.add_child(WeaponMeshes.axe(2))
 
 	var ham_pivot := Node3D.new()
 	ham_pivot.name = "HammerPivot"
 	ham_pivot.scale = Vector3.ONE * 0.62
 	vcam.add_child(ham_pivot)
 	_mesh(ham_pivot, "Hand", _boxmesh(Vector3(0.16, 0.18, 0.2)), Vector3(0, 0, 0), skin, Vector3.ZERO, 2)
-	_mesh(ham_pivot, "Handle", _cylmesh(0.035, 0.04, 0.5), Vector3(0, 0.2, 0), wood, Vector3.ZERO, 2)
-	_mesh(ham_pivot, "Head", _boxmesh(Vector3(0.48, 0.28, 0.28)), Vector3(0, 0.52, 0), steel, Vector3.ZERO, 2)
-	_mesh(ham_pivot, "Rune", _boxmesh(Vector3(0.14, 0.14, 0.3)), Vector3(0, 0.52, 0), rune_glow, Vector3.ZERO, 2)
+	ham_pivot.add_child(WeaponMeshes.hammer(2))
 
 	var axe := Node.new()
 	axe.name = "Axe"
@@ -530,14 +594,13 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	var w: float = d.w
 	var dep: float = d.d
 	var h := 6.0
-	var floor_mat := _mat("floor", Color(0.42, 0.4, 0.38), 0.95)
-	var wall_mat := _mat("wall", Color(0.55, 0.53, 0.5), 0.9)
+	var floor_mat := _tex_mat("q_floor", "Brick", Color(0.72, 0.68, 0.64), 0.35)
+	var wall_mat: Material = null  # стены — модели Quaternius, у коробок только коллизия
 	var mats := {
-		"wood": _mat("plat_wood", Color(0.5, 0.34, 0.2), 0.9),
-		"stone_dark": _mat("stone_dark", Color(0.36, 0.35, 0.36), 0.9),
+		"wood": _tex_mat("q_wood", "WoodTrim", Color(0.85, 0.75, 0.65), 0.5),
+		"stone_dark": _tex_mat("q_rock", "RockTrim", Color(0.7, 0.7, 0.74), 0.4),
 	}
-	var pillar_mat := _mat("pillar", Color(0.62, 0.6, 0.56), 0.85)
-	var trim_mat := _mat("trim", Color(0.75, 0.55, 0.25), 0.6, false)
+	var pillar_mat := _tex_mat("q_pillar", "UnevenBrick", Color(0.8, 0.78, 0.75), 0.45)
 
 	var geo := Node3D.new()
 	geo.name = "Geometry"
@@ -551,10 +614,18 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	_box(geo, "WallS", Vector3(0, h / 2, dep / 2 + 0.5), Vector3(w + 2, h, 1), wall_mat)
 	_box(geo, "WallW", Vector3(-w / 2 - 0.5, h / 2, 0), Vector3(1, h, dep + 2), wall_mat)
 	_box(geo, "WallE", Vector3(w / 2 + 0.5, h / 2, 0), Vector3(1, h, dep + 2), wall_mat)
-	# Золотой кант поверху
-	_box(geo, "TrimS", Vector3(0, h + 0.1, dep / 2 + 0.5), Vector3(w + 2.2, 0.2, 1.2), trim_mat, false)
-	_box(geo, "TrimW", Vector3(-w / 2 - 0.5, h + 0.1, 0), Vector3(1.2, 0.2, dep + 2.2), trim_mat, false)
-	_box(geo, "TrimE", Vector3(w / 2 + 0.5, h + 0.1, 0), Vector3(1.2, 0.2, dep + 2.2), trim_mat, false)
+	# Стены — секции Quaternius (UnevenBrick), в 2 ряда
+	var walls := Node3D.new()
+	walls.name = "WallModels"
+	geo.add_child(walls)
+	_wall_row(walls, "N_L", Vector3(-w / 2, 0, -dep / 2 - 0.1), side_w, 0)
+	_wall_row(walls, "N_R", Vector3(gap / 2, 0, -dep / 2 - 0.1), side_w, 0)
+	_wall_row(walls, "S", Vector3(w / 2, 0, dep / 2 + 0.1), w, 180)
+	_wall_row(walls, "W", Vector3(-w / 2 - 0.1, 0, dep / 2), dep, 90)
+	_wall_row(walls, "E", Vector3(w / 2 + 0.1, 0, -dep / 2), dep, -90)
+	_wall_row(walls, "CL", Vector3(-gap / 2 - 0.1, 0, -dep / 2 - 0.5), 5.0, 90)
+	_wall_row(walls, "CR", Vector3(gap / 2 + 0.1, 0, -dep / 2 - 5.5), 5.0, -90)
+	_wall_row(walls, "CE", Vector3(-gap / 2 - 1, 0, -dep / 2 - 5.6), gap + 2, 0)
 	# Коридор за дверью
 	_box(geo, "CorridorFloor", Vector3(0, -0.5, -dep / 2 - 3), Vector3(gap + 2, 1, 5), floor_mat)
 	_box(geo, "CorridorL", Vector3(-gap / 2 - 0.5, h / 2, -dep / 2 - 3), Vector3(1, h, 5), wall_mat)
@@ -573,7 +644,7 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		_cyl(geo, "PillarCap%d" % i, pp + Vector3(0, h - 0.2, 0), 1.0, 0.4, pillar_mat)
 
 	# Дверь
-	var door := _box(root, "Door", Vector3(0, h / 2, -dep / 2 - 0.5), Vector3(gap, h, 0.6), _mat("door", Color(0.45, 0.16, 0.12), 0.8))
+	var door := _box(root, "Door", Vector3(0, h / 2, -dep / 2 - 0.5), Vector3(gap, h, 0.6), _tex_mat("q_door", "WoodTrim", Color(0.55, 0.32, 0.25), 0.6))
 	var door_rune := _mat("door_rune", Color(1.0, 0.45, 0.2), 0.5, false, 3.0)
 	_box(door, "Rune", Vector3(0, 0.3, 0.33), Vector3(0.5, 2.2, 0.05), door_rune, false)
 	_box(door, "RuneBar", Vector3(0, 0.9, 0.33), Vector3(1.4, 0.3, 0.05), door_rune, false)
@@ -640,8 +711,14 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		t.name = "Torch%d" % i
 		t.position = torch_pos[i]
 		lights.add_child(t)
-		_mesh(t, "Holder", _boxmesh(Vector3(0.15, 0.5, 0.15)), Vector3(0, -0.3, 0), holder)
-		_mesh(t, "Flame", _cylmesh(0.0, 0.15, 0.35), Vector3(0, 0.1, 0), flame)
+		# Модель Quaternius Torch_Metal смотрит в +Z — разворачиваем от стены внутрь зала
+		var p3: Vector3 = torch_pos[i]
+		var yaw := 0.0
+		if absf(p3.x) > w / 2 - 1.0:
+			yaw = 90.0 if p3.x < 0 else -90.0
+		t.rotation_degrees.y = yaw
+		_model(t, "Model", QP + "Torch_Metal.gltf", Vector3(0, -0.3, -0.25), Vector3.ZERO, Vector3.ONE * 1.4)
+		_mesh(t, "Flame", _cylmesh(0.0, 0.11, 0.3), Vector3(0, 0.38, 0.08), flame)
 		var l := OmniLight3D.new()
 		l.name = "Light"
 		l.light_color = Color(1.0, 0.62, 0.3)
@@ -649,6 +726,15 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		l.omni_range = 9.0
 		l.position = Vector3(0, 0.3, 0)
 		t.add_child(l)
+
+	# Знамёна на боковых стенах
+	var banners := Node3D.new()
+	banners.name = "Banners"
+	root.add_child(banners)
+	var bz := [0.0] if dep < 26 else [-dep / 8, dep / 8 + 2]
+	for z in bz:
+		_model(banners, "BannerW%d" % int(z), QP + "Banner_2.gltf", Vector3(-w / 2 + 0.05, 4.6, z + 0.8), Vector3(0, 90, 0), Vector3.ONE * 1.3)
+		_model(banners, "BannerE%d" % int(z), QP + "Banner_2.gltf", Vector3(w / 2 - 0.05, 4.6, z - 0.8), Vector3(0, -90, 0), Vector3.ONE * 1.3)
 
 	# Портал-свет у выхода
 	var pl := OmniLight3D.new()

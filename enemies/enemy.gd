@@ -2,8 +2,11 @@ extends CharacterBody3D
 class_name Enemy
 ## Базовый враг: грунт (ближний), метатель (дальний), босс. Тип задаётся полем kind.
 ## Отбрасывание через knockback_velocity, оглушение об стену, «рэгдолл» RigidBody при смерти.
-## Чтобы заменить заглушку на модель (например, Quaternius), добавь в сцену дочерний узел "Visual" —
-## процедурная модель тогда не строится.
+## Вид врага (по приоритету):
+##   1) свой узел "Visual" в сцене (например, модель Synty со своим AnimationPlayer);
+##   2) персонаж Quaternius, собранный HumanoidModel по полям группы «Модель» ниже;
+##   3) процедурная заглушка из примитивов (если model_outfit пустой).
+## Имена анимаций — в группе «Анимации»: при смене моделей достаточно поменять их там.
 
 signal died(enemy: Enemy)
 
@@ -50,6 +53,30 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var body_color: Color = Color(0.32, 0.45, 0.33)
 @export var model_scale: float = 1.0
 
+@export_group("Модель")
+@export var model_body: String = "base/Superhero_Male_FullBody.gltf"
+@export var model_outfit: String = ""
+@export var model_hair: String = ""
+@export var skin_tint: Color = Color.WHITE
+@export var cloth_tint: Color = Color.WHITE
+@export var eye_glow: Color = Color(0, 0, 0, 0)
+## Оружие в правой руке: "" / "club" / "axe" / "staff"
+@export var hand_weapon: String = ""
+
+@export_group("Анимации")
+@export var anim_spawn: String = "LayToIdle"
+@export var anim_idle: String = "Idle_Loop"
+@export var anim_move: String = "Walk_Loop"
+## Скорость (м/с), при которой анимация ходьбы играет с ×1
+@export var anim_move_ref_speed: float = 1.6
+@export var anim_attack: String = "Punch_Cross"
+## В какой доле анимации атаки происходит удар (для синхронизации с телеграфом)
+@export_range(0.05, 1.0) var anim_attack_hit_at: float = 0.5
+@export var anim_slam: String = ""
+@export var anim_hit: String = "Hit_Chest"
+@export var anim_stun: String = "Hit_Knockback"
+@export var anim_death: String = "Death01"
+
 var health: float
 var is_dead: bool = false
 var state: State = State.SPAWNING
@@ -76,6 +103,9 @@ var _stuck_check_t: float = 0.0
 var _stuck_check_pos: Vector3 = Vector3.ZERO
 var _detour_left: float = 0.0
 var _detour_dir: Vector3 = Vector3.ZERO
+var _humanoid: HumanoidModel
+var _hit_anim_left: float = 0.0
+var _spawn_time: float = 0.5
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -84,14 +114,38 @@ func _ready() -> void:
 	health = max_health
 	_strafe_sign = 1.0 if randf() < 0.5 else -1.0
 	_visual = get_node_or_null("Visual")
+	if _visual == null and model_outfit != "":
+		_humanoid = HumanoidModel.new()
+		_humanoid.name = "Visual"
+		_humanoid.body = model_body
+		_humanoid.outfit = model_outfit
+		_humanoid.hair = model_hair
+		_humanoid.skin_tint = skin_tint
+		_humanoid.cloth_tint = cloth_tint
+		_humanoid.eye_glow = eye_glow
+		add_child(_humanoid)
+		_humanoid.scale = Vector3.ONE * model_scale
+		_visual = _humanoid
+		if hand_weapon != "":
+			_attach_weapon(hand_weapon)
+	elif _visual is HumanoidModel:
+		_humanoid = _visual as HumanoidModel
 	if _visual == null:
 		_visual = _build_procedural_model()
 	_collect_materials(_visual)
-	# Появление: вырастаем из-под земли
-	_visual.scale = Vector3(0.1, 0.1, 0.1)
-	var tw := create_tween()
-	tw.tween_property(_visual, "scale", Vector3.ONE * model_scale, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	FX.ring(get_parent(), global_position, 1.5 * model_scale, Color(0.7, 0.2, 1.0, 0.8), 0.45)
+	if _humanoid:
+		# Появление: драугр поднимается с земли
+		if _humanoid.play(anim_spawn, 0.0, 1.6):
+			var a := _humanoid.anim.get_animation(_humanoid.resolve(anim_spawn))
+			_spawn_time = a.length / 1.6
+		else:
+			_humanoid.play(anim_idle, 0.0)
+	else:
+		# Процедурная заглушка: вырастаем из-под земли
+		_visual.scale = Vector3(0.1, 0.1, 0.1)
+		var tw := create_tween()
+		tw.tween_property(_visual, "scale", Vector3.ONE * model_scale, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -104,7 +158,7 @@ func _physics_process(delta: float) -> void:
 	var move_dir := Vector3.ZERO
 	match state:
 		State.SPAWNING:
-			if _state_time >= 0.5:
+			if _state_time >= _spawn_time:
 				_set_state(State.CHASE)
 		State.CHASE:
 			move_dir = _think_chase()
@@ -119,7 +173,7 @@ func _physics_process(delta: float) -> void:
 				_set_state(State.CHASE)
 		State.STUNNED:
 			_stun_left -= delta
-			if _visual:
+			if _visual and _humanoid == null:
 				_visual.rotation.z = sin(_state_time * 30.0) * 0.12
 			if _stun_left <= 0.0:
 				if _visual:
@@ -128,12 +182,34 @@ func _physics_process(delta: float) -> void:
 
 	_apply_movement(move_dir, delta)
 	_update_visual_feedback(delta)
+	_update_animation(delta)
 
 func _set_state(s: State) -> void:
 	state = s
 	_state_time = 0.0
 	if s != State.WINDUP:
 		_windup_glow = 0.0
+	if s == State.STUNNED and _humanoid:
+		_humanoid.play(anim_stun, 0.05)
+
+## Анимации персонажа по состоянию. Атака запускается в _begin_windup, здесь — ходьба/стойка.
+func _update_animation(delta: float) -> void:
+	if _humanoid == null:
+		return
+	_hit_anim_left = maxf(0.0, _hit_anim_left - delta)
+	match state:
+		State.CHASE:
+			if _hit_anim_left > 0.0:
+				return
+			var hs := Vector2(velocity.x, velocity.z).length()
+			if hs > 0.4:
+				_humanoid.play(anim_move, 0.2, clampf(hs / anim_move_ref_speed, 0.5, 2.5))
+			else:
+				_humanoid.play(anim_idle, 0.25)
+		State.RECOVER:
+			# Даём доиграть атаке, к концу восстановления — в стойку
+			if _state_time > recover_time * 0.7:
+				_humanoid.play(anim_idle, 0.25)
 
 # --- Мышление ---
 
@@ -212,7 +288,14 @@ func _begin_windup(slam: bool) -> void:
 		Audio.play("sounds/sfx/enemy_growl.wav")
 	if slam:
 		_show_slam_telegraph()
-	if _visual:
+	if _humanoid:
+		var a_name := anim_slam if slam and anim_slam != "" else anim_attack
+		var full := _humanoid.resolve(a_name)
+		if full != "":
+			var wt := boss_slam_windup if slam else windup_time
+			var hit_t := _humanoid.anim.get_animation(full).length * anim_attack_hit_at
+			_humanoid.anim.play(full, 0.08, clampf(hit_t / maxf(wt, 0.05), 0.3, 4.0))
+	elif _visual:
 		var tw := create_tween()
 		tw.tween_property(_visual, "scale", Vector3(1.12, 0.88, 1.12) * model_scale, 0.15)
 		tw.tween_property(_visual, "scale", Vector3(0.95, 1.08, 0.95) * model_scale, maxf(0.05, (boss_slam_windup if slam else windup_time) - 0.15))
@@ -220,7 +303,7 @@ func _begin_windup(slam: bool) -> void:
 func _execute_attack() -> void:
 	_attack_count += 1
 	_cooldown = attack_cooldown
-	if _visual:
+	if _visual and _humanoid == null:
 		var tw := create_tween()
 		tw.tween_property(_visual, "scale", Vector3.ONE * model_scale, 0.12).set_trans(Tween.TRANS_BACK)
 	match kind:
@@ -304,6 +387,10 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 		Color(1, 0.55, 0.2) if big else (Color(0.6, 0.85, 1.0) if source in ["hammer", "lightning"] else Color(1, 0.92, 0.4)), big)
 	var k := knockback * (1.0 - knock_resist)
 	knockback_velocity += k
+	# Реакция на удар (не сбиваем анимацию атаки и оглушения)
+	if _humanoid and health > 0.0 and state in [State.CHASE, State.RECOVER] and k.length() > 1.0:
+		_humanoid.play(anim_hit, 0.03, 1.3)
+		_hit_anim_left = 0.25
 	if k.length() > 0.1:
 		_last_knock = k
 	if k.y > 2.5 and is_on_floor():
@@ -431,8 +518,16 @@ func _spawn_debris() -> void:
 	for m in _flash_mats:
 		m.emission_enabled = false
 	var knock := _last_knock if _last_knock.length() > 0.5 else -global_transform.basis.z * 4.0
-	rb.apply_central_impulse((knock * 1.1 + Vector3.UP * 4.0) * rb.mass)
-	rb.apply_torque_impulse(Vector3(randf_range(-3, 3), randf_range(-2, 2), randf_range(-3, 3)) * rb.mass)
+	if _humanoid:
+		# Персонаж с анимацией: тело летит от удара, но не кувыркается — играет анимация смерти
+		rb.lock_rotation = true
+		box.size = Vector3(0.6, 0.4, 0.6) * model_scale
+		shape.position = Vector3(0, 0.2 * model_scale, 0)
+		_humanoid.play(anim_death, 0.05, 1.4)
+		rb.apply_central_impulse((knock * 0.9 + Vector3.UP * 3.0) * rb.mass)
+	else:
+		rb.apply_central_impulse((knock * 1.1 + Vector3.UP * 4.0) * rb.mass)
+		rb.apply_torque_impulse(Vector3(randf_range(-3, 3), randf_range(-2, 2), randf_range(-3, 3)) * rb.mass)
 	# Через 4 с «рэгдолл» сжимается и исчезает (твин привязан к телу и умрёт вместе с ним)
 	var tw := rb.create_tween()
 	tw.tween_interval(4.0)
@@ -443,8 +538,8 @@ func _spawn_debris() -> void:
 
 func _update_visual_feedback(delta: float) -> void:
 	_hurt_flash = maxf(0.0, _hurt_flash - delta * 8.0)
-	# Процедурная «анимация»: покачивание при ходьбе, отклонение назад на замахе, рывок вперёд на ударе
-	if _visual and state != State.STUNNED:
+	# Процедурная «анимация» (только для заглушки): покачивание, отклонение на замахе, рывок на ударе
+	if _visual and _humanoid == null and state != State.STUNNED:
 		var hs := Vector2(velocity.x, velocity.z).length()
 		var bob := 0.0
 		if hs > 0.5 and is_on_floor():
@@ -471,22 +566,47 @@ func _update_visual_feedback(delta: float) -> void:
 			m.emission_enabled = true
 			var pulse := 0.5 + 0.5 * sin(_state_time * 30.0)
 			m.emission = Color(1, 0.15, 0.05)
-			m.emission_energy_multiplier = _windup_glow * (1.0 + pulse) * 1.5
+			m.emission_energy_multiplier = _windup_glow * (1.0 + pulse) * (0.55 if _humanoid else 1.5)
 		elif m.emission_enabled:
 			m.emission_enabled = false
 
 func _collect_materials(root: Node) -> void:
 	for mi in root.find_children("*", "MeshInstance3D", true, false):
 		var mesh_inst := mi as MeshInstance3D
-		var mat := mesh_inst.material_override as StandardMaterial3D
-		if mat == null and mesh_inst.mesh and mesh_inst.mesh.get_surface_count() > 0:
-			var src := mesh_inst.get_active_material(0) as StandardMaterial3D
-			if src:
-				mat = src.duplicate()
-				mesh_inst.material_override = mat
-		if mat:
-			_flash_mats.append(mat)
-			_base_colors.append(mat.albedo_color)
+		var over := mesh_inst.material_override as StandardMaterial3D
+		if over:
+			# Своя копия: общий материал (например, оружие) иначе мигал бы у всех сразу
+			if over.emission_enabled:
+				over.set_meta("glow", true)
+			if not over.has_meta("glow"):
+				over = over.duplicate() as StandardMaterial3D
+				mesh_inst.material_override = over
+			_flash_mats.append(over)
+			_base_colors.append(over.albedo_color)
+			continue
+		if mesh_inst.mesh == null:
+			continue
+		# Модели из нескольких поверхностей: свой материал на каждую (для вспышки при уроне)
+		for sidx in mesh_inst.mesh.get_surface_count():
+			var cur := mesh_inst.get_surface_override_material(sidx) as StandardMaterial3D
+			if cur == null:
+				var src := mesh_inst.get_active_material(sidx) as StandardMaterial3D
+				if src == null:
+					continue
+				cur = src.duplicate() as StandardMaterial3D
+				mesh_inst.set_surface_override_material(sidx, cur)
+			if cur.emission_enabled:
+				cur.set_meta("glow", true)
+			_flash_mats.append(cur)
+			_base_colors.append(cur.albedo_color)
+
+## Оружие в правую руку (процедурное, в текстурах Quaternius).
+func _attach_weapon(kind_name: String) -> void:
+	var att := BoneAttachment3D.new()
+	att.bone_name = "hand_r"
+	_humanoid.skeleton.add_child(att)
+	var w := WeaponMeshes.build(kind_name)
+	att.add_child(w)
 
 func _build_procedural_model() -> Node3D:
 	var root := Node3D.new()

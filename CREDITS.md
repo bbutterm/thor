@@ -9,8 +9,12 @@
 | Шрифт для рун (ᚠ ᛗ ᚦ…) Noto Sans Runic | Google Fonts / Noto — https://github.com/google/fonts/tree/main/ofl/notosansrunic | SIL OFL 1.1 (`fonts/NotoSansRunic-OFL.txt`) |
 | Движок | Godot Engine 4.6 — https://godotengine.org | MIT |
 | Физика | Jolt Physics (встроен в Godot 4.6) | MIT |
-| Модели врагов, оружия, залов, бочек | Сгенерированы кодом из примитивов (заглушки) | — |
+| Персонажи (драугры, шаманы, Хримтурс): Universal Base Characters + Modular Character Outfits – Fantasy | Quaternius — https://quaternius.com (копия: github.com/OpenAgentsInc/openagents, `assets/verse/characters/quaternius`) | CC0 (`assets/quaternius/characters/*-license.txt`) |
+| Анимации персонажей: Universal Animation Library 1 и 2 (Standard) | Quaternius — https://quaternius.com/packs/universalanimationlibrary.html | CC0 |
+| Стены, полы, ящики, текстуры дерева/камня: Medieval Village MegaKit (Standard) | Quaternius — https://quaternius.com/packs/medievalvillagemegakit.html (копия: github.com/Fialuxe/MouthOfGod_System) | CC0 (`assets/quaternius/village/LICENSE.txt`) |
+| Бочки, факелы, знамёна: Fantasy Props MegaKit (часть) | Quaternius — https://quaternius.com/packs/fantasypropsmegakit.html (копия: github.com/OpenAgentsInc/openagents, `assets/verse/props/quaternius`) | CC0 (`assets/quaternius/props/license.txt`) |
+| Оружие (топор, Мьёльнир, дубина, посох) | Собрано кодом (`scripts/weapon_meshes.gd`) из примитивов с текстурами Quaternius | — |
 
-Паки Quaternius из мега-промпта в этом прогоне **не использованы**: сайты itch.io / quaternius.com недоступны из среды сборки без ручного скачивания. Как подключить — см. PROGRESS.md.
+Текстуры Quaternius уменьшены до 1024 px, чтобы репозиторий и сборка были легче.
 
 Оригинальная демо-сцена кита (бластеры, летающие враги) перенесена в `_kit_original/` (Godot её не импортирует — там лежит `.gdignore`).

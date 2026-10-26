@@ -6,7 +6,7 @@
 radius = 0.45
 height = 1.8
 
-[node name="Thrower" type="CharacterBody3D" unique_id=2097006394]
+[node name="Thrower" type="CharacterBody3D" unique_id=1948879491]
 collision_layer = 4
 collision_mask = 15
 floor_snap_length = 0.3
@@ -20,7 +20,18 @@ windup_time = 0.55
 recover_time = 0.4
 attack_cooldown = 2.2
 body_color = Color(0.42, 0.33, 0.55, 1)
+model_body = "base/Superhero_Female_FullBody.gltf"
+model_outfit = "outfits/Female_Ranger.gltf"
+skin_tint = Color(0.5, 0.58, 0.66, 1)
+cloth_tint = Color(0.5, 0.42, 0.68, 1)
+eye_glow = Color(0.75, 0.4, 1, 1)
+hand_weapon = "staff"
+anim_idle = "Spell_Simple_Idle_Loop"
+anim_move_ref_speed = 1.5
+anim_attack = "Spell_Simple_Shoot"
+anim_attack_hit_at = 0.6
+anim_hit = "Hit_Head"
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=138474527]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=252619529]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_qnocd")
