@@ -248,3 +248,17 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 Экран выбора тела (`ui/body_select.gd`): `columns` 3, `card_size` 230×100. Реакция Одина на смерть тела — `body_death_chance` 0.35 (`scripts/dialogue_manager.gd`).
 
+## Ярость (блок П, GDD 8) — узел **Player/Rage** (`player/rage.gd`, создаётся кодом)
+
+| Параметр | По умолчанию | Что делает |
+|---|---|---|
+| `kill_window` | 3 с | Окно между убийствами серии; дольше — шкала сбрасывается |
+| `kills_to_full` | 25 | Убийств в серии до полной шкалы |
+| `berserk_time` | 8 с | Длительность берсерка |
+| `damage_mult` / `speed_mult` | 1.5 / 1.5 | Урон Тора (всё, что идёт через `deal_damage`) и скорость бега в берсерке |
+| `hitstop_on_start` | 0.12 с | Хит-стоп при включении |
+
+В берсерке удары по Тору не отбрасывают («неуязвимость к стану» — стана у Тора нет), шкала заново не копится. HUD (`ui/rage_hud.gd`): `bar_width` 380, `vignette_alpha` 0.75; картинки `sprites/ui/hud/hud_rage_frame.png` + `hud_rage_fill.png`, `sprites/vfx/vfx_rage_vignette.png` — подхватятся сами.
+
+Бой-реплики Одина (GDD 17), лимит — `combat_cooldown` 12 с (`run/odin.gd`, «berserk» — без лимита): «ДВИГАЙСЯ!» `idle_time` 4 с, мульти-килл `multikill_count` 3 за `multikill_window` 0.8 с, «Скуф…» `big_damage_fraction` 0.35 HP за `big_damage_window` 3 с, «Позорище» — добил ренжем (`run/run_tracker.gd`; мульти-килл важнее), «Вот! ВОТ!» — удар-приземление с `big_slam_height` 9 м (узел Player). Тексты — пулы `idle`, `multikill`, `big_damage`, `ranged_kill`, `big_slam`, `berserk`, `rage_over` в `data/dialogues/odin.json`.
+

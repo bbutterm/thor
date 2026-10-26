@@ -9,7 +9,8 @@ signal line_spoken(text: String)
 ## Реплика Одина в бою не чаще раза в N секунд (GDD 17)
 @export var combat_cooldown: float = 12.0
 ## События, которые не ждут лимита (начало забега, босс, итог)
-const EXEMPT := ["run_start", "boss_start", "miniboss_start", "miniboss_death", "victory", "death"]
+## «berserk» — Один орёт при берсерке (GDD 8), не ждёт лимита (но и не сбрасывает его)
+const EXEMPT := ["run_start", "boss_start", "miniboss_start", "miniboss_death", "victory", "death", "berserk"]
 
 var _last_combat_time: float = -1000.0
 

@@ -49,6 +49,8 @@ signal slammed(power: float)
 @export var super_jump_window: float = 0.25
 ## Во сколько раз выше обычного прыжка (по высоте)
 @export var super_jump_height_mult: float = 2.5
+## С какой высоты (м) удар-приземление — «Вот! ВОТ!» Одина (GDD 17)
+@export var big_slam_height: float = 9.0
 
 @export_group("Прыжки по GDD 7.2")
 ## Отскок от удара-приземления, если задет хотя бы один враг (доля высоты падения)
@@ -187,10 +189,13 @@ var hammer_damage_mult: float = 1.0
 @onready var footsteps: AudioStreamPlayer = $Footsteps
 ## Слоты оружия правой руки (мили + ренж), см. weapons/weapon_holder.gd
 var weapons: WeaponHolder
+## Ярость и берсерк (GDD 8), см. player/rage.gd
+var rage: Rage
 
 func _ready() -> void:
 	add_to_group("player")
 	_setup_weapons()
+	_setup_rage()
 	health = max_health
 	dash_charges_max = dash_charges_base
 	dash_charges = dash_charges_max
@@ -665,7 +670,7 @@ func _do_slam_impact(height: float) -> void:
 	slammed.emit(power)
 	for h in body_handlers:
 		h.on_slam(self, power, _last_slam_hits)
-	if height >= 9.0:
+	if height >= big_slam_height:
 		Odin.say("big_slam")
 
 # --- Прыжки по GDD 7.2: отскок, прыжок по головам, залезание на уступ ---
@@ -850,7 +855,9 @@ func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln
 		RunTracker.pending_source = ""
 		return
 	health -= amount
-	velocity += knockback
+	# Берсерк: Тора не сбивают — удары не отбрасывают
+	if not (rage and rage.is_stun_immune()):
+		velocity += knockback
 	_invuln_left = 0.25
 	camera_fx.add_trauma(clampf(amount / 30.0, 0.15, 0.6))
 	Run.register_player_hit()
@@ -900,7 +907,7 @@ func _setup_weapons() -> void:
 
 ## Скорость бега с учётом оружия в руке.
 func effective_move_speed() -> float:
-	return move_speed * weapon_move_mult()
+	return move_speed * weapon_move_mult() * (rage.current_speed_mult() if rage else 1.0)
 
 func weapon_move_mult() -> float:
 	var m := weapons.move_speed_mult() if weapons else 1.0
@@ -1004,7 +1011,7 @@ func body_handler(id: String) -> BodyTraitHandler:
 
 ## Множитель исходящего урона: пассивка/изъян тела (по цели и источнику) и Ярость.
 func outgoing_damage_mult(target: Object, source: String) -> float:
-	var m := 1.0
+	var m := rage.current_damage_mult() if rage else 1.0
 	for h in body_handlers:
 		m *= h.damage_mult(target, source)
 	return m
@@ -1029,3 +1036,17 @@ func _on_kill_registered(source: String) -> void:
 		return
 	for h in body_handlers:
 		h.on_kill(self, source)
+
+# --- Ярость (GDD 8) ---
+
+func _setup_rage() -> void:
+	rage = get_node_or_null("Rage") as Rage
+	if rage == null:
+		rage = Rage.new()
+		rage.name = "Rage"
+		rage.player = self
+		add_child(rage)
+
+func is_berserk() -> bool:
+	return rage != null and rage.active
+

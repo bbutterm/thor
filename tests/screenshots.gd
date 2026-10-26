@@ -63,6 +63,15 @@ func _run() -> void:
 		en.set_physics_process(false)
 	await wait(0.2)
 	await shot("02_room_start")
+	# Ярость (блок П): шкала наполовину, потом берсерк
+	for i in 14:
+		p.rage.add_kill()
+	await wait(0.2)
+	await shot("02b_rage")
+	p.rage.start_berserk()
+	await wait(0.6)
+	await shot("02c_berserk")
+	p.rage.reset()
 	# Подходим к врагу и бьём
 	var enemies := game.room.alive_enemies()
 	if not enemies.is_empty():
