@@ -37,13 +37,16 @@ static func panel_style(bg: Color = STONE, border: Color = Color(GOLD, 0.6), rad
 	sb.shadow_size = 8
 	return sb
 
-## Панель на графике комплекта (UISkin: тёмная рамка panel_dialogue); kind = "wood" — деревянная
-## рамка окна (panel_training). Нет картинок — плоская панель цветов bg/border.
+## Панель на графике комплекта (UISkin). kind: "" — тёмная рамка panel_dialogue (широкие и невысокие:
+## реплики, подсказки), "wood" — деревянная рамка panel_training (высокие списки и окна; scale 0.3),
+## "window" — она же крупнее (пауза, настройки), "plate" — железная плашка panel_nameplate (счётчики).
+## Нет картинок — плоская панель цветов bg/border.
 static func panel(bg: Color = STONE, border: Color = Color(GOLD, 0.6), kind: String = "") -> PanelContainer:
 	var p := PanelContainer.new()
-	var id := "panel_training" if kind == "wood" else "panel_dialogue"
-	if UISkin.texture(id):
-		p.add_theme_stylebox_override("panel", UISkin.stylebox(id, 0.42 if kind == "wood" else 0.3, 6))
+	var spec: Array = {"wood": ["panel_training", 0.3], "window": ["panel_training", 0.42],
+		"plate": ["panel_nameplate", 0.34]}.get(kind, ["panel_dialogue", 0.3])
+	if UISkin.texture(spec[0]):
+		p.add_theme_stylebox_override("panel", UISkin.stylebox(spec[0], spec[1], 6))
 	else:
 		p.add_theme_stylebox_override("panel", panel_style(bg, border))
 	return p

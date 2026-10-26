@@ -2,12 +2,11 @@ extends CanvasLayer
 class_name ShopScreen
 ## Экран ларька Брокка и Эйтри (GDD 13): слева братья и реплика Брокка, справа товары с ценами.
 ## Мышь или стрелки + Enter; E / Esc — уйти. Игра на паузе. Логика товаров — run/shop.gd.
-## Рамка — sprites/ui/panels/panel_shop.png (UI_PROMPTS 2.5), если есть; иначе стиль UIStyle.
+## Рамка — panel_shop из UI-комплекта (UISkin), строки — кожаные планки; нет картинок — стиль UIStyle.
 
 signal closed
 signal bought(item: ShopItemDef, result: Dictionary)
 
-const PANEL_TEX := "res://sprites/ui/panels/panel_shop.png"
 const SILVER := Color(0.86, 0.9, 1.0)
 
 var game: Game
@@ -32,6 +31,7 @@ func _ready() -> void:
 	_sub.picked.connect(_on_sub_picked)
 	_root = Control.new()
 	UIStyle.full_rect(_root)
+	UISkin.apply(_root)
 	add_child(_root)
 	var dim := ColorRect.new()
 	dim.color = Color(0.03, 0.02, 0.01, 0.72)
@@ -41,11 +41,9 @@ func _ready() -> void:
 	UIStyle.full_rect(center)
 	_root.add_child(center)
 	var frame := PanelContainer.new()
-	if ResourceLoader.exists(PANEL_TEX):
-		var sb := StyleBoxTexture.new()
-		sb.texture = load(PANEL_TEX)
-		sb.set_content_margin_all(48)
-		frame.add_theme_stylebox_override("panel", sb)
+	# Рамка ларька из UI-комплекта (навес и фонари в углах — 9-slice, UISkin)
+	if UISkin.texture("panel_shop"):
+		frame.add_theme_stylebox_override("panel", UISkin.stylebox("panel_shop", 0.36, 4))
 	else:
 		frame.add_theme_stylebox_override("panel", UIStyle.panel_style(Color(0.09, 0.065, 0.045, 0.97), Color(0.85, 0.55, 0.25, 0.85), 12, 3))
 	center.add_child(frame)
@@ -162,20 +160,24 @@ func _make_row(it: ShopItemDef) -> Button:
 	var cost := Shop.price(game, it)
 	var afford := it.pays_player or Run.silver >= cost
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(640, 58)
+	b.custom_minimum_size = Vector2(640, 56)
 	b.focus_mode = Control.FOCUS_ALL
 	b.disabled = reason != ""
 	var col := it.color
-	b.add_theme_stylebox_override("normal", UIStyle.panel_style(UIStyle.STONE_LIGHT, Color(col, 0.35), 8))
-	b.add_theme_stylebox_override("disabled", UIStyle.panel_style(Color(0.1, 0.1, 0.1, 0.85), Color(0.4, 0.4, 0.4, 0.3), 8))
-	for st in ["hover", "focus"]:
-		b.add_theme_stylebox_override(st, UIStyle.panel_style(Color(0.22, 0.17, 0.12, 0.98), col, 8, 3))
-	b.add_theme_stylebox_override("pressed", UIStyle.panel_style(Color(0.3, 0.22, 0.12, 1.0), col, 8, 3))
+	if UISkin.texture("button_secondary_normal"):
+		# Строка товара — кожаная планка комплекта (UISkin)
+		UISkin.style_button(b, "secondary", 0.22)
+	else:
+		b.add_theme_stylebox_override("normal", UIStyle.panel_style(UIStyle.STONE_LIGHT, Color(col, 0.35), 8))
+		b.add_theme_stylebox_override("disabled", UIStyle.panel_style(Color(0.1, 0.1, 0.1, 0.85), Color(0.4, 0.4, 0.4, 0.3), 8))
+		for st in ["hover", "focus"]:
+			b.add_theme_stylebox_override(st, UIStyle.panel_style(Color(0.22, 0.17, 0.12, 0.98), col, 8, 3))
+		b.add_theme_stylebox_override("pressed", UIStyle.panel_style(Color(0.3, 0.22, 0.12, 1.0), col, 8, 3))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	UIStyle.full_rect(row)
-	row.offset_left = 12
-	row.offset_right = -14
+	row.offset_left = 30
+	row.offset_right = -32
 	row.offset_top = 4
 	row.offset_bottom = -4
 	b.add_child(row)

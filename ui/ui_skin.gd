@@ -29,18 +29,20 @@ const CONTENT := {
 	"button_main": [118, 26, 118, 26],
 	"button_secondary": [96, 24, 96, 24],
 	"button_danger": [118, 24, 118, 24],
-	"panel_dialogue": [118, 44, 118, 44],
-	"panel_nameplate": [46, 22, 46, 22],
+	"panel_dialogue": [136, 44, 136, 44],
+	"panel_nameplate": [62, 22, 62, 22],
 	"panel_shop": [110, 150, 110, 80],
 	"panel_training": [96, 90, 100, 80],
 	"slider_track": [40, 20, 40, 20],
 }
 ## Поправки 9-slice (пиксели исходника). У slider_track поля манифеста (95) лежат в прозрачном крае
 ## и тянули бы торцы — рисуем только видимую часть (CROP), поля — от её края. Panel_training: верх 400
-## держит перо, но в невысоком окне всё было бы углом — 300 хватает на верёвку и перо.
+## держит перо, но в невысоком окне всё было бы углом — 300 хватает на верёвку и перо. Panel_shop: низ 170
+## режет железные уголки (начинаются с y≈515) — тянулись бы по высоте, берём 260.
 const SLICE_FIX := {
 	"slider_track": [42, 20, 42, 20],
 	"panel_training": [250, 300, 250, 160],
+	"panel_shop": [250, 350, 250, 260],
 }
 ## Рисовать только видимую часть VISIBLE (поля SLICE_FIX — от её края)
 const CROP := ["slider_track"]
@@ -270,6 +272,8 @@ static func theme() -> Theme:
 		th.set_color("font_disabled_color", type, Color(0.6, 0.58, 0.55))
 		th.set_color("font_outline_color", type, Color(0, 0, 0, 0.8))
 		th.set_constant("outline_size", type, 5)
+	# Вкладки (SmallButton с toggle_mode): выбранная — золотом
+	th.set_color("font_pressed_color", "SmallButton", UIStyle.GOLD)
 	# Панели: тёмная «диалоговая» по умолчанию, деревянная — для окон (пауза, настройки)
 	th.set_stylebox("panel", "PanelContainer", stylebox("panel_dialogue", 0.3, 6))
 	th.set_stylebox("panel", "Panel", stylebox("panel_dialogue", 0.3, 6))

@@ -265,7 +265,9 @@ static func apply_video() -> void:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 		elif not bool(v["fullscreen"]) and fs:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if bool(v["vsync"]) else DisplayServer.VSYNC_DISABLED)
+		var vs := DisplayServer.VSYNC_ENABLED if bool(v["vsync"]) else DisplayServer.VSYNC_DISABLED
+		if DisplayServer.window_get_vsync_mode() != vs:
+			DisplayServer.window_set_vsync_mode(vs)
 	# --fixed-fps тестов не трогаем
 	if not _is_test():
 		Engine.max_fps = int(v["max_fps"])

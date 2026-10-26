@@ -29,7 +29,7 @@ var overlay: float = 0.0:
 	set(v):
 		overlay = clampf(v, 0.0, 1.0)
 		queue_redraw()
-var overlay_color: Color = Color(0.55, 0.85, 1.0, 0.85)
+var overlay_color: Color = Color(0.45, 0.8, 1.0, 0.7)
 ## Цвет заливки (берсерк краснее, вне боя тусклее)
 var fill_modulate: Color = Color.WHITE:
 	set(v):
@@ -93,18 +93,19 @@ func _draw() -> void:
 		_draw_fill(area, tk, _trail, Color(1.0, 0.92, 0.75, 0.55))
 	_draw_fill(area, tk, value, fill_modulate)
 	if overlay > 0.0:
-		# Щит — светлая полоса по верхней половине заливки
-		var band := Rect2(area.position, Vector2(area.size.x, area.size.y * 0.5))
-		_draw_fill(band, tk, overlay, overlay_color, true)
+		# Щит — светло-голубая полоса по верхней половине заливки (модуляция красной текстуры дала бы
+		# грязный цвет — рисуем плоским цветом с яркой кромкой)
+		var inset := area.grow_individual(-area.size.y * 0.12, -area.size.y * 0.1, -area.size.y * 0.12, 0.0)
+		var band := Rect2(inset.position, Vector2(inset.size.x * overlay, inset.size.y * 0.42))
+		draw_rect(band, overlay_color)
+		draw_rect(Rect2(band.position, Vector2(band.size.x, maxf(2.0, band.size.y * 0.2))), Color(0.9, 0.97, 1.0, 0.95))
 	var f := _fit()
 	draw_texture_rect(_frame, Rect2(f[1], _src * f[0]), false)
 
-func _draw_fill(area: Rect2, tk: float, v: float, col: Color, top_half: bool = false) -> void:
+func _draw_fill(area: Rect2, tk: float, v: float, col: Color) -> void:
 	if v <= 0.0:
 		return
 	var src := Rect2(_fill_rect.position * tk, _fill_rect.size * tk)
-	if top_half:
-		src.size.y *= 0.5
 	if _vertical:
 		var h := area.size.y * v
 		var sh := src.size.y * v

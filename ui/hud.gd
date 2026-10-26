@@ -1,7 +1,7 @@
 extends CanvasLayer
 class_name HUD
 ## Интерфейс боя (GDD 18) на графике комплекта (UISkin): HP и щит Сиф, заряды рывка, Мьёльнир (в руке /
-## летит / воткнут / возвращается) и его трейты, Слава, серебро, руны иконками по категориям,
+## летит / воткнут / возвращается) и его трейты, Слава, серебро (ui/silver_hud.gd), руны иконками по категориям,
 ## прицел и шкала высоты удара-приземления, индикаторы врагов за экраном, реплики Одина,
 ## полоса босса, линии скорости. Оружие — ui/weapon_hud.gd, Ярость — ui/rage_hud.gd.
 ## Раскладка якорями от углов: 1280×720 и 1920×1080 (stretch canvas_items) выглядят одинаково.
@@ -16,7 +16,7 @@ class_name HUD
 ## Базовый размер прицела (px; множитель — настройки)
 @export var crosshair_base_size: float = 30.0
 ## Размер иконки руны в ряду
-@export var rune_icon_size: float = 30.0
+@export var rune_icon_size: float = 36.0
 
 const CROSSHAIR_IDS := {"dot": "crosshair_dot", "cross": "crosshair_cross", "circle": "crosshair_circle"}
 const CLASSIC_CROSSHAIR := "res://sprites/crosshair.png"
@@ -31,8 +31,6 @@ var _hammer_icon: HudIcon
 var _hammer_label: Label
 var _hammer_state: String = ""
 var _glory_label: Label
-var _silver_row: HBoxContainer
-var _silver_label: Label
 var _room_label: Label
 var _body_label: Label
 var _enemies_label: Label
@@ -187,16 +185,7 @@ func _build() -> void:
 	_glory_label = UIStyle.label("СЛАВА 0", 30, UIStyle.GOLD, 8)
 	_glory_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	tr.add_child(_glory_label)
-	# Серебро (блок К): показываем, только если в забеге есть Run.silver
-	_silver_row = HBoxContainer.new()
-	_silver_row.alignment = BoxContainer.ALIGNMENT_END
-	_silver_row.add_theme_constant_override("separation", 4)
-	_silver_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_silver_row.visible = false
-	tr.add_child(_silver_row)
-	_silver_label = UIStyle.label("0", 24, Color(0.85, 0.88, 0.92), 6)
-	_silver_row.add_child(_silver_label)
-	_silver_row.add_child(HudIcon.make(UISkin.texture("hud_silver"), 34))
+	# Серебро — ui/silver_hud.gd (SilverHUD.attach в bind_player встаёт сразу под Славу)
 	_body_label = UIStyle.label("", 16, UIStyle.TEXT_DIM, 4)
 	_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	tr.add_child(_body_label)
@@ -243,7 +232,7 @@ func _build() -> void:
 	ob.add_theme_constant_override("separation", 0)
 	_odin_panel.add_child(ob)
 	ob.add_child(UIStyle.label("ОДИН", 15, UIStyle.GOLD, 4))
-	_odin_label = UIStyle.label("", 19, UIStyle.TEXT, 5)
+	_odin_label = UIStyle.label("", int(19 * GameSettings.text_scale()), UIStyle.TEXT, 5)
 	_odin_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_odin_label.custom_minimum_size = Vector2(560, 0)
 	ob.add_child(_odin_label)
@@ -283,7 +272,7 @@ func _apply_crosshair() -> void:
 	_crosshair.texture = tex
 	var s := crosshair_base_size * float(GameSettings.get_value("hud", "crosshair_size"))
 	if kind == "dot":
-		s *= 0.8
+		s *= 1.4
 	_anchor(_crosshair, Control.PRESET_CENTER, -s * 0.5, -s * 0.5, s * 0.5, s * 0.5)
 	_crosshair.modulate = GameSettings.crosshair_color()
 
@@ -305,11 +294,6 @@ func _process(delta: float) -> void:
 	if absf(_glory_shown - Run.glory) > 0.5:
 		_glory_shown = lerpf(_glory_shown, Run.glory, minf(1.0, delta * 8.0))
 		_glory_label.text = "СЛАВА %d" % int(round(_glory_shown))
-	# Серебро — поле Run.silver появится с ларьком (блок К); нет поля — строки нет
-	var silver: Variant = Run.get("silver")
-	_silver_row.visible = silver != null
-	if silver != null:
-		_silver_label.text = str(int(silver))
 
 func _on_health_changed(current: float, maximum: float) -> void:
 	_hp_bar.value = current / maxf(maximum, 1.0)

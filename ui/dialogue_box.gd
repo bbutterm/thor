@@ -60,6 +60,7 @@ func _build() -> void:
 	_root = Control.new()
 	UIStyle.full_rect(_root)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UISkin.apply(_root)
 	add_child(_root)
 	_backdrop = ColorRect.new()
 	UIStyle.full_rect(_backdrop)
@@ -87,6 +88,16 @@ func _build() -> void:
 	_right.fallback_area = Rect2(0.1, 0.06, 0.8, 0.56)
 	_root.add_child(_right)
 
+	# Центр panel_dialogue полупрозрачный — подложка, чтобы текст читался поверх портрета
+	var back := ColorRect.new()
+	back.color = Color(0.03, 0.025, 0.035, 0.72)
+	back.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	back.offset_left = 70
+	back.offset_right = -70
+	back.offset_top = -190
+	back.offset_bottom = -34
+	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(back)
 	_panel = UIStyle.panel(Color(0.06, 0.055, 0.07, 0.94), Color(UIStyle.GOLD, 0.55))
 	_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	_panel.offset_left = 40
@@ -306,8 +317,15 @@ func _show_line(line: Dictionary) -> void:
 	other.modulate = Color(1, 1, 1, 1).darkened(inactive_dim)
 	# Плашка с именем — над панелью со стороны говорящего, в цвете персонажа
 	_name_label.text = str(def.get("name", sp.capitalize()))
-	_name_plate.add_theme_stylebox_override("panel", UIStyle.panel_style(Color(col.darkened(0.45), 0.97), col.lightened(0.2), 8, 2))
-	var w := maxf(180.0, _name_label.get_minimum_size().x + 40.0)
+	# Плашка имени — panel_nameplate комплекта, чуть окрашена в цвет персонажа
+	var plate := UISkin.stylebox("panel_nameplate", 0.34, 2)
+	if plate is SkinStyleBox:
+		(plate as SkinStyleBox).modulate = Color.WHITE.lerp(col.lightened(0.35), 0.35)
+	else:
+		plate = UIStyle.panel_style(Color(col.darkened(0.45), 0.97), col.lightened(0.2), 8, 2)
+	_name_plate.add_theme_stylebox_override("panel", plate)
+	_name_label.label_settings.font_color = col.lightened(0.55)
+	var w := maxf(200.0, _name_label.get_minimum_size().x + 70.0)
 	if side == "left":
 		_name_plate.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 		_name_plate.offset_left = 70
@@ -319,6 +337,8 @@ func _show_line(line: Dictionary) -> void:
 	_name_plate.offset_top = -232
 	_name_plate.offset_bottom = -186
 	_text.text = str(line.get("text", ""))
+	# Настройки «Субтитры и текст» (GDD 22): размер текста
+	_text.label_settings.font_size = int(27 * GameSettings.text_scale())
 	_text.visible_characters = 0
 	_shown = 0.0
 	_pause_left = 0.0
@@ -338,7 +358,12 @@ func _process(delta: float) -> void:
 		_pause_left -= delta
 		return
 	var before := int(_shown)
-	_shown += delta * chars_per_second
+	# Скорость печати из настроек (0 — сразу целиком)
+	var speed := GameSettings.typing_speed()
+	if speed <= 0.0:
+		_finish_typing()
+		return
+	_shown += delta * chars_per_second * speed
 	var total := _text.get_total_character_count()
 	var n := mini(int(_shown), total)
 	if n > before and n > 0 and n < total:
@@ -364,13 +389,13 @@ func _show_choices(chs: Array) -> void:
 	_next_mark.visible = false
 	for i in chs.size():
 		var ch: Dictionary = chs[i]
-		var b := UIStyle.button("%d · %s: «%s»" % [i + 1, ch.get("label", ""), ch.get("text", "")], 20)
+		var accent := Color(0.95, 0.4, 0.3) if str(ch.get("id", "")) == "snap" else Color(0.5, 0.85, 0.55)
+		# «Огрызнуться» — красная кнопка комплекта, мирный ответ — кожаная
+		var b := UIStyle.button("%d · %s: «%s»" % [i + 1, ch.get("label", ""), ch.get("text", "")], 20,
+			"danger" if str(ch.get("id", "")) == "snap" else "secondary")
 		b.custom_minimum_size = Vector2(660, 52)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		var accent := Color(0.95, 0.4, 0.3) if str(ch.get("id", "")) == "snap" else Color(0.5, 0.85, 0.55)
-		b.add_theme_stylebox_override("normal", UIStyle.panel_style(UIStyle.STONE_LIGHT, Color(accent, 0.6), 8))
-		b.add_theme_stylebox_override("hover", UIStyle.panel_style(Color(0.22, 0.19, 0.15, 0.98), accent, 8))
 		b.add_theme_color_override("font_hover_color", accent.lightened(0.3))
 		b.pressed.connect(choose.bind(i))
 		_choices_box.add_child(b)

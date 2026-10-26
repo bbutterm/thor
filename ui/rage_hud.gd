@@ -2,26 +2,22 @@ extends Control
 class_name RageHUD
 ## Шкала Ярости (GDD 8, 18) — внизу по центру: копится за убийства в серии, тонкая полоска под ней —
 ## сколько осталось до сброса серии (окно 3 с). В берсерке — «БЕРСЕРК» с таймером и красная виньетка.
-## Картинки (UI_PROMPTS.txt 3.3, 5.13): sprites/ui/hud/hud_rage_frame.png + hud_rage_fill.png,
-## sprites/vfx/vfx_rage_vignette.png; нет файлов — процедурная заглушка. Подключение: RageHUD.attach(hud, player).
+## Картинки комплекта (UISkin): рамка hud_rage_frame + заливка hud_rage_fill по fill_rect (SkinBar),
+## виньетка vfx_rage_vignette; нет файлов — процедурная заглушка. Подключение: RageHUD.attach(hud, player).
 
-const FRAME_TEX := "res://sprites/ui/hud/hud_rage_frame.png"
-const FILL_TEX := "res://sprites/ui/hud/hud_rage_fill.png"
-const VIGNETTE_TEX := "res://sprites/vfx/vfx_rage_vignette.png"
 const RAGE_COLOR := Color(1.0, 0.45, 0.12)
 const BERSERK_COLOR := Color(1.0, 0.18, 0.08)
 
-## Ширина шкалы, px
-@export var bar_width: float = 380.0
+## Ширина шкалы, px (высота — по пропорциям рамки 768×192)
+@export var bar_width: float = 340.0
 ## Насколько видна виньетка в берсерке (0..1)
 @export var vignette_alpha: float = 0.75
 
 var rage: Rage
-var _bar: Range
+var _bar: SkinBar
 var _window_bar: ProgressBar
 var _label: Label
 var _vignette: TextureRect
-var _fill_style: StyleBoxFlat
 var _pulse: float = 0.0
 var _shown: float = 0.0
 
@@ -48,7 +44,8 @@ func _build() -> void:
 	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_vignette.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_vignette.stretch_mode = TextureRect.STRETCH_SCALE
-	_vignette.texture = load(VIGNETTE_TEX) if ResourceLoader.exists(VIGNETTE_TEX) else _make_vignette()
+	var vig := UISkin.texture("vfx_rage_vignette")
+	_vignette.texture = vig if vig else _make_vignette()
 	_vignette.modulate.a = 0.0
 	add_child(_vignette)
 
@@ -57,46 +54,24 @@ func _build() -> void:
 	box.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	box.offset_left = -bar_width * 0.5
 	box.offset_right = bar_width * 0.5
-	box.offset_top = -92
-	box.offset_bottom = -22
+	box.offset_top = -bar_width * 0.25 - 30
+	box.offset_bottom = -8
 	box.alignment = BoxContainer.ALIGNMENT_END
 	box.add_theme_constant_override("separation", 3)
 	add_child(box)
 	_label = UIStyle.label("ЯРОСТЬ", 16, Color(RAGE_COLOR, 0.85), 4)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_label)
-	if ResourceLoader.exists(FRAME_TEX) and ResourceLoader.exists(FILL_TEX):
-		var tp := TextureProgressBar.new()
-		tp.texture_over = load(FRAME_TEX)
-		tp.texture_progress = load(FILL_TEX)
-		tp.nine_patch_stretch = true
-		tp.custom_minimum_size = Vector2(bar_width, 26)
-		tp.max_value = 1.0
-		tp.step = 0.0
-		tp.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_bar = tp
-	else:
-		var pb := ProgressBar.new()
-		pb.custom_minimum_size = Vector2(bar_width, 16)
-		pb.show_percentage = false
-		pb.max_value = 1.0
-		pb.step = 0.0
-		var bg := StyleBoxFlat.new()
-		bg.bg_color = Color(0, 0, 0, 0.55)
-		bg.set_corner_radius_all(5)
-		bg.border_color = Color(RAGE_COLOR, 0.45)
-		bg.set_border_width_all(1)
-		_fill_style = StyleBoxFlat.new()
-		_fill_style.bg_color = RAGE_COLOR
-		_fill_style.set_corner_radius_all(5)
-		pb.add_theme_stylebox_override("background", bg)
-		pb.add_theme_stylebox_override("fill", _fill_style)
-		pb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_bar = pb
+	_bar = SkinBar.new()
+	_bar.frame_id = "hud_rage_frame"
+	_bar.fill_id = "hud_rage_fill"
+	_bar.flat_color = RAGE_COLOR
+	_bar.trail_delay = 0.0
+	_bar.custom_minimum_size = Vector2(bar_width, bar_width * 0.25)
+	_bar.value = 0.0
 	box.add_child(_bar)
 	# Окно серии: сколько осталось до сброса
 	_window_bar = ProgressBar.new()
-	_window_bar.custom_minimum_size = Vector2(bar_width, 3)
 	_window_bar.show_percentage = false
 	_window_bar.max_value = 1.0
 	_window_bar.step = 0.0
@@ -107,7 +82,12 @@ func _build() -> void:
 	_window_bar.add_theme_stylebox_override("background", wbg)
 	_window_bar.add_theme_stylebox_override("fill", wfg)
 	_window_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(_window_bar)
+	# Тонкая полоска окна — по нижнему краю заливки рамки
+	_bar.add_child(_window_bar)
+	_bar.resized.connect(func() -> void:
+		var a := _bar.fill_area()
+		_window_bar.position = Vector2(a.position.x, a.end.y - 4)
+		_window_bar.size = Vector2(a.size.x, 4))
 	_apply(0.0, false)
 
 ## Радиальный градиент: прозрачный центр, красные края
@@ -135,8 +115,7 @@ func _apply(v: float, active: bool) -> void:
 		return
 	_shown = v
 	_bar.value = v
-	if _fill_style:
-		_fill_style.bg_color = BERSERK_COLOR if active else RAGE_COLOR.lerp(Color(1, 0.75, 0.2), v)
+	_bar.fill_modulate = Color(1.3, 0.75, 0.6) if active else Color.WHITE
 	if active and rage:
 		_label.text = "БЕРСЕРК  %.1f" % maxf(rage.berserk_left, 0.0)
 		_label.label_settings.font_color = BERSERK_COLOR.lightened(0.3)

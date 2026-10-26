@@ -1,7 +1,7 @@
 extends HBoxContainer
 class_name MjolnirTraitsHud
 ## Иконки активных трейтов Мьёльнира (отдельно от рун) — слева внизу, над здоровьем и строкой молота.
-## Руна в круге цвета трейта, под ней уровень. Справа — «ИДЕАЛЬНЫЙ ХВАТ ×2», пока следующий бросок усилен.
+## Иконка трейта из UI-комплекта (нет — руна в круге цвета трейта), уровень в углу. Справа — «ИДЕАЛЬНЫЙ ХВАТ ×2», пока следующий бросок усилен.
 
 var player: Player
 var _icons: HBoxContainer
@@ -42,6 +42,14 @@ func _rebuild(traits: Array = []) -> void:
 		_icons.add_child(_icon(tr, Run.mjolnir_trait_level(tr.id)))
 
 func _icon(t: MjolnirTrait, level: int) -> Control:
+	# Иконка трейта из комплекта (UISkin.trait_icon); нет картинки — руна в круге цвета трейта
+	var tex := UISkin.trait_icon(str(t.id))
+	if tex:
+		var icon := HudIcon.make(tex, 44)
+		icon.badge = "I" if level <= 1 else "II"
+		icon.badge_color = t.color.lightened(0.3)
+		icon.tooltip_text = t.title
+		return icon
 	var box := VBoxContainer.new()
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_theme_constant_override("separation", 0)

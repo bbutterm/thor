@@ -1,30 +1,39 @@
 extends CanvasLayer
 class_name PauseMenu
-## Пауза на Esc: продолжить, новый забег, в меню.
+## Пауза на Esc (GDD 18): продолжить, настройки, новый забег, в меню, «Сообщить о лаге»;
+## справа — журнал рун и трейтов забега (полные названия и описания уровней). Скин комплекта (UISkin).
 
 signal restart_requested
 signal menu_requested
 
 var _first: Button
+var _root: Control
+var _journal: VBoxContainer
+var _settings: SettingsPanel
 
 func _ready() -> void:
 	layer = 20
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
-	var root := Control.new()
-	UIStyle.full_rect(root)
-	add_child(root)
+	_root = Control.new()
+	UIStyle.full_rect(_root)
+	UISkin.apply(_root)
+	add_child(_root)
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.6)
 	UIStyle.full_rect(dim)
-	root.add_child(dim)
+	_root.add_child(dim)
 	var center := CenterContainer.new()
 	UIStyle.full_rect(center)
-	root.add_child(center)
-	var panel := UIStyle.panel()
-	center.add_child(panel)
+	_root.add_child(center)
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 18)
+	center.add_child(hb)
+	var panel := PanelContainer.new()
+	panel.theme_type_variation = &"WoodPanel"
+	hb.add_child(panel)
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 14)
+	vb.add_theme_constant_override("separation", 12)
 	panel.add_child(vb)
 	var t := UIStyle.label("ПАУЗА", 40, UIStyle.GOLD, 10)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -35,28 +44,104 @@ func _ready() -> void:
 	_first = UIStyle.button("Продолжить")
 	_first.pressed.connect(toggle)
 	vb.add_child(_first)
-	var r := UIStyle.button("Новое тело (заново)")
+	var s := UIStyle.button("Настройки", 22, "secondary")
+	s.pressed.connect(open_settings)
+	vb.add_child(s)
+	var r := UIStyle.button("Новое тело (заново)", 22, "secondary")
 	r.pressed.connect(func() -> void: restart_requested.emit())
 	vb.add_child(r)
-	var m := UIStyle.button("В главное меню")
+	var m := UIStyle.button("В главное меню", 22, "danger")
 	m.pressed.connect(func() -> void: menu_requested.emit())
 	vb.add_child(m)
-	vb.add_child(SettingsPanel.comic_controls())
 	# «Сообщить о лаге» (GDD 23): zip с логом фризов и сохранением на рабочий стол
-	var lag := UIStyle.button("Сообщить о лаге", 18)
+	var lag := UIStyle.button("Сообщить о лаге", 17, "secondary")
+	lag.custom_minimum_size = Vector2(280, 46)
 	lag.pressed.connect(func() -> void:
 		var path := Perf.report_lag()
 		lag.text = "Сохранено на рабочий стол" if path != "" else "Не удалось сохранить")
 	vb.add_child(lag)
+	# Журнал рун и трейтов (GDD 18: «пауза — журнал рун и трейтов»)
+	var jp := UIStyle.panel(UIStyle.STONE, Color(UIStyle.GOLD, 0.6), "wood")
+	jp.custom_minimum_size = Vector2(440, 470)
+	hb.add_child(jp)
+	var jv := VBoxContainer.new()
+	jv.add_theme_constant_override("separation", 6)
+	jp.add_child(jv)
+	jv.add_child(UIStyle.label("ЖУРНАЛ ЗАБЕГА", 22, UIStyle.GOLD, 6))
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	jv.add_child(scroll)
+	_journal = VBoxContainer.new()
+	_journal.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_journal.add_theme_constant_override("separation", 6)
+	scroll.add_child(_journal)
 
 func toggle() -> void:
 	visible = not visible
 	get_tree().paused = visible
 	if visible:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		_fill_journal()
 		_first.grab_focus()
 	else:
+		if _settings and is_instance_valid(_settings):
+			_settings.close()
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+func open_settings() -> void:
+	if _settings and is_instance_valid(_settings):
+		return
+	_settings = SettingsPanel.new()
+	_settings.closed.connect(func() -> void:
+		if visible:
+			_first.grab_focus())
+	_root.add_child(_settings)
+
+func _fill_journal() -> void:
+	for c in _journal.get_children():
+		c.queue_free()
+	var traits: Array = Run.mjolnir_traits
+	if not traits.is_empty():
+		_journal.add_child(UIStyle.label("МЬЁЛЬНИР", 16, UIStyle.ICE, 4))
+		for t in traits:
+			var tr := t as MjolnirTrait
+			var lv := Run.mjolnir_trait_level(tr.id)
+			_journal.add_child(_entry(UISkin.trait_icon(str(tr.id)), tr.glyph, "%s  %s" % [tr.title, "I" if lv <= 1 else "II"],
+				tr.description_lvl2 if lv > 1 and tr.description_lvl2 != "" else tr.description, tr.color))
+	var counts := {}
+	var order: Array = []
+	for r in Run.runes:
+		if not counts.has(r.id):
+			counts[r.id] = 0
+			order.append(r)
+		counts[r.id] += 1
+	_journal.add_child(UIStyle.label("РУНЫ" if not order.is_empty() else "Рун пока нет — Норны ждут зачистки зала.", 16, UIStyle.GOLD, 4))
+	for r in order:
+		var rr := r as RuneDef
+		var lvl := mini(counts[rr.id], Run.RUNE_MAX_LEVEL)
+		var desc := rr.level_descriptions[lvl - 1] if lvl - 1 < rr.level_descriptions.size() else rr.description
+		_journal.add_child(_entry(UISkin.rune_category_icon(rr.category), rr.glyph,
+			("☠ " if rr.cursed else "") + "%s  ур. %d" % [rr.title, lvl], desc, rr.color))
+
+func _entry(tex: Texture2D, glyph: String, title: String, desc: String, col: Color) -> Control:
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 8)
+	var icon := HudIcon.make(tex, 40)
+	icon.badge = glyph
+	icon.badge_color = col.lightened(0.2)
+	icon.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	hb.add_child(icon)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 0)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hb.add_child(v)
+	v.add_child(UIStyle.label(title, 17, col.lightened(0.35), 4))
+	var d := UIStyle.label(desc, 14, UIStyle.TEXT_DIM, 2)
+	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	d.custom_minimum_size = Vector2(330, 0)
+	v.add_child(d)
+	return hb
 
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("pause"):

@@ -26,6 +26,9 @@ enum Mode { NINE, FIT, STRETCH }
 @export var grow: Vector4 = Vector4.ZERO
 @export var modulate: Color = Color.WHITE
 @export var draw_center: bool = true
+## Накладка поверх (FIT, тот же холст): рамка редкости card_rarity_* на карточке
+@export var overlay: Texture2D
+@export var overlay_modulate: Color = Color.WHITE
 
 func _region() -> Rect2:
 	if region.has_area():
@@ -53,8 +56,12 @@ func _draw(to_canvas_item: RID, rect: Rect2) -> void:
 		Mode.FIT:
 			var k := minf(dst.size.x / src.size.x, dst.size.y / src.size.y)
 			var sz := src.size * k
-			RenderingServer.canvas_item_add_texture_rect_region(to_canvas_item,
-				Rect2(dst.position + (dst.size - sz) * 0.5, sz), rid, src, modulate)
+			var fit := Rect2(dst.position + (dst.size - sz) * 0.5, sz)
+			RenderingServer.canvas_item_add_texture_rect_region(to_canvas_item, fit, rid, src, modulate)
+			if overlay:
+				var ok := overlay.get_size().x / texture.get_size().x
+				RenderingServer.canvas_item_add_texture_rect_region(to_canvas_item, fit, overlay.get_rid(),
+					Rect2(src.position * ok, src.size * ok), overlay_modulate)
 			return
 	# 9-slice: экранные поля = поля текстуры × масштаб; если контрол меньше суммы полей — ужимаем
 	var l := slice.x * draw_scale

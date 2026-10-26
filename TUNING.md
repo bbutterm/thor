@@ -305,7 +305,7 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 | `damage_mult` / `speed_mult` | 1.5 / 1.5 | Урон Тора (всё, что идёт через `deal_damage`) и скорость бега в берсерке |
 | `hitstop_on_start` | 0.12 с | Хит-стоп при включении |
 
-В берсерке удары по Тору не отбрасывают («неуязвимость к стану» — стана у Тора нет), шкала заново не копится. HUD (`ui/rage_hud.gd`): `bar_width` 380, `vignette_alpha` 0.75; картинки `sprites/ui/hud/hud_rage_frame.png` + `hud_rage_fill.png`, `sprites/vfx/vfx_rage_vignette.png` — подхватятся сами.
+В берсерке удары по Тору не отбрасывают («неуязвимость к стану» — стана у Тора нет), шкала заново не копится. HUD (`ui/rage_hud.gd`): `bar_width` 340, `vignette_alpha` 0.75; картинки комплекта `hud_rage_frame` + `hud_rage_fill`, `vfx_rage_vignette` (через `UISkin`).
 
 Бой-реплики Одина (GDD 17), лимит — `combat_cooldown` 12 с (`run/odin.gd`, «berserk» — без лимита): «ДВИГАЙСЯ!» `idle_time` 4 с, мульти-килл `multikill_count` 3 за `multikill_window` 0.8 с, «Скуф…» `big_damage_fraction` 0.35 HP за `big_damage_window` 3 с, «Позорище» — добил ренжем (`run/run_tracker.gd`; мульти-килл важнее), «Вот! ВОТ!» — удар-приземление с `big_slam_height` 9 м (узел Player). Тексты — пулы `idle`, `multikill`, `big_damage`, `ranged_kill`, `big_slam`, `berserk`, `rage_over` в `data/dialogues/odin.json`.
 
@@ -348,3 +348,16 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 | `hild_record` | `target` 10 убийств за 30 с, зал получает `extra_waves` 2 доп. волны | 80 Славы |
 | `loki_lava` | пол — лава: стоять на полу дольше `lava_grace` 0.4 с — ожог `lava_tick_damage` 6 HP каждые `lava_tick` 0.5 с; ожог суммарно больше `lava_max_burn` 4 с — провал | особая руна |
 Дверь «Испытание» — 10 % (`run/rewards/trial.tres`).
+
+## HUD и настройки (блок С, GDD 18, 22)
+
+**HUD** — `ui/hud.gd` (узел HUD сцены игры): `hp_bar_height` 84 (полоса HP, ширина по рамке 768×192 — ×4), `hammer_icon_size` 58 (иконка Мьёльнира), `dash_icon_size` 38 (камень рывка), `slam_meter_min_height` 2.5 м (с какой высоты над полом видна шкала удара-приземления; полная шкала — `Player.big_slam_height` 9 м), `crosshair_base_size` 30 px (точка ×1.4; множитель — настройка), `rune_icon_size` 36.
+- Полосы `ui/skin_bar.gd`: след урона `trail_speed` 0.6 полосы/с после `trail_delay` 0.35 с. Полоса босса `ui/boss_bar.gd`: `trail_speed` 0.35.
+- Ярость `ui/rage_hud.gd`: `bar_width` 340 (было 380 у плоской полосы; высота — четверть ширины).
+- Оружие `ui/weapon_hud.gd`: `slot_size` 96, `active_slot_size` 112.
+- Индикаторы врагов за экраном `ui/offscreen_indicators.gd`: `max_distance` 30 м, `max_count` 8, `near_size` 40 / `far_size` 24 px, `edge_margin` 46 px.
+- Карточки выбора: `RunePick.card_width` 300, `TraitPick.card_width` 300 (высота — по пропорциям card_rune/card_trait 390×522), выбор наград — 260.
+
+**Настройки** — `scripts/settings.gd` (`GameSettings.DEFAULTS`): звук общая 100 % / музыка 80 % / эффекты 100 % / голоса 100 %; чувствительность мыши и стика ×1.0 (база 0.0022 и 3.0); FOV 85 (70–110); тряска 100 %; покачивание вкл; масштаб интерфейса 100 % (75–150 %); прицел «точка», размер 100 %, яркость 85 %, белый; индикаторы за экраном и шкала высоты — вкл; размер текста 100 %, скорость печати ×1 (0 — сразу целиком); помощь в прицеливании и замедление — выкл.
+- Помощь в прицеливании: `RangedWeapon.aim_assist_cone_deg` 6° (центр разброса — на ближайшего видимого врага в конусе).
+- Замедление при ударе-приземлении: `Player.slam_assist_time_scale` 0.5 (на падение и окно супер-прыжка/отскока; hit-stop главнее).

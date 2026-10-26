@@ -22,7 +22,7 @@ func _ready() -> void:
 	add_child(root)
 	_panel = UIStyle.panel(Color(0.05, 0.05, 0.07, 0.86), Color(UIStyle.GOLD, 0.5))
 	_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_panel.offset_left = -470
+	_panel.offset_left = -520
 	_panel.offset_right = -28
 	_panel.offset_top = -250
 	_panel.offset_bottom = -150
@@ -56,7 +56,9 @@ func show_line(speaker: String, emotion: String, text: String) -> void:
 	_portrait.set_speaker(speaker, emotion, def, 0.08)
 	_name.text = str(def.get("name", speaker)).to_upper()
 	_name.label_settings.font_color = col.lightened(0.3)
-	_panel.add_theme_stylebox_override("panel", UIStyle.panel_style(Color(0.05, 0.05, 0.07, 0.86), Color(col, 0.7)))
+	if not UISkin.texture("panel_dialogue"):
+		_panel.add_theme_stylebox_override("panel", UIStyle.panel_style(Color(0.05, 0.05, 0.07, 0.86), Color(col, 0.7)))
+	_text.label_settings.font_size = int(19 * GameSettings.text_scale())
 	_text.text = text
 	if _tween and _tween.is_valid():
 		_tween.kill()
