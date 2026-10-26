@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UnlockDef" format=3]
+
+[ext_resource type="Script" path="res://run/unlock_def.gd" id="1_unlk"]
+
+[resource]
+script = ExtResource("1_unlk")
+id = "dwarf_lab"
+title = "Гномий эксперимент"
+description = "Гвоздомёт и ракетница в пул. Рокет-джамп прилагается."
+price = 400
+kind = "weapon"
+target_id = "nailgun"
+extra_target_ids = PackedStringArray("rocket_launcher")
+requires = "loki_chest"
+order = 112

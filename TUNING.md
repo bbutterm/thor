@@ -127,6 +127,32 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 Дублируй файл → поменяй поля в инспекторе → новое тело/руна появится в игре само. Эффекты рун по `id` — в `player.gd → recalc_from_runes()` и `scenes/game.gd → _on_rune_picked()`.
 
-## Реплики Одина — `data/odin_lines.json`
+## Реплики Одина — `data/dialogues/odin.json`, раздел `pools`
 
-Обычный JSON: событие → список фраз. Добавляй сколько хочешь.
+Событие → список реплик (`speaker`, `emotion`, `text`, `id`). Добавляй сколько хочешь; формат — в `STORY.md`.
+
+## Диалоги — `ui/dialogue_box.gd`, `ui/bark_bubble.gd`, `scripts/dialogue_manager.gd`, `run/odin.gd`
+
+| Где | Параметр | По умолчанию | Что делает |
+|---|---|---|---|
+| DialogueBox | `chars_per_second` | 48 | Скорость печати текста |
+| DialogueBox | `punctuation_pause` | 0.12 | Пауза после . ! ? … |
+| DialogueBox | `portrait_bounce` | 0.06 | «Подпрыгивание» портрета при смене эмоции |
+| DialogueBox | `inactive_dim` | 0.45 | Затемнение неговорящего портрета |
+| DialogueBox | `open_guard` | 0.25 | Защита от двойного клика после открытия |
+| BarkBubble | `hold_time` / `max_hold_time` | 2.2 / 4.0 | Сколько держится пузырь в бою |
+| Dialogue | `thor_reply_chance` | 0.4 | Шанс ответа Тора (с выбором) после реакции Одина на смерть |
+| Dialogue | `visitor_chance` | 0.3 | Шанс, что к дивану заглянет знакомый персонаж (пулы `*.visit`) |
+| Dialogue | `heimdall_chance` | 0.35 | Шанс реплики Хеймдалля на старте забега (после знакомства) |
+| Odin | `combat_cooldown` | 12 | Реплика Одина в бою не чаще (GDD 17) |
+
+## Бой-реплики и причина смерти — `run/run_tracker.gd`
+
+`idle_time` 4 с / `idle_speed` 0.6 («ДВИГАЙСЯ!»), `multikill_count` 3 за `multikill_window` 0.8 с («Хоть что-то»), `big_damage_fraction` 0.35 HP за `big_damage_window` 3 с («Скуф…»), `quick_death_time` 45 с («быстро сдох»), `long_life_time` 420 с («долго жил»), `fall_death_y` −15 (ниже — смерть от падения).
+
+Тексты — `data/dialogues/*.json`: правь прямо в JSON (формат в `STORY.md`).
+
+## «План тренировок» — `run/unlocks/*.tres` (`run/unlock_def.gd`), `ui/training_plan.gd`
+
+Цены и эффекты — в файлах открытий (инспектор): `price`, `amount` (для перков: `move_speed_pct` 0.05, `max_health` 20, `dash_charges` 1, `catch_window` 0.2, `start_silver` 30, `shop_discount` 0.15, `first_rune_level` 2), `requires`, `available` (перк уже работает). На экране: `card_height` 92, `glory_pulse_time` 0.25.
+Слава за забег целиком уходит в копилку (`Save.data.glory.bank`).

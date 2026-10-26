@@ -1,0 +1,165 @@
+{
+	"id": "heimdall",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"heimdall": {
+			"name": "Хеймдалль",
+			"color": "#f2d03b",
+			"initial": "Х",
+			"accessory": "helmet",
+			"side": "right"
+		}
+	},
+	"scenes": [
+		{
+			"id": "heimdall_intro",
+			"trigger": "run_start",
+			"priority": 70,
+			"conditions": [
+				"run_count >= 3"
+			],
+			"lines": [
+				{
+					"speaker": "heimdall",
+					"emotion": "neutral",
+					"text": "Стой. Биврёст. Пропуск предъявите.",
+					"id": "heimdall_intro_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Хеймдалль, это я. Тор. Твой… коллега.",
+					"id": "heimdall_intro_02"
+				},
+				{
+					"speaker": "heimdall",
+					"emotion": "angry",
+					"text": "Вижу. Слышу. Я всё вижу и слышу. Особенно, как ты храпишь. Девять миров слышат.",
+					"id": "heimdall_intro_03"
+				},
+				{
+					"speaker": "heimdall",
+					"emotion": "neutral",
+					"text": "Правила забега: умер — на диван. Сдался — на диван. Победил — тоже потом на диван, но с гордостью.",
+					"id": "heimdall_intro_04"
+				},
+				{
+					"speaker": "heimdall",
+					"emotion": "neutral",
+					"text": "Распишитесь. Тут, тут и тут. И кровью — нет, ладно, ручкой.",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Я бог! Мне не нужны пропуска!",
+							"lines": [
+								{
+									"speaker": "heimdall",
+									"emotion": "smug",
+									"text": "Богам — особенно. Порядок есть порядок. Следующий.",
+									"id": "heimdall_intro_05_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Расписываюсь. А кофе у тебя есть?",
+							"lines": [
+								{
+									"speaker": "heimdall",
+									"emotion": "happy",
+									"text": "Есть. Мой. Не дам. Проходите.",
+									"id": "heimdall_intro_05_agree_01"
+								}
+							]
+						}
+					],
+					"id": "heimdall_intro_05"
+				}
+			]
+		}
+	],
+	"pools": {
+		"run_start": [
+			{
+				"speaker": "heimdall",
+				"emotion": "neutral",
+				"text": "Пропуск выдан. Не потеряй. Как в прошлый раз.",
+				"id": "heimdall.run_start.01",
+				"conditions": [
+					"seen:heimdall_intro"
+				]
+			},
+			{
+				"speaker": "heimdall",
+				"emotion": "angry",
+				"text": "Я не спал тысячу лет. Ты мог бы хоть раз прийти вовремя.",
+				"id": "heimdall.run_start.02",
+				"conditions": [
+					"seen:heimdall_intro"
+				]
+			},
+			{
+				"speaker": "heimdall",
+				"emotion": "neutral",
+				"text": "Модификаторы забега: нет. Надежды: мало. Проходи.",
+				"id": "heimdall.run_start.03",
+				"conditions": [
+					"seen:heimdall_intro"
+				]
+			},
+			{
+				"speaker": "heimdall",
+				"emotion": "smug",
+				"text": "Слышу, как у тебя урчит живот. Девять миров слышат.",
+				"id": "heimdall.run_start.04",
+				"conditions": [
+					"seen:heimdall_intro"
+				]
+			}
+		],
+		"visit": [
+			{
+				"lines": [
+					{
+						"speaker": "heimdall",
+						"emotion": "neutral",
+						"text": "Я видел твою смерть. Из Асгарда. В подробностях. Не спрашивай.",
+						"id": "heimdall.visit.01_01"
+					}
+				],
+				"conditions": [
+					"seen:heimdall_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "heimdall",
+						"emotion": "angry",
+						"text": "Кто-то снова оставил Биврёст открытым. Ты? Ну конечно ты.",
+						"id": "heimdall.visit.02_01"
+					}
+				],
+				"conditions": [
+					"seen:heimdall_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "heimdall",
+						"emotion": "neutral",
+						"text": "Сводка: драугров в Мидгарде — много. Тебя — один. Неравенство.",
+						"id": "heimdall.visit.03_01"
+					}
+				],
+				"conditions": [
+					"seen:heimdall_intro"
+				]
+			}
+		]
+	}
+}

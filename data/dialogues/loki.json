@@ -1,0 +1,243 @@
+{
+	"id": "loki",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"loki": {
+			"name": "Локи",
+			"color": "#3fae4a",
+			"initial": "Л",
+			"accessory": "horns",
+			"side": "right"
+		}
+	},
+	"scenes": [
+		{
+			"id": "loki_intro",
+			"trigger": "death",
+			"priority": 75,
+			"conditions": [
+				"deaths >= 5"
+			],
+			"lines": [
+				{
+					"speaker": "loki",
+					"emotion": "smug",
+					"text": "Ба-а! Брат мой! Опять лежим? Какой знакомый пейзаж.",
+					"id": "loki_intro_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "angry",
+					"text": "Локи. Тебя только не хватало.",
+					"id": "loki_intro_02"
+				},
+				{
+					"speaker": "loki",
+					"emotion": "happy",
+					"text": "Меня всегда не хватает. Поэтому я прихожу сам.",
+					"id": "loki_intro_03"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "angry",
+					"text": "Чего тебе, змей?",
+					"id": "loki_intro_04"
+				},
+				{
+					"speaker": "loki",
+					"emotion": "embarrassed",
+					"text": "Мне? Ничего! Просто… поддержать брата. Морально. Издалека.",
+					"id": "loki_intro_05"
+				},
+				{
+					"speaker": "loki",
+					"emotion": "smug",
+					"text": "Хочешь совет? Ложись обратно. Рагнарёк всё равно перенесли.",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Не твоё дело, сколько я лежу!",
+							"lines": [
+								{
+									"speaker": "loki",
+									"emotion": "happy",
+									"text": "Конечно, не моё! Совсем не моё. Ни капельки. Хи-хи.",
+									"id": "loki_intro_06_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "А его правда перенесли?",
+							"lines": [
+								{
+									"speaker": "loki",
+									"emotion": "smug",
+									"text": "Так говорят. А кто говорит — неважно. Пока-пока!",
+									"id": "loki_intro_06_agree_01"
+								}
+							]
+						}
+					],
+					"id": "loki_intro_06"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "…Он что-то знает. У него всегда такое лицо, когда знает.",
+					"id": "loki_intro_07"
+				}
+			]
+		},
+		{
+			"id": "loki_reveal",
+			"trigger": "death",
+			"priority": 70,
+			"conditions": [
+				"seen:loki_intro",
+				"seen:ravens_gossip",
+				"deaths >= 12"
+			],
+			"lines": [
+				{
+					"speaker": "loki",
+					"emotion": "smug",
+					"text": "Слышал, ты ходишь на тренировки. Очень мило. Очень… тщетно.",
+					"id": "loki_reveal_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "angry",
+					"text": "Это ты! Это ты рассылал письма, что Рагнарёк перенесли!",
+					"id": "loki_reveal_02"
+				},
+				{
+					"speaker": "loki",
+					"emotion": "shocked",
+					"text": "Я?! Да как ты мог… Ну хорошо, я. Но печати были очень красивые!",
+					"id": "loki_reveal_03"
+				},
+				{
+					"speaker": "loki",
+					"emotion": "smug",
+					"text": "Зато ты отдохнул. Тысячу лет! Скажи спасибо.",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Я тебя молотом!..",
+							"lines": [
+								{
+									"speaker": "loki",
+									"emotion": "happy",
+									"text": "Сначала встань с дивана. Потом догони. Потом — молотом.",
+									"id": "loki_reveal_04_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "…Отдохнул, это правда.",
+							"lines": [
+								{
+									"speaker": "loki",
+									"emotion": "embarrassed",
+									"text": "Вот! Видишь? Я же для тебя старался.",
+									"id": "loki_reveal_04_agree_01"
+								},
+								{
+									"speaker": "odin",
+									"emotion": "angry",
+									"text": "ЛОКИ!",
+									"id": "loki_reveal_04_agree_02"
+								}
+							]
+						}
+					],
+					"id": "loki_reveal_04"
+				},
+				{
+					"speaker": "loki",
+					"emotion": "smug",
+					"text": "Мне пора. Приходи на финал — будет весело. Мне.",
+					"id": "loki_reveal_05"
+				}
+			],
+			"note": "Вариант А причины скуфа (STORY.md): письма о переносе Рагнарёка подделал Локи"
+		}
+	],
+	"pools": {
+		"visit": [
+			{
+				"lines": [
+					{
+						"speaker": "loki",
+						"emotion": "smug",
+						"text": "Брат, у меня для тебя выгодная сделка! Почти без подвоха.",
+						"id": "loki.visit.01_01"
+					}
+				],
+				"conditions": [
+					"seen:loki_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "loki",
+						"emotion": "happy",
+						"text": "Опять умер? А я ставил! На «опять». Выиграл.",
+						"id": "loki.visit.02_01"
+					}
+				],
+				"conditions": [
+					"seen:loki_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "loki",
+						"emotion": "smug",
+						"text": "Кстати, молот у тебя с короткой рукоятью. Интересно, почему? Не я, честно.",
+						"id": "loki.visit.03_01"
+					}
+				],
+				"conditions": [
+					"seen:loki_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "loki",
+						"emotion": "embarrassed",
+						"text": "Я тут ни при чём. Чем бы это ни было.",
+						"id": "loki.visit.04_01"
+					}
+				],
+				"conditions": [
+					"seen:loki_intro"
+				]
+			}
+		],
+		"deal": [
+			{
+				"speaker": "loki",
+				"emotion": "smug",
+				"text": "Половина здоровья — за легендарное оружие. Подписывай, не читая.",
+				"id": "loki.deal.01"
+			},
+			{
+				"speaker": "loki",
+				"emotion": "happy",
+				"text": "Проклятая руна! Сильная. Проклятая — это просто маркетинг.",
+				"id": "loki.deal.02"
+			}
+		]
+	}
+}

@@ -13,12 +13,16 @@ var room: Room
 var _ending: bool = false
 ## Выбор трейта Мьёльнира после мини-босса (строится кодом, не из game.tscn)
 var trait_pick: TraitPick
+## Время забега, причина смерти, бой-реплики Одина (run/run_tracker.gd)
+var tracker: RunTracker
+var _after_run_started: bool = false
 
 func _ready() -> void:
 	FX.reset_time()
 	get_tree().paused = false
 	if Run.body == null or Run.room_order.is_empty():
 		Run.start_run()
+	Run.body = Save.apply_permanent_to_body(Run.body)  # открытия «навсегда»: +HP, +рывок, скорость
 	player.apply_body_and_runes(Run.body, Run)
 	player.died.connect(_on_player_died)
 	Run.kill_streak.connect(_on_kill_streak)
@@ -27,20 +31,17 @@ func _ready() -> void:
 	trait_pick.name = "TraitPick"
 	add_child(trait_pick)
 	trait_pick.picked.connect(_on_trait_picked)
-	end_screen.restart_requested.connect(restart_run)
+	end_screen.restart_requested.connect(_after_run)
 	end_screen.menu_requested.connect(go_to_menu)
 	pause_menu.restart_requested.connect(restart_run)
 	pause_menu.menu_requested.connect(go_to_menu)
 	hud.bind_player(player)
+	tracker = RunTracker.attach(self, player)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Дожидаемся фоновой загрузки моделей (обычно уже готово, пока игрок был в меню)
 	AssetCache.finish()
 	_load_room()
-	var body_id := Run.body.id if Run.body else ""
-	if randf() < 0.5:
-		Odin.say("run_start_" + body_id)
-	else:
-		Odin.say("run_start")
+	Dialogue.on_run_start(Run.body.id if Run.body else "")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and not _ending and not rune_pick.visible and not trait_pick.visible:
@@ -85,7 +86,7 @@ func _load_room() -> void:
 	hud.fade_in()
 	# Пока экран затемнён — прогреваем шейдеры (в каждом зале: свои материалы под светом огня/снарядов)
 	ShaderWarmup.run(self)
-	if Run.is_boss_room():
+	if Run.is_boss_room() and not Dialogue.on_boss_intro():
 		Odin.say("boss_start")
 	# Даём осмотреться полсекунды
 	get_tree().create_timer(0.6, false).timeout.connect(func() -> void:
@@ -100,6 +101,7 @@ func _on_room_cleared() -> void:
 	if Run.is_boss_room():
 		Run.won = true
 		_ending = true
+		Dialogue.on_boss_defeat()
 		get_tree().create_timer(1.6, false).timeout.connect(func() -> void:
 			Odin.say("victory")
 			_show_end(true))
@@ -156,7 +158,7 @@ func _on_player_died() -> void:
 	if _ending:
 		return
 	_ending = true
-	Odin.say("death")
+	tracker.finish(false)
 	get_tree().create_timer(1.4, false).timeout.connect(func() -> void: _show_end(false))
 
 func _on_kill_streak(_count: int) -> void:
@@ -164,9 +166,27 @@ func _on_kill_streak(_count: int) -> void:
 
 func _show_end(victory: bool) -> void:
 	_ending = true
+	tracker.finish(victory)
 	FX.reset_time()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	end_screen.show_result(victory)
+
+## После итога забега: диалог у дивана (Dialogue.after_run) → «План тренировок» → новый забег.
+func _after_run() -> void:
+	if _after_run_started:
+		return
+	_after_run_started = true
+	end_screen.visible = false
+	await Dialogue.after_run(Run.won)
+	var plan := TrainingPlan.new()
+	plan.name = "TrainingPlan"
+	add_child(plan)
+	plan.open("В меню")
+	var start: bool = await plan.closed
+	if start:
+		restart_run()
+	else:
+		go_to_menu()
 
 func restart_run() -> void:
 	FX.reset_time()

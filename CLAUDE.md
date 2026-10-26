@@ -9,7 +9,7 @@
 - Мини-босс: `enemies/miniboss_def.gd` (`MinibossDef`, `enemies/minibosses/*.tres`) — обычный враг с переопределёнными числами и `Kind.BOSS`; добавляется последней волной (`Room.add_wave`) в залах `Run.miniboss_rooms`, после него `Game` открывает выбор трейта, потом руны.
 - `enemies/enemy.gd` — один скрипт на грунта/метателя/босса (поле `kind`); `enemy_projectile.gd`.
 - `rooms/room.gd` + `rooms/*.tscn` — залы, волны (маркеры в `Spawns` с метаданными `kind`/`wave`), дверь, выход.
-- `run/run_manager.gd` (автозагрузка `Run`) — забег, Слава, руны; `run/odin.gd` (`Odin`) — реплики из `data/odin_lines.json`.
+- `run/run_manager.gd` (автозагрузка `Run`) — забег, Слава, руны; `run/odin.gd` (`Odin`) — короткие реплики Одина, обёртка над `Dialogue` (пулы `data/dialogues/odin.json`).
 - `ui/` — HUD, выбор рун, пауза, экран конца, меню (всё строится кодом, `.tscn` — пустые обёртки со скриптом).
 - `scripts/fx.gd` — hit-stop (тикает из `Run._process`), цифры урона, молнии, кольца, искры. Материалы эффектов — общие (`FX.fx_apply`, шейдеры `shaders/fx_*.gdshader`, цвет per-instance), меши — общие (`FX.shared_mesh`).
 - `scripts/perf.gd` (автозагрузка `Perf`) — F3-оверлей, лог фризов `user://hitches.log`, `Perf.mark("событие")` в игровом коде, счётчики компиляций пайплайнов (`pso_draw` = фриз на отрисовке).
@@ -55,3 +55,13 @@ godot --headless --path . --fixed-fps 60 res://tests/comic_test.tscn  # коми
 Скриншоты (нужен xvfb): `xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/screenshots.tscn -- <папка>`.
 
 Экспорт: `godot --headless --path . --export-release "Windows Desktop" export/windows/ThorDostoynayaSmert.exe` (нужны export templates 4.6.3). Проверка сборки: `<exe> --headless -- --selftest`.
+
+## Диалоги и сохранения (ночь 26.10, блоки А–В)
+- `scripts/dialogue_manager.gd` (автозагрузка `Dialogue`) — сцены-новеллы и пулы коротких реплик из `data/dialogues/*.json` (по файлу на персонажа, формат — `STORY.md` → «Формат данных»). Выбор: самая приоритетная непросмотренная сцена события с выполненными условиями, иначе пул. Точки входа: `on_run_start`, `on_boss_intro`, `on_boss_defeat`, `after_run`, `run_trigger(событие, пул)`, `bark(реплика)`.
+- `ui/dialogue_box.gd` — окно новеллы (портреты, имя, печать, выбор ответа Тора, «Пропустить», журнал); `ui/portrait.gd` — портрет `sprites/portraits/<speaker>_<emotion>.png` или процедурная заглушка; `ui/bark_bubble.gd` — пузырь в углу для не-Одина.
+- `run/odin.gd` (`Odin`) — тонкая обёртка: `Odin.say(событие)` = пузырь HUD из пула `odin.<событие>`, лимит 12 с в бою.
+- `run/run_tracker.gd` (`RunTracker`, узел в сцене игры) — время забега, причина смерти, «ДВИГАЙСЯ!»/мульти-килл/«Скуф…». **Источник урона по Тору:** перед `player.take_damage()` вызывай `RunTracker.note_damage("barrel")` или `RunTracker.note_hit(enemy)` (id из `enemy_id`/`death_source_id`/`kind`). Падение определяется само.
+- `STORY.md` — сюжетная библия (черновик) и формат JSON диалогов.
+- `scripts/save_game.gd` (автозагрузка `Save`) — `user://save.json` с версией и миграцией. Тесты (`res://tests/*`) и `--selftest` пишут в `user://test_save.json`.
+- `run/unlock_def.gd` + `run/unlocks/*.tres` — открытия «Плана тренировок» (GDD 15.3): `kind` weapon/trait/body/rune/perk, `target_id` (+`extra_target_ids`), цена. **Пулы:** `Save.is_in_pool(kind, id)` — закрытое не выпадает (руны и тела уже подключены в `run_manager.gd`; оружию и трейтам — подключить в своих пулах). Id целей: оружие `spear, scythe, pickaxe, knife, assault_rifle, smg, sawed_off, nailgun, rocket_launcher`; трейты `boomerang, ice_trail, heaviness, lightning_rod, storm, earthquake, two_hammers, sky_thunder`; тела `priest, soldier, skald, courier, smith, shieldmaiden`. Нет определения цели в игре (`weapons/defs/`, `weapons/mjolnir_traits/`, `run/bodies/`, `run/runes/`) — на экране «скоро». Перки: `Save.perk("catch_window")` и т. п.; +HP/+рывок/скорость применяет `Save.apply_permanent_to_body()` в `Game._ready`.
+- `ui/training_plan.gd` — экран «План тренировок Одина»: после диалога у дивана и из главного меню.

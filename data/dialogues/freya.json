@@ -1,0 +1,182 @@
+{
+	"id": "freya",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"freya": {
+			"name": "Фрейя",
+			"color": "#1fa37a",
+			"initial": "Ф",
+			"accessory": "flowers",
+			"side": "right"
+		}
+	},
+	"scenes": [
+		{
+			"id": "freya_intro",
+			"trigger": "death",
+			"priority": 72,
+			"conditions": [
+				"deaths >= 7"
+			],
+			"lines": [
+				{
+					"speaker": "freya",
+					"emotion": "happy",
+					"text": "Ой, Тор! Не двигайся. Свет хороший. Селфи для моих поклонников!",
+					"id": "freya_intro_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Я в майке и в шлёпанцах!",
+					"id": "freya_intro_02"
+				},
+				{
+					"speaker": "freya",
+					"emotion": "smug",
+					"text": "Вот именно. Подпишу: «До». Потом сделаем «После».",
+					"id": "freya_intro_03"
+				},
+				{
+					"speaker": "freya",
+					"emotion": "neutral",
+					"text": "Тебе нужен ребрендинг. Бог грома — это классика, но классика должна сиять.",
+					"id": "freya_intro_04"
+				},
+				{
+					"speaker": "freya",
+					"emotion": "happy",
+					"text": "Дам тебе благословения-руны. Если будешь их достоин. И если повернёшься правым боком.",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Мне не нужен ребрендинг!",
+							"lines": [
+								{
+									"speaker": "freya",
+									"emotion": "smug",
+									"text": "Это говорит каждый, кому нужен ребрендинг.",
+									"id": "freya_intro_05_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Правым — это вот так?",
+							"lines": [
+								{
+									"speaker": "freya",
+									"emotion": "happy",
+									"text": "Идеально! Кошечки, смотрите, он учится.",
+									"id": "freya_intro_05_agree_01"
+								}
+							]
+						}
+					],
+					"id": "freya_intro_05"
+				}
+			]
+		},
+		{
+			"id": "freya_after_win",
+			"trigger": "victory",
+			"priority": 60,
+			"conditions": [
+				"seen:freya_intro"
+			],
+			"lines": [
+				{
+					"speaker": "freya",
+					"emotion": "happy",
+					"text": "Тор! Ты победил! Мои подписчики в восторге. Ну, коты в восторге.",
+					"id": "freya_after_win_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "happy",
+					"text": "Правда?",
+					"id": "freya_after_win_02"
+				},
+				{
+					"speaker": "freya",
+					"emotion": "smug",
+					"text": "Правда. Делаем фото «В процессе». Улыбнись. Не так. Да, так.",
+					"id": "freya_after_win_03"
+				}
+			]
+		}
+	],
+	"pools": {
+		"visit": [
+			{
+				"lines": [
+					{
+						"speaker": "freya",
+						"emotion": "happy",
+						"text": "Мой совет: побеждай красиво. Некрасиво побеждать — это просто побеждать.",
+						"id": "freya.visit.01_01"
+					}
+				],
+				"conditions": [
+					"seen:freya_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "freya",
+						"emotion": "smug",
+						"text": "Брисингамен сияет, а ты — пока нет. Работаем.",
+						"id": "freya.visit.02_01"
+					}
+				],
+				"conditions": [
+					"seen:freya_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "freya",
+						"emotion": "neutral",
+						"text": "Кошки спрашивают, почему ты пахнешь драугром. Я тоже спрашиваю.",
+						"id": "freya.visit.03_01"
+					}
+				],
+				"conditions": [
+					"seen:freya_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "freya",
+						"emotion": "happy",
+						"text": "Сегодня у тебя хорошая аура. Ну, лучше, чем вчера.",
+						"id": "freya.visit.04_01"
+					}
+				],
+				"conditions": [
+					"seen:freya_intro"
+				]
+			}
+		],
+		"blessing": [
+			{
+				"speaker": "freya",
+				"emotion": "happy",
+				"text": "Благословляю! Руна сразу второго уровня. Ты сияешь. Почти.",
+				"id": "freya.blessing.01"
+			},
+			{
+				"speaker": "freya",
+				"emotion": "smug",
+				"text": "Держи руну. И держи осанку.",
+				"id": "freya.blessing.02"
+			}
+		]
+	}
+}

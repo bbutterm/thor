@@ -1,0 +1,1432 @@
+{
+	"id": "odin",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"odin": {
+			"name": "Один",
+			"color": "#2a3f8f",
+			"initial": "О",
+			"accessory": "eyepatch",
+			"side": "right"
+		}
+	},
+	"scenes": [
+		{
+			"id": "odin_intro",
+			"trigger": "run_start",
+			"priority": 100,
+			"conditions": [
+				"run_count == 1"
+			],
+			"lines": [
+				{
+					"speaker": "odin",
+					"emotion": "angry",
+					"text": "ПОДЪЁМ! Сколько можно лежать?",
+					"id": "odin_intro_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "Пап, ещё серию… одну… там сейчас всё решится.",
+					"id": "odin_intro_02"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "angry",
+					"text": "Там уже тысячу лет «всё решится». Посмотри на себя.",
+					"id": "odin_intro_03"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "А что не так? Плечи на месте. Пузо… тоже на месте.",
+					"id": "odin_intro_04"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "angry",
+					"text": "Ты бог грома. А гремит у тебя только живот.",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Это не живот, это запас грома!",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "smug",
+									"text": "Вот и потратишь. С сегодняшнего дня — тренировки.",
+									"id": "odin_intro_05_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Ну… может, чуть-чуть размяться.",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "happy",
+									"text": "«Чуть-чуть» — это до первой смерти. Дальше — как следует.",
+									"id": "odin_intro_05_agree_01"
+								}
+							]
+						}
+					],
+					"id": "odin_intro_05"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Твоё тело останется тут, на диване. Дух я вселю в смертного воина.",
+					"id": "odin_intro_06"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Умрёт тело — проснёшься здесь. А я буду стоять над тобой. Со свистком.",
+					"id": "odin_intro_07"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Это какая-то тренировка в аду!",
+					"id": "odin_intro_08"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "happy",
+					"text": "Это тренировка в Мидгарде. Ад — следующий уровень. Пошёл!",
+					"id": "odin_intro_09"
+				}
+			]
+		},
+		{
+			"id": "odin_first_death",
+			"trigger": "death",
+			"priority": 100,
+			"conditions": [
+				"first_time"
+			],
+			"lines": [
+				{
+					"pool": "$reaction"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Я… на диване? Я же только что рубил драугров!",
+					"id": "odin_first_death_01"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Тело смертного погибло — дух вернулся домой. Так будет каждый раз.",
+					"id": "odin_first_death_02"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "Каждый?! А можно мне хотя бы чипсы перед следующим?",
+					"id": "odin_first_death_03"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Чипсы — после того, как дойдёшь до Ярла. Вопросы?",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Это издевательство, а не тренировки!",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "angry",
+									"text": "Это любовь. Суровая. Отцовская. Встал!",
+									"id": "odin_first_death_04_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Нет вопросов. Встаю.",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "happy",
+									"text": "Хороший мальчик. Ну, большой мальчик.",
+									"id": "odin_first_death_04_agree_01"
+								}
+							]
+						}
+					],
+					"id": "odin_first_death_04"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Слава, что ты набрал, — не пропадёт. Потратишь на план тренировок.",
+					"id": "odin_first_death_05"
+				}
+			]
+		},
+		{
+			"id": "odin_notebook",
+			"trigger": "death",
+			"priority": 60,
+			"conditions": [
+				"deaths >= 3"
+			],
+			"lines": [
+				{
+					"pool": "$reaction"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Смерть номер {deaths}. Я завёл тебе тетрадку для смертей. Тетрадка кончилась.",
+					"id": "odin_notebook_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "Пап, а может, ну его? Мне и на диване хорошо.",
+					"id": "odin_notebook_02"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "angry",
+					"text": "Тебе хорошо. А Асгарду без грома плохо: дожди идут без молний. Скучно!",
+					"id": "odin_notebook_03"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Ты помнишь, каким ты был? Великаны от одного твоего чиха прятались.",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Тогда и великаны были ниже ростом!",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "smug",
+									"text": "Великаны те же. Это ты стал шире.",
+									"id": "odin_notebook_04_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Помню. Иногда снится.",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "happy",
+									"text": "Вот. Значит, бог ещё там. Под слоем чипсов.",
+									"id": "odin_notebook_04_agree_01"
+								}
+							]
+						}
+					],
+					"id": "odin_notebook_04"
+				}
+			]
+		},
+		{
+			"id": "odin_first_win",
+			"trigger": "victory",
+			"priority": 100,
+			"conditions": [
+				"first_time"
+			],
+			"lines": [
+				{
+					"speaker": "odin",
+					"emotion": "shocked",
+					"text": "Ты… победил Ярла?",
+					"id": "odin_first_win_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "happy",
+					"text": "А то! Видел, как я его? Бах! Шмяк! Голова — укатилась!",
+					"id": "odin_first_win_02"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Видел. Видел и то, как ты дважды упал с балкона по дороге.",
+					"id": "odin_first_win_03"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "happy",
+					"text": "Хм. Сдал первый зачёт. Я… почти горжусь.",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "«Почти»?! Я Ярла победил!",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "angry",
+									"text": "Ярл — это разминка. Впереди Йотунхейм и Хельхейм. И я.",
+									"id": "odin_first_win_04_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Спасибо, пап. Правда.",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "embarrassed",
+									"text": "…Не раскисай. Это дурно влияет на мой образ.",
+									"id": "odin_first_win_04_agree_01"
+								}
+							]
+						}
+					],
+					"id": "odin_first_win_04"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Главный экзамен — со мной. Когда будешь готов. А ты не готов.",
+					"id": "odin_first_win_05"
+				}
+			]
+		},
+		{
+			"id": "odin_boss_trauma",
+			"trigger": "death",
+			"priority": 50,
+			"conditions": [
+				"killed_by_count.boss_jarl >= 3"
+			],
+			"lines": [
+				{
+					"pool": "$reaction"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Ярл тебя уже по имени знает. Передавал привет.",
+					"id": "odin_boss_trauma_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "angry",
+					"text": "У него рука отваливается и прилетает обратно! Это нечестно!",
+					"id": "odin_boss_trauma_02"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Как и твой молот. Вы с ним похожи. Только он в форме.",
+					"id": "odin_boss_trauma_03"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Подсказка: когда он бросил руку — у тебя три секунды. Бей.",
+					"id": "odin_boss_trauma_04"
+				}
+			]
+		},
+		{
+			"id": "odin_falls",
+			"trigger": "death",
+			"priority": 45,
+			"conditions": [
+				"deaths_by.fall >= 3"
+			],
+			"lines": [
+				{
+					"pool": "$reaction"
+				},
+				{
+					"speaker": "hugin",
+					"emotion": "neutral",
+					"text": "Я посчитал. С учётом массы Тора падение длилось одну вечность и два чипса.",
+					"id": "odin_falls_01"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "angry",
+					"text": "Ты бог грома. Гром падает СВЕРХУ на врагов. А не сам — вниз.",
+					"id": "odin_falls_02"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "Я хотел сделать удар-приземление…",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Я и сделал! Просто земли там не было.",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "smug",
+									"text": "Это называется «яма». Запиши, Хугин.",
+									"id": "odin_falls_03_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Ладно, перестарался.",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "neutral",
+									"text": "Сначала посмотри вниз. Потом прыгай. Потом — бах.",
+									"id": "odin_falls_03_agree_01"
+								}
+							]
+						}
+					],
+					"id": "odin_falls_03"
+				}
+			]
+		},
+		{
+			"id": "odin_own_fire",
+			"trigger": "death",
+			"priority": 40,
+			"conditions": [
+				"deaths_by.own_fire >= 2"
+			],
+			"lines": [
+				{
+					"pool": "$reaction"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "shocked",
+					"text": "Ты поджёг землю… и сел в неё.",
+					"id": "odin_own_fire_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "Я думал, на мне будет смотреться круто.",
+					"id": "odin_own_fire_02"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Огонь Муспельхейма не разбирает, кто его зажёг. Уходи с пятна.",
+					"id": "odin_own_fire_03"
+				}
+			]
+		},
+		{
+			"id": "odin_quick",
+			"trigger": "death",
+			"priority": 35,
+			"conditions": [
+				"tag:quick",
+				"deaths >= 2"
+			],
+			"lines": [
+				{
+					"pool": "$reaction"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "angry",
+					"text": "Я не успел досвистеть. Я даже набрать воздуха не успел!",
+					"id": "odin_quick_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "Ну… зато быстро. Экономия времени.",
+					"id": "odin_quick_02"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Хорошо. С завтрашнего дня экономим и твои чипсы.",
+					"id": "odin_quick_03"
+				}
+			]
+		},
+		{
+			"id": "odin_long",
+			"trigger": "death",
+			"priority": 35,
+			"conditions": [
+				"tag:long"
+			],
+			"lines": [
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Долго держался. {time} на ногах. Я засёк.",
+					"id": "odin_long_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "happy",
+					"text": "Видал? Я почти не задыхался!",
+					"id": "odin_long_02"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Почти. Хугин насчитал сорок «ой» и одно «мамочки».",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Это был боевой клич!",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "happy",
+									"text": "Хороший клич. Ярл испугался. От неожиданности.",
+									"id": "odin_long_03_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Ну было, было.",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "neutral",
+									"text": "Честность — тоже форма. Продолжай.",
+									"id": "odin_long_03_agree_01"
+								}
+							]
+						}
+					],
+					"id": "odin_long_03"
+				}
+			]
+		},
+		{
+			"id": "odin_many_deaths",
+			"trigger": "death",
+			"priority": 30,
+			"conditions": [
+				"deaths >= 20"
+			],
+			"lines": [
+				{
+					"pool": "$reaction"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Смерть номер {deaths}. Валькирии делают ставки, когда ты сдашься.",
+					"id": "odin_many_deaths_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "angry",
+					"text": "И на что ставят?",
+					"id": "odin_many_deaths_02"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Хильд поставила на «никогда». Остальные — на «завтра». Не подведи Хильд.",
+					"id": "odin_many_deaths_03"
+				}
+			]
+		}
+	],
+	"pools": {
+		"run_start": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Это тело выбрал не я. Ладно, это тело выбрал я.",
+				"id": "odin.run_start.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Новое тело, старая лень. Удиви меня.",
+				"id": "odin.run_start.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Помни: топор — острым концом к врагу.",
+				"id": "odin.run_start.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Мама просила за тобой присмотреть. Смотрю. Пока стыдно.",
+				"id": "odin.run_start.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Разминка закончилась на диване. Дальше — работа.",
+				"id": "odin.run_start.05"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Сегодня по плану: драугры, драугры и, если повезёт, драугры.",
+				"id": "odin.run_start.06"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Свисток! Бегом, бегом, бегом!",
+				"id": "odin.run_start.07"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Тело хорошее, почти новое. Верни хотя бы с одной рукой.",
+				"id": "odin.run_start.08"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Не стой — двигайся. Стоячий бог — это статуя.",
+				"id": "odin.run_start.09"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Если увижу, что ты сел отдохнуть, — заберу пульт навсегда.",
+				"id": "odin.run_start.10"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Молот бросай, молот лови. Это не бумеранг, это семейная ценность.",
+				"id": "odin.run_start.11"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Хугин ставит, что ты продержишься минуту. Докажи, что он оптимист.",
+				"id": "odin.run_start.12"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Прыгай выше, бей сильнее. Земля потерпит.",
+				"id": "odin.run_start.13"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Новый забег — новая возможность меня не разочаровать.",
+				"id": "odin.run_start.14"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Пятьдесят приседаний ты сегодня не сделал. Сделаешь их на драуграх.",
+				"id": "odin.run_start.15"
+			}
+		],
+		"run_start_berserker": [
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Берсерк. Много мяса, мало мыслей. Тебе подойдёт.",
+				"id": "odin.run_start_berserker.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Он орёт, когда бежит. Ты тоже начнёшь.",
+				"id": "odin.run_start_berserker.02"
+			}
+		],
+		"run_start_hunter": [
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Охотник. Быстрый, хрупкий. Как твоё самолюбие.",
+				"id": "odin.run_start_hunter.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Этот хотя бы умеет уворачиваться. В отличие от тебя.",
+				"id": "odin.run_start_hunter.02"
+			}
+		],
+		"run_start_thrall": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Трэлл. Слабое тело, двойная Слава. Социальный лифт.",
+				"id": "odin.run_start_thrall.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Раб с метлой. Никто не ждёт от него подвига. Идеальная маскировка.",
+				"id": "odin.run_start_thrall.02"
+			}
+		],
+		"death_draugr": [
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Драугр. Обычный драугр. Он даже не целился.",
+				"id": "odin.death_draugr.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Тебя забил покойник. Причём уже второй раз покойник.",
+				"id": "odin.death_draugr.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Драугры ходят толпой и мычат. Ты — тоже толпой и тоже мычишь.",
+				"id": "odin.death_draugr.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Он замахивался ПОЛСЕКУНДЫ. С подсветкой! Как можно не увидеть?",
+				"id": "odin.death_draugr.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Драугр передавал: «Спасибо за лёгкий день».",
+				"id": "odin.death_draugr.05"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Совет: бей после его замаха. Не до, не вместо, а после.",
+				"id": "odin.death_draugr.06"
+			}
+		],
+		"death_boss": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Ярл. Ну хоть враг солидный. Почти не стыдно. Почти.",
+				"id": "odin.death_boss.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Босс бил по площади — а ты стоял на земле. Прыгать я тебя учил?",
+				"id": "odin.death_boss.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Ярл попросил автограф. На твоей надгробной плите.",
+				"id": "odin.death_boss.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Дошёл до босса — хорошо. Лёг у босса — плохо. Среднее — диван.",
+				"id": "odin.death_boss.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Он большой и медленный. Ты — большой и медленный. Кто-то должен был стать быстрее.",
+				"id": "odin.death_boss.05"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Ярлу понравилось. Он ждёт тебя снова. С рукой наготове.",
+				"id": "odin.death_boss.06"
+			}
+		],
+		"death_fall": [
+			{
+				"speaker": "odin",
+				"emotion": "shocked",
+				"text": "Ты упал. Сам. Без помощи врагов. Это талант.",
+				"id": "odin.death_fall.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Гравитация — единственный враг, которого ты не видел.",
+				"id": "odin.death_fall.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Бог грома должен падать НА врагов, а не мимо мира!",
+				"id": "odin.death_fall.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Край арены — это край. Он так и называется. Запомни.",
+				"id": "odin.death_fall.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Хугин записал: «Тор исследовал глубину. Глубина победила».",
+				"id": "odin.death_fall.05"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Красиво летел. Жаль, недолго. И вниз.",
+				"id": "odin.death_fall.06"
+			}
+		],
+		"death_barrel": [
+			{
+				"speaker": "odin",
+				"emotion": "shocked",
+				"text": "Бочка. Тебя победила бочка.",
+				"id": "odin.death_barrel.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Бочка была полна браги. Ты — нет. Счёт 1:0 в пользу бочки.",
+				"id": "odin.death_barrel.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Бочки надо пинать во врагов. Не обниматься с ними!",
+				"id": "odin.death_barrel.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Я напишу на бочках: «Осторожно, опасна для богов».",
+				"id": "odin.death_barrel.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Скальды споют «Сагу о бочке». Ты в ней на второй роли.",
+				"id": "odin.death_barrel.05"
+			}
+		],
+		"death_own_fire": [
+			{
+				"speaker": "odin",
+				"emotion": "shocked",
+				"text": "Ты сгорел в собственном огне. Это… экологично.",
+				"id": "odin.death_own_fire.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Огонь Муспельхейма отлично работает. По тебе — особенно.",
+				"id": "odin.death_own_fire.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Поджёг землю — отойди. Это правило знает каждый ёж.",
+				"id": "odin.death_own_fire.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Хоть согрелся. Впервые за тысячу лет без пледа.",
+				"id": "odin.death_own_fire.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Драугры аплодировали. Им понравился костёр.",
+				"id": "odin.death_own_fire.05"
+			}
+		],
+		"death_ranged": [
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Ты умер со стрелялкой в руке. Позорище.",
+				"id": "odin.death_ranged.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Палка-стрелялка не спасла? Какая неожиданность.",
+				"id": "odin.death_ranged.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "У тебя в другой руке Мьёльнир. Помнишь такой? Тяжёлый, родной.",
+				"id": "odin.death_ranged.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Бог грома прячется за арбалетом. Мама бы плакала.",
+				"id": "odin.death_ranged.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Стрелять издалека — для тех, кто боится вспотеть. Ты вспотел и умер.",
+				"id": "odin.death_ranged.05"
+			}
+		],
+		"death_quick": [
+			{
+				"speaker": "odin",
+				"emotion": "shocked",
+				"text": "Это рекорд. Плохой, но рекорд.",
+				"id": "odin.death_quick.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Я не успел досчитать до десяти. Я до трёх не успел!",
+				"id": "odin.death_quick.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Тело даже не успело остыть после дивана.",
+				"id": "odin.death_quick.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Ты умер быстрее, чем загрузился зал. Как?!",
+				"id": "odin.death_quick.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Хугин засёк время. Хугин рыдает.",
+				"id": "odin.death_quick.05"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Минута! Тренировка у меня длится дольше, чем твоя жизнь.",
+				"id": "odin.death_quick.06"
+			}
+		],
+		"death_long": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Долго держался. Почти горжусь. Почти.",
+				"id": "odin.death_long.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Ты продержался {time}. Это уже не позор, это попытка.",
+				"id": "odin.death_long.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Хорошая долгая смерть. Ноги-то как, гудят?",
+				"id": "odin.death_long.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Столько продержаться — и всё равно лечь. Узнаю сына.",
+				"id": "odin.death_long.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Вот это выносливость. Пульт заслужил. На пять минут.",
+				"id": "odin.death_long.05"
+			}
+		],
+		"death": [
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Смерть засчитана. Достоинство — нет.",
+				"id": "odin.death.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Я видел, как гномы дерутся лучше. Пьяные гномы.",
+				"id": "odin.death.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Следующее тело. И постарайся хотя бы в этот раз.",
+				"id": "odin.death.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Валькирии даже не подлетели. Сказали — неловко.",
+				"id": "odin.death.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Даже Локи бы так не опозорился. А он однажды стал кобылой.",
+				"id": "odin.death.05"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Ну… это было. Определённо было.",
+				"id": "odin.death.06"
+			}
+		],
+		"victory": [
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Неплохо. Для скуфа — даже хорошо.",
+				"id": "odin.victory.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Победил? Я тоже удивлён. Иди сюда, разберём ошибки.",
+				"id": "odin.victory.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Вот это гром! Ну, громок. Но уже слышно.",
+				"id": "odin.victory.03"
+			}
+		],
+		"victory_reaction": [
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Хм. Сдал зачёт. Не зазнавайся.",
+				"id": "odin.victory_reaction.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Ярл повержен. Твоё пузо — пока нет.",
+				"id": "odin.victory_reaction.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Хорошо. Завтра то же самое, только быстрее.",
+				"id": "odin.victory_reaction.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Видишь, как полезно не лежать? Ещё сто таких — и будешь в форме.",
+				"id": "odin.victory_reaction.04"
+			}
+		],
+		"idle": [
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "ДВИГАЙСЯ!",
+				"id": "odin.idle.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Ты что, прирос? ДВИГАЙСЯ!",
+				"id": "odin.idle.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Стоять — это для статуй! Бегом!",
+				"id": "odin.idle.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Это не диван! ШЕВЕЛИСЬ!",
+				"id": "odin.idle.04"
+			}
+		],
+		"multikill": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Хоть что-то.",
+				"id": "odin.multikill.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Трое разом! Уже на что-то похоже.",
+				"id": "odin.multikill.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Неплохо. Мама бы похлопала.",
+				"id": "odin.multikill.03"
+			}
+		],
+		"big_damage": [
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Скуф…",
+				"id": "odin.big_damage.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Уворачивайся! Рывок для кого придуман?",
+				"id": "odin.big_damage.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "shocked",
+				"text": "Ты принимаешь удары, как диван — гостей. Охотно.",
+				"id": "odin.big_damage.03"
+			}
+		],
+		"ranged_kill": [
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Позорище.",
+				"id": "odin.ranged_kill.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Добил стрелялкой. Славы — половина. Уважения — ноль.",
+				"id": "odin.ranged_kill.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Это что, палка-стрелялка? Позорище.",
+				"id": "odin.ranged_kill.03"
+			}
+		],
+		"big_slam": [
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Вот! ВОТ!",
+				"id": "odin.big_slam.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Вот это приземление! Мидгард вздрогнул.",
+				"id": "odin.big_slam.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Земля просит пощады. Я — нет.",
+				"id": "odin.big_slam.03"
+			}
+		],
+		"streak10": [
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Десять подряд! Я почти горжусь. Почти.",
+				"id": "odin.streak10.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Вот это я понимаю — бог грома. Продолжай.",
+				"id": "odin.streak10.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Скальды уже сочиняют. Пока неприличное, но сочиняют.",
+				"id": "odin.streak10.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Хм. Может, ты ещё не совсем диван.",
+				"id": "odin.streak10.04"
+			}
+		],
+		"room_clear": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Зал чист. Иди, пока я добрый.",
+				"id": "odin.room_clear.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Неплохо. Для смертного тела.",
+				"id": "odin.room_clear.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Следующий зал. Там хуже. Тебе понравится.",
+				"id": "odin.room_clear.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Отдышался? Нет? Неважно. Вперёд.",
+				"id": "odin.room_clear.04"
+			}
+		],
+		"rune_pick": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Руна выбрана. Не потеряй, как молот в прошлый раз.",
+				"id": "odin.rune_pick.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Хороший выбор. Для тебя.",
+				"id": "odin.rune_pick.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Бери, бери. Бесплатно только руны и мои упрёки.",
+				"id": "odin.rune_pick.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Норны одобрили. Неохотно.",
+				"id": "odin.rune_pick.04"
+			}
+		],
+		"boss_start": [
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Большой. Злой. Как мама до завтрака.",
+				"id": "odin.boss_start.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Босс. Дыши ровно. Прыгай вовремя.",
+				"id": "odin.boss_start.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Говорят, он ел героев на завтрак. Ты — полдник.",
+				"id": "odin.boss_start.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Последний зал. Покажи, чему научился. Хоть чему-нибудь.",
+				"id": "odin.boss_start.04"
+			}
+		],
+		"hammer_lost": [
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Мьёльнир — не бумеранг для слабаков. Хотя… да, бумеранг.",
+				"id": "odin.hammer_lost.01"
+			}
+		],
+		"plan_open": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "План тренировок. Выбирай, что подкачать. Всё.",
+				"id": "odin.plan_open.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Слава есть — трать с умом. Ума нет — трать на скорость.",
+				"id": "odin.plan_open.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Каждая строчка — шаг из скуфа обратно в бога.",
+				"id": "odin.plan_open.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Чипсы в плане не предусмотрены. Даже не ищи.",
+				"id": "odin.plan_open.04"
+			}
+		],
+		"plan_buy": [
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Записал. Завтра проверю.",
+				"id": "odin.plan_buy.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Хорошо. Ещё один шаг с дивана.",
+				"id": "odin.plan_buy.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Вот! Видишь, это не больно.",
+				"id": "odin.plan_buy.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Заплатил Славой. Потом заплатишь потом. Шутка. Но правда.",
+				"id": "odin.plan_buy.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Мышцы помнят. Ты — нет. Поэтому плати.",
+				"id": "odin.plan_buy.05"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Хороший выбор. Я бы выбрал то же. Ну, почти.",
+				"id": "odin.plan_buy.06"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Отметил в тетрадке. Новой.",
+				"id": "odin.plan_buy.07"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Форма возвращается. Медленно, как ты по утрам.",
+				"id": "odin.plan_buy.08"
+			}
+		],
+		"plan_broke": [
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Славы не хватает. Зато самомнения — с избытком.",
+				"id": "odin.plan_broke.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Сначала заработай. Потом покупай. Так устроен мир.",
+				"id": "odin.plan_broke.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "В долг не даю. Даже сыну. Особенно сыну.",
+				"id": "odin.plan_broke.03"
+			}
+		],
+		"miniboss_start": [
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Толстый Свен! Он тоже когда-то был героем. Потом открыл бочку.",
+				"id": "odin.miniboss_start.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Смотри, сын, вот что бывает без утренней пробежки. Бей его!",
+				"id": "odin.miniboss_start.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Это не босс. Это предупреждение. Тебе.",
+				"id": "odin.miniboss_start.03"
+			}
+		],
+		"miniboss_death": [
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Свен лопнул. Мьёльнир чует силу — бери.",
+				"id": "odin.miniboss_death.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Неплохо. Молот хочет новый фокус.",
+				"id": "odin.miniboss_death.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Одним скуфом меньше. Не считая тебя.",
+				"id": "odin.miniboss_death.03"
+			}
+		],
+		"trait_pick": [
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Молот выбрал. Ну, ты выбрал. Молот согласился.",
+				"id": "odin.trait_pick.01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Мьёльнир помнит старые трюки. Ты — нет. Вспоминай.",
+				"id": "odin.trait_pick.02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Хороший выбор. Для тебя — даже отличный.",
+				"id": "odin.trait_pick.03"
+			}
+		]
+	}
+}

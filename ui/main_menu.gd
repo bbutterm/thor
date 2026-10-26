@@ -36,7 +36,7 @@ func _ready() -> void:
 	var sub := UIStyle.label("ДОСТОЙНАЯ СМЕРТЬ", 36, UIStyle.TEXT, 8)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(sub)
-	var tag := UIStyle.label("Один выгнал тебя из Асгарда. Вселяйся в смертных и умри красиво.", 18, UIStyle.TEXT_DIM, 4)
+	var tag := UIStyle.label("Тор скуфнулся. Один вселяет его в смертных воинов — возвращать форму.", 18, UIStyle.TEXT_DIM, 4)
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(tag)
 
@@ -50,6 +50,11 @@ func _ready() -> void:
 	var start_box := CenterContainer.new()
 	start_box.add_child(start)
 	vb.add_child(start_box)
+	var plan := UIStyle.button("План тренировок", 22)
+	plan.pressed.connect(_on_plan)
+	var plan_box := CenterContainer.new()
+	plan_box.add_child(plan)
+	vb.add_child(plan_box)
 	var settings := UIStyle.button("Настройки", 22)
 	settings.pressed.connect(func() -> void:
 		var sp := SettingsPanel.new()
@@ -80,6 +85,16 @@ func _ready() -> void:
 	start.grab_focus()
 	if "--selftest" in OS.get_cmdline_user_args():
 		_selftest.call_deferred()
+
+## «План тренировок Одина» из меню: «В бой» — сразу забег, «Назад» — в меню.
+func _on_plan() -> void:
+	var tp := TrainingPlan.new()
+	add_child(tp)
+	tp.open("Назад")
+	if await tp.closed:
+		_on_start()
+	else:
+		tp.queue_free()
 
 func _on_start() -> void:
 	Run.start_run()

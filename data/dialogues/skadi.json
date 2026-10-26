@@ -1,0 +1,152 @@
+{
+	"id": "skadi",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"skadi": {
+			"name": "Скади",
+			"color": "#9fd8f0",
+			"initial": "С",
+			"accessory": "hat",
+			"side": "right"
+		}
+	},
+	"scenes": [
+		{
+			"id": "skadi_intro",
+			"trigger": "death",
+			"priority": 62,
+			"conditions": [
+				"deaths >= 12"
+			],
+			"lines": [
+				{
+					"speaker": "skadi",
+					"emotion": "neutral",
+					"text": "Один сказал вытащить тебя с дивана.",
+					"id": "skadi_intro_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Ты кто?! И почему ты такая высокая?",
+					"id": "skadi_intro_02"
+				},
+				{
+					"speaker": "skadi",
+					"emotion": "neutral",
+					"text": "Скади. Я принесла лыжи. Ты встанешь на них, и я тебя вытащу.",
+					"id": "skadi_intro_03"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "Он имел в виду — мотивировать. Это была фигура речи.",
+					"id": "skadi_intro_04"
+				},
+				{
+					"speaker": "skadi",
+					"emotion": "embarrassed",
+					"text": "…Фигура. Речи. Я не умею фигуры. Я умею лыжи.",
+					"id": "skadi_intro_05"
+				},
+				{
+					"speaker": "skadi",
+					"emotion": "neutral",
+					"text": "Тогда я подожду. Пока ты сам встанешь. Я умею ждать. Я с гор.",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Тогда жди долго!",
+							"lines": [
+								{
+									"speaker": "skadi",
+									"emotion": "neutral",
+									"text": "Хорошо.",
+									"id": "skadi_intro_06_snap_01"
+								},
+								{
+									"speaker": "odin",
+									"emotion": "smug",
+									"text": "Она правда будет. Она так тысячу лет стояла на вершине.",
+									"id": "skadi_intro_06_snap_02"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Ладно, встаю, встаю.",
+							"lines": [
+								{
+									"speaker": "skadi",
+									"emotion": "happy",
+									"text": "Ты встал. Значит, лыжи не нужны. Жаль. Хорошие лыжи.",
+									"id": "skadi_intro_06_agree_01"
+								}
+							]
+						}
+					],
+					"id": "skadi_intro_06"
+				}
+			]
+		}
+	],
+	"pools": {
+		"visit": [
+			{
+				"lines": [
+					{
+						"speaker": "skadi",
+						"emotion": "neutral",
+						"text": "Ты опять умер. Это плохо. Я принесла снег. Приложи к голове.",
+						"id": "skadi.visit.01_01"
+					}
+				],
+				"conditions": [
+					"seen:skadi_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "skadi",
+						"emotion": "embarrassed",
+						"text": "Хильд сказала, ты «дедуля». Я проверила. Ты не дед. Ты сын.",
+						"id": "skadi.visit.02_01"
+					}
+				],
+				"conditions": [
+					"seen:skadi_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "skadi",
+						"emotion": "neutral",
+						"text": "В Йотунхейме скользко. Не падай. Если упадёшь — вставай. Это всё.",
+						"id": "skadi.visit.03_01"
+					}
+				],
+				"conditions": [
+					"seen:skadi_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "skadi",
+						"emotion": "happy",
+						"text": "Волк говорит, ты пахнешь смелостью. Ещё чипсами. Но смелостью тоже.",
+						"id": "skadi.visit.04_01"
+					}
+				],
+				"conditions": [
+					"seen:skadi_intro"
+				]
+			}
+		]
+	}
+}

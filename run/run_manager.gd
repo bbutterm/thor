@@ -89,7 +89,11 @@ func start_run(forced_body_id: String = "") -> void:
 			if b.id == forced_body_id:
 				body = b
 	if body == null and not all_bodies.is_empty():
-		body = all_bodies[randi() % all_bodies.size()]
+		# Закрытые в «Плане тренировок» тела не выпадают (Save.is_in_pool)
+		var open_bodies: Array = all_bodies.filter(func(b: BodyDef) -> bool: return Save.is_in_pool("body", b.id))
+		if open_bodies.is_empty():
+			open_bodies = all_bodies
+		body = open_bodies[randi() % open_bodies.size()]
 	if body == null:
 		body = BodyDef.new()
 	var pool := ROOM_SCENES.duplicate()
@@ -166,7 +170,8 @@ func rune_count(id: String) -> int:
 	return n
 
 func random_rune_choices(count: int = 3) -> Array[RuneDef]:
-	var pool := all_runes.duplicate()
+	# Закрытые в «Плане тренировок» руны не выпадают (Save.is_in_pool)
+	var pool := all_runes.filter(func(r: RuneDef) -> bool: return Save.is_in_pool("rune", r.id))
 	pool.shuffle()
 	var out: Array[RuneDef] = []
 	for i in mini(count, pool.size()):
