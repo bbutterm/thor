@@ -157,8 +157,11 @@ func _test_ram() -> void:
 	await press("dash")
 	await wait(0.4)
 	Input.action_release("move_forward")
-	check(barrel.global_position.distance_to(bpos) > 1.0, "таран отбросил бочку (%.1f м)" % barrel.global_position.distance_to(bpos))
-	barrel.queue_free()
+	# Сильно отброшенная бочка разбивается в серебро (блок К) — это тоже «отбросил»
+	var moved := barrel.global_position.distance_to(bpos) if is_instance_valid(barrel) else 99.0
+	check(moved > 1.0, "таран отбросил бочку (%.1f м)" % moved)
+	if is_instance_valid(barrel):
+		barrel.queue_free()
 
 func _test_jumper() -> void:
 	print("-- Прыгун (Скальд): тройной прыжок, 3 отскока от стены, рывка на земле нет")

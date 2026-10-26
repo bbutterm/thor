@@ -433,5 +433,47 @@ if not ONLY or any(p.startswith("music") for p in ONLY):
     tt = mt(1.6)
     st = np.tanh(np.sin(2 * np.pi * np.cumsum(np.linspace(90, 35, len(tt))) / MSR) * np.exp(-tt * 3) * 3) + mhp(mrng.standard_normal(len(tt)), 5000) * np.exp(-tt * 2.5) * 0.3
     save_music("stingers", "slam", st, 0.9)
+# --- Блок К: серебро и ларёк ---
+# Монета: короткий высокий «динь»
+tt = t(0.25)
+save("coin_pickup", sum(np.sin(2 * np.pi * f * tt) * np.exp(-tt * (18 + i * 6)) for i, f in enumerate([2637.0, 3520.0, 5274.0])), 0.4)
+# Покупка: звон монет + колокольчик кассы
+n = int(SR * 0.7)
+jingle = np.zeros(n)
+for pos in [0.0, 0.05, 0.11, 0.16]:
+    p0 = int(SR * pos)
+    seg = t(0.18)
+    jingle[p0:p0 + len(seg)] += sum(np.sin(2 * np.pi * f * seg) * np.exp(-seg * 30) for f in [2400 + pos * 3000, 3300 + pos * 2000]) * 0.5
+tt = t(0.7)
+bell = sum(np.sin(2 * np.pi * f * tt) * np.exp(-tt * (4 + i)) * np.clip((tt - 0.2) * 30, 0, 1) for i, f in enumerate([1318.5, 1975.5]))
+save("shop_buy", jingle + bell * 0.6, 0.55)
+# Нет денег: низкое «бу-бу»
+tt = t(0.4)
+buzz = np.sign(np.sin(2 * np.pi * 110 * tt)) * 0.3 * env(len(tt), 0.01, 1.5)
+save("shop_broke", mix(lp(buzz, 900), thump(0.2, 140, 90) * 0.5), 0.45)
+# Бочка разбилась: треск досок + глухой удар
+n = int(SR * 0.45)
+crack = bp(rng.standard_normal(n), 800, 4000) * env(n, 0.001, 4.0)
+for pos in [0.03, 0.08, 0.15]:
+    p0 = int(SR * pos)
+    m = int(SR * 0.04)
+    crack[p0:p0 + m] += bp(rng.standard_normal(m), 1500, 6000) * np.exp(-np.linspace(0, 6, m))
+save("barrel_break", mix(crack, thump(0.3, 160, 60) * 0.8), 0.7)
+
+# --- Блок Ф: испытания ---
+# Старт испытания: рог (две ноты)
+tt = t(0.9)
+horn = sum(np.sin(2 * np.pi * f * h * tt) / (h * h) for h in range(1, 6) for f in [196.0]) * np.clip(tt * 8, 0, 1) * np.exp(-np.maximum(tt - 0.6, 0) * 8)
+save("trial_start", lp(horn, 2500), 0.6)
+# Испытание пройдено: восходящий аккорд
+tt = t(1.1)
+win = sum(np.sin(2 * np.pi * f * tt) * np.exp(-tt * 2.5) * np.clip((tt - i * 0.09) * 40, 0, 1) for i, f in enumerate([523.25, 659.25, 783.99, 1046.5]))
+save("trial_win", win, 0.55)
+# Провал: «ва-ва-ваа» вниз
+n = int(SR * 1.0)
+tt = t(1.0)
+freq = np.concatenate([np.full(int(SR * 0.25), 330.0), np.full(int(SR * 0.25), 311.0), np.linspace(294.0, 240.0, n - int(SR * 0.5))])
+saw = 2 * ((np.cumsum(freq) / SR) % 1.0) - 1
+save("trial_fail", lp(saw, 1400) * (0.6 + 0.4 * np.sin(2 * np.pi * 6 * tt)) * env(n, 0.01, 0.8), 0.5)
 
 print("Готово:", OUT)

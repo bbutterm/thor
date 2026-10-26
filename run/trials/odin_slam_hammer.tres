@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="TrialDef" format=3]
+
+[ext_resource type="Script" path="res://run/trial_def.gd" id="1_trial"]
+
+[resource]
+script = ExtResource("1_trial")
+id = "odin_slam_hammer"
+host = "odin"
+title = "Только сверху и молотом"
+condition = "Добивай только ударом-приземлением и Мьёльниром"
+kind = "only_sources"
+time_limit = 0.0
+target = 0
+allowed_sources = PackedStringArray("slam", "hammer", "lightning", "fire", "stomp")
+forbidden_sources = PackedStringArray("melee", "melee_finisher", "melee_heavy", "ranged", "dash")
+extra_waves = 0
+reward_glory = 0
+reward_rune = true
+weight = 1.0
