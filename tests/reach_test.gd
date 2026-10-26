@@ -93,10 +93,16 @@ func _run() -> void:
 	await frames(2)
 	Input.action_release("jump")
 	Input.action_press("move_forward")
-	await frames(50)
+	# Залез — отпускаем «вперёд» (с топором бег ×1.1, иначе перелетает башню насквозь)
+	var on_top := false
+	for i in 50:
+		await get_tree().physics_frame
+		if p.is_on_floor() and p.global_position.y > 4.8:
+			on_top = true
+			break
 	Input.action_release("move_forward")
 	await frames(20)
-	var ok2 := p.global_position.y > 4.8
+	var ok2 := on_top and p.global_position.y > 4.8
 	print("[%s] супер+двойной на башню 5 м: y=%.2f" % ["OK" if ok2 else "FAIL", p.global_position.y])
 	if not ok2:
 		fails += 1

@@ -18,6 +18,8 @@
 - `scripts/comic_fx.gd` (автозагрузка `ComicFX`) — комиксовые слова-удары: `ComicFX.pop(event, pos, big)` и хуки `ComicFX.on_*` (однострочные вызовы в player/enemy/mjolnir/enemy_projectile). Словарь, цвета, приоритеты — `data/comic_words.json`; рисованные «взрывы» — `sprites/comic/<событие>.png` или `burst.png` (иначе процедурные); шейдеры `shaders/comic_halftone.gdshader`, `comic_vignette.gdshader`; шрифт `fonts/Bangers-Regular.ttf`. Рисуется в 2D (CanvasLayer 6) с проекцией точки мира; пул слов, общие материалы.
 - `scripts/settings.gd` (`GameSettings`) — настройки игрока в `user://settings.cfg` (секция `[comic]`; чужие секции сохраняются). UI — `ui/settings_panel.gd` (`SettingsPanel`: экран из главного меню + блок `comic_controls()` в паузе).
 - Hit-stop: `FX.real_delta(delta)` — реальная длительность кадра при `Engine.time_scale` ≠ 1 (delta кадра масштабирован значением на НАЧАЛО кадра).
+- **Оружие правой руки (этап 1):** `weapons/weapon_def.gd` (`WeaponDef`, данные в `weapons/defs/*.tres` — новое оружие = новый .tres), `weapon_item.gd` (экземпляр: уровень 1–3, патроны), `weapon_holder.gd` (узел `Player/Weapons`: 2 слота мили/ренж, свитч, подбор по E, патроны; API `player.equip(def)`, `current_weapon()`, `current_melee_style()`), `axe.gd` (теперь любое мили из `WeaponDef`; сильный удар — зажать ЛКМ), `ranged.gd` (`RangedWeapon`: луч, пробитие, отдача, трассеры, гильзы), `loot.gd` (пул выпадения, элита, сундук, патроны, прогрев), `pickup.gd` / `ammo_pickup.gd` / `chest.gd`; HUD — `ui/weapon_hud.gd`. Источник урона: `melee` / `melee_finisher` / `melee_heavy` / `ranged`.
+- Огнестрел — Quaternius Ultimate Gun Pack (FBX) в `assets/quaternius/guns/`, ключи `gun_*` в `WeaponMeshes.GUN_MODELS`; арбалет и болт — процедурные. Кадры всего оружия: `xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 640x360 res://tests/weapon_shots.tscn -- <папка>`.
 
 ## Модели (Quaternius, CC0)
 - `assets/quaternius/characters/` — тела, одежда, волосы, анимации (`gaits.glb` = UAL1, `animations.glb` = UAL2). Скелет у всех один (65 костей, правая кисть `hand_r`).
@@ -50,6 +52,7 @@ godot --headless --path . --fixed-fps 60 res://tests/trait_test.tscn # база 
 godot --headless --path . --fixed-fps 60 res://tests/hitch_test.tscn -- 50  # фризы (CPU-часть)
 godot --headless --path . --fixed-fps 60 res://tests/comic_test.tscn  # комиксовые слова: события, кулдаун, лимит, выключатель
 godot --headless --path . --fixed-fps 60 res://tests/jump_test.tscn   # отскок от удара-приземления, по головам, уступ, от стены
+godot --headless --path . --fixed-fps 60 res://tests/weapon_test.tscn  # оружие: слоты, свитч, подбор, патроны, штрафы
 ```
 Правило: запускать **все** `tests/*_test.tscn` (dialogue_test, save_test и новые тоже), у каждого в конце строка «ИТОГ … 0 FAIL».
 Фризы с рендерингом (Forward+ на программном Vulkan: `apt-get install mesa-vulkan-drivers`):

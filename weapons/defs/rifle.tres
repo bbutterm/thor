@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="WeaponDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_def.gd" id="1_wd"]
+
+[resource]
+script = ExtResource("1_wd")
+id = "rifle"
+display_name = "Автомат"
+description = "Очередь, средний урон; отдача уводит прицел вверх."
+weapon_class = "ranged"
+style = "pierce"
+damage = 5.5
+move_speed_mult = 0.8
+dash_recharge_mult = 1.3
+in_drop_pool = false
+model = "gun_rifle"
+view_offset = Vector3(0.0, 0.0, 0.0)
+view_rotation = Vector3(0.0, 0.0, 0.0)
+view_scale = 1.25
+pickup_scale = 1.6
+view_rest_pos = Vector3(0.3, -0.3, -0.78)
+view_rest_rot = Vector3(0.0, 3.0, 0.0)
+fire_interval = 0.1
+automatic = true
+mag_size = 30
+reserve_start = 60
+reserve_max = 60
+reload_time = 1.6
+spread_deg = 0.7
+spread_per_shot_deg = 0.15
+spread_max_deg = 3.0
+recoil_kick_deg = 1.0
+recoil_climb_deg = 0.35
+muzzle_offset = Vector3(0.0, 0.1, -0.4)
+muzzle_flash_size = 1.1
+sound_fire = "sounds/sfx/gun_rifle.wav"
+sound_reload = "sounds/sfx/gun_reload.wav"
+shake = 0.05

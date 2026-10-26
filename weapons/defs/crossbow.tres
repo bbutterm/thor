@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="WeaponDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_def.gd" id="1_wd"]
+
+[resource]
+script = ExtResource("1_wd")
+id = "crossbow"
+display_name = "Арбалет"
+description = "Медленный, мощный болт пробивает одного врага насквозь."
+weapon_class = "ranged"
+style = "pierce"
+damage = 17.6
+move_speed_mult = 0.8
+dash_recharge_mult = 1.3
+model = "crossbow"
+view_offset = Vector3(0.0, 0.0, 0.0)
+view_rotation = Vector3(0.0, 0.0, 0.0)
+view_scale = 1.0
+pickup_scale = 1.2
+view_rest_pos = Vector3(0.3, -0.32, -0.75)
+view_rest_rot = Vector3(0.0, 3.0, 0.0)
+fire_interval = 0.2
+mag_size = 1
+reserve_start = 12
+reserve_max = 12
+reload_time = 0.75
+pierce = 1
+spread_deg = 0.15
+recoil_kick_deg = 2.0
+tracer = "bolt"
+tracer_speed = 70.0
+shell_casing = false
+muzzle_offset = Vector3(0.0, 0.12, -0.55)
+sound_fire = "sounds/sfx/crossbow_fire.wav"
+sound_reload = "sounds/sfx/crossbow_reload.wav"
+shake = 0.1

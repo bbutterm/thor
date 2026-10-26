@@ -411,9 +411,9 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	health -= damage
 	ComicFX.on_enemy_hit(self, damage, source)
 	_hurt_flash = 1.0
-	var big := source == "axe_finisher" or source == "slam"
-	if source != "fire":
-		FX.sparks(get_parent(), global_position + Vector3(0, 1.1 * model_scale, 0), Color(1, 0.85, 0.4) if source.begins_with("axe") else Color(0.6, 0.85, 1.0), 18 if big else 10, 7.0 if big else 5.0)
+	var big := source == "melee_finisher" or source == "melee_heavy" or source == "slam"
+	if source != "fire" and source != "ranged":
+		FX.sparks(get_parent(), global_position + Vector3(0, 1.1 * model_scale, 0), Color(1, 0.85, 0.4) if source.begins_with("melee") else Color(0.6, 0.85, 1.0), 18 if big else 10, 7.0 if big else 5.0)
 	FX.damage_number(get_parent(), global_position + Vector3(0, 1.8 * model_scale, 0), damage,
 		Color(1, 0.55, 0.2) if big else (Color(0.6, 0.85, 1.0) if source in ["hammer", "lightning"] else Color(1, 0.92, 0.4)), big)
 	var k := knockback * (1.0 - knock_resist)
@@ -427,17 +427,22 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	if k.y > 2.5 and is_on_floor():
 		velocity.y = k.y
 		knockback_velocity.y = 0
-	# Сильные удары сбивают замах (кроме босса)
-	if kind != Kind.BOSS and state == State.WINDUP and (big or source == "hammer"):
+	# Замах сбивают мили и Мьёльнир (ренж — нет); элиту — только сильные удары и молот; босса — ничто
+	var interrupts := big or source == "hammer" or (source.begins_with("melee") and not has_meta("elite"))
+	if kind != Kind.BOSS and state == State.WINDUP and interrupts:
 		if _telegraph and is_instance_valid(_telegraph):
 			_telegraph.queue_free()
 		_set_state(State.RECOVER)
 	if health <= 0.0:
 		_die(source)
 
-## Оглушить на time секунд (босса и мини-босса — нет). Для трейтов и эффектов.
+## Оглушить на time секунд (трейты, эффекты, Мьёльнир — сильное оглушение: элиту тоже). Босса — нет.
 func stun(time: float) -> void:
-	if is_dead or kind == Kind.BOSS:
+	apply_stun(time, true)
+
+## Оглушение оружием (дубина и т. п.). Элиту и босса — только сильным ударом (strong), босса — никогда.
+func apply_stun(time: float, strong: bool = false) -> void:
+	if is_dead or kind == Kind.BOSS or time <= 0.0 or (has_meta("elite") and not strong):
 		return
 	if _telegraph and is_instance_valid(_telegraph):
 		_telegraph.queue_free()
@@ -529,10 +534,11 @@ func _die(source: String) -> void:
 		_telegraph.queue_free()
 	var now := Time.get_ticks_msec() / 1000.0
 	# Мини-босс — тоже Kind.BOSS (поведение босса), но Славу за него даёт MinibossDef
-	Run.register_kill(source == "axe_finisher", now - _last_splat_time < 0.6, kind == Kind.BOSS and not has_meta("miniboss"))
+	Run.register_kill(source == "melee_finisher", now - _last_splat_time < 0.6, kind == Kind.BOSS and not has_meta("miniboss"), source)
 	ComicFX.on_enemy_killed(self, source)
 	if player and is_instance_valid(player) and not player.is_dead:
-		player.heal(player.heal_per_kill)
+		player.heal(player.kill_heal(source))
+	Loot.on_enemy_died(self, source)
 	Audio.play("sounds/enemy_destroy.ogg")
 	_spawn_debris()
 	died.emit(self)

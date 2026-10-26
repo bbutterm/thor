@@ -88,10 +88,10 @@ func _run() -> void:
 	await wait(0.6 - slam_frames / 60.0 - 0.1)
 	await shot("05_slam")
 	for en in game.room.alive_enemies().duplicate():
-		en.take_hit(9999, Vector3(0, 2, -6), "axe_finisher")
+		en.take_hit(9999, Vector3(0, 2, -6), "melee_finisher")
 	await wait(1.4)
 	for en in game.room.alive_enemies().duplicate():
-		en.take_hit(9999, Vector3(0, 2, -6), "axe_finisher")
+		en.take_hit(9999, Vector3(0, 2, -6), "melee_finisher")
 	await wait(2.0)
 	await shot("06_rune_pick")
 	game.rune_pick._open_time = -10.0

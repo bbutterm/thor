@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Синтез звуков прототипа (свои, CC0). Запуск: python3 tools/make_sfx.py
-Пишет WAV в sounds/sfx/. Всё процедурно: шум + фильтры + огибающие."""
+"""Синтез звуков прототипа (свои, CC0). Запуск: python3 tools/make_sfx.py [префикс ...]
+Пишет WAV в sounds/sfx/. Всё процедурно: шум + фильтры + огибающие.
+С префиксами пишет только звуки, чьи имена с них начинаются (например: python3 tools/make_sfx.py gun_ crossbow_)."""
 import os
+import sys
 import numpy as np
 from scipy.signal import butter, sosfilt
 from scipy.io import wavfile
@@ -10,6 +12,7 @@ SR = 44100
 OUT = os.path.join(os.path.dirname(__file__), "..", "sounds", "sfx")
 os.makedirs(OUT, exist_ok=True)
 rng = np.random.default_rng(7)
+ONLY = sys.argv[1:]
 
 
 def t(dur):
@@ -63,6 +66,8 @@ def mix(*parts):
 
 
 def save(name, sig, gain=0.9):
+    if ONLY and not any(name.startswith(p) for p in ONLY):
+        return
     sig = sig / (np.max(np.abs(sig)) + 1e-9) * gain
     fade = min(len(sig), int(SR * 0.004))
     sig[-fade:] *= np.linspace(1, 0, fade)
@@ -187,4 +192,70 @@ save("hammer_stick", thump(0.35, 130, 40) * 1.3 + bp(rng.standard_normal(n), 400
 tt = t(0.7)
 ding = sum(np.sin(2 * np.pi * f * tt) * np.exp(-tt * (5 + 3 * i)) / (1 + i) for i, f in enumerate([1568.0, 2349.3, 3136.0]))
 save("perfect_catch", mix(ding, metal(0.4, 900) * 0.3), 0.6)
+# ---------------- Оружие (этап 1) ----------------
+# Отдельный генератор шума, чтобы новые звуки не сдвигали старые
+rng = np.random.default_rng(101)
+
+
+def gunshot(dur, body_f0, body_f1, crack_lo, crack_hi, tail=0.6, crack=1.0):
+    """Выстрел: щелчок-трескотня + «тело» + хвост реверберации."""
+    n = int(SR * dur)
+    noise = rng.standard_normal(n)
+    snap = bp(noise, crack_lo, crack_hi) * env(n, 0.0005, 7.0) * crack
+    body = thump(dur, body_f0, body_f1) * 1.2
+    tl = lp(rng.standard_normal(n), 1800) * env(n, 0.002, 2.2) * tail
+    return mix(snap, body, tl)
+
+
+save("gun_pistol", gunshot(0.32, 220, 70, 1500, 7000, 0.5), 0.8)
+save("gun_smg", gunshot(0.16, 260, 110, 2000, 8000, 0.25, 0.9), 0.7)
+save("gun_rifle", gunshot(0.28, 180, 60, 1200, 6500, 0.55, 1.1), 0.85)
+save("gun_shotgun", gunshot(0.6, 120, 35, 600, 5000, 1.0, 1.3), 1.0)
+
+# Пустой магазин — сухой щелчок
+tt = t(0.06)
+save("gun_empty", np.sin(2 * np.pi * 2400 * tt) * np.exp(-tt * 120) + bp(rng.standard_normal(len(tt)), 3000, 9000) * np.exp(-tt * 90) * 0.5, 0.45)
+
+# Перезарядка: щелчок магазина + лязг затвора
+n = int(SR * 0.5)
+clk = np.zeros(n)
+for pos, f in [(0.02, 1800), (0.30, 1300), (0.38, 2200)]:
+    p0 = int(SR * pos)
+    seg = t(0.06)
+    clk[p0:p0 + len(seg)] += (np.sin(2 * np.pi * f * seg) + bp(rng.standard_normal(len(seg)), 2000, 8000) * 0.6) * np.exp(-seg * 70)
+save("gun_reload", clk, 0.55)
+
+# Арбалет: хлёсткий «твонк» тетивы + свист болта
+tt = t(0.35)
+twang = np.sin(2 * np.pi * (180 + 80 * np.exp(-tt * 20)) * tt) * np.exp(-tt * 10)
+save("crossbow_fire", mix(twang, whoosh(0.25, 1200, 3000) * 0.6, thump(0.08, 300, 120) * 0.5), 0.75)
+# Взвод арбалета: скрип + щелчок
+n = int(SR * 0.6)
+creak = bp(rng.standard_normal(n), 300, 1200) * (0.5 + 0.5 * np.sin(2 * np.pi * 18 * t(0.6))) * np.linspace(0.2, 1.0, n) * 0.5
+seg = t(0.05)
+click = np.zeros(n)
+click[n - len(seg):] = np.sin(2 * np.pi * 1600 * seg) * np.exp(-seg * 80)
+save("crossbow_reload", creak + click, 0.55)
+
+# Свитч оружия: короткий «вжух» + стук
+save("weapon_switch", mix(whoosh(0.12, 700, 2200) * 0.6, thump(0.08, 260, 140) * 0.4), 0.45)
+# Подбор оружия: металлический «клинк»
+save("weapon_pickup", mix(metal(0.4, 640) * 0.8, thump(0.1, 220, 120) * 0.4), 0.6)
+# Подбор патронов: два коротких щелчка
+n = int(SR * 0.22)
+cl2 = np.zeros(n)
+for pos in [0.0, 0.09]:
+    p0 = int(SR * pos)
+    seg = t(0.05)
+    cl2[p0:p0 + len(seg)] += np.sin(2 * np.pi * 1900 * seg) * np.exp(-seg * 90)
+save("ammo_pickup", cl2, 0.5)
+# Сундук появился: звон
+tt = t(0.9)
+save("chest_appear", sum(np.sin(2 * np.pi * f * tt) * np.exp(-tt * (3 + i)) for i, f in enumerate([880, 1320, 1760])), 0.45)
+# Сундук открыт: скрип петель + аккорд
+n = int(SR * 0.8)
+hinge = bp(rng.standard_normal(n), 500, 1600) * np.sin(np.pi * np.linspace(0, 1, n)) * (0.6 + 0.4 * np.sin(2 * np.pi * 11 * t(0.8)))
+tt = t(0.8)
+chord = sum(np.sin(2 * np.pi * f * tt) * np.exp(-tt * (2.5 + i)) * np.clip((tt - 0.25) * 20, 0, 1) for i, f in enumerate([392.0, 493.9, 587.3]))
+save("chest_open", hinge * 0.5 + chord, 0.6)
 print("Готово:", OUT)

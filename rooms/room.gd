@@ -15,6 +15,13 @@ signal boss_spawned(boss: Enemy)
 ## Пауза между появлением врагов одной волны (с)
 @export var spawn_interval: float = 0.12
 
+@export_group("Оружие и элита")
+## Шанс, что враг (не босс) появится элитой: светится, ×2.5 HP, роняет оружие
+@export_range(0.0, 1.0) var elite_chance: float = 0.1
+@export var max_elites: int = 1
+## Шанс сундука с оружием после зачистки (в первом зале — всегда, у босса — никогда)
+@export_range(0.0, 1.0) var chest_chance: float = 0.5
+
 const ENEMY_SCENES := {
 	"grunt": "res://enemies/grunt.tscn",
 	"thrower": "res://enemies/thrower.tscn",
@@ -30,6 +37,7 @@ var _is_cleared: bool = false
 var door_open: bool = false
 var _spawn_queue: Array = []
 var _spawn_timer: float = 0.0
+var _last_death_pos: Vector3 = Vector3.INF
 
 @onready var spawns: Node3D = $Spawns
 @onready var door: Node3D = get_node_or_null("Door")
@@ -103,6 +111,7 @@ func _spawn_enemy(marker: Node3D) -> void:
 	# Позиция до add_child: в _ready враг рисует кольцо появления там, где стоит
 	enemy.position = to_local(marker.global_position)
 	enemy.rotation.y = marker.global_rotation.y - global_rotation.y
+	Loot.maybe_make_elite(self, enemy, elite_chance, max_elites)
 	add_child(enemy)
 	enemy.player = _player
 	enemy.died.connect(_on_enemy_died)
@@ -117,6 +126,7 @@ func pending_spawns() -> int:
 
 func _on_enemy_died(enemy: Enemy) -> void:
 	_alive.erase(enemy)
+	_last_death_pos = enemy.global_position
 	enemy_count_changed.emit(_alive.size() + _spawn_queue.size())
 	_check_clear()
 
@@ -129,6 +139,7 @@ func _check_clear() -> void:
 		get_tree().create_timer(wave_delay, false).timeout.connect(func() -> void: _spawn_wave(idx))
 	else:
 		_is_cleared = true
+		_spawn_chest()
 		cleared.emit()
 
 func alive_count() -> int:
@@ -152,3 +163,10 @@ func open_door() -> void:
 func _on_exit_body_entered(body: Node) -> void:
 	if door_open and body is Player:
 		exit_reached.emit()
+
+## Сундук с оружием там, где пал последний враг (или у точки входа).
+func _spawn_chest() -> void:
+	var pos := _last_death_pos
+	if pos == Vector3.INF:
+		pos = get_spawn_transform().origin + get_spawn_transform().basis.z * -4.0
+	Loot.on_room_cleared(self, pos, chest_chance)

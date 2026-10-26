@@ -80,6 +80,8 @@ signal slammed(power: float)
 @export var max_health: float = 100.0
 ## Лечение за каждое убийство — поощряет агрессию
 @export var heal_per_kill: float = 3.0
+## Дополнительное лечение, если добил мили (GDD 8: +2 HP)
+@export var melee_kill_heal: float = 2.0
 
 var health: float = 100.0
 var is_dead: bool = false
@@ -129,9 +131,12 @@ var hammer_damage_mult: float = 1.0
 @onready var axe: Axe = $Axe
 @onready var mjolnir: MjolnirHand = $Mjolnir
 @onready var footsteps: AudioStreamPlayer = $Footsteps
+## Слоты оружия правой руки (мили + ренж), см. weapons/weapon_holder.gd
+var weapons: WeaponHolder
 
 func _ready() -> void:
 	add_to_group("player")
+	_setup_weapons()
 	health = max_health
 	dash_charges_max = dash_charges_base
 	dash_charges = dash_charges_max
@@ -148,6 +153,7 @@ func apply_body_and_runes(body: BodyDef, run: Node) -> void:
 		hammer_damage_mult = body.hammer_damage_mult
 		axe.set_hand_color(body.hand_color, body.sleeve_color)
 		mjolnir.set_hand_color(body.hand_color, body.sleeve_color)
+		weapons.apply_body(body)
 	recalc_from_runes(run, true)
 
 func recalc_from_runes(run: Node, full_heal: bool = false) -> void:
@@ -273,19 +279,21 @@ func _update_timers(delta: float) -> void:
 	_climb_check_cooldown = maxf(0.0, _climb_check_cooldown - delta)
 	if dash_charges < dash_charges_max:
 		_dash_recharge_timer += delta
-		if _dash_recharge_timer >= dash_recharge:
+		if _dash_recharge_timer >= dash_recharge * weapon_dash_recharge_mult():
 			_dash_recharge_timer = 0.0
 			dash_charges += 1
-		dash_charges_changed.emit(dash_charges, dash_charges_max, _dash_recharge_timer / dash_recharge)
+		dash_charges_changed.emit(dash_charges, dash_charges_max, _dash_recharge_timer / (dash_recharge * weapon_dash_recharge_mult()))
 	else:
 		_dash_recharge_timer = 0.0
 
 func _process_walk(wish: Vector3, on_floor: bool, delta: float) -> void:
+	# Скорость бега с учётом оружия в руке (мили быстрее, ренж медленнее)
+	var ms := effective_move_speed()
 	var horiz := Vector3(velocity.x, 0, velocity.z)
-	var target := wish * move_speed
+	var target := wish * ms
 	var speed := horiz.length()
 	if on_floor:
-		if speed > move_speed * 1.05:
+		if speed > ms * 1.05:
 			# Скорость выше нормы (после рывка/супер-прыжка) — гасим плавно
 			horiz = horiz.move_toward(target, ground_overspeed_drag * delta)
 		elif wish != Vector3.ZERO:
@@ -294,14 +302,14 @@ func _process_walk(wish: Vector3, on_floor: bool, delta: float) -> void:
 			horiz = horiz.move_toward(Vector3.ZERO, ground_decel * delta)
 	else:
 		if wish != Vector3.ZERO:
-			if speed > move_speed:
+			if speed > ms:
 				# Сохраняем инерцию, но позволяем рулить
 				var steered := horiz.move_toward(wish * speed, air_accel * delta)
-				horiz = steered.normalized() * maxf(move_speed, speed - air_overspeed_drag * delta)
+				horiz = steered.normalized() * maxf(ms, speed - air_overspeed_drag * delta)
 			else:
 				horiz = horiz.move_toward(target, air_accel * delta)
-		elif speed > move_speed:
-			horiz = horiz.move_toward(horiz.normalized() * move_speed, air_overspeed_drag * delta)
+		elif speed > ms:
+			horiz = horiz.move_toward(horiz.normalized() * ms, air_overspeed_drag * delta)
 	velocity.x = horiz.x
 	velocity.z = horiz.z
 
@@ -674,3 +682,45 @@ func is_dashing() -> bool:
 
 func horizontal_speed() -> float:
 	return Vector2(velocity.x, velocity.z).length()
+
+# --- Оружие правой руки (этап 1) ---
+
+func _setup_weapons() -> void:
+	weapons = get_node_or_null("Weapons") as WeaponHolder
+	if weapons == null:
+		weapons = WeaponHolder.new()
+		weapons.name = "Weapons"
+		add_child(weapons)
+
+## Скорость бега с учётом оружия в руке.
+func effective_move_speed() -> float:
+	return move_speed * weapon_move_mult()
+
+func weapon_move_mult() -> float:
+	return weapons.move_speed_mult() if weapons else 1.0
+
+func weapon_dash_recharge_mult() -> float:
+	return weapons.dash_recharge_mult() if weapons else 1.0
+
+## Взять оружие (встанет в слот своего класса). drop_old — старое упадёт на пол.
+func equip(def: WeaponDef, level: int = 1, drop_old: bool = false) -> WeaponItem:
+	return weapons.equip(def, level, drop_old)
+
+## Активное оружие (WeaponDef) и экземпляр (уровень, патроны).
+func current_weapon() -> WeaponDef:
+	return weapons.current_def() if weapons else null
+
+func current_weapon_item() -> WeaponItem:
+	return weapons.current() if weapons else null
+
+## Ренж в руке (для прыжка по головам, залезания, причины смерти).
+func is_ranged_active() -> bool:
+	return weapons.is_ranged_active() if weapons else false
+
+## Стиль мили в слоте: blade / blunt / pierce (для слов-ударов этапа 4).
+func current_melee_style() -> String:
+	return weapons.melee_style() if weapons else "blade"
+
+## Лечение за убийство: базовое + бонус за добивание мили.
+func kill_heal(source: String) -> float:
+	return heal_per_kill + (melee_kill_heal if source.begins_with("melee") else 0.0)

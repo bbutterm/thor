@@ -41,6 +41,8 @@ func _build() -> void:
 	for path in ["res://enemies/grunt.tscn", "res://enemies/thrower.tscn", "res://enemies/boss.tscn"]:
 		var e := (load(path) as PackedScene).instantiate() as Enemy
 		e.process_mode = Node.PROCESS_MODE_DISABLED
+		if i == 0:
+			Loot.make_elite(e)
 		e.position = right * (i - 1) * 0.9
 		add_child(e)
 		e.remove_from_group("enemies")
@@ -77,6 +79,11 @@ func _build() -> void:
 		add_child(wpn)
 		wpn.position = right * (wi * 0.15 - 1.3) + Vector3(0, 1.2, 0)
 		wi += 1
+	# Оружие этапа 1: ренж, подбор, сундук, трассеры, гильзы, вспышка; и то же во вьюмодели рук
+	Loot.warmup_samples(self, right)
+	var pl := game_node.get("player") as Player if game_node else null
+	if pl and pl.weapons:
+		pl.weapons.warmup_viewmodel(FRAMES)
 	# Эффекты
 	var p := center + Vector3(0, 1.0, 0)
 	FX.damage_number(game, p, 12)

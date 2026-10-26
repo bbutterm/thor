@@ -1,6 +1,8 @@
 [gd_resource type="Resource" script_class="BodyDef" format=3]
 
 [ext_resource type="Script" path="res://run/body_def.gd" id="1_ngowi"]
+[ext_resource type="Resource" path="res://weapons/defs/knife.tres" id="2_melee"]
+[ext_resource type="Resource" path="res://weapons/defs/crossbow.tres" id="3_ranged"]
 
 [resource]
 script = ExtResource("1_ngowi")
@@ -14,3 +16,5 @@ axe_damage_mult = 0.9
 hammer_damage_mult = 1.2
 hand_color = Color(0.9, 0.76, 0.64, 1)
 sleeve_color = Color(0.32, 0.42, 0.28, 1)
+start_melee = ExtResource("2_melee")
+start_ranged = ExtResource("3_ranged")
