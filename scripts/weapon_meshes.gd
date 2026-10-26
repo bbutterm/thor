@@ -55,6 +55,12 @@ static func mat(kind: String) -> StandardMaterial3D:
 			m.emission_enabled = true
 			m.emission = Color(0.3, 0.7, 1.0)
 			m.emission_energy_multiplier = 1.6
+		"gunmetal":
+			# Воронёная сталь огнестрела
+			m.uv1_triplanar = false
+			m.albedo_color = Color(0.3, 0.31, 0.34)
+			m.metallic = 0.5
+			m.roughness = 0.45
 		"curse":
 			m.albedo_color = Color(0.7, 0.25, 1.0)
 			m.emission_enabled = true
@@ -265,7 +271,87 @@ static func build(kind: String, layer: int = 1) -> Node3D:
 		"pitchfork": n = pitchfork(layer)
 		"torch": n = torch(layer)
 		"shield": n = shield(layer)
+		"crossbow": n = crossbow(layer)
+		"bolt": n = bolt(layer)
 		_:
+			if GUN_MODELS.has(kind):
+				return gun(kind, layer)
 			n = model(kind, layer) if MODEL_WEAPONS.has(kind) else Node3D.new()
 	# Хват в кисти Quaternius: рукоять вдоль пальцев
 	return n
+
+# ---------------- Ренж (этап 1) ----------------
+
+const QG := "res://assets/quaternius/guns/"
+## Огнестрел Quaternius Ultimate Gun Pack (CC0): [файл, масштаб]. В файле ствол вдоль +X, начало координат — у рукояти.
+const GUN_MODELS := {
+	"gun_pistol": ["Pistol_1.fbx", 0.12],
+	"gun_smg": ["SubmachineGun_1.fbx", 0.12],
+	"gun_rifle": ["AssaultRifle_1.fbx", 0.13],
+	"gun_shotgun": ["Shotgun_SawedOff.fbx", 0.12],
+}
+
+## Огнестрел: рукоять вдоль +Y от точки хвата, ствол в -Z (как у остального оружия). Материалы — наши.
+static func gun(kind: String, layer: int = 1) -> Node3D:
+	var r := Node3D.new()
+	r.name = kind
+	var d: Array = GUN_MODELS[kind]
+	var path: String = QG + str(d[0])
+	if not ResourceLoader.exists(path):
+		return r
+	var inst := (load(path) as PackedScene).instantiate() as Node3D
+	inst.rotation_degrees = Vector3(0, 90, 0)
+	inst.scale = Vector3.ONE * float(d[1])
+	# Кулак держит середину рукояти, а не её верх
+	inst.position = Vector3(0, 0.2 * float(d[1]), 0)
+	r.add_child(inst)
+	for mi in inst.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		m.layers = layer
+		if layer == 2:
+			m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		for sidx in m.mesh.get_surface_count():
+			var src := m.mesh.surface_get_material(sidx)
+			var n := src.resource_name.to_lower() if src else ""
+			var mm: Material = mat("gunmetal")
+			if n.contains("wood"):
+				mm = mat("leather") if n.contains("dark") else mat("wood")
+			elif n.contains("light") or n == "metal":
+				mm = mat("iron")
+			elif n.contains("grey") or n.contains("gray"):
+				mm = mat("steel")
+			m.set_surface_override_material(sidx, mm)
+	return r
+
+## Арбалет одной рукой: ложе вперёд (-Z), плечи поперёк, болт сверху.
+static func crossbow(layer: int = 1) -> Node3D:
+	var r := Node3D.new()
+	r.name = "Crossbow"
+	# Рукоять (под кулак) и ложе
+	_add(r, _box(Vector3(0.035, 0.12, 0.045)), Vector3(0, -0.01, 0.0), mat("leather"), Vector3(-12, 0, 0), layer)
+	_add(r, _box(Vector3(0.055, 0.06, 0.62)), Vector3(0, 0.075, -0.2), mat("wood"), Vector3.ZERO, layer)
+	_add(r, _box(Vector3(0.04, 0.05, 0.12)), Vector3(0, 0.06, 0.12), mat("wood"), Vector3(10, 0, 0), layer)
+	# Спусковая скоба
+	_add(r, _box(Vector3(0.012, 0.012, 0.07)), Vector3(0, 0.03, -0.05), mat("iron"), Vector3.ZERO, layer)
+	# Плечи (лук) с изгибом назад
+	for sx in [-1.0, 1.0]:
+		_add(r, _box(Vector3(0.3, 0.03, 0.03)), Vector3(sx * 0.15, 0.085, -0.5), mat("iron"), Vector3(0, sx * 14.0, 0), layer)
+	# Тетива
+	for sx in [-1.0, 1.0]:
+		_add(r, _box(Vector3(0.006, 0.006, 0.36)), Vector3(sx * 0.15, 0.095, -0.37), mat("leather"), Vector3(0, sx * 55.0, 0), layer)
+	# Наконечник ложа и стремя
+	_add(r, _box(Vector3(0.07, 0.07, 0.03)), Vector3(0, 0.075, -0.52), mat("iron"), Vector3.ZERO, layer)
+	var b := bolt(layer)
+	b.position = Vector3(0, 0.12, -0.3)
+	r.add_child(b)
+	return r
+
+## Болт арбалета: древко вдоль -Z (наконечник впереди), длина ~0.42 м.
+static func bolt(layer: int = 1) -> Node3D:
+	var r := Node3D.new()
+	r.name = "Bolt"
+	_add(r, _cyl(0.008, 0.008, 0.38), Vector3(0, 0, 0), mat("wood"), Vector3(-90, 0, 0), layer)
+	_add(r, _cyl(0.0, 0.018, 0.06), Vector3(0, 0, -0.21), mat("steel"), Vector3(-90, 0, 0), layer)
+	_add(r, _box(Vector3(0.002, 0.03, 0.06)), Vector3(0, 0, 0.16), mat("leather"), Vector3.ZERO, layer)
+	_add(r, _box(Vector3(0.03, 0.002, 0.06)), Vector3(0, 0, 0.16), mat("leather"), Vector3.ZERO, layer)
+	return r

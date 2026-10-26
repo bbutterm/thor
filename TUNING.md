@@ -78,3 +78,40 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 ## Реплики Одина — `data/odin_lines.json`
 
 Обычный JSON: событие → список фраз. Добавляй сколько хочешь.
+
+## Оружие правой руки (этап 1) — `weapons/defs/*.tres` (`weapons/weapon_def.gd`)
+
+Каждое оружие — отдельный ресурс: дублируй `.tres`, поменяй поля — оружие появится само (в пуле выпадения, если `in_drop_pool`). 1 У (GDD) = 22 урона.
+
+| Оружие | Урон | Скорость | Бег | Особое | В пуле |
+|---|---|---|---|---|---|
+| Топор `axe` | 22 (1 У), комбо 3: ×1 ×1 ×2.2 | 1.0 | ×1.1 | — | да |
+| Меч `sword` | 15.4 (0.7 У), комбо 4: ×1 ×1 ×1 ×1.8 | 1.3 | ×1.1 | `special = parry` (пока не сделано) | да |
+| Дубина `club` | 28.6 (1.3 У) | 0.75 | ×1.0 | `stun_on_hit` 1.5 с, `knockback_mult` 1.6 | да |
+| Копьё `spear` | 19.8 (0.9 У), тычки | 1.0 | ×1.05 | `reach` 1.8 (≈3.5 м), `max_targets` 3 | нет |
+| Коса `scythe` | 17.6 (0.8 У) | 0.8 | ×1.0 | `arc` 1.8 (широкая дуга) | нет |
+| Кирка `pickaxe` | 26.4 (1.2 У) | 0.75 | ×1.0 | `stunned_mult` 2 (×2 по оглушённым) | нет |
+| Нож `knife` | 11 (0.5 У), тычки | 1.7 | ×1.2 | `backstab_mult` 3 | нет (старт Охотника) |
+| Арбалет `crossbow` | 17.6 (0.8 У) | 1 / 12, ~0.95 с на выстрел | ×0.8 | `pierce` 1 | да |
+| Пистолет `pistol` | 6.6 (0.3 У) | 8 / 40, 0.17 с | ×0.8 | точный | да |
+| Пистолет-пулемёт `smg` | 3.3 (0.15 У) | 30 / 90, 0.07 с | ×0.8 | разброс растёт `spread_per_shot_deg` | нет |
+| Автомат `rifle` | 5.5 (0.25 У) | 30 / 60, 0.1 с | ×0.8 | `recoil_climb_deg` 0.35 — прицел уходит вверх | нет |
+| Обрез `shotgun` | 6 × 2.64 (0.12 У) | 2 / 16, перезарядка 1.6 с | ×0.8 | дробь, `spread_deg` 6 | нет |
+
+Поля мили: `attack_speed` (делитель базовых таймингов топора), `reach` (ход хитбокса вперёд), `arc` (ширина хитбокса), `combo_count`, `stage_damage_mult`, `swing_set` (slash/thrust), `knockback_mult`, `max_targets`, `stun_on_hit`, `backstab_mult` (в спину, по умолчанию 1.5), `stunned_mult`, `heavy_damage_mult` 2 / `heavy_windup` 0.4 (сильный удар — зажать ЛКМ), `hitstop_mult`.
+Поля ренжа: `fire_interval`, `automatic`, `pellets`, `spread_deg` / `spread_per_shot_deg` / `spread_max_deg` / `spread_recover`, `recoil_kick_deg` (отдача камеры), `recoil_climb_deg`, `mag_size`, `reserve_start` / `reserve_max`, `reload_time`, `pierce`, `max_range`, `fire_move_mult` 0.65 (бег во время стрельбы), `tracer` / `tracer_speed`, `shell_casing`, `muzzle_offset`.
+Общие: `move_speed_mult` (мили ≥ 1, ренж 0.8), `dash_recharge_mult` (ренж 1.3 — рывок на 30 % дольше), вид в руке `view_*`, на полу `pickup_scale`.
+**Уровень оружия 1–3:** +20 % урона за уровень (`WeaponDef.level_mult`).
+
+### Узел **Weapons** игрока (`weapons/weapon_holder.gd`)
+`switch_time` 0.25 (свитч), `auto_switch_on_empty` (пустой ренж без запаса → мили), `auto_reload`, `interact_radius` 2.4 (подбор по E), `ammo_pickup_radius` 1.4, `ammo_box_fraction` 0.4 (ящик = 40 % запаса), `ammo_drop_chance` 0.15 (метатели ×2), `drop_all_weapons` false (true — в пуле всё оружие, а не только стартовое GDD), `drop_level2_chance` 0.2 / `drop_level3_chance` 0.05, `fire_slow_time` 0.3 (сколько длится замедление «при стрельбе»), `prop_bullet_impulse` 1.2, `max_casings` 24, `casing_lifetime` 2, `max_tracers` 40, `bolt_stick_time` 1.5.
+
+### Мили-удары — узел **Axe** (`weapons/axe.gd`)
+Базовые тайминги и отдача (массивы ступеней выше) — общие для всего мили; оружие масштабирует их своим `attack_speed`. Урон теперь берётся из `WeaponDef.damage` (поле `base_damage` — только запасной вариант без оружия).
+Сильный удар: `heavy_hold_time` 0.28 (сколько держать ЛКМ), `heavy_active` 0.14, `heavy_recovery` 0.36, `heavy_knockback` 15, `heavy_knock_up` 6, `heavy_hitstop` 0.09, `heavy_shake` 0.45.
+
+### Прочее
+- Камера: `recoil_return_speed` 14 (как быстро гаснет отдача).
+- Игрок: `melee_kill_heal` 2 (добивание мили лечит 3 + 2 HP).
+- Забег: `glory_melee_kill_mult` 1.5, `glory_ranged_kill_mult` 0.5 (Слава за убийство мили/ренжем).
+- Залы: `elite_chance` 0.1, `max_elites` 1 (элита: ×2.5 HP, урон ×1.5, золотая метка, роняет оружие 60 % мили / 40 % ренж), `chest_chance` 0.5 (сундук после зачистки; в первом зале всегда, у босса нет).

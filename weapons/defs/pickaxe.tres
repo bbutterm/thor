@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="WeaponDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_def.gd" id="1_wd"]
+
+[resource]
+script = ExtResource("1_wd")
+id = "pickaxe"
+display_name = "Кирка"
+description = "Медленная. По оглушённым — ×2."
+weapon_class = "melee"
+style = "pierce"
+damage = 26.4
+move_speed_mult = 1.0
+in_drop_pool = false
+model = "q_pickaxe"
+view_offset = Vector3(0.0, -0.15, 0.0)
+view_rotation = Vector3(0.0, 90.0, 0.0)
+view_scale = 1.15
+pickup_scale = 1.1
+attack_speed = 0.75
+stunned_mult = 2.0
+combo_count = 3
+stage_damage_mult = Array[float]([1.0, 1.0, 2.0])
+hitstop_mult = 1.1
+view_rest_pos = Vector3(0.46, -0.36, -0.95)
+view_rest_rot = Vector3(-8.0, 12.0, -14.0)

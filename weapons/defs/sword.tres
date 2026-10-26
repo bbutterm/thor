@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_def.gd" id="1_wd"]
+
+[resource]
+script = ExtResource("1_wd")
+id = "sword"
+display_name = "Меч"
+description = "Быстрый, комбо из 4 ударов. (Парирование — позже.)"
+weapon_class = "melee"
+style = "blade"
+damage = 15.4
+move_speed_mult = 1.1
+special = "parry"
+model = "q_sword"
+view_offset = Vector3(0.0, -0.06, 0.0)
+view_rotation = Vector3(0.0, 90.0, 0.0)
+view_scale = 1.15
+pickup_scale = 1.1
+attack_speed = 1.3
+combo_count = 4
+stage_damage_mult = Array[float]([1.0, 1.0, 1.0, 1.8])
+hitstop_mult = 0.85
+view_rest_pos = Vector3(0.46, -0.36, -0.95)
+view_rest_rot = Vector3(-8.0, 12.0, -14.0)

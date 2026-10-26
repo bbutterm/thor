@@ -13,6 +13,8 @@
 - `scripts/perf.gd` (автозагрузка `Perf`) — F3-оверлей, лог фризов `user://hitches.log`, `Perf.mark("событие")` в игровом коде, счётчики компиляций пайплайнов (`pso_draw` = фриз на отрисовке).
 - `scripts/asset_cache.gd` (`AssetCache`) — фоновая загрузка и удержание моделей/анимаций/звуков (старт в `Run._ready`, ожидание в `Game._ready`).
 - `scripts/shader_warmup.gd` (`ShaderWarmup`) — прогрев шейдеров при входе в каждый зал (под затемнением).
+- **Оружие правой руки (этап 1):** `weapons/weapon_def.gd` (`WeaponDef`, данные в `weapons/defs/*.tres` — новое оружие = новый .tres), `weapon_item.gd` (экземпляр: уровень 1–3, патроны), `weapon_holder.gd` (узел `Player/Weapons`: 2 слота мили/ренж, свитч, подбор по E, патроны; API `player.equip(def)`, `current_weapon()`, `current_melee_style()`), `axe.gd` (теперь любое мили из `WeaponDef`; сильный удар — зажать ЛКМ), `ranged.gd` (`RangedWeapon`: луч, пробитие, отдача, трассеры, гильзы), `loot.gd` (пул выпадения, элита, сундук, патроны, прогрев), `pickup.gd` / `ammo_pickup.gd` / `chest.gd`; HUD — `ui/weapon_hud.gd`. Источник урона: `melee` / `melee_finisher` / `melee_heavy` / `ranged`.
+- Огнестрел — Quaternius Ultimate Gun Pack (FBX) в `assets/quaternius/guns/`, ключи `gun_*` в `WeaponMeshes.GUN_MODELS`; арбалет и болт — процедурные. Кадры всего оружия: `xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 640x360 res://tests/weapon_shots.tscn -- <папка>`.
 
 ## Модели (Quaternius, CC0)
 - `assets/quaternius/characters/` — тела, одежда, волосы, анимации (`gaits.glb` = UAL1, `animations.glb` = UAL2). Скелет у всех один (65 костей, правая кисть `hand_r`).
@@ -42,6 +44,7 @@ godot --headless --path . --fixed-fps 60 res://tests/smoke_test.tscn # полн�
 godot --headless --path . --fixed-fps 60 res://tests/reach_test.tscn # достижимость платформ
 godot --headless --path . --fixed-fps 60 res://tests/ai_test.tscn    # враги доходят и бьют во всех залах
 godot --headless --path . --fixed-fps 60 res://tests/hitch_test.tscn -- 50  # фризы (CPU-часть)
+godot --headless --path . --fixed-fps 60 res://tests/weapon_test.tscn  # оружие: слоты, свитч, подбор, патроны, штрафы
 ```
 Фризы с рендерингом (Forward+ на программном Vulkan: `apt-get install mesa-vulkan-drivers`):
 `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json xvfb-run -a godot --path . --fixed-fps 60 --rendering-method forward_plus --resolution 320x180 res://tests/hitch_test.tscn -- 50` (и то же с `gl_compatibility`). Прогон ~10 мин; кадры без событий — шум программного рендера, не считаются.

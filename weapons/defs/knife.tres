@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WeaponDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_def.gd" id="1_wd"]
+
+[resource]
+script = ExtResource("1_wd")
+id = "knife"
+display_name = "Нож"
+description = "Очень быстрый, ×3 в спину, бегаешь быстрее."
+weapon_class = "melee"
+style = "pierce"
+damage = 11.0
+move_speed_mult = 1.2
+in_drop_pool = false
+model = "q_dagger"
+view_offset = Vector3(0.0, -0.04, 0.0)
+view_rotation = Vector3(0.0, 90.0, 0.0)
+view_scale = 1.8
+pickup_scale = 1.6
+view_rest_pos = Vector3(0.42, -0.36, -0.8)
+view_rest_rot = Vector3(-40.0, 10.0, -10.0)
+swing_set = "thrust"
+attack_speed = 1.7
+reach = 0.8
+backstab_mult = 3.0
+combo_count = 3
+stage_damage_mult = Array[float]([1.0, 1.0, 1.6])
+knockback_mult = 0.6
+hitstop_mult = 0.7

@@ -15,3 +15,6 @@ class_name BodyDef
 @export var hand_color: Color = Color(0.86, 0.66, 0.52)
 ## Цвет рукавов на руках от первого лица
 @export var sleeve_color: Color = Color(0.45, 0.32, 0.22)
+## Стартовое оружие (этап 1): мили — обязательно, ренж — может быть пусто
+@export var start_melee: WeaponDef
+@export var start_ranged: WeaponDef

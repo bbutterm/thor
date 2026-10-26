@@ -144,3 +144,30 @@ static func _bone_pos(sk: Skeleton3D, bone: String) -> Vector3:
 	if i < 0:
 		return Vector3.ZERO
 	return sk.get_bone_global_pose(i).origin
+
+# --- Смена оружия в кулаке (этап 1: слоты оружия) ---
+var _weapon_cache: Dictionary = {}
+
+## Показать в кулаке оружие kind (WeaponMeshes.build). Построенные модели кешируются и переиспользуются,
+## чтобы свитч не собирал меши заново. Возвращает узел оружия.
+func set_weapon(kind: String, offset: Vector3, rot_deg: Vector3, scl: float) -> Node3D:
+	if model == null:
+		build()
+	if weapon and is_instance_valid(weapon):
+		if _weapon_cache.values().has(weapon):
+			weapon.visible = false
+		else:
+			weapon.queue_free()
+	var w: Node3D = _weapon_cache.get(kind)
+	if w == null or not is_instance_valid(w):
+		w = WeaponMeshes.build(kind, layer)
+		w.name = "Weapon_" + kind
+		add_child(w)
+		_weapon_cache[kind] = w
+	w.visible = true
+	w.position = offset
+	w.rotation_degrees = rot_deg
+	w.scale = Vector3.ONE * scl
+	weapon = w
+	weapon_kind = kind
+	return w

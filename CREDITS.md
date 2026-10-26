@@ -15,6 +15,9 @@
 | Бочки, факелы, знамёна: Fantasy Props MegaKit (часть) | Quaternius — https://quaternius.com/packs/fantasypropsmegakit.html (копия: github.com/OpenAgentsInc/openagents, `assets/verse/props/quaternius`) | CC0 (`assets/quaternius/props/license.txt`) |
 | Оружие: топор, меч, копьё, коса, кинжал, круглый щит, лук, посох (Medieval Weapons Pack, RPG Pack), кирка (Kenney Survival Kit) | Quaternius / Kenney (копия: github.com/nrknithin/html-anime, `models/library`) — распакованы из meshopt, материалы заменены на наши | CC0 |
 | Мьёльнир, дубина, вилы, факел, посох шамана | Собраны кодом (`scripts/weapon_meshes.gd`) в текстурах Quaternius | — |
+| Огнестрел: пистолет, пистолет-пулемёт, автомат, обрез (Ultimate Gun Pack, FBX) | Quaternius — https://opengameart.org/content/low-poly-guns-pack (`assets/quaternius/guns/`), материалы заменены на наши | CC0 (`assets/quaternius/guns/LICENSE.txt`) |
+| Арбалет и болт | Собраны кодом (`scripts/weapon_meshes.gd`) | — |
+| Звуки оружия (выстрелы, перезарядка, арбалет, свитч, подбор, сундук) | Синтезированы `tools/make_sfx.py` | свои, CC0 |
 
 Текстуры Quaternius уменьшены до 1024 px, чтобы репозиторий и сборка были легче.
 

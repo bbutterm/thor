@@ -48,6 +48,14 @@ func _init() -> void:
 	_set_action("pick_1", [_key(KEY_1)])
 	_set_action("pick_2", [_key(KEY_2)])
 	_set_action("pick_3", [_key(KEY_3)])
+	# Оружие (этап 1): свитч мили ↔ ренж, подбор, перезарядка
+	_set_action("weapon_switch", [_key(KEY_Q), _joy(JOY_BUTTON_Y)])
+	_set_action("weapon_next", [_mouse(MOUSE_BUTTON_WHEEL_DOWN)])
+	_set_action("weapon_prev", [_mouse(MOUSE_BUTTON_WHEEL_UP)])
+	_set_action("weapon_melee", [_key(KEY_1)])
+	_set_action("weapon_ranged", [_key(KEY_2)])
+	_set_action("interact", [_key(KEY_E), _joy(JOY_BUTTON_DPAD_UP)])
+	_set_action("reload", [_key(KEY_R), _joy(JOY_BUTTON_DPAD_LEFT)])
 
 	ProjectSettings.set_setting("autoload/Run", "*res://run/run_manager.gd")
 	ProjectSettings.set_setting("autoload/Odin", "*res://run/odin.gd")

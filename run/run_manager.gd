@@ -25,6 +25,9 @@ const BOSS_SCENE := "res://rooms/boss_arena.tscn"
 @export var glory_room_clear: int = 25
 @export var glory_boss_kill: int = 150
 @export var multikill_window: float = 0.6
+## Множители Славы за убийство: добил мили / ренжем (GDD 15.2: ×1.5 / ×0.5)
+@export var glory_melee_kill_mult: float = 1.5
+@export var glory_ranged_kill_mult: float = 0.5
 
 var body: BodyDef
 var room_order: Array[String] = []
@@ -116,7 +119,7 @@ func add_glory(amount: int) -> void:
 	glory_changed.emit(glory)
 
 ## Вызывается при убийстве врага. Считает мультикиллы и серии.
-func register_kill(finisher: bool, wall_splat: bool, is_boss: bool) -> void:
+func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: String = "") -> void:
 	kills += 1
 	streak += 1
 	best_streak = maxi(best_streak, streak)
@@ -125,6 +128,11 @@ func register_kill(finisher: bool, wall_splat: bool, is_boss: bool) -> void:
 		amount += glory_combo_finisher_bonus
 	if wall_splat:
 		amount += glory_wall_splat_bonus
+	# «Один не уважает тех, кто стреляет издалека»
+	if source.begins_with("melee"):
+		amount = int(round(amount * glory_melee_kill_mult))
+	elif source == "ranged":
+		amount = int(round(amount * glory_ranged_kill_mult))
 	if is_boss:
 		amount += glory_boss_kill
 	var now := Time.get_ticks_msec() / 1000.0

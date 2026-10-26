@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="WeaponDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_def.gd" id="1_wd"]
+
+[resource]
+script = ExtResource("1_wd")
+id = "spear"
+display_name = "Копьё"
+description = "Тычок на 3.5 м, задевает до трёх врагов в линию."
+weapon_class = "melee"
+style = "pierce"
+damage = 19.8
+move_speed_mult = 1.05
+in_drop_pool = false
+model = "q_spear"
+view_offset = Vector3(0.0, -0.75, 0.0)
+view_rotation = Vector3(0.0, 90.0, 0.0)
+view_scale = 1.0
+pickup_scale = 0.8
+view_rest_pos = Vector3(0.42, -0.38, -0.7)
+view_rest_rot = Vector3(-70.0, 8.0, 0.0)
+swing_set = "thrust"
+reach = 1.8
+arc = 0.55
+max_targets = 3
+combo_count = 3
+stage_damage_mult = Array[float]([1.0, 1.0, 1.6])
+knockback_mult = 0.8

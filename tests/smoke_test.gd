@@ -216,7 +216,7 @@ func _clear_room_and_exit(is_last: bool) -> bool:
 			if is_instance_valid(e):
 				if e.kind == Enemy.Kind.BOSS:
 					seen_boss = true
-				e.take_hit(9999, Vector3(0, 3, -5), "axe_finisher")
+				e.take_hit(9999, Vector3(0, 3, -5), "melee_finisher")
 		game.player.heal(999)
 	check(room._is_cleared, "зал зачищен (%d волн)" % waves)
 	if is_last:

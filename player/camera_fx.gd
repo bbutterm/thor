@@ -13,6 +13,10 @@ class_name CameraFX
 @export var shake_max_roll_deg: float = 4.0
 @export var shake_decay: float = 1.8
 
+@export_group("Отдача ренжа")
+## Как быстро камера возвращается после отдачи выстрела
+@export var recoil_return_speed: float = 14.0
+
 @export_group("Покачивание и наклон")
 @export var head_bob_enabled: bool = true
 @export var head_bob_amount: float = 0.05
@@ -31,6 +35,8 @@ var _tilt: float = 0.0
 var _noise := FastNoiseLite.new()
 var _noise_t: float = 0.0
 var _speed_pulse: float = 0.0
+## Отдача выстрела: x — вверх (рад), y — вбок (рад); гаснет сама
+var _recoil: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	fov = base_fov
@@ -53,7 +59,7 @@ func update_motion(player: Player, input_dir: Vector2, on_floor: bool, delta: fl
 	var real_delta := delta / maxf(Engine.time_scale, 0.001)
 	real_delta = minf(real_delta, 0.05)
 	var hspeed := player.horizontal_speed()
-	var overspeed := maxf(0.0, hspeed - player.move_speed)
+	var overspeed := maxf(0.0, hspeed - player.effective_move_speed())
 
 	# FOV
 	_fov_kick = lerpf(_fov_kick, 0.0, real_delta * fov_return_speed)
@@ -89,3 +95,12 @@ func update_motion(player: Player, input_dir: Vector2, on_floor: bool, delta: fl
 	h_offset = bob.x + off_x
 	v_offset = bob.y - _dip + off_y
 	rotation.z = _tilt + roll
+	# Отдача ренжа
+	_recoil = _recoil.lerp(Vector2.ZERO, clampf(real_delta * recoil_return_speed, 0.0, 1.0))
+	rotation.x = _recoil.x
+	rotation.y = _recoil.y
+
+## Отдача выстрела: камера подпрыгивает вверх (и чуть вбок) и сама возвращается.
+func kick_recoil(up_deg: float, side_deg: float = 0.0) -> void:
+	_recoil.x = minf(_recoil.x + deg_to_rad(up_deg), deg_to_rad(12.0))
+	_recoil.y += deg_to_rad(side_deg)

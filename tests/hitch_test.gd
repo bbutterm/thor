@@ -51,6 +51,9 @@ func _run() -> void:
 		if r.id in ["slam_fire", "hammer_power"]:
 			Run.add_rune(r)
 	game.player.recalc_from_runes(Run)
+	# Ренж в слоте — чтобы выстрелы, трассеры и гильзы тоже попали в замер
+	game.player.weapons.equip(Loot.get_def("smg"), 1, false)
+	game.player.weapons.switch_to(WeaponHolder.MELEE, true)
 	Perf.frames.clear()
 	Perf.record_all = true
 	var total := Run.total_rooms()
@@ -84,8 +87,16 @@ func _play_room() -> void:
 		var to := e.global_position - p.global_position
 		p.rotation_target.y = atan2(-to.x, -to.z)
 		match step % 4:
-			0, 3:
+			0:
 				p.axe.request_attack()
+			3:
+				# Очередь из ренжа и обратно на мили
+				p.weapons.switch_to(WeaponHolder.RANGED, true)
+				for k in 4:
+					p.weapons.gun.try_fire()
+					await wait(0.08)
+				p.weapons.ranged.reserve = p.weapons.ranged.def.reserve_max
+				p.weapons.switch_to(WeaponHolder.MELEE, true)
 			1:
 				if p.mjolnir.in_hand:
 					p.mjolnir.throw_hammer()
@@ -98,7 +109,7 @@ func _play_room() -> void:
 		await wait(0.25)
 		# Добиваем по одному — смерть каждого врага отдельным событием
 		if is_instance_valid(e) and not e.is_dead:
-			e.take_hit(9999, Vector3(0, 3, -5), "axe_finisher")
+			e.take_hit(9999, Vector3(0, 3, -5), "melee_finisher")
 	print("  зал зачищен: %s" % room.room_title)
 
 func _go_next() -> void:
