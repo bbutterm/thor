@@ -1,0 +1,245 @@
+ПРОМПТЫ ДЛЯ UI И ЭФФЕКТОВ — Тор: Достойная смерть
+===================================================================
+
+ПРАВИЛА ГЕНЕРАЦИИ
+- Текста на картинках НЕТ. Надписи, цифры и комиксовые слова (POW!, BONK!) рисуются кодом.
+  Нейронки пишут буквы криво, поэтому в каждом промпте стоит "no text, no letters".
+- Фон: прозрачный. Если генератор не умеет прозрачный — сплошной ярко-зелёный (#00FF00),
+  потом вырезать.
+- Для одной серии (например, все иконки рун) используйте один seed или один стиль.
+  Удобно генерировать серию одной картинкой-листом: "sprite sheet, 4x4 grid".
+- Размеры: кнопки и панели — генерировать крупно, потом агент нарежет 9-slice
+  (растягиваемые рамки). Иконки — 512x512, в игре будут 64–128 px.
+- Куда класть: sprites/ui/<папка>/<имя>.png (названия указаны у каждого пункта).
+  Агент подхватит. Пока файла нет, в игре остаётся процедурная заглушка.
+
+ОБЩИЙ СТИЛЬ (вставлять в начало каждого промпта)
+-------------------------------------------------------------------
+game UI asset, stylized norse viking meets comic book style, bold black outlines,
+cel shading, slight halftone dot texture, carved wood and dark iron with gold rune
+engravings, warm torch-lit colors, clean readable shapes, flat front view,
+isolated on transparent background, no text, no letters, no numbers
+
+
+===================================================================
+1. КНОПКИ                                     → sprites/ui/buttons/
+===================================================================
+
+1.1 Основная кнопка (3 состояния) — button_main_normal / _hover / _pressed
+wide horizontal game button plate, carved dark wood board with iron corner
+brackets and small gold rune engravings along the edges, empty center for text,
+three states side by side: normal, hover (glowing golden edges), pressed
+(slightly darker and inset), sprite sheet
+
+1.2 Второстепенная кнопка — button_secondary_*
+smaller horizontal game button, worn leather strap stitched onto an iron plate,
+empty center, three states side by side: normal, hover (warm glow), pressed,
+sprite sheet
+
+1.3 Опасная кнопка («Выход», «Сдаться») — button_danger_*
+horizontal game button, cracked dark stone slab with red glowing runes on the
+edges, empty center, three states: normal, hover (red glow), pressed, sprite sheet
+
+1.4 Круглая кнопка-иконка (пауза, настройки, закрыть) — button_round_*
+round shield-shaped game button, viking round shield with iron rim and wooden
+planks, empty center for an icon, three states: normal, hover (gold rim glow),
+pressed, sprite sheet
+
+1.5 Чекбокс и ползунок (настройки) — checkbox_*, slider_*
+game settings UI kit: square iron checkbox empty and checked with a gold rune mark,
+horizontal slider track carved in wood, slider knob shaped like a small hammer head,
+sprite sheet
+
+
+===================================================================
+2. ПАНЕЛИ И РАМКИ                              → sprites/ui/panels/
+===================================================================
+
+2.1 Окно диалога (новелла) — panel_dialogue
+wide horizontal dialogue box frame for a visual novel, dark semi-transparent
+parchment center, carved wooden border with knotwork and gold runes, small empty
+name plate on the top left corner, 9-slice friendly with plain stretchable middle
+
+2.2 Плашка имени — panel_nameplate
+small horizontal name plate, gold-trimmed dark iron banner with notched ends, empty
+
+2.3 Карточка выбора руны/трейта (1 из 3) — card_rune, card_trait
+vertical selection card for a roguelike upgrade, tall rectangle, carved standing
+runestone shape with a glowing empty circle at the top for an icon and an empty
+area below, two variants: blue-glowing rune card and golden lightning hammer
+trait card, sprite sheet
+
+2.4 Рамки редкости карточек — card_rarity_*
+set of four card border glows: common grey iron, rare blue, epic purple,
+legendary gold with tiny lightning sparks, empty center, sprite sheet
+
+2.5 Окно ларька Брокка и Эйтри — panel_shop
+merchant shop window frame, wooden market stall board with a small cloth awning
+on top, hanging lanterns at the corners, empty grid area in the middle,
+cozy and funny dwarven style
+
+2.6 Экран «План тренировок Одина» — panel_training
+large board frame like a gym training plan pinned on a wooden wall, rope corners,
+iron nails, small whistle and raven feather decorations, empty center, comedic
+
+2.7 Пузырь реплики Одина в бою — bubble_speech
+comic book speech bubble, white with thick black outline and a short tail,
+slightly jagged angry shout version and a calm round version, empty, sprite sheet
+
+
+===================================================================
+3. HUD                                         → sprites/ui/hud/
+===================================================================
+
+3.1 Полоска здоровья — hud_hp_frame, hud_hp_fill
+horizontal health bar frame, iron frame with a small horned helmet emblem on the
+left, empty inside; separate fill texture: rich red liquid with a glossy highlight,
+sprite sheet
+
+3.2 Заряды рывка — hud_dash
+set of small dash charge icons, glowing blue wind-swirl rune stones, full and
+empty (dim grey) versions, sprite sheet
+
+3.3 Шкала Ярости — hud_rage_frame, hud_rage_fill
+horizontal rage meter frame, iron with a roaring bear skull emblem, empty inside;
+separate fill texture: burning orange-red fire energy with sparks, sprite sheet
+
+3.4 Слоты оружия — hud_weapon_slot
+two weapon slot frames side by side, square iron frames, one with a crossed axes
+motif corner (melee), one with a crosshair motif corner (ranged), active version
+with golden glow, sprite sheet
+
+3.5 Индикатор Мьёльнира — hud_mjolnir
+hammer status icon set: short-handled war hammer icon in hand (bright with
+electric glow), thrown (outline only, dim), returning (motion arrow swirl),
+sprite sheet
+
+3.6 Прицел — crosshair
+set of minimal game crosshairs, small rune-shaped dot, four-tick cross, circle with
+lightning notch, white with thin black outline, sprite sheet
+
+3.7 Шкала высоты удара-приземления — hud_slam_meter
+small vertical meter frame next to a crosshair, iron with a downward lightning
+arrow at the bottom, empty inside; fill: electric blue to white gradient, sprite sheet
+
+3.8 Серебро — hud_silver
+icon of a small pile of viking hacksilver coins and chopped silver pieces,
+shiny, readable at small size
+
+3.9 Индикатор врага за экраном — hud_offscreen
+small red arrow-shaped warning marker with a skull notch, glowing
+
+
+===================================================================
+4. ИКОНКИ                                       → sprites/ui/icons/
+===================================================================
+
+4.1 Иконки наград над дверями (лист 3x3) — door_*
+set of 9 game reward icons, each in a round iron medallion: glowing rune stone
+(rune), crossed axe and crossbow (weapon), treasure chest (chest), campfire with
+a mug (rest), dwarf merchant cart (shop), stopwatch with lightning (trial),
+green snake and dice (loki deal), feather and heart (freya blessing), war hammer
+with lightning (hammer trait), sprite sheet 3x3
+
+4.2 Категории рун (лист) — runecat_*
+set of rune category emblems: red axe (attack), blue wing (movement), orange
+downward impact star (slam), green shield (defense), brown crossbow (ranged),
+fiery bear claw (rage), gold coin (meta), sprite sheet, each a glowing carved
+runestone
+
+4.3 Оружие (лист 4x4) — weapon_*
+set of 16 stylized weapon icons on transparent background: viking axe, sword,
+spear, wooden club, scythe, pickaxe, knife, wooden staff, lute, crossbow, pistol,
+submachine gun, assault rifle, sawed-off shotgun, nail gun, rocket launcher,
+consistent angle, sprite sheet 4x4
+
+4.4 Трейты Мьёльнира (лист 4x4) — trait_*
+set of 13 icons for magic hammer upgrades, each shows a short-handled war hammer
+with an effect: fire trail, ice trail, hammer pulling a tiny figure, magnet pull,
+boomerang arc, chain lightning, heavy downward weight, ricochet bounce lines,
+lightning rod sparks, spinning storm, two hammers, earthquake cracks, lightning
+from the sky, gold frame, sprite sheet 4x4
+
+4.5 Элитные модификаторы — elite_*
+set of 7 small enemy modifier icons: flame, snowflake, iron armor plate,
+running speed lines, bomb, blood drop with fangs, summoning circle, sprite sheet
+
+4.6 Замок (закрытое открытие/тело) — icon_lock
+heavy iron padlock with a carved rune and a small chain, slightly comedic
+
+
+===================================================================
+5. ЭФФЕКТЫ (СПРАЙТЫ VFX)                      → sprites/vfx/
+   Для частиц лучше белые и серые: цвет задаёт игра. Отмечено «белым».
+===================================================================
+
+5.1 Подложки под комиксовые слова — comic_burst_*
+(слова рисуются кодом поверх этих картинок)
+set of comic book impact burst shapes, jagged explosion stars, spiky speech blast,
+cloud puff blast, lightning-edged burst, flat solid fill with thick black outline
+and halftone dots, no text inside, sprite sheet 2x3, bright yellow and red variants
+
+5.2 Вспышка удара — vfx_hit_flash (белым)
+sprite sheet of a 6-frame impact flash animation, white star-shaped hit spark
+expanding and fading, comic style with sharp rays, horizontal strip
+
+5.3 Пыль и дым — vfx_smoke (белым)
+sprite sheet of 8-frame cartoon smoke puff animation, round fluffy white-grey
+clouds expanding and dissolving, cel shaded with black outline, horizontal strip
+
+5.4 Ударная волна удара-приземления — vfx_shockwave (белым)
+top-down view of a ground shockwave ring decal, cracked earth ring with dust
+fragments, white and light grey for tinting, circular, sprite
+
+5.5 Трещины на полу — vfx_crack_decal
+ground crack decal seen from above, radial cracks in stone, dark lines on
+transparent background, three size variants, sprite sheet
+
+5.6 Молния — vfx_lightning (белым)
+set of 4 jagged lightning bolt sprites, bright white core with soft blue glow edges,
+vertical, varied shapes, sprite sheet
+
+5.7 Искры — vfx_sparks (белым)
+sprite sheet of small comic sparks and stars, 12 tiny elements, white with black
+outline, for particles
+
+5.8 Синяя жижа драугров — vfx_ichor
+cartoon splash and splat decals of glowing blue-teal ichor liquid, 3 mid-air splash
+shapes and 3 floor splat puddles, comic style, not gory, sprite sheet
+
+5.9 Огонь — vfx_fire (белым/жёлтым)
+sprite sheet of 8-frame looping cartoon flame animation, stylized fire with bold
+shapes, yellow core orange edges, horizontal strip
+
+5.10 Лёд — vfx_ice
+set of ice shard sprites and a frosty floor decal patch, light blue with white
+highlights, comic style, sprite sheet
+
+5.11 Кольцо идеального хвата — vfx_perfect_catch
+radial energy ring burst with lightning sparks, bright gold and white, comic style,
+single sprite
+
+5.12 Линии скорости — vfx_speed_lines (белым)
+full-screen anime speed lines overlay, radial white streaks toward the edges,
+empty clear center, transparent background
+
+5.13 Виньетка Ярости — vfx_rage_vignette
+full-screen vignette overlay, burning red-orange edges with fiery wisps,
+fully transparent center
+
+
+===================================================================
+6. ЛОГОТИП И МЕНЮ (по желанию)                 → sprites/ui/menu/
+===================================================================
+
+6.1 Эмблема без текста — logo_emblem
+game logo emblem without text: short-handled war hammer crossed with a beer mug,
+lightning bolts, round viking shield behind, comic book style, bold outlines
+
+6.2 Фон главного меню — menu_background
+wide 16:9 game main menu background, cozy dark viking longhouse at night, an old
+worn couch in front of a fireplace, a war hammer lying on the floor next to empty
+beer mugs, neon purple and pink synthwave glow mixing with warm firelight,
+comic book style, no characters, no text
+
+Название игры и все надписи на кнопках — шрифтом в коде (Russo One / Bangers).
