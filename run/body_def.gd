@@ -13,3 +13,5 @@ class_name BodyDef
 @export var hammer_damage_mult: float = 1.0
 @export var glory_mult: float = 1.0
 @export var hand_color: Color = Color(0.86, 0.66, 0.52)
+## Цвет рукавов на руках от первого лица
+@export var sleeve_color: Color = Color(0.45, 0.32, 0.22)

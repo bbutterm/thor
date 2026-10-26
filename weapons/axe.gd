@@ -45,9 +45,9 @@ var _tween: Tween
 @onready var player: Player = get_node(player_path)
 @onready var pivot: Node3D = get_node_or_null(pivot_path)
 @onready var hitbox: ShapeCast3D = get_node_or_null(hitbox_path)
-@onready var hand_mesh: MeshInstance3D = get_node_or_null(hand_mesh_path)
+@onready var hand_mesh: Node = get_node_or_null(hand_mesh_path)
 
-const REST_POS := Vector3(0.48, -0.5, -1.0)
+const REST_POS := Vector3(0.46, -0.36, -0.95)
 const REST_ROT := Vector3(-8, 12, -14)
 # Позы: [замах_поз, замах_рот, конец_поз, конец_рот] для каждой ступени комбо
 const POSES := [
@@ -61,9 +61,12 @@ func _ready() -> void:
 		pivot.position = REST_POS
 		pivot.rotation_degrees = REST_ROT
 
-func set_hand_color(c: Color) -> void:
-	if hand_mesh:
-		hand_mesh.material_override = FX.make_material(c, 0.9)
+## Цвет кожи и рукава (из тела BodyDef). Рука — ViewmodelArm или (старое) простой меш.
+func set_hand_color(c: Color, sleeve: Color = Color(0, 0, 0, 0)) -> void:
+	if hand_mesh is ViewmodelArm:
+		(hand_mesh as ViewmodelArm).recolor(c, sleeve)
+	elif hand_mesh is MeshInstance3D:
+		(hand_mesh as MeshInstance3D).material_override = FX.make_material(c, 0.9)
 
 func _physics_process(delta: float) -> void:
 	if player == null or player.is_dead or not player.input_enabled:

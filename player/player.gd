@@ -109,8 +109,8 @@ func apply_body_and_runes(body: BodyDef, run: Node) -> void:
 		dash_charges_base = body.dash_charges
 		axe_damage_mult = body.axe_damage_mult
 		hammer_damage_mult = body.hammer_damage_mult
-		axe.set_hand_color(body.hand_color)
-		mjolnir.set_hand_color(body.hand_color)
+		axe.set_hand_color(body.hand_color, body.sleeve_color)
+		mjolnir.set_hand_color(body.hand_color, body.sleeve_color)
 	recalc_from_runes(run, true)
 
 func recalc_from_runes(run: Node, full_heal: bool = false) -> void:

@@ -36,6 +36,137 @@ func _ready() -> void:
 	var cam := Camera3D.new()
 	add_child(cam)
 	match set_name:
+		"fparm":
+			floor_m.visible = false
+			e.background_color = Color(0.25, 0.22, 0.2)
+			cam.fov = 60
+			cam.near = 0.05
+			cam.position = Vector3.ZERO
+			var defs := [["right", "axe", Vector3(0.48, -0.42, -1.0), Vector3(-8, 12, -14)], ["left", "hammer", Vector3(-0.52, -0.44, -1.05), Vector3(-10, -15, 12)]]
+			for d in defs:
+				var pv := Node3D.new()
+				add_child(pv)
+				pv.scale = Vector3.ONE * 0.62
+				pv.position = d[2]
+				pv.rotation_degrees = d[3]
+				var arm := ViewmodelArm.new()
+				arm.side = d[0]
+				arm.layer = 1
+				pv.add_child(arm)
+				var wpn := WeaponMeshes.build(d[1])
+				wpn.position.y = -0.28 if d[1] == "axe" else -0.06
+				pv.add_child(wpn)
+			var l2 := OmniLight3D.new()
+			l2.position = Vector3(0.3, 0.6, 0.6)
+			l2.light_energy = 1.0
+			add_child(l2)
+		"fp":
+			# Вид от первого лица: руки персонажа + оружие, камера на уровне глаз
+			floor_m.visible = false
+			for i in 3:
+				_place("res://assets/quaternius/village/Wall_UnevenBrick_Straight.gltf", Vector3(-2 + i * 2, 0, 4), PI)
+			var h := HumanoidModel.new()
+			h.body = "base/Superhero_Male_FullBody.gltf"
+			h.outfit = ""
+			h.parts = PackedStringArray(["parts/Male_Ranger_Arms.gltf"])
+			h.part_tints = [Color(0.75, 0.6, 0.45)]
+			add_child(h)
+			var att := BoneAttachment3D.new()
+			att.bone_name = "hand_r"
+			h.skeleton.add_child(att)
+			att.add_child(WeaponMeshes.build("axe"))
+			var att2 := BoneAttachment3D.new()
+			att2.bone_name = "hand_l"
+			h.skeleton.add_child(att2)
+			att2.add_child(WeaponMeshes.build("hammer"))
+			var pose := OS.get_cmdline_user_args()[2] if OS.get_cmdline_user_args().size() > 2 else "Sword_Idle"
+			var at := float(OS.get_cmdline_user_args()[3]) if OS.get_cmdline_user_args().size() > 3 else 0.3
+			h.play(pose, 0.0)
+			h.anim.seek(at, true)
+			h.anim.pause()
+			# голова скрыта (обрезка голова-только + без головы: прячем базовое тело целиком)
+			for mi in h.skeleton.get_children():
+				if mi is MeshInstance3D and (mi.name.begins_with("SuperHero") or mi.name.begins_with("Superhero") or mi.name.begins_with("Eye")):
+					mi.visible = false
+			cam.fov = 70
+			cam.near = 0.03
+			if OS.get_cmdline_user_args().size() > 4 and OS.get_cmdline_user_args()[4] == "side":
+				cam.position = Vector3(3.0, 1.5, 1.0)
+				cam.look_at(Vector3(0, 1.3, 0.3))
+			else:
+				# Камера — на кости головы, смотрит вперёд персонажа (+Z)
+				var head_i := h.skeleton.find_bone("Head")
+				var head_pos := h.skeleton.global_transform * h.skeleton.get_bone_global_pose(head_i).origin
+				print("HEAD ", head_pos)
+				cam.global_position = head_pos + Vector3(0, 0.08, 0.1)
+				cam.look_at(cam.global_position + Vector3(0, -0.25, 1.0))
+		"weapons":
+			var names := ["axe", "sword", "dagger", "spear", "scythe", "shield-round", "bow", "staff", "pickaxe"]
+			for i in names.size():
+				var n := _place("res://assets/quaternius/weapons/%s.glb" % names[i], Vector3((i - 4) * 0.9, 0.0, 0), 0.0)
+				var box := _aabb(n)
+				print("W %-14s %s" % [names[i], box])
+				_label(names[i], Vector3((i - 4) * 0.9, 2.1, 0))
+			var hm := WeaponMeshes.hammer()
+			add_child(hm)
+			hm.position = Vector3(4.6, 0, 0)
+			_label("mjolnir (свой)", Vector3(4.6, 2.1, 0))
+			cam.position = Vector3(0.3, 1.0, 4.2)
+			cam.look_at(Vector3(0.3, 0.65, 0))
+		"grip":
+			var rots := [Vector3(0, 0, 0), Vector3(90, 0, 0), Vector3(-90, 0, 0), Vector3(0, 0, 90), Vector3(0, 0, -90), Vector3(180, 0, 0)]
+			for i in rots.size():
+				var h := HumanoidModel.new()
+				h.outfit = "outfits/Male_Peasant.gltf"
+				add_child(h)
+				h.position = Vector3((i - 2.5) * 1.2, 0, 0)
+				var att := BoneAttachment3D.new()
+				att.bone_name = "hand_r"
+				h.skeleton.add_child(att)
+				var w := WeaponMeshes.build("spear")
+				w.rotation_degrees = rots[i]
+				att.add_child(w)
+				h.play("Sword_Idle", 0.0)
+				_label(str(rots[i]), Vector3((i - 2.5) * 1.2, 2.3, 0))
+			cam.position = Vector3(0, 1.4, 5.5)
+			cam.look_at(Vector3(0, 1.1, 0))
+		"crowd":
+			e.background_color = Color(0.1, 0.1, 0.13)
+			for i in 6:
+				_place("res://assets/quaternius/village/Wall_UnevenBrick_Straight.gltf", Vector3(-10 + i * 4, 0, -4.5), 0.0)
+			fm.albedo_color = Color(0.32, 0.3, 0.28)
+			var rng := RandomNumberGenerator.new()
+			rng.seed = 7
+			var anims := ["Idle_Loop", "Sword_Idle", "Idle_Talking_Loop", "Idle_FoldArms_Loop", "Idle_Torch_Loop", "Walk_Loop", "Idle_Shield_Loop", "Sword_Regular_Combo", "Punch_Jab", "Yes"]
+			for i in 14:
+				var look := HumanoidModel.random_look(rng, rng.randf() < 0.35)
+				var h := HumanoidModel.new()
+				h.body = look.body; h.outfit = ""; h.parts = look.parts; h.part_tints = look.part_tints; h.skin_tint = look.skin_tint
+				add_child(h)
+				var row := i / 7
+				var col := i % 7
+				h.position = Vector3((col - 3) * 1.15 + (0.55 if row == 1 else 0.0), 0, -row * 1.6)
+				h.rotation.y = rng.randf_range(-0.5, 0.5)
+				var w: String = WeaponMeshes.CROWD_WEAPONS[i % WeaponMeshes.CROWD_WEAPONS.size()]
+				var att := BoneAttachment3D.new()
+				att.bone_name = "hand_r"
+				h.skeleton.add_child(att)
+				var wn := WeaponMeshes.build(w)
+				wn.rotation_degrees = Vector3(0, 0, -90)
+				wn.position = Vector3(0, 0.08, 0)
+				att.add_child(wn)
+				if rng.randf() < 0.35:
+					var att2 := BoneAttachment3D.new()
+					att2.bone_name = "hand_l"
+					h.skeleton.add_child(att2)
+					var sh := WeaponMeshes.build("q_shield")
+					sh.rotation_degrees = Vector3(0, 0, 90)
+					att2.add_child(sh)
+				h.play(anims[rng.randi() % anims.size()], 0.0)
+				h.anim.seek(rng.randf() * 1.0, true)
+			cam.position = Vector3(0.0, 1.55, 3.6)
+			cam.fov = 60
+			cam.look_at(Vector3(0.0, 1.05, -0.6))
 		"lineup":
 			e.background_color = Color(0.08, 0.08, 0.11)
 			sun.light_energy = 0.9
@@ -126,6 +257,15 @@ func _place(path: String, pos: Vector3, yaw: float) -> Node3D:
 		if a.get_animation_list().size() > 0:
 			a.play(a.get_animation_list()[0])
 	return n
+
+func _aabb(n: Node3D) -> AABB:
+	var box := AABB()
+	var first := true
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		var b: AABB = (mi as MeshInstance3D).global_transform * (mi as MeshInstance3D).get_aabb()
+		box = b if first else box.merge(b)
+		first = false
+	return box
 
 func _label(text: String, pos: Vector3) -> void:
 	var l := Label3D.new()

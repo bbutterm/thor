@@ -13,36 +13,36 @@
 [ext_resource type="PackedScene" path="res://ui/end_screen.tscn" id="11_37s47"]
 [ext_resource type="Script" path="res://ui/end_screen.gd" id="12_bt5mj"]
 
-[node name="Game" type="Node3D" unique_id=630862400]
+[node name="Game" type="Node3D" unique_id=454274756]
 script = ExtResource("1_dinhu")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=951168629]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1576948471]
 environment = ExtResource("2_kvuet")
 
-[node name="Sun" type="DirectionalLight3D" parent="." unique_id=911186321]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=591569014]
 transform = Transform3D(0.81915206, 0.43938506, -0.36868784, 0, 0.64278764, 0.76604444, 0.57357645, -0.62750685, 0.5265408, 0, 0, 0)
 light_color = Color(1, 0.86, 0.7, 1)
 light_energy = 1.15
 shadow_enabled = true
 directional_shadow_max_distance = 60.0
 
-[node name="Level" type="Node3D" parent="." unique_id=1715349554]
+[node name="Level" type="Node3D" parent="." unique_id=1207936938]
 
-[node name="Player" type="CharacterBody3D" parent="." unique_id=1861678668 instance=ExtResource("3_trtic")]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=241262816 instance=ExtResource("3_trtic")]
 collision_layer = 2
 collision_mask = 13
 floor_max_angle = 0.87266463
 floor_snap_length = 0.35
 script = ExtResource("4_ir15t")
 
-[node name="HUD" type="CanvasLayer" parent="." unique_id=309220752 instance=ExtResource("5_ca42v")]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1315715174 instance=ExtResource("5_ca42v")]
 script = ExtResource("6_rysoc")
 
-[node name="RunePick" type="CanvasLayer" parent="." unique_id=1169191639 instance=ExtResource("7_ssvqc")]
+[node name="RunePick" type="CanvasLayer" parent="." unique_id=1904947444 instance=ExtResource("7_ssvqc")]
 script = ExtResource("8_264po")
 
-[node name="PauseMenu" type="CanvasLayer" parent="." unique_id=722193982 instance=ExtResource("9_1kice")]
+[node name="PauseMenu" type="CanvasLayer" parent="." unique_id=323573705 instance=ExtResource("9_1kice")]
 script = ExtResource("10_5newe")
 
-[node name="EndScreen" type="CanvasLayer" parent="." unique_id=1056536349 instance=ExtResource("11_37s47")]
+[node name="EndScreen" type="CanvasLayer" parent="." unique_id=1267653170 instance=ExtResource("11_37s47")]
 script = ExtResource("12_bt5mj")

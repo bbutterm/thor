@@ -60,8 +60,13 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var skin_tint: Color = Color.WHITE
 @export var cloth_tint: Color = Color.WHITE
 @export var eye_glow: Color = Color(0, 0, 0, 0)
-## Оружие в правой руке: "" / "club" / "axe" / "staff"
+## Оружие в правой руке: "" / "club" / "staff" / "q_axe" / "q_sword"... (см. WeaponMeshes)
 @export var hand_weapon: String = ""
+## Массовка: случайный комплект одежды/волос (цвета одежды умножаются на cloth_tint)
+@export var randomize_look: bool = false
+## Если не пусто — оружие выбирается случайно из списка
+@export var weapon_pool: PackedStringArray = []
+@export_range(0.0, 1.0) var shield_chance: float = 0.0
 
 @export_group("Анимации")
 @export var anim_spawn: String = "LayToIdle"
@@ -120,6 +125,20 @@ func _ready() -> void:
 		_humanoid.body = model_body
 		_humanoid.outfit = model_outfit
 		_humanoid.hair = model_hair
+		if randomize_look:
+			var rng := RandomNumberGenerator.new()
+			rng.randomize()
+			var look := HumanoidModel.random_look(rng, rng.randf() < 0.3)
+			_humanoid.body = look.body
+			_humanoid.outfit = ""
+			_humanoid.hair = ""
+			_humanoid.parts = look.parts
+			var tints: Array[Color] = []
+			for c in look.part_tints:
+				tints.append((c as Color) * cloth_tint)
+			_humanoid.part_tints = tints
+			if not weapon_pool.is_empty():
+				hand_weapon = weapon_pool[rng.randi() % weapon_pool.size()]
 		_humanoid.skin_tint = skin_tint
 		_humanoid.cloth_tint = cloth_tint
 		_humanoid.eye_glow = eye_glow
@@ -606,7 +625,17 @@ func _attach_weapon(kind_name: String) -> void:
 	att.bone_name = "hand_r"
 	_humanoid.skeleton.add_child(att)
 	var w := WeaponMeshes.build(kind_name)
+	# Хват: рукоять поперёк кулака, оружие смотрит вверх-вперёд
+	w.rotation_degrees = Vector3(0, 0, -90)
+	w.position = Vector3(0, 0.08, 0)
 	att.add_child(w)
+	if shield_chance > 0.0 and randf() < shield_chance:
+		var att2 := BoneAttachment3D.new()
+		att2.bone_name = "hand_l"
+		_humanoid.skeleton.add_child(att2)
+		var sh := WeaponMeshes.build("q_shield")
+		sh.rotation_degrees = Vector3(0, 0, 90)
+		att2.add_child(sh)
 
 func _build_procedural_model() -> Node3D:
 	var root := Node3D.new()

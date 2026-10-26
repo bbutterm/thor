@@ -30,6 +30,9 @@ func _ready() -> void:
 
 func _own(node: Node, owner: Node) -> void:
 	for c in node.get_children():
+		# Внутренности руки/персонажа строятся при запуске — в сцену их не сохраняем
+		if node is ViewmodelArm or node is HumanoidModel:
+			continue
 		c.owner = owner
 		if c.scene_file_path == "":
 			_own(c, owner)
@@ -202,9 +205,9 @@ func _cylmesh(r_top: float, r_bot: float, h: float) -> CylinderMesh:
 func build_resources() -> void:
 	print("Ресурсы…")
 	var bodies := [
-		{"id": "berserker", "name": "Берсерк", "desc": "Много здоровья, бьёт тяжело, бегает медленно. Орёт.", "hp": 150.0, "speed": 7.5, "dash": 2, "axe": 1.3, "hammer": 1.0, "glory": 1.0, "hand": Color(0.85, 0.62, 0.5)},
-		{"id": "hunter", "name": "Охотник", "desc": "Быстрый и хрупкий. Три заряда рывка.", "hp": 80.0, "speed": 10.0, "dash": 3, "axe": 0.9, "hammer": 1.2, "glory": 1.0, "hand": Color(0.72, 0.55, 0.42)},
-		{"id": "thrall", "name": "Трэлл-раб", "desc": "Всё слабое, но Слава ×2. Социальный лифт.", "hp": 60.0, "speed": 8.5, "dash": 2, "axe": 0.7, "hammer": 0.8, "glory": 2.0, "hand": Color(0.8, 0.68, 0.58)},
+		{"id": "berserker", "name": "Берсерк", "desc": "Много здоровья, бьёт тяжело, бегает медленно. Орёт.", "hp": 150.0, "speed": 7.5, "dash": 2, "axe": 1.3, "hammer": 1.0, "glory": 1.0, "hand": Color(1.0, 0.86, 0.78), "sleeve": Color(0.55, 0.22, 0.18)},
+		{"id": "hunter", "name": "Охотник", "desc": "Быстрый и хрупкий. Три заряда рывка.", "hp": 80.0, "speed": 10.0, "dash": 3, "axe": 0.9, "hammer": 1.2, "glory": 1.0, "hand": Color(0.9, 0.76, 0.64), "sleeve": Color(0.32, 0.42, 0.28)},
+		{"id": "thrall", "name": "Трэлл-раб", "desc": "Всё слабое, но Слава ×2. Социальный лифт.", "hp": 60.0, "speed": 8.5, "dash": 2, "axe": 0.7, "hammer": 0.8, "glory": 2.0, "hand": Color(0.95, 0.82, 0.72), "sleeve": Color(0.55, 0.5, 0.42)},
 	]
 	for b in bodies:
 		var r := BodyDef.new()
@@ -218,6 +221,7 @@ func build_resources() -> void:
 		r.hammer_damage_mult = b.hammer
 		r.glory_mult = b.glory
 		r.hand_color = b.hand
+		r.sleeve_color = b.sleeve
 		ResourceSaver.save(r, "res://run/bodies/%s.tres" % b.id)
 	var runes := [
 		{"id": "axe_damage", "title": "Руна Тюра", "desc": "Урон топора +25%", "glyph": "ᛏ", "color": Color(1.0, 0.55, 0.35)},
@@ -320,7 +324,8 @@ const MODEL_LOOKS := {
 	"grunt": {
 		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Peasant.gltf", "model_hair": "",
 		"skin_tint": Color(0.45, 0.58, 0.66), "cloth_tint": Color(0.55, 0.55, 0.52), "eye_glow": Color(0.4, 0.85, 1.0, 1.0),
-		"hand_weapon": "axe",
+		"hand_weapon": "q_axe", "randomize_look": true, "shield_chance": 0.3,
+		"weapon_pool": ["q_axe", "q_sword", "q_spear", "club", "q_pickaxe", "q_scythe", "pitchfork"],
 		"anim_spawn": "LayToIdle", "anim_idle": "Zombie_Idle_Loop", "anim_move": "Zombie_Walk_Fwd_Loop", "anim_move_ref_speed": 1.6,
 		"anim_attack": "Zombie_Scratch", "anim_attack_hit_at": 0.45, "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
 	},
@@ -402,7 +407,25 @@ func build_player() -> void:
 	sv.msaa_3d = Viewport.MSAA_2X
 	sv.size = Vector2i(1280, 720)
 	sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	# Свой «мир» для рук: независимое освещение, руки не темнеют в тёмных залах
+	sv.own_world_3d = true
 	svc.add_child(sv)
+	var vm_env := WorldEnvironment.new()
+	vm_env.name = "ViewmodelEnvironment"
+	var ve := Environment.new()
+	ve.background_mode = Environment.BG_CLEAR_COLOR
+	ve.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	ve.ambient_light_color = Color(0.85, 0.78, 0.7)
+	ve.ambient_light_energy = 0.9
+	ve.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	vm_env.environment = ve
+	sv.add_child(vm_env)
+	var vm_sun := DirectionalLight3D.new()
+	vm_sun.name = "ViewmodelKeyLight"
+	vm_sun.rotation_degrees = Vector3(-35, 30, 0)
+	vm_sun.light_color = Color(1.0, 0.9, 0.8)
+	vm_sun.light_energy = 1.1
+	sv.add_child(vm_sun)
 	var vcam := Camera3D.new()
 	vcam.name = "ViewCam"
 	vcam.cull_mask = 2
@@ -415,8 +438,8 @@ func build_player() -> void:
 	vlight.name = "HandLight"
 	vlight.light_cull_mask = 2
 	vlight.position = Vector3(0.3, 0.6, 0.6)
-	vlight.light_energy = 0.8
-	vlight.omni_range = 4.0
+	vlight.light_energy = 1.6
+	vlight.omni_range = 5.0
 	vcam.add_child(vlight)
 
 	var skin := _mat("skin_default", Color(0.85, 0.65, 0.5), 0.9, false)
@@ -429,17 +452,28 @@ func build_player() -> void:
 
 	var axe_pivot := Node3D.new()
 	axe_pivot.name = "AxePivot"
-	axe_pivot.scale = Vector3.ONE * 0.62
+	axe_pivot.scale = Vector3.ONE * 0.68
 	vcam.add_child(axe_pivot)
-	_mesh(axe_pivot, "Hand", _boxmesh(Vector3(0.16, 0.18, 0.2)), Vector3(0, 0, 0), skin, Vector3.ZERO, 2)
-	axe_pivot.add_child(WeaponMeshes.axe(2))
+	var arm_r := ViewmodelArm.new()
+	arm_r.name = "Hand"
+	arm_r.side = "right"
+	# Топор Quaternius: лезвие разворачиваем вперёд (-Z), держим за нижнюю треть
+	arm_r.weapon_kind = "q_axe"
+	arm_r.weapon_rotation = Vector3(0, 90, 0)
+	arm_r.weapon_scale = 1.25
+	arm_r.weapon_offset = Vector3(0, -0.22, 0)
+	axe_pivot.add_child(arm_r)
 
 	var ham_pivot := Node3D.new()
 	ham_pivot.name = "HammerPivot"
-	ham_pivot.scale = Vector3.ONE * 0.62
+	ham_pivot.scale = Vector3.ONE * 0.68
 	vcam.add_child(ham_pivot)
-	_mesh(ham_pivot, "Hand", _boxmesh(Vector3(0.16, 0.18, 0.2)), Vector3(0, 0, 0), skin, Vector3.ZERO, 2)
-	ham_pivot.add_child(WeaponMeshes.hammer(2))
+	var arm_l := ViewmodelArm.new()
+	arm_l.name = "Hand"
+	arm_l.side = "left"
+	arm_l.weapon_kind = "hammer"
+	arm_l.weapon_offset = Vector3(0, -0.06, 0)
+	ham_pivot.add_child(arm_l)
 
 	var axe := Node.new()
 	axe.name = "Axe"

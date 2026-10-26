@@ -16,7 +16,9 @@
 - `enemies/humanoid_model.gd` собирает персонажа: тело + одежда + волосы на одном скелете, красит, добавляет библиотеки анимаций `ual1/…`, `ual2/…`. Godot при импорте отрезает суффикс `_Loop` — `HumanoidModel.resolve()` ищет оба варианта.
 - Вид и анимации врагов — `MODEL_LOOKS` в `tools/build_scenes.gd` (поля групп «Модель»/«Анимации» в `enemy.gd`). Замена на Synty: положить в сцену врага узел `Visual` со своим `AnimationPlayer` или поменять пути/имена анимаций там.
 - `assets/quaternius/village/` — стены 2×3.12 м (`_wall_row` в генераторе ставит их в 2 ряда), текстуры для трипланарных материалов (`_tex_mat`). `assets/quaternius/props/` — бочки, факелы, знамёна.
-- Оружие — `scripts/weapon_meshes.gd` (процедурное, текстуры Quaternius). Слой 2 = вьюмодель.
+- Оружие — `scripts/weapon_meshes.gd`: модели `q_*` из `assets/quaternius/weapons/` (материалы подменяются на наши) + процедурные (Мьёльнир, дубина, вилы, факел). Слой 2 = вьюмодель.
+- Руки от первого лица — `player/viewmodel_arm.gd`: рука Quaternius (одна сторона, обрезана у локтя), застывшая в позе кулака и выровненная по рукояти; оружие строится им же при запуске (в .tscn не сохраняется). У SubViewport рук свой мир и свет (`own_world_3d`).
+- Массовка/драугры: `HumanoidModel.random_look()` смешивает части одежды, волосы, цвета; у грунтов `randomize_look` + `weapon_pool` + `shield_chance`.
 - Витрина ассетов: `xvfb-run -a godot --path . --rendering-method gl_compatibility --resolution 1280x720 res://tools/preview_assets.tscn -- out.png lineup|characters|village|props`.
 
 ## Важно

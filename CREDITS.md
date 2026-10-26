@@ -13,7 +13,8 @@
 | Анимации персонажей: Universal Animation Library 1 и 2 (Standard) | Quaternius — https://quaternius.com/packs/universalanimationlibrary.html | CC0 |
 | Стены, полы, ящики, текстуры дерева/камня: Medieval Village MegaKit (Standard) | Quaternius — https://quaternius.com/packs/medievalvillagemegakit.html (копия: github.com/Fialuxe/MouthOfGod_System) | CC0 (`assets/quaternius/village/LICENSE.txt`) |
 | Бочки, факелы, знамёна: Fantasy Props MegaKit (часть) | Quaternius — https://quaternius.com/packs/fantasypropsmegakit.html (копия: github.com/OpenAgentsInc/openagents, `assets/verse/props/quaternius`) | CC0 (`assets/quaternius/props/license.txt`) |
-| Оружие (топор, Мьёльнир, дубина, посох) | Собрано кодом (`scripts/weapon_meshes.gd`) из примитивов с текстурами Quaternius | — |
+| Оружие: топор, меч, копьё, коса, кинжал, круглый щит, лук, посох (Medieval Weapons Pack, RPG Pack), кирка (Kenney Survival Kit) | Quaternius / Kenney (копия: github.com/nrknithin/html-anime, `models/library`) — распакованы из meshopt, материалы заменены на наши | CC0 |
+| Мьёльнир, дубина, вилы, факел, посох шамана | Собраны кодом (`scripts/weapon_meshes.gd`) в текстурах Quaternius | — |
 
 Текстуры Quaternius уменьшены до 1024 px, чтобы репозиторий и сборка были легче.
 

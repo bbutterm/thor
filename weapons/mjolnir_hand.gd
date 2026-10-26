@@ -34,9 +34,9 @@ var projectile: Node3D = null
 
 @onready var player: Player = get_node(player_path)
 @onready var pivot: Node3D = get_node_or_null(pivot_path)
-@onready var hand_mesh: MeshInstance3D = get_node_or_null(hand_mesh_path)
+@onready var hand_mesh: Node = get_node_or_null(hand_mesh_path)
 
-const REST_POS := Vector3(-0.52, -0.52, -1.05)
+const REST_POS := Vector3(-0.5, -0.37, -1.0)
 const REST_ROT := Vector3(-10, -15, 12)
 
 func _ready() -> void:
@@ -44,9 +44,12 @@ func _ready() -> void:
 		pivot.position = REST_POS
 		pivot.rotation_degrees = REST_ROT
 
-func set_hand_color(c: Color) -> void:
-	if hand_mesh:
-		hand_mesh.material_override = FX.make_material(c, 0.9)
+## Цвет кожи и рукава (из тела BodyDef). Рука — ViewmodelArm или (старое) простой меш.
+func set_hand_color(c: Color, sleeve: Color = Color(0, 0, 0, 0)) -> void:
+	if hand_mesh is ViewmodelArm:
+		(hand_mesh as ViewmodelArm).recolor(c, sleeve)
+	elif hand_mesh is MeshInstance3D:
+		(hand_mesh as MeshInstance3D).material_override = FX.make_material(c, 0.9)
 
 func _physics_process(_delta: float) -> void:
 	if player == null or player.is_dead or not player.input_enabled:
