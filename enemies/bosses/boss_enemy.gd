@@ -50,9 +50,14 @@ func _run_act(_delta: float) -> void:
 func set_act(a: int) -> void:
 	act = a
 	act_time = 0.0
+	# Полоса-телеграф показывается каждый кадр прицеливания — при любой смене действия прячем
+	strip_hide()
 	if a == 0:
 		_windup_glow = 0.0
 		_set_state(State.CHASE)
+		# Не оставлять позу действия (оглушение, пришивание) — обычный ИИ дальше сам выберет ходьбу/стойку
+		if _humanoid:
+			_humanoid.play(anim_idle, 0.2)
 	else:
 		# Обычный замах (если был) отменяется
 		if _telegraph and is_instance_valid(_telegraph):

@@ -81,6 +81,13 @@
 - **Раздувание:** с `swell_hp_fraction` 0.25 HP бежит ×`swell_speed_mult` 1.4 к Тору (не дольше `swell_max_time` 6 с), раздувается на `swell_amount` 0.5; ближе `fuse_range` 3 м — фитиль `fuse_time` 1.1 с (красный круг), взрыв `blast_radius` 5 / `blast_damage` 30 — его конец. Убит раздутым — взрыв ×`death_blast_mult` 0.6 через 0.45 с.
 - Арена — `rooms/sven_arena.tscn` (генератор, «Пивной погреб Свена»): `Run.miniboss_arena` подменяет ею зал мини-босса (`Run.miniboss_rooms`); пусто — Свен выходит последней волной обычного зала.
 
+## Ярл Бьорн — `enemies/jarl.tscn` (`enemies/bosses/jarl.gd`), числа GDD — `enemies/defs/jarl.tres`
+
+60 У = 1320 HP, `move_speed` 3.6, удар 25 (`attack_range` 3.6 — широкий замах), удар по площади `boss_slam_radius` 6 / 30, `knock_resist` 0.85. Фазы: `phase2_at` 0.66, `phase3_at` 0.33, рёв `roar_time` 1.2 с.
+- **Рука-бумеранг:** `throw_cooldown` 6, бросает дальше `throw_min_dist` 6 м, замах `throw_windup` 0.75, `arm_damage` 20 (туда и обратно), окно `arm_window` 3 с, дальность `arm_range` 16. Урон по Ярлу: с рукой ×`armed_damage_mult` 0.7, в окнах (без руки, сбит, оглушён) ×`window_damage_mult` 1.5.
+- **Балкон:** прыжок `leap_time` 1.0 / `leap_height` 4; наверху урон ×`perch_damage_mult` 0.2, сбивают `slam`/`stomp`/`hammer`/`lightning` → оглушён `knocked_stun` 3 с; корм `summon_count` 4 раз в `summon_interval` 5 с (не больше `summon_cap` 16 врагов); снова наверх через `perch_return_time` 12 с; подошёл наверху ближе `perch_swat_range` 2.6 — отмахивается `perch_swat_damage` 15 (раз в 1.8 с).
+- **Ярость:** балконы по одному раз в `break_interval` 0.7 с (тряска `Balcony.shake_time` 0.45, `debris_count` 6 досок на `debris_lifetime` 4 с); бодание — телеграф `butt_aim_time` 0.8, `butt_speed` 14, `butt_max_dist` 22, `butt_damage` 30, о стену — оглушён `butt_wall_stun` 2 с, `butt_cooldown` 2.5; прыжок с волной `slam_leap_cooldown` 7, `slam_leap_time` 1.1, `slam_leap_radius` 5, `slam_leap_damage` 25 (только по стоящему на земле); бег ×`phase3_move_mult` 1.25.
+
 ## Враги — `enemies/grunt.tscn`, `thrower.tscn`, `boss.tscn` (`enemies/enemy.gd`)
 
 | | Грунт | Метатель | Босс |

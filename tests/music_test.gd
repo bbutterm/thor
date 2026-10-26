@@ -33,7 +33,7 @@ func _layer_db(i: int) -> float:
 
 func _run() -> void:
 	print("=== MUSIC TEST ===")
-	for t in ["midgard", "boss", "miniboss", "menu", "plan", "shop"]:
+	for t in ["midgard", "boss", "jarl", "miniboss", "menu", "plan", "shop"]:
 		check(Music.has_track(t), "трек «%s» найден" % t)
 	check(Music._stinger.stream != null, "стингер удара-приземления загружен")
 	Music.auto = false

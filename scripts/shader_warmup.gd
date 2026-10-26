@@ -40,7 +40,7 @@ func _build() -> void:
 	var i := 0
 	for path in ["res://enemies/grunt.tscn", "res://enemies/thrower.tscn", "res://enemies/boss.tscn",
 			"res://enemies/fodder.tscn", "res://enemies/bloated.tscn", "res://enemies/shieldbearer.tscn", "res://enemies/shaman.tscn", "res://enemies/merc.tscn",
-			"res://enemies/sven.tscn"]:
+			"res://enemies/sven.tscn", "res://enemies/jarl.tscn"]:
 		var e := (load(path) as PackedScene).instantiate() as Enemy
 		e.process_mode = Node.PROCESS_MODE_DISABLED
 		if i == 0:

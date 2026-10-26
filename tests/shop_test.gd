@@ -245,7 +245,8 @@ func _test_purchases() -> void:
 	check(Run.runes.size() == n_runes + 1, "мешок: руна")
 	var sv := Run.silver
 	Shop._open_bag(game, "silver")
-	check(Run.silver == sv + Shop.BAG_SILVER, "мешок: серебро")
+	# Руна из мешка могла оказаться «Жадностью Брокка» (+25 % серебра) — учитываем
+	check(Run.silver == sv + int(round(Shop.BAG_SILVER * (1.0 + Run.rune_value("brokk_greed")))), "мешок: серебро")
 	p.health = 100.0
 	Shop._open_bag(game, "curse")
 	check(p.health < 100.0, "мешок: проклятие (%.0f)" % p.health)
@@ -274,7 +275,7 @@ func _test_purchases() -> void:
 		si = 0
 	shop._sub.choose(si, true)
 	await wait(0.1)
-	check(Run.rune_count(sell_id) == 0 and Run.silver == sv + 20, "руна %s сдана: +20 (%d)" % [sell_id, Run.silver])
+	check(Run.rune_count(sell_id) == 0 and (Run.silver == sv + 20 or Run.silver == sv + int(round(20 * (1.0 + Run.rune_value("brokk_greed"))))), "руна %s сдана: +20 (%d)" % [sell_id, Run.silver])
 	# Скидка «Плана тренировок»
 	Save.data.unlocks["discount"] = 1
 	check(Shop.price(game, _item("shawarma")) == 34, "скидка −15 %%: шаурма за %d" % Shop.price(game, _item("shawarma")))

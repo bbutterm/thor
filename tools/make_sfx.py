@@ -416,6 +416,11 @@ if not ONLY or any(p.startswith("music") for p in ONLY):
     save_music("boss", "base", bass_line(jarl, 4.0, 700) + pad(jarl) * 0.5, 0.8)
     save_music("boss", "drums", drums("drive", True), 0.75)
     save_music("boss", "full", lead(jarl, (0, 1, 5, 7, 8), 4000), 0.55)
+    # Ярл Бьорн (блок О): своя тема-заглушка — тяжёлый марш в до-диез миноре, «королевский» лид с хроматикой
+    jt = [37, 37, 40, 35, 37, 42, 40, 35]
+    save_music("jarl", "base", bass_line(jt, 4.5, 650) + pad(jt, 3, 1100) * 0.55, 0.8)
+    save_music("jarl", "drums", drums("drive", True), 0.78)
+    save_music("jarl", "full", lead(jt, (0, 1, 4, 7, 8), 3800), 0.55)
     # Мини-босс: короткая агрессивная петля
     mb = [40, 40, 43, 38, 40, 40, 43, 45]
     save_music("miniboss", "base", bass_line(mb, 3.5, 800), 0.8)

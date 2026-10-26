@@ -153,6 +153,47 @@ func _box(parent: Node, name: String, center: Vector3, size: Vector3, mat: Mater
 	root.add_child(mi)
 	return root
 
+## Разрушаемый балкон (rooms/balcony.gd): StaticBody3D — настил «Deck»/«Mesh» и столбы до пола по переднему краю.
+func _balcony(parent: Node, name: String, center: Vector3, size: Vector3, mat: Material) -> Node3D:
+	var sb := StaticBody3D.new()
+	sb.name = name
+	sb.set_script(load("res://rooms/balcony.gd"))
+	sb.collision_layer = WORLD
+	sb.collision_mask = 0
+	sb.position = center
+	parent.add_child(sb)
+	var cs := CollisionShape3D.new()
+	cs.name = "Deck"
+	var bs := BoxShape3D.new()
+	bs.size = size
+	cs.shape = bs
+	sb.add_child(cs)
+	var mi := MeshInstance3D.new()
+	mi.name = "Mesh"
+	mi.mesh = _boxmesh(size)
+	mi.material_override = mat
+	sb.add_child(mi)
+	# Столбы — по краю, обращённому в зал (по X к центру), через каждые ~5 м
+	var post_h := center.y - size.y * 0.5
+	var edge_x := -signf(center.x) * (size.x * 0.5 - 0.25)
+	var n := maxi(2, int(round(size.z / 5.0)) + 1)
+	for i in n:
+		var z := lerpf(-size.z * 0.5 + 0.3, size.z * 0.5 - 0.3, float(i) / (n - 1))
+		var pc := CollisionShape3D.new()
+		pc.name = "PostShape%d" % i
+		var pb := BoxShape3D.new()
+		pb.size = Vector3(0.35, post_h, 0.35)
+		pc.shape = pb
+		pc.position = Vector3(edge_x, -center.y + post_h * 0.5, z)
+		sb.add_child(pc)
+		var pm := MeshInstance3D.new()
+		pm.name = "Post%d" % i
+		pm.mesh = _boxmesh(Vector3(0.35, post_h, 0.35))
+		pm.material_override = mat
+		pm.position = pc.position
+		sb.add_child(pm)
+	return sb
+
 func _cyl(parent: Node, name: String, center: Vector3, radius: float, height: float, mat: Material) -> Node3D:
 	var sb := StaticBody3D.new()
 	sb.name = name
@@ -300,6 +341,9 @@ func build_enemies() -> void:
 			"extra": {}},
 		"merc": {"kind": Enemy.Kind.MERC, "hp": 44.0, "speed": 4.0, "range": 14.0, "dmg": 15.0, "windup": 0.8, "recover": 0.9, "cd": 2.4, "color": Color(0.35, 0.3, 0.3), "scale": 1.0, "resist": 0.0,
 			"extra": {"keep_min_dist": 7.0, "keep_max_dist": 13.0}},
+		# Ярл Бьорн Мёртвый — босс Мидгарда (GDD 14.2): 60 У, три фазы (enemies/bosses/jarl.gd); HP/урон — enemies/defs/jarl.tres
+		"jarl": {"kind": Enemy.Kind.BOSS, "hp": 1320.0, "speed": 3.6, "range": 3.6, "dmg": 25.0, "windup": 0.8, "recover": 0.9, "cd": 1.1, "color": Color(0.5, 0.26, 0.2), "scale": 2.1, "resist": 0.85,
+			"script": "res://enemies/bosses/jarl.gd", "extra": {"lunge_speed": 5.0, "wall_splat_speed": 99.0, "boss_slam_radius": 6.0, "boss_slam_damage": 30.0, "boss_slam_windup": 1.0, "boss_far_slam_chance": 0.0}},
 		# Толстый Свен — мини-босс (GDD 14.1): свой скрипт поверх enemy.gd; числа и вид перекрывает MinibossDef
 		"sven": {"kind": Enemy.Kind.BOSS, "hp": 550.0, "speed": 4.2, "range": 2.6, "dmg": 18.0, "windup": 0.75, "recover": 0.9, "cd": 1.0, "color": Color(0.55, 0.62, 0.4), "scale": 1.5, "resist": 0.6,
 			"script": "res://enemies/bosses/sven.gd", "extra": {"lunge_speed": 5.0, "wall_splat_speed": 99.0, "boss_slam_radius": 4.5, "boss_slam_damage": 20.0, "boss_slam_windup": 0.9, "boss_far_slam_chance": 0.004}},
@@ -362,6 +406,14 @@ const MODEL_LOOKS := {
 		"anim_attack": "Spell_Simple_Shoot", "anim_attack_hit_at": 0.6, "anim_hit": "Hit_Head", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
 	},
 	"boss": {
+		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Peasant.gltf", "model_hair": "hair/Hair_Beard.gltf",
+		"skin_tint": Color(0.5, 0.72, 1.0), "cloth_tint": Color(0.55, 0.7, 1.0), "eye_glow": Color(0.5, 0.95, 1.0, 1.0),
+		"hand_weapon": "club",
+		"anim_spawn": "LayToIdle", "anim_idle": "Sword_Idle", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.6,
+		"anim_attack": "Sword_Regular_C", "anim_attack_hit_at": 0.35, "anim_slam": "Sword_Regular_C", "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
+	# Ярл: огромный синеватый драугр с бородой, рука-дубина в правой руке (бросает её бумерангом)
+	"jarl": {
 		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Peasant.gltf", "model_hair": "hair/Hair_Beard.gltf",
 		"skin_tint": Color(0.5, 0.72, 1.0), "cloth_tint": Color(0.55, 0.7, 1.0), "eye_glow": Color(0.5, 0.95, 1.0, 1.0),
 		"hand_weapon": "club",
@@ -698,18 +750,26 @@ func build_rooms() -> void:
 		_build_room(d, false)
 	# Зал-ларёк Брокка и Эйтри (блок К): без врагов, сам ларёк собирает rooms/shop_stall.gd
 	_build_room(shop_room_def(), false)
+	# Длинный дом Ярла Бьорна (GDD 14.2): длинный зал, по длинным стенам — 4 разрушаемых балкона (Balcony,
+	# настил на 3 м, StaticBody3D), к каждому — ступень-ящик 1.5 м со стороны середины зала. Маркеры: JarlPerches —
+	# куда Ярл прыгает пришивать руку (фаза 2), FodderGates — откуда лезет корм.
 	_build_room({
-		"file": "boss_arena", "title": "Чертог Хримтурса", "w": 32.0, "d": 32.0,
+		"file": "boss_arena", "title": "Длинный дом ярла", "w": 22.0, "d": 44.0, "torch_y": 4.4,
 		"blocks": [
-			[Vector3(-12.5, 1.3, -12.5), Vector3(5, 2.6, 5), "stone_dark"],
-			[Vector3(12.5, 1.3, -12.5), Vector3(5, 2.6, 5), "stone_dark"],
-			[Vector3(-12.5, 1.3, 8), Vector3(5, 2.6, 5), "stone_dark"],
-			[Vector3(12.5, 1.3, 8), Vector3(5, 2.6, 5), "stone_dark"],
+			[Vector3(-9.5, 0.75, -3.6), Vector3(3, 1.5, 2), "wood"],
+			[Vector3(9.5, 0.75, -3.6), Vector3(3, 1.5, 2), "wood"],
+			[Vector3(-9.5, 0.75, 3.6), Vector3(3, 1.5, 2), "wood"],
+			[Vector3(9.5, 0.75, 3.6), Vector3(3, 1.5, 2), "wood"],
 		],
-		"pillars": [Vector3(-6, 0, -6), Vector3(6, 0, -6), Vector3(-6, 0, 4), Vector3(6, 0, 4)],
-		"enemies": [["boss", Vector3(0, 0, -8), 0], ["grunt", Vector3(-8, 0, -10), 0], ["grunt", Vector3(8, 0, -10), 0],
-			["thrower", Vector3(-12.5, 2.7, -12.5), 1], ["thrower", Vector3(12.5, 2.7, -12.5), 1], ["fodder", Vector3(0, 0, -13), 1, 6, 2.0]],
-		"props": _ring_props(Vector3(0, 0, -2), 11.0, 10, "barrel"),
+		"balconies": [[Vector3(-9.5, 2.825, -11), Vector3(3, 0.35, 12)], [Vector3(9.5, 2.825, -11), Vector3(3, 0.35, 12)],
+			[Vector3(-9.5, 2.825, 11), Vector3(3, 0.35, 12)], [Vector3(9.5, 2.825, 11), Vector3(3, 0.35, 12)]],
+		"pillars": [Vector3(-4.5, 0, -9), Vector3(4.5, 0, -9), Vector3(-4.5, 0, 9), Vector3(4.5, 0, 9)],
+		"enemies": [["jarl", Vector3(0, 0, -12), 0], ["fodder", Vector3(0, 0, -16), 0, 4, 2.0],
+			["thrower", Vector3(-9.5, 3.05, -13), 1], ["thrower", Vector3(9.5, 3.05, 13), 1], ["fodder", Vector3(0, 0, -18), 1, 6, 2.0]],
+		"markers": {"JarlPerches": [Vector3(-9.5, 3.0, -11), Vector3(9.5, 3.0, -11), Vector3(-9.5, 3.0, 11), Vector3(9.5, 3.0, 11)],
+			"FodderGates": [Vector3(-7, 0, -19), Vector3(7, 0, -19), Vector3(-7.5, 0, 0), Vector3(7.5, 0, 0)]},
+		"props": [["barrel", Vector3(-10.2, 0, -7.5)], ["barrel", Vector3(10.2, 0, 14.5)], ["barrel", Vector3(-10.2, 0, 15)], ["barrel", Vector3(10.2, 0, -15)],
+			["barrel", Vector3(-2, 0, 0)], ["barrel", Vector3(2.5, 0, -4)], ["crate", Vector3(-10, 0, 19)], ["crate", Vector3(10, 0, -19.5)]],
 	}, true)
 	# Арена Толстого Свена (GDD 14.1) — пивной погреб: открытый пол для таранов на бочке, две низкие
 	# площадки (1.4 м) — уйти с пути тарана, колонны — о них Свен оглушается. Сам Свен выходит
@@ -785,6 +845,15 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		_cyl(geo, "Pillar%d" % i, pp + Vector3(0, h / 2, 0), 0.8, h, pillar_mat)
 		_cyl(geo, "PillarBase%d" % i, pp + Vector3(0, 0.25, 0), 1.05, 0.5, pillar_mat)
 		_cyl(geo, "PillarCap%d" % i, pp + Vector3(0, h - 0.2, 0), 1.0, 0.4, pillar_mat)
+
+	# Разрушаемые балконы: [центр настила, размер настила] — rooms/balcony.gd
+	var bals: Array = d.get("balconies", [])
+	if not bals.is_empty():
+		var bnode := Node3D.new()
+		bnode.name = "Balconies"
+		root.add_child(bnode)
+		for i in bals.size():
+			_balcony(bnode, "Balcony%d" % i, bals[i][0], bals[i][1], mats.wood)
 
 	# Дверь
 	var door := _box(root, "Door", Vector3(0, h / 2, -dep / 2 - 0.5), Vector3(gap, h, 0.6), _tex_mat("q_door", "WoodTrim", Color(0.55, 0.32, 0.25), 0.6))
@@ -867,7 +936,8 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	var lights := Node3D.new()
 	lights.name = "Torches"
 	root.add_child(lights)
-	var torch_pos := [Vector3(-w / 2 + 0.2, 3.2, -dep / 4), Vector3(w / 2 - 0.2, 3.2, -dep / 4), Vector3(-w / 2 + 0.2, 3.2, dep / 4), Vector3(w / 2 - 0.2, 3.2, dep / 4),
+	var ty := float(d.get("torch_y", 3.2))
+	var torch_pos := [Vector3(-w / 2 + 0.2, ty, -dep / 4), Vector3(w / 2 - 0.2, ty, -dep / 4), Vector3(-w / 2 + 0.2, ty, dep / 4), Vector3(w / 2 - 0.2, ty, dep / 4),
 		Vector3(-gap / 2 - 1.2, 3.6, -dep / 2 + 0.1), Vector3(gap / 2 + 1.2, 3.6, -dep / 2 + 0.1)]
 	var flame := _mat("flame", Color(1.0, 0.6, 0.2), 0.5, false, 5.0)
 	var holder := _mat("holder", Color(0.25, 0.22, 0.2), 0.6, false)
