@@ -144,6 +144,16 @@
 - **Фишка:** огромный рог Гьяллархорн, кружка кофе, планшет-дощечка с рунами-списком.
 - **EN:** `tall serious guardian god in golden armor, golden teeth, huge dark bags under his eyes from insomnia, twitching eye, holding a giant horn and a large mug of coffee, clipboard with runes, overly bureaucratic stern expression, comedic`
 
+### Брокк и Эйтри — гномы-торговцы
+- **Роль:** торговцы. Передвижной ларёк посреди забега: «РУНЫ • ШАУРМА • ЗАТОЧКА». Когда-то выковали Мьёльнир и до сих пор оправдываются за короткую рукоять.
+- **Брокк:** болтливый торгаш, низкий и круглый. Огромная рыжевато-каштановая борода заправлена за пояс. Хитрый прищур, золотой зуб. Кожаный фартук с карманами, полными рун, за ухом карандаш, на шее калькулятор-счёты.
+- **Эйтри:** молчаливый кузнец, жилистый, весь в саже. Короткая седая борода, защитные очки на лбу, молот в руке. Общается кивком и «угу».
+- **Эмоции:**
+  - Брокк впаривает (широкая улыбка);
+  - Брокк возмущён («это не брак!»);
+  - Эйтри показывает большой палец.
+- **EN:** `two comedic dwarf brothers merchants at a small wooden market stall on wheels with a sign, first dwarf short and round chatty salesman with huge chestnut beard tucked into his belt, sly squint, one golden tooth, leather apron with pockets full of glowing rune stones, pencil behind ear, abacus on his neck, wide salesman grin; second dwarf wiry silent blacksmith covered in soot, short grey beard, goggles on forehead, holding a smithing hammer, giving thumbs up, comedic`
+
 ### Ярл Бьорн Мёртвый — первый босс (драугр)
 - **Роль:** босс Мидгарда. Нежить-ярл, который до сих пор считает, что правит деревней.
 - **Характер:** напыщенный, громкий, обидчивый. У него отваливаются части тела, и он их пришивает обратно.
