@@ -317,7 +317,8 @@ func _do_hitbox() -> void:
 			_hit_ids[id] = true
 			_enemies_hit += 1
 			var dmg := _stage_damage() * _situational_mult(c)
-			c.take_hit(dmg, knock, _source())
+			# Через игрока: множители тела (пассивка/изъян) и Ярости, хук on_hit
+			player.deal_damage(c, dmg, knock, _source())
 			if def and def.stun_on_hit > 0.0 and c.has_method("apply_stun") and is_instance_valid(c):
 				c.call("apply_stun", def.stun_on_hit * (1.5 if strong else 1.0), strong)
 			new_hits += 1

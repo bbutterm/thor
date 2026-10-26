@@ -39,6 +39,18 @@ func _run() -> void:
 	await wait(0.15)
 	await shot("01b_settings")
 	sp.close()
+	# Выбор тела (блок Л): открытое и закрытое тело
+	var bsel := BodySelect.new()
+	get_tree().current_scene.add_child(bsel)
+	bsel.open("Назад", "berserker")
+	await wait(0.4)
+	await shot("01c_body_select")
+	bsel.select("smith")
+	await wait(0.1)
+	await shot("01d_body_locked")
+	bsel.close("")
+	bsel.queue_free()
+	get_tree().paused = false
 	Run.start_run("hunter")
 	Run.room_order.assign(["res://rooms/room_02.tscn", "res://rooms/room_03.tscn", "res://rooms/boss_arena.tscn"])
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
@@ -51,6 +63,15 @@ func _run() -> void:
 		en.set_physics_process(false)
 	await wait(0.2)
 	await shot("02_room_start")
+	# Ярость (блок П): шкала наполовину, потом берсерк
+	for i in 14:
+		p.rage.add_kill()
+	await wait(0.2)
+	await shot("02b_rage")
+	p.rage.start_berserk()
+	await wait(0.6)
+	await shot("02c_berserk")
+	p.rage.reset()
 	# Подходим к врагу и бьём
 	var enemies := game.room.alive_enemies()
 	if not enemies.is_empty():

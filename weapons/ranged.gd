@@ -153,7 +153,7 @@ func _ray(origin: Vector3, dir: Vector3, dmg: float, pierce: int) -> Vector3:
 		var c: Object = hit.collider
 		var pos: Vector3 = hit.position
 		if c and c.has_method("take_hit"):
-			c.take_hit(dmg, Vector3.ZERO, "ranged")
+			player.deal_damage(c, dmg, Vector3.ZERO, "ranged")
 			FX.sparks(player.get_parent(), pos, Color(1.0, 0.55, 0.35), 5, 3.0, 12.0, 0.05, 0.25)
 			if left > 0 and c is CollisionObject3D:
 				left -= 1
@@ -176,6 +176,18 @@ func start_reload() -> void:
 	Audio.play(item.def.sound_reload)
 	reload_changed.emit(true, 0.0)
 	_animate_reload(item.def.reload_time)
+
+## Мгновенная перезарядка из запаса (Солдат: рывок перезаряжает ренж). true — патроны добавились.
+func instant_reload() -> bool:
+	if item == null or item.mag >= item.def.mag_size or item.reserve <= 0:
+		return false
+	cancel_reload()
+	var take := mini(item.def.mag_size - item.mag, item.reserve)
+	item.mag += take
+	item.reserve -= take
+	Audio.play(item.def.sound_reload)
+	_emit_ammo()
+	return true
 
 func cancel_reload() -> void:
 	if not reloading:

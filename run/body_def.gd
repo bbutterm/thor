@@ -28,3 +28,16 @@ class_name BodyDef
 ## Смешное описание от Одина для экрана выбора тела
 @export_multiline var odin_comment: String = ""
 
+
+## Профиль стиля движения (run/movement/<movement_style>.tres)
+func movement_profile() -> MovementProfile:
+	return MovementProfile.for_style(movement_style)
+
+## Число тела, пропущенное через обработчики пассивки и изъяна (без состояния: годится для Run и экранов).
+## В забеге у игрока — свои копии обработчиков: Player.modify_stat().
+func stat(stat_name: StringName, value: Variant) -> Variant:
+	for p in [passive, flaw]:
+		var pd := p as PassiveDef
+		if pd and pd.handler:
+			value = pd.handler.modify(stat_name, value)
+	return value

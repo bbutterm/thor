@@ -1,7 +1,8 @@
 extends Node
 class_name RunTracker
 ## Следит за забегом из сцены игры: время забега, кто последним ударил Тора (причина смерти),
-## бой-реплики Одина (стоит столбом, мульти-килл, получил много урона).
+## бой-реплики Одина (стоит столбом, мульти-килл, получил много урона, добил ренжем — «Позорище»).
+## «Вот! ВОТ!» (удар-приземление с высоты) говорит сам игрок (Player.big_slam_height), берсерк — Rage.
 ## Создаётся из Game._ready() через RunTracker.attach(). Игрока не меняет — только читает.
 ##
 ## Источник урона: перед player.take_damage() вызови RunTracker.note_damage("barrel") или
@@ -44,6 +45,7 @@ var _kill_times: Array[float] = []
 var _last_kills: int = 0
 var _damage_log: Array = []
 var _finished: bool = false
+var _pending_ranged_kill: bool = false
 
 ## Подключает трекер к сцене игры. Возвращает созданный узел.
 static func attach(game: Node, p: Player) -> RunTracker:
@@ -95,6 +97,8 @@ func _ready() -> void:
 	if player:
 		player.hurt.connect(_on_hurt)
 	_last_kills = Run.kills
+	if Run.has_signal("kill_registered"):
+		Run.kill_registered.connect(_on_kill_registered)
 	Save.begin_run(Run.body.id if Run.body else "")
 
 func _process(delta: float) -> void:
@@ -124,7 +128,16 @@ func _watch_kills() -> void:
 	_kill_times = _kill_times.filter(func(t: float) -> bool: return now - t <= multikill_window)
 	if _kill_times.size() >= multikill_count:
 		_kill_times.clear()
+		_pending_ranged_kill = false
 		Odin.say("multikill")
+	elif _pending_ranged_kill:
+		_pending_ranged_kill = false
+		Odin.say("ranged_kill")
+
+## «Позорище» — добил ренжем (GDD 17). Мульти-килл важнее: если убийство его собрало, он и скажется.
+func _on_kill_registered(source: String) -> void:
+	if not _finished and source == "ranged":
+		_pending_ranged_kill = true
 
 func _on_hurt(amount: float) -> void:
 	last_hit_by = pending_source if pending_source != "" else "unknown"

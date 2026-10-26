@@ -1,6 +1,11 @@
-[gd_resource type="Resource" script_class="PassiveDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="PassiveDef" format=3]
 
 [ext_resource type="Script" path="res://run/passive_def.gd" id="1_s"]
+
+[ext_resource type="Script" path="res://run/passives/smith_level.gd" id="h_script"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("h_script")
 
 [resource]
 script = ExtResource("1_s")
@@ -8,4 +13,6 @@ id = "smith_level"
 title = "Своя наковальня"
 description = "Оружие сразу +1 уровень, заточка у Эйтри −50%"
 is_flaw = false
-implemented = false
+implemented = true
+todo = "Заточка у Эйтри — когда появится ларёк"
+handler = SubResource("Resource_handler")

@@ -24,6 +24,13 @@ class_name CameraFX
 @export var strafe_tilt_enabled: bool = true
 @export var strafe_tilt_deg: float = 2.5
 
+@export_group("Тело")
+## Покачивание прицела, градусы (Пьяный скальд — ставит игрок из изъяна тела)
+@export var aim_wobble_deg: float = 0.0
+@export var aim_wobble_freq: float = 0.45
+## Как быстро камера опускается в подкат и поднимается обратно
+@export var crouch_speed: float = 12.0
+
 var trauma: float = 0.0
 ## 0..1 — насколько видны линии скорости (читает HUD)
 var speed_lines: float = 0.0
@@ -37,6 +44,10 @@ var _noise_t: float = 0.0
 var _speed_pulse: float = 0.0
 ## Отдача выстрела: x — вверх (рад), y — вбок (рад); гаснет сама
 var _recoil: Vector2 = Vector2.ZERO
+## Насколько опустить камеру (подкат) — ставит игрок
+var crouch_target: float = 0.0
+var _crouch: float = 0.0
+var _wobble_t: float = 0.0
 
 func _ready() -> void:
 	fov = base_fov
@@ -92,13 +103,20 @@ func update_motion(player: Player, input_dir: Vector2, on_floor: bool, delta: fl
 	var off_y := _noise.get_noise_2d(0.0, _noise_t) * shake_max_offset * shake
 	var roll := _noise.get_noise_2d(_noise_t, _noise_t) * deg_to_rad(shake_max_roll_deg) * shake
 
+	# Подкат — камера ниже
+	_crouch = lerpf(_crouch, crouch_target, clampf(real_delta * crouch_speed, 0.0, 1.0))
 	h_offset = bob.x + off_x
-	v_offset = bob.y - _dip + off_y
+	v_offset = bob.y - _dip + off_y - _crouch
 	rotation.z = _tilt + roll
 	# Отдача ренжа
 	_recoil = _recoil.lerp(Vector2.ZERO, clampf(real_delta * recoil_return_speed, 0.0, 1.0))
-	rotation.x = _recoil.x
-	rotation.y = _recoil.y
+	# Пьяный прицел: две несоизмеримые синусоиды
+	var wob := Vector2.ZERO
+	if aim_wobble_deg > 0.0:
+		_wobble_t += real_delta * TAU * aim_wobble_freq
+		wob = Vector2(sin(_wobble_t * 1.3) * 0.6, sin(_wobble_t)) * deg_to_rad(aim_wobble_deg)
+	rotation.x = _recoil.x + wob.x
+	rotation.y = _recoil.y + wob.y
 
 ## Отдача выстрела: камера подпрыгивает вверх (и чуть вбок) и сама возвращается.
 func kick_recoil(up_deg: float, side_deg: float = 0.0) -> void:

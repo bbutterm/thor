@@ -8,7 +8,7 @@
 |---|---|---|---|
 | Бег | `move_speed` | 8 | Базовая скорость (тело её переопределяет: Берсерк 7.5, Охотник 10, Трэлл 8.5) |
 | Бег | `ground_accel` / `ground_decel` | 70 / 55 | Разгон и торможение на земле. Больше — «отзывчивее» |
-| Бег | `air_accel` | 28 | Управление в воздухе |
+| Бег | `air_control` | 0.7 | Управление в воздухе — доля от наземного разгона (GDD 7.4: 70 %; было `air_accel` 28 ≈ 40 %) |
 | Бег | `air_overspeed_drag` / `ground_overspeed_drag` | 6 / 18 | Как быстро гасится скорость после рывка |
 | Прыжок | `jump_velocity` | 9.0 | Высота прыжка (~1.7 м) |
 | Прыжок | `extra_jumps` | 1 | Сколько прыжков в воздухе |
@@ -217,4 +217,57 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 ## Портреты — `sprites/portraits/<speaker>_<emotion>.webp|png`, `ui/portrait.gd`, `ui/dialogue_box.gd`
 
 Окно диалога: `portrait_size` 440×660 (пропорции спрайтов 2:3), `portrait_bottom` 40 (низ портрета уходит под плашку текста). Пузырь реплики: крупный план лица, `face_crop` 0.34 (сторона квадрата в долях ширины холста), центр — глаза из `data/portrait_faces.json`. Импорт портретов: WebP с потерями 0.85, не больше 1024 по высоте (иначе сборка выросла бы на ~70 МБ).
+## Тела смертных (блок Л) — `run/movement/*.tres`, `run/passives/*.tres`, `run/bodies/*.tres`
+
+**Стиль движения** — `run/movement/<стиль>.tres` (`MovementProfile`), имя файла = `BodyDef.movement_style`. Игрок копирует числа в свои поля (`Player.apply_movement_profile`), без тела — значения из группы «Стиль движения» узла Player (= Базовый). Заряды рывка — у тела (`BodyDef.dash_charges`: Берсерк 1, Охотник и Гонец 3, остальные 2), чтобы перк «+1 рывок» работал у всех.
+
+| Стиль (тела) | Что меняет | Числа |
+|---|---|---|
+| Базовый (Трэлл) | — | рывок 24 / 0.16 с, перезарядка 1.2 с, двойной прыжок, 2 отскока от стены |
+| Шустрый (Охотник) | короткие рывки | `dash_duration` 0.11, `dash_recharge` 0.8 |
+| Шустрый+ (Гонец) | ещё быстрее перезарядка (своё решение: GDD не уточняет, чем «+» отличается) | `dash_duration` 0.13, `dash_recharge` 0.6 |
+| Таран (Берсерк) | 1 длинный рывок сквозь врагов | `dash_speed` 26, `dash_duration` 0.34, `dash_recharge` 1.6, `dash_ram`; `ram_damage` 15.4 (0.7 У), `ram_knockback` 13 (в стороны), `ram_knock_up` 4, `ram_radius` 1.4, `ram_prop_impulse` 9 (бочки) |
+| Прыгун (Скальд, Дева щита) | тройной прыжок, рывка на земле нет | `extra_jumps` 2, `wall_jumps` 3, `wall_jump_mult` 1.25, `dash_on_ground` false |
+| Тяжёлый (Жрец, Кузнец) | нет двойного прыжка, мощный удар-приземление | `extra_jumps` 0, `slam_radius_mult` / `slam_damage_mult` 1.5, `slam_stun` 1 с, `slam_bounce_mult` 1.35 |
+| Скользящий (Солдат) | рывок на земле → подкат на скорости рывка | `dash_to_slide`, `slide_friction` 0, `momentum_cap` 2.2, `keep_air_momentum` (в воздухе скорость не гасится — bunny-hop) |
+
+**Правила ощущений (GDD 7.4)**, узел Player: `air_control` 0.7; `momentum_cap` 1.8 (предел горизонтальной скорости от рывка, подката и отскоков, × скорость бега); `dash_momentum_bonus` 3 (рывок прибавляет к текущей скорости: выход из рывка = max(24 × 0.55, скорость до рывка + 3), но не выше предела).
+
+**Подкат (GDD 5, 7.2)** — Ctrl + Shift на земле (тратит заряд рывка): `slide_speed` 13 (не ниже текущей), `slide_duration` 0.55 с, `slide_friction` 9 м/с² (у Скользящего 0), `slide_steer` 2.5 рад/с, `slide_camera_drop` 0.55 м, `slide_min_speed_ratio` 0.8 (медленнее — подкат кончается). Прыжок из подката сохраняет скорость. Камера: `crouch_speed` 12 (`camera_fx.gd`).
+
+**Пассивки и изъяны** — `run/passives/<id>.tres` (`PassiveDef`: `implemented`, `todo`, `handler`) + скрипт `run/passives/<id>.gd` (`BodyTraitHandler`). Числа — в инспекторе вложенного ресурса `handler`:
+
+| Черта (тело) | Поля |
+|---|---|
+| Кровавая ярость (Берсерк) | `damage_per_lost_pct` 1.0, `max_bonus` 0.5 |
+| Орёт и плохо лечится (Берсерк) | `heal_mult` 0.5, `shout_chance` 0.3 |
+| Привычка к луку (Охотник) | — (ренж не замедляет) |
+| Слабак (Трэлл) | `damage_factor` 0.7 — весь урон (раньше было `axe_damage_mult` 0.7 / `hammer_damage_mult` 0.8 в теле — убрано) |
+| Мудрость предков (Жрец) | `rune_power` 2 → `Run.rune_count` ×2, руна «Лечение» лечит 100 |
+| Кряхтит (Жрец) | `groan_chance` 0.6 (слово «KHEH!» при прыжке) |
+| Тактическая перезарядка (Солдат) | — (рывок → магазин из запаса) |
+| Пьяному море по колено (Скальд) | — (первый удар в зале — 0 урона; падение в пропасть не прощает) |
+| Пьяный прицел (Скальд) | `wobble_deg` 1.6 (частота — `aim_wobble_freq` 0.45 в `camera_fx.gd`) |
+| Удар в спину (Гонец) | `backstab_mult` 2.0 (поверх множителя оружия) |
+| Трус (Гонец) | `front_mult` 0.7 (враг смотрит на Тора) |
+| Своя наковальня (Кузнец) | `level_bonus` 1, `sharpen_cost_mult` 0.5 (заточки ещё нет) |
+| Тяжёлые сапоги (Кузнец) | — (нет рывка в воздухе) |
+| Мастер щита (Дева щита) | `window_mult` 2, `heal_on_parry` 5 (парирования ещё нет) |
+| Не её оружие (Дева щита) | `ranged_mult` 0.75 |
+
+Экран выбора тела (`ui/body_select.gd`): `columns` 3, `card_size` 230×100. Реакция Одина на смерть тела — `body_death_chance` 0.35 (`scripts/dialogue_manager.gd`).
+
+## Ярость (блок П, GDD 8) — узел **Player/Rage** (`player/rage.gd`, создаётся кодом)
+
+| Параметр | По умолчанию | Что делает |
+|---|---|---|
+| `kill_window` | 3 с | Окно между убийствами серии; дольше — шкала сбрасывается |
+| `kills_to_full` | 25 | Убийств в серии до полной шкалы |
+| `berserk_time` | 8 с | Длительность берсерка |
+| `damage_mult` / `speed_mult` | 1.5 / 1.5 | Урон Тора (всё, что идёт через `deal_damage`) и скорость бега в берсерке |
+| `hitstop_on_start` | 0.12 с | Хит-стоп при включении |
+
+В берсерке удары по Тору не отбрасывают («неуязвимость к стану» — стана у Тора нет), шкала заново не копится. HUD (`ui/rage_hud.gd`): `bar_width` 380, `vignette_alpha` 0.75; картинки `sprites/ui/hud/hud_rage_frame.png` + `hud_rage_fill.png`, `sprites/vfx/vfx_rage_vignette.png` — подхватятся сами.
+
+Бой-реплики Одина (GDD 17), лимит — `combat_cooldown` 12 с (`run/odin.gd`, «berserk» — без лимита): «ДВИГАЙСЯ!» `idle_time` 4 с, мульти-килл `multikill_count` 3 за `multikill_window` 0.8 с, «Скуф…» `big_damage_fraction` 0.35 HP за `big_damage_window` 3 с, «Позорище» — добил ренжем (`run/run_tracker.gd`; мульти-килл важнее), «Вот! ВОТ!» — удар-приземление с `big_slam_height` 9 м (узел Player). Тексты — пулы `idle`, `multikill`, `big_damage`, `ranged_kill`, `big_slam`, `berserk`, `rage_over` в `data/dialogues/odin.json`.
 

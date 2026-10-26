@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MovementProfile" format=3]
+
+[ext_resource type="Script" path="res://player/movement_profile.gd" id="1_mp"]
+
+[resource]
+script = ExtResource("1_mp")
+id = "heavy"
+title = "Тяжёлый"
+description = "Нет двойного прыжка. Удар-приземление ×1.5 по радиусу и урону, стан 1 с, отскок выше."
+extra_jumps = 0
+slam_radius_mult = 1.5
+slam_damage_mult = 1.5
+slam_stun = 1.0
+slam_bounce_mult = 1.35

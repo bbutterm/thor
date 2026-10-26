@@ -28,6 +28,8 @@ const TRIGGERS := ["run_start", "death", "victory", "boss_intro", "boss_defeat",
 @export var visitor_chance: float = 0.3
 ## Вероятность реплики Хеймдалля на старте забега (после знакомства с ним)
 @export var heimdall_chance: float = 0.35
+## Шанс, что Один отреагирует на смерть тела (пул odin.death_body_<тело>), а не на причину смерти
+@export var body_death_chance: float = 0.35
 
 var speakers: Dictionary = {}
 var scenes: Array[Dictionary] = []
@@ -307,6 +309,11 @@ func reaction_pool(won: bool) -> String:
 		order.append("long")
 	if cause != "":
 		order.append(cause)
+	# Реакция на смерть тела (блок Л) — иногда, если нет «особой» причины (быстро, упал, огонь, бочка)
+	var body_id := str(lr.get("body", ""))
+	if body_id != "" and has_pool("odin.death_body_" + body_id) and randf() < body_death_chance \
+			and not ("quick" in tags or cause in ["fall", "own_fire", "barrel"]):
+		return "odin.death_body_" + body_id
 	for c in order:
 		if has_pool("odin.death_" + c):
 			return "odin.death_" + c
