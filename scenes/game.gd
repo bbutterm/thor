@@ -15,6 +15,7 @@ var _ending: bool = false
 var trait_pick: TraitPick
 ## Время забега, причина смерти, бой-реплики Одина (run/run_tracker.gd)
 var tracker: RunTracker
+var tutorial: Tutorial
 ## Двери-награды и выдача наград залов (run/reward_flow.gd, блок И)
 var rewards: RewardFlow
 var _after_run_started: bool = false
@@ -40,6 +41,8 @@ func _ready() -> void:
 	pause_menu.menu_requested.connect(go_to_menu)
 	hud.bind_player(player)
 	tracker = RunTracker.attach(self, player)
+	# Обучение в первом зале — подсказки Хугина и Мунина (run/tutorial.gd)
+	tutorial = Tutorial.attach(self)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Дожидаемся фоновой загрузки моделей (обычно уже готово, пока игрок был в меню)
 	AssetCache.finish()
