@@ -23,6 +23,7 @@ static func detonate(parent: Node, pos: Vector3, radius_: float, damage_: float,
 	var ground := Loot.floor_point(parent as Node3D, pos) if parent is Node3D else pos
 	FX.ring(parent, ground, radius_, Color(color_, 0.9), 0.35)
 	FX.sparks(parent, pos, color_.lightened(0.3), 22, 9.0)
+	FX.blast_smoke(parent, pos, radius_)
 	Audio.play("sounds/sfx/boss_slam.wav")
 	ComicFX.pop("slam", pos)
 	var tree := parent.get_tree()

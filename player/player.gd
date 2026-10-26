@@ -694,6 +694,7 @@ func _do_slam_impact(height: float) -> void:
 	FX.ring(get_parent(), center, radius, Color(1.0, 0.85, 0.5, 0.9), 0.4)
 	FX.burst(get_parent(), center + Vector3(0, 0.3, 0), radius * 0.35, Color(1, 0.9, 0.6, 0.45), 0.25)
 	FX.sparks(get_parent(), center + Vector3(0, 0.2, 0), Color(0.55, 0.47, 0.4), 26 + int(power * 20), 7.0 + power * 6.0, 18.0, 0.14, 0.7)
+	FX.slam_impact(get_parent(), center, radius, height)  # волна и трещина (VFX-комплект)
 	FX.hitstop(0.06 + power * 0.04)
 	ComicFX.on_slam(center, height)
 	Audio.play("sounds/sfx/slam.wav")

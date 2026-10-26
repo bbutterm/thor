@@ -463,6 +463,7 @@ func _do_boss_slam() -> void:
 		_telegraph.queue_free()
 	FX.ring(get_parent(), global_position, boss_slam_radius, Color(1, 0.35, 0.2, 0.9), 0.4)
 	FX.burst(get_parent(), global_position + Vector3(0, 0.5, 0), 1.5, Color(1, 0.4, 0.2, 0.4), 0.25)
+	FX.shockwave(get_parent(), global_position, boss_slam_radius, Color(1.0, 0.55, 0.4))
 	Audio.play("sounds/sfx/boss_slam.wav")
 	if player and not player.is_dead:
 		player.camera_fx.add_trauma(0.45)
@@ -773,6 +774,7 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	var big := source == "melee_finisher" or source == "melee_heavy" or source == "slam"
 	if source != "fire" and source != "ranged":
 		FX.sparks(get_parent(), global_position + Vector3(0, 1.1 * model_scale, 0), Color(1, 0.85, 0.4) if source.begins_with("melee") else Color(0.6, 0.85, 1.0), 18 if big else 10, 7.0 if big else 5.0)
+	FX.enemy_hit(self, damage, source, big)  # вспышка, у нежити — ихор (VFX-комплект)
 	FX.damage_number(get_parent(), global_position + Vector3(0, 1.8 * model_scale, 0), damage,
 		Color(1, 0.55, 0.2) if big else (Color(0.6, 0.85, 1.0) if source in ["hammer", "lightning"] else Color(1, 0.92, 0.4)), big)
 	var k := knockback * (1.0 - knock_resist)
@@ -916,6 +918,7 @@ func _die(source: String) -> void:
 	var glory_base := Run.glory_elite_kill if has_meta("elite") else glory_value
 	Run.register_kill(source == "melee_finisher", now - _last_splat_time < 0.6, kind == Kind.BOSS and not has_meta("miniboss"), source, glory_base)
 	ComicFX.on_enemy_killed(self, source)
+	FX.enemy_died(self, source)
 	if player and is_instance_valid(player) and not player.is_dead:
 		player.heal(player.kill_heal(source))
 	Loot.on_enemy_died(self, source)
@@ -965,6 +968,7 @@ func _spawn_debris() -> void:
 	# Через 4 с «рэгдолл» сжимается и исчезает (твин привязан к телу и умрёт вместе с ним)
 	var tw := rb.create_tween()
 	tw.tween_interval(debris_lifetime)
+	tw.tween_callback(FX.corpse_smoke.bind(rb))
 	tw.tween_property(vis, "scale", Vector3(0.01, 0.01, 0.01), 0.3)
 	tw.tween_callback(rb.queue_free)
 

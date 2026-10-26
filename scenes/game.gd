@@ -37,6 +37,7 @@ func _ready() -> void:
 	pause_menu.menu_requested.connect(go_to_menu)
 	hud.bind_player(player)
 	tracker = RunTracker.attach(self, player)
+	VfxScreen.attach(self, player)  # линии скорости, виньетка Ярости, идеальный хват
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Дожидаемся фоновой загрузки моделей (обычно уже готово, пока игрок был в меню)
 	AssetCache.finish()
