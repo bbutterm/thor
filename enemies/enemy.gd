@@ -9,8 +9,12 @@ class_name Enemy
 ## Имена анимаций — в группе «Анимации»: при смене моделей достаточно поменять их там.
 
 signal died(enemy: Enemy)
+## Удар врага дошёл до Тора (amount — сколько HP снято на самом деле). Для модификаторов элиты.
+signal struck_player(amount: float)
 
-enum Kind { GRUNT, THROWER, BOSS }
+## Новые виды — только в конец (номера сохранены в сценах).
+## FODDER — драугр-корм, BLOATED — Раздутый, SHIELD — Щитоносец, SHAMAN — Шаман, MERC — Наёмник Локи (GDD 12.1)
+enum Kind { GRUNT, THROWER, BOSS, FODDER, BLOATED, SHIELD, SHAMAN, MERC }
 enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 
 @export var kind: Kind = Kind.GRUNT
@@ -45,6 +49,47 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var boss_slam_windup: float = 1.0
 ## Шанс (за кадр) начать удар по площади издалека (> 5 м) — давление на игрока, но и задержка подхода
 @export var boss_far_slam_chance: float = 0.02
+
+@export_group("Раздутый")
+## С какой дистанции до Тора поджигает фитиль (радиус и время телеграфа — boss_slam_radius / boss_slam_windup)
+@export var bloat_trigger_range: float = 2.4
+## Во сколько раз толще обычного драугра
+@export var bloat_fatness: float = 1.55
+## На сколько раздувается к взрыву
+@export var bloat_swell: float = 0.3
+
+@export_group("Щитоносец")
+## Щит закрывает удары, пришедшие спереди: косинус половины угла (0.3 ≈ ±72°)
+@export var shield_front_dot: float = 0.3
+## Удар щитом отталкивает Тора (скорость, м/с) — теснит к краю
+@export var shove_force: float = 13.0
+@export var shove_up: float = 2.5
+## Щит на корпусе (в системе модели): смещение, поворот, масштаб
+@export var shield_offset: Vector3 = Vector3(0.1, 0.5, 0.45)
+@export var shield_rotation: Vector3 = Vector3(0, 0, 0)
+@export var shield_scale: float = 1.45
+
+@export_group("Шаман")
+## Раз в столько секунд — обряд (телеграф = windup_time): лечит своих и поднимает корм
+@export var ritual_interval: float = 6.0
+@export var ritual_heal_radius: float = 12.0
+## Лечение за обряд, доля максимума HP каждого врага рядом
+@export var ritual_heal_fraction: float = 0.35
+@export var ritual_raise_count: int = 2
+## Не поднимает корм, если в зале и так столько живых врагов
+@export var ritual_raise_cap: int = 30
+## Ближе этого к Тору — отходит (но не прыгает с края)
+@export var shaman_flee_dist: float = 5.0
+
+@export_group("Наёмник")
+## Лазерная точка ведёт Тора windup_time секунд (0.8 по GDD), потом очередь по последней точке
+@export var merc_aim_track: float = 7.0
+@export var merc_burst_count: int = 6
+@export var merc_burst_interval: float = 0.1
+## Урон пули — доля attack_damage (15 по GDD); Тор неуязвим 0.25 с после попадания, так что за очередь доходит 2–3 пули
+@export var merc_bullet_mult: float = 0.5
+@export var merc_spread_deg: float = 2.0
+@export var merc_range: float = 40.0
 
 @export_group("Об стену")
 @export var wall_splat_speed: float = 8.5
@@ -121,6 +166,17 @@ var _detour_dir: Vector3 = Vector3.ZERO
 var _humanoid: HumanoidModel
 var _hit_anim_left: float = 0.0
 var _spawn_time: float = 0.5
+## Особые враги (GDD 8): замах сбивают только сильные удары, Мьёльнир и удар-приземление
+var _tough: bool = false
+var _ritual_left: float = 3.0
+var _laser: MeshInstance3D
+var _laser_dot: MeshInstance3D
+var _aim_point: Vector3 = Vector3.ZERO
+var _burst_left: int = 0
+var _burst_t: float = 0.0
+var _burst_dir: Vector3 = Vector3.FORWARD
+## Урон не меньше этого — отладочное «убить» (тесты): проходит сквозь щит и броню
+const DEBUG_KILL_DAMAGE := 9999.0
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -175,6 +231,7 @@ func _ready() -> void:
 		_visual.scale = Vector3(0.1, 0.1, 0.1)
 		var tw := create_tween()
 		tw.tween_property(_visual, "scale", Vector3.ONE * model_scale, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_setup_special()
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -210,6 +267,7 @@ func _physics_process(delta: float) -> void:
 				_set_state(State.CHASE)
 
 	_apply_movement(move_dir, delta)
+	_update_special(delta)
 	_update_visual_feedback(delta)
 	_update_animation(delta)
 
@@ -252,7 +310,7 @@ func _think_chase() -> Vector3:
 	_face_dir(dir, get_physics_process_delta_time())
 	var move := Vector3.ZERO
 	match kind:
-		Kind.GRUNT, Kind.BOSS:
+		Kind.GRUNT, Kind.BOSS, Kind.FODDER, Kind.SHIELD:
 			var reach := attack_range
 			if kind == Kind.BOSS and dist > 5.0 and _cooldown <= 0.0 and randf() < boss_far_slam_chance:
 				_begin_windup(true)
@@ -261,7 +319,19 @@ func _think_chase() -> Vector3:
 				_begin_windup(kind == Kind.BOSS and _attack_count % 3 == 2)
 				return Vector3.ZERO
 			move = dir
-		Kind.THROWER:
+		Kind.BLOATED:
+			# Бежит к Тору; вплотную — фитиль (телеграф-диск радиусом взрыва), потом взрыв
+			if dist <= bloat_trigger_range and _cooldown <= 0.0 and _state_time > 0.2:
+				_begin_windup(true)
+				return Vector3.ZERO
+			move = dir
+		Kind.SHAMAN:
+			move = _think_shaman(dist, dir)
+			if _ritual_left <= 0.0:
+				_ritual_left = ritual_interval
+				_begin_windup(false)
+				return Vector3.ZERO
+		Kind.THROWER, Kind.MERC:
 			if dist < keep_min_dist:
 				move = -dir
 			elif dist > keep_max_dist:
@@ -277,10 +347,21 @@ func _think_chase() -> Vector3:
 		move = (_detour_dir + move * 0.35).normalized()
 	return (move + _separation()).normalized() if move != Vector3.ZERO else _separation()
 
+## Список врагов — один на кадр физики для всех (раньше каждый враг собирал свой массив: при толпе в 40–60 это лишние аллокации)
+static var _group_frame: int = -1
+static var _group_cache: Array[Node] = []
+
+func _enemies_now() -> Array[Node]:
+	var f := Engine.get_physics_frames()
+	if f != _group_frame:
+		_group_frame = f
+		_group_cache = get_tree().get_nodes_in_group("enemies")
+	return _group_cache
+
 func _separation() -> Vector3:
 	var push := Vector3.ZERO
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if e == self:
+	for e in _enemies_now():
+		if e == self or not is_instance_valid(e):
 			continue
 		var other := e as Node3D
 		var d := global_position - other.global_position
@@ -314,8 +395,12 @@ func _begin_windup(slam: bool) -> void:
 	Perf.mark("enemy_windup")
 	_doing_slam = slam
 	_set_state(State.WINDUP)
-	if kind != Kind.THROWER and (slam or randf() < 0.5):
+	if kind != Kind.THROWER and kind != Kind.MERC and (slam or randf() < (0.15 if kind == Kind.FODDER else 0.5)):
 		Audio.play("sounds/sfx/enemy_growl.wav")
+	if kind == Kind.SHAMAN:
+		_ritual_telegraph()
+	elif kind == Kind.MERC:
+		_aim_point = player.global_position + Vector3(0, 1.0, 0) if player else global_position + global_transform.basis.z * 5.0
 	if slam:
 		_show_slam_telegraph()
 	if _humanoid:
@@ -339,6 +424,16 @@ func _execute_attack() -> void:
 	match kind:
 		Kind.THROWER:
 			_throw_projectile()
+		Kind.BLOATED:
+			_doing_slam = false
+			_die("self_blast")
+			return
+		Kind.SHIELD:
+			_do_shield_bash()
+		Kind.SHAMAN:
+			_do_ritual()
+		Kind.MERC:
+			_start_burst()
 		_:
 			if _doing_slam:
 				_do_boss_slam()
@@ -356,9 +451,7 @@ func _do_melee() -> void:
 	to_p.y = 0
 	var reach := attack_range * 1.35 + 0.3
 	if to_p.length() <= reach and fwd.dot(to_p.normalized()) > 0.25:
-		RunTracker.note_hit(self)
-		ComicFX.on_player_struck(self, player)
-		player.take_damage(attack_damage, to_p.normalized() * 6.0 + Vector3.UP * 2.5)
+		_hit_player(attack_damage, to_p.normalized() * 6.0 + Vector3.UP * 2.5)
 	FX.burst(get_parent(), global_position + fwd * attack_range * 0.8 + Vector3(0, 1, 0), 0.5 * model_scale, Color(1, 0.3, 0.2, 0.5), 0.15)
 	Audio.play("sounds/enemy_attack.ogg")
 
@@ -373,9 +466,7 @@ func _do_boss_slam() -> void:
 		var d := player.global_position - global_position
 		d.y = 0
 		if d.length() <= boss_slam_radius and player.is_on_floor():
-			RunTracker.note_hit(self)
-			ComicFX.on_player_struck(self, player)
-			player.take_damage(boss_slam_damage, d.normalized() * 10.0 + Vector3.UP * 6.0)
+			_hit_player(boss_slam_damage, d.normalized() * 10.0 + Vector3.UP * 6.0)
 	for c in get_tree().get_nodes_in_group("props"):
 		var rb := c as RigidBody3D
 		if rb and rb.global_position.distance_to(global_position) < boss_slam_radius:
@@ -405,11 +496,255 @@ func _throw_projectile() -> void:
 	proj.call("launch", origin, (target - origin).normalized() * projectile_speed, projectile_damage, self)
 	Audio.play("sounds/sfx/curse_throw.wav")
 
+# --- Враги Мидгарда (GDD 12.1): корм, Раздутый, Щитоносец, Шаман, Наёмник Локи ---
+
+## id источника для причины смерти Тора (RunTracker) — совпадают с EnemyDef.id
+const SOURCE_IDS := {Kind.FODDER: "draugr_fodder", Kind.BLOATED: "bloated", Kind.SHIELD: "shieldbearer", Kind.SHAMAN: "shaman", Kind.MERC: "loki_merc"}
+
+func _setup_special() -> void:
+	_tough = kind in [Kind.BLOATED, Kind.SHIELD, Kind.SHAMAN, Kind.MERC]
+	if SOURCE_IDS.has(kind) and not has_meta("death_source_id"):
+		set_meta("death_source_id", SOURCE_IDS[kind])
+	_ritual_left = ritual_interval * randf_range(0.4, 0.7)
+	if kind == Kind.SHIELD and _visual:
+		# Щит — на корпусе спереди (а не в кисти): всегда виден там, где он блокирует
+		var sh := WeaponMeshes.build("q_shield")
+		sh.name = "FrontShield"
+		sh.rotation_degrees = shield_rotation
+		sh.position = shield_offset
+		sh.scale = Vector3.ONE * shield_scale
+		_visual.add_child(sh)
+		_collect_meshes(_visual)
+	if kind == Kind.MERC:
+		# Лазер и точка — общие меш/материал эффектов, создаются один раз на наёмника и только прячутся
+		_laser = MeshInstance3D.new()
+		_laser.name = "Laser"
+		_laser.mesh = FX.shared_mesh("box")
+		FX.fx_apply(_laser, "alpha_nocull", Color(1.0, 0.1, 0.08, 0.75), 3.0)
+		_laser.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_laser.top_level = true
+		_laser.visible = false
+		add_child(_laser)
+		_laser_dot = MeshInstance3D.new()
+		_laser_dot.name = "LaserDot"
+		_laser_dot.mesh = FX.shared_mesh("sphere")
+		FX.fx_apply(_laser_dot, "glow", Color(1.0, 0.1, 0.05), 6.0)
+		_laser_dot.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_laser_dot.top_level = true
+		_laser_dot.scale = Vector3.ONE * 0.14
+		_laser_dot.visible = false
+		add_child(_laser_dot)
+
+func _update_special(delta: float) -> void:
+	match kind:
+		Kind.SHAMAN:
+			if state == State.CHASE:
+				_ritual_left -= delta
+		Kind.BLOATED:
+			if _visual:
+				var s := 1.0 + bloat_swell * _windup_glow
+				_visual.scale = Vector3(bloat_fatness * s, s, bloat_fatness * s) * model_scale
+		Kind.MERC:
+			_update_merc(delta)
+
+func _room() -> Node:
+	var p := get_parent()
+	return p if p and p.has_method("spawn_extra") else null
+
+## Удар по Тору от этого врага; возвращает, сколько HP на самом деле снято (неуязвимость — 0).
+func _hit_player(amount: float, knock: Vector3) -> float:
+	if player == null or not is_instance_valid(player) or player.is_dead:
+		return 0.0
+	var h0 := player.health
+	RunTracker.note_hit(self)
+	ComicFX.on_player_struck(self, player)
+	player.take_damage(amount, knock)
+	var dealt := maxf(0.0, h0 - player.health)
+	if dealt > 0.0:
+		struck_player.emit(dealt)
+	return dealt
+
+func _has_floor_ahead(dir: Vector3, ahead: float = 0.9) -> bool:
+	var from := global_position + dir.normalized() * ahead + Vector3(0, 0.5, 0)
+	var q := PhysicsRayQueryParameters3D.create(from, from + Vector3(0, -1.6, 0), 1)
+	return not get_world_3d().direct_space_state.intersect_ray(q).is_empty()
+
+## Свободна ли линия (по миру) — чтобы не ставить поднятый корм в стену или за неё.
+func _clear_path(from: Vector3, to: Vector3) -> bool:
+	var q := PhysicsRayQueryParameters3D.create(from, to, 1)
+	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
+
+# Щитоносец: щит спереди блокирует всё; проходят удар сверху (удар-приземление, по головам, Тор выше),
+# сзади/сбоку, кирка (WeaponDef.special = "armor_break"), огонь и молнии. Оглушённый щит не держит.
+func _shield_blocks(knockback: Vector3, source: String) -> bool:
+	if state == State.STUNNED or state == State.SPAWNING:
+		return false
+	if source in ["slam", "stomp", "fire", "lightning", "explosion", "wall", "fall"]:
+		return false
+	if player and is_instance_valid(player):
+		if source.begins_with("melee"):
+			var w := player.current_weapon()
+			if w and w.special == "armor_break":
+				return false
+		if player.global_position.y - global_position.y > 1.6 * model_scale:
+			return false
+	var from_dir := Vector3.ZERO
+	if source in ["hammer", "reflect"] and knockback.length() > 0.1:
+		from_dir = -knockback
+	elif player and is_instance_valid(player):
+		from_dir = player.global_position - global_position
+	from_dir.y = 0
+	if from_dir.length() < 0.01:
+		return false
+	return from_dir.normalized().dot(global_transform.basis.z) > shield_front_dot
+
+func _on_blocked(knockback: Vector3) -> void:
+	Perf.mark("shield_block")
+	knockback_velocity += Vector3(knockback.x, 0, knockback.z) * 0.25 * (1.0 - knock_resist)
+	var pos := global_position + Vector3(0, 1.2 * model_scale, 0) + global_transform.basis.z * 0.6
+	FX.sparks(get_parent(), pos, Color(0.85, 0.92, 1.0), 12, 6.0)
+	Audio.play("sounds/sfx/hammer_bounce.wav")
+	ComicFX.pop("ricochet", pos)
+
+## Удар щитом: урон и сильный толчок — теснит Тора (к краю, в огонь, под удары толпы).
+func _do_shield_bash() -> void:
+	var fwd := global_transform.basis.z
+	knockback_velocity += fwd * lunge_speed
+	if player and not player.is_dead:
+		var to_p := player.global_position - global_position
+		to_p.y = 0
+		if to_p.length() <= attack_range * 1.35 + 0.3 and fwd.dot(to_p.normalized()) > 0.25:
+			_hit_player(attack_damage, to_p.normalized() * shove_force + Vector3.UP * shove_up)
+	FX.burst(get_parent(), global_position + fwd * attack_range * 0.8 + Vector3(0, 1, 0), 0.6 * model_scale, Color(0.8, 0.85, 1.0, 0.5), 0.15)
+	Audio.play("sounds/sfx/wall_splat.wav")
+
+# Шаман: стоит на высоте, отходит от Тора (не прыгая с края); раз в ritual_interval — обряд с телеграфом
+func _think_shaman(dist: float, dir: Vector3) -> Vector3:
+	if dist < shaman_flee_dist and _has_floor_ahead(-dir):
+		return -dir
+	return Vector3.ZERO
+
+func _ritual_telegraph() -> void:
+	Perf.mark("shaman_telegraph")
+	FX.ring(get_parent(), global_position, 3.0, Color(0.35, 1.0, 0.45, 0.9), windup_time)
+	FX.burst(get_parent(), global_position + Vector3(0, 2.0 * model_scale, 0), 0.4, Color(0.35, 1.0, 0.45, 0.6), windup_time)
+	Audio.play("sounds/sfx/curse_throw.wav")
+
+func _do_ritual() -> void:
+	Perf.mark("shaman_ritual")
+	var parent := get_parent()
+	var top := global_position + Vector3(0, 2.0 * model_scale, 0)
+	for e in _enemies_now():
+		var en := e as Enemy
+		if en == null or not is_instance_valid(en) or en.is_dead:
+			continue
+		if en.global_position.distance_to(global_position) > ritual_heal_radius or en.health >= en.max_health:
+			continue
+		var amt := minf(en.max_health * ritual_heal_fraction, en.max_health - en.health)
+		en.health += amt
+		FX.damage_number(parent, en.global_position + Vector3(0, 1.8 * en.model_scale, 0), amt, Color(0.4, 1.0, 0.5))
+		FX.lightning(parent, top, en.global_position + Vector3(0, 1.0, 0), 0.3, Color(0.4, 1.0, 0.5))
+	var room := _room()
+	if room and get_tree().get_nodes_in_group("enemies").size() < ritual_raise_cap:
+		var raised := 0
+		for i in ritual_raise_count * 3:
+			if raised >= ritual_raise_count:
+				break
+			var a := randf() * TAU
+			var cand := global_position + Vector3(cos(a), 0, sin(a)) * randf_range(2.5, 4.5)
+			if not _clear_path(global_position + Vector3(0, 1.0, 0), cand + Vector3(0, 1.0, 0)):
+				continue
+			var ground := Loot.floor_point(self, cand)
+			if ground == cand:
+				continue
+			room.call("spawn_extra", "fodder", ground)
+			raised += 1
+	FX.ring(parent, global_position, 3.5, Color(0.35, 1.0, 0.45, 0.9), 0.4)
+	Audio.play("sounds/sfx/lightning.wav")
+
+# Наёмник Локи: держит дистанцию как метатель; лазер ведёт Тора windup_time (0.8 с), затем очередь по точке
+func _muzzle() -> Vector3:
+	return global_position + Vector3(0, 1.35 * model_scale, 0) + global_transform.basis.z * 0.55
+
+func _update_merc(delta: float) -> void:
+	if state == State.WINDUP and player and is_instance_valid(player):
+		var target := player.global_position + Vector3(0, 1.0, 0)
+		_aim_point = _aim_point.lerp(target, clampf(merc_aim_track * delta, 0.0, 1.0))
+		_show_laser(_muzzle(), _aim_point)
+	elif _laser and _laser.visible:
+		_laser.visible = false
+		_laser_dot.visible = false
+	if state == State.STUNNED:
+		_burst_left = 0
+	if _burst_left > 0:
+		_burst_t -= delta
+		if _burst_t <= 0.0:
+			_burst_t = merc_burst_interval
+			_burst_left -= 1
+			_fire_bullet()
+
+func _ray(from: Vector3, to: Vector3, mask: int) -> Dictionary:
+	var q := PhysicsRayQueryParameters3D.create(from, to, mask)
+	q.exclude = [get_rid()]
+	return get_world_3d().direct_space_state.intersect_ray(q)
+
+func _show_laser(from: Vector3, aim: Vector3) -> void:
+	if _laser == null:
+		return
+	var dir := (aim - from).normalized()
+	var to := from + dir * merc_range
+	var hit := _ray(from, to, 1 | (1 << 1))
+	if not hit.is_empty():
+		to = hit.position
+	var length := from.distance_to(to)
+	if length < 0.05:
+		return
+	_laser.visible = true
+	_laser_dot.visible = true
+	_laser.global_position = (from + to) * 0.5
+	_laser.look_at(to, Vector3.UP if absf(dir.y) < 0.99 else Vector3.RIGHT)
+	_laser.scale = Vector3(0.018, 0.018, length)
+	_laser_dot.global_position = to - dir * 0.05
+
+func _start_burst() -> void:
+	Perf.mark("merc_burst")
+	_burst_dir = (_aim_point - _muzzle()).normalized()
+	_burst_left = merc_burst_count
+	_burst_t = 0.0
+
+func _fire_bullet() -> void:
+	Perf.mark("merc_shot")
+	var from := _muzzle()
+	var spread := deg_to_rad(merc_spread_deg)
+	var dir := _burst_dir.rotated(Vector3.UP, randf_range(-spread, spread))
+	var side := dir.cross(Vector3.UP)
+	if side.length() > 0.01:
+		dir = dir.rotated(side.normalized(), randf_range(-spread, spread))
+	var to := from + dir * merc_range
+	var hit := _ray(from, to, 1 | (1 << 1))
+	if not hit.is_empty():
+		to = hit.position
+		if hit.collider is Player:
+			_hit_player(attack_damage * merc_bullet_mult, dir * 2.0)
+	var tr := RangedWeapon.make_tracer_mesh()
+	get_parent().add_child(tr)
+	tr.global_position = from
+	if from.distance_to(to) > 0.1:
+		tr.look_at(to, Vector3.UP if absf(dir.y) < 0.99 else Vector3.RIGHT)
+	var tw := tr.create_tween()
+	tw.tween_property(tr, "global_position", to, from.distance_to(to) / 140.0)
+	tw.tween_callback(tr.queue_free)
+	FX.burst(get_parent(), from, 0.12, Color(1.0, 0.85, 0.4, 0.8), 0.06)
+	Audio.play("sounds/sfx/gun_smg.wav")
+
 # --- Урон ---
 
 func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	Perf.mark("enemy_hit")
 	if is_dead:
+		return
+	if kind == Kind.SHIELD and damage < DEBUG_KILL_DAMAGE and _shield_blocks(knockback, source):
+		_on_blocked(knockback)
 		return
 	health -= damage
 	ComicFX.on_enemy_hit(self, damage, source)
@@ -431,8 +766,8 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 		velocity.y = k.y
 		knockback_velocity.y = 0
 	# Замах сбивают мили и Мьёльнир (ренж — нет); элиту — только сильные удары и молот; босса — ничто
-	var interrupts := big or source == "hammer" or (source.begins_with("melee") and not has_meta("elite"))
-	if kind != Kind.BOSS and state == State.WINDUP and interrupts:
+	var interrupts := big or source == "hammer" or source == "stomp" or (source.begins_with("melee") and not has_meta("elite") and not _tough)
+	if kind != Kind.BOSS and kind != Kind.BLOATED and state == State.WINDUP and interrupts:
 		if _telegraph and is_instance_valid(_telegraph):
 			_telegraph.queue_free()
 		_set_state(State.RECOVER)
@@ -456,7 +791,7 @@ func stun(time: float) -> void:
 
 ## Оглушение оружием (дубина и т. п.). Элиту и босса — только сильным ударом (strong), босса — никогда.
 func apply_stun(time: float, strong: bool = false) -> void:
-	if is_dead or kind == Kind.BOSS or time <= 0.0 or (has_meta("elite") and not strong):
+	if is_dead or kind == Kind.BOSS or time <= 0.0 or ((has_meta("elite") or _tough) and not strong):
 		return
 	if _telegraph and is_instance_valid(_telegraph):
 		_telegraph.queue_free()
@@ -546,6 +881,14 @@ func _die(source: String) -> void:
 	remove_from_group("enemies")
 	if _telegraph and is_instance_valid(_telegraph):
 		_telegraph.queue_free()
+	if kind == Kind.BLOATED:
+		# Взрывается и сам (дошёл до Тора), и от смерти (GDD: «убить издалека, молотом в толпу»)
+		Blast.detonate(get_parent(), global_position + Vector3(0, 0.9 * model_scale, 0), boss_slam_radius, attack_damage, self, self)
+	if source == "self_blast":
+		# Подорвался сам — не убийство Тора: ни Славы, ни лечения, ни добычи
+		died.emit(self)
+		queue_free()
+		return
 	var now := Time.get_ticks_msec() / 1000.0
 	# Мини-босс — тоже Kind.BOSS (поведение босса), но Славу за него даёт MinibossDef
 	# Слава по GDD 15.2: по слою врага (EnemyDef), элита — 15
@@ -556,7 +899,8 @@ func _die(source: String) -> void:
 		player.heal(player.kill_heal(source))
 	Loot.on_enemy_died(self, source)
 	Audio.play("sounds/enemy_destroy.ogg")
-	_spawn_debris()
+	if kind != Kind.BLOATED:
+		_spawn_debris()
 	died.emit(self)
 	queue_free()
 

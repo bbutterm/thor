@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://enemies/enemy.gd" id="1_8ydsn"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_yvyfl"]
+radius = 0.4725
+height = 1.89
+
+[node name="Bloated" type="CharacterBody3D" unique_id=1520613346]
+collision_layer = 4
+collision_mask = 15
+floor_snap_length = 0.3
+script = ExtResource("1_8ydsn")
+kind = 4
+max_health = 22.0
+move_speed = 5.0
+knock_resist = 0.2
+attack_range = 2.4
+attack_damage = 44.0
+windup_time = 0.7
+recover_time = 0.5
+attack_cooldown = 0.5
+boss_slam_radius = 3.0
+boss_slam_windup = 0.7
+body_color = Color(0.6, 0.65, 0.35, 1)
+model_scale = 1.05
+model_outfit = "outfits/Male_Peasant.gltf"
+skin_tint = Color(0.78, 0.9, 0.5, 1)
+cloth_tint = Color(0.5, 0.42, 0.3, 1)
+eye_glow = Color(1, 0.55, 0.1, 1)
+weapon_pool = PackedStringArray()
+anim_idle = "Zombie_Idle_Loop"
+anim_move = "Jog_Fwd_Loop"
+anim_move_ref_speed = 3.2
+anim_attack = "Zombie_Scratch"
+anim_attack_hit_at = 0.9
+anim_slam = "Zombie_Scratch"
+
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=60531761]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.945, 0)
+shape = SubResource("CapsuleShape3D_yvyfl")

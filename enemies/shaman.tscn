@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://enemies/enemy.gd" id="1_hlytg"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8gspe"]
+radius = 0.45
+height = 1.8
+
+[node name="Shaman" type="CharacterBody3D" unique_id=1526498310]
+collision_layer = 4
+collision_mask = 15
+floor_snap_length = 0.3
+script = ExtResource("1_hlytg")
+kind = 6
+max_health = 44.0
+move_speed = 3.0
+knock_resist = 0.1
+attack_range = 0.0
+attack_damage = 15.0
+windup_time = 1.0
+recover_time = 0.6
+attack_cooldown = 1.0
+body_color = Color(0.3, 0.5, 0.35, 1)
+model_outfit = "outfits/Male_Ranger.gltf"
+model_hair = "hair/Hair_Long.gltf"
+skin_tint = Color(0.55, 0.68, 0.58, 1)
+cloth_tint = Color(0.32, 0.5, 0.36, 1)
+eye_glow = Color(0.4, 1, 0.5, 1)
+hand_weapon = "q_staff"
+weapon_pool = PackedStringArray()
+anim_idle = "Spell_Simple_Idle_Loop"
+anim_move_ref_speed = 1.5
+anim_attack = "Spell_Simple_Shoot"
+anim_attack_hit_at = 0.6
+anim_hit = "Hit_Head"
+
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=742888984]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_8gspe")

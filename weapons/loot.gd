@@ -102,7 +102,8 @@ static func spawn_ammo(parent: Node, pos: Vector3) -> Node3D:
 
 ## Решить при спавне, станет ли враг элитой (до add_child: меняет здоровье, урон, вид).
 static func maybe_make_elite(room: Node, enemy: Enemy, chance: float, max_per_room: int) -> void:
-	if enemy.kind == Enemy.Kind.BOSS or chance <= 0.0:
+	# GDD 12.4: элитой бывает боец или особый враг — не корм и не босс
+	if enemy.kind == Enemy.Kind.BOSS or enemy.kind == Enemy.Kind.FODDER or chance <= 0.0:
 		return
 	var n: int = room.get_meta("elites", 0)
 	if n >= max_per_room or randf() >= chance:
@@ -160,6 +161,10 @@ static func on_enemy_died(enemy: Enemy, _source: String) -> void:
 			spawn_weapon(parent, pos, WeaponItem.create(d, random_level()), pos + Vector3(0, 1.5, 0))
 		if h and h.ranged:
 			spawn_ammo(parent, pos + Vector3(0.6, 0, 0.3))
+		return
+	# Наёмник Локи роняет патроны всегда (GDD 12.1)
+	if enemy.kind == Enemy.Kind.MERC:
+		spawn_ammo(parent, pos)
 		return
 	if h and h.wants_ammo():
 		var chance := h.ammo_drop_chance * (2.0 if enemy.kind == Enemy.Kind.THROWER else 1.0)

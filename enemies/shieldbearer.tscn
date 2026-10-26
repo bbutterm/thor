@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://enemies/enemy.gd" id="1_ucqia"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_f3tfr"]
+radius = 0.486
+height = 1.944
+
+[node name="Shieldbearer" type="CharacterBody3D" unique_id=526883300]
+collision_layer = 4
+collision_mask = 15
+floor_snap_length = 0.3
+script = ExtResource("1_ucqia")
+kind = 5
+max_health = 88.0
+move_speed = 3.0
+turn_speed = 2.6
+knock_resist = 0.6
+attack_damage = 15.0
+windup_time = 0.75
+recover_time = 0.8
+attack_cooldown = 1.4
+lunge_speed = 9.0
+body_color = Color(0.4, 0.45, 0.55, 1)
+model_scale = 1.08
+model_outfit = "outfits/Male_Ranger.gltf"
+skin_tint = Color(0.45, 0.55, 0.66, 1)
+cloth_tint = Color(0.5, 0.52, 0.58, 1)
+eye_glow = Color(0.4, 0.85, 1, 1)
+hand_weapon = "q_sword"
+weapon_pool = PackedStringArray()
+
+anim_idle = "Idle_Shield_Loop"
+anim_move_ref_speed = 1.5
+anim_attack = "Shield_OneShot"
+anim_attack_hit_at = 0.4
+
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=1517206686]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.972, 0)
+shape = SubResource("CapsuleShape3D_f3tfr")
