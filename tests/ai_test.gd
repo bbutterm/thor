@@ -106,5 +106,41 @@ func _run() -> void:
 	print("[%s] мини-босс %s: HP %.0f, попаданий по игроку %d за 20 с, полоса HP «%s»" % ["OK" if mok else "FAIL", mb.title, boss.max_health if boss else 0.0, mhits[0], g2.hud._boss_title.text])
 	if not mok:
 		fails += 1
+	# Толстый Свен на своей арене (блок Н): выходит после собутыльников, таранит на бочке / плюётся брагой и бьёт
+	var mi: int = Run.miniboss_rooms[0] if not Run.miniboss_rooms.is_empty() else 1
+	Run.start_run("berserker")
+	var order: Array = []
+	for i in mi:
+		order.append(Run.ROOM_SCENES[i % Run.ROOM_SCENES.size()])
+	order.append(Run.miniboss_arena)
+	order.append(Run.BOSS_SCENE)
+	Run.room_order.assign(order)
+	Run.room_index = mi
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await frames(60)
+	var g3 := get_tree().current_scene as Game
+	var sven: FatSven = null
+	for t in 60:
+		for e in g3.room.alive_enemies():
+			if e is FatSven:
+				sven = e
+		if sven:
+			break
+		for e in g3.room.alive_enemies().duplicate():
+			e.take_hit(9999, Vector3.ZERO, "test")
+		await frames(20)
+	var shits := [0]
+	g3.player.hurt.connect(func(_a: float) -> void: shits[0] += 1)
+	var specials := {}
+	for i in 60 * 20:
+		await get_tree().physics_frame
+		g3.player.health = g3.player.max_health
+		if sven and is_instance_valid(sven) and sven.act != 0:
+			specials[sven.act] = true
+	var sok: bool = sven != null and shits[0] > 0 and (specials.has(FatSven.Act.CHARGE) or specials.has(FatSven.Act.SPIT))
+	print("[%s] Толстый Свен на арене «%s»: попаданий по игроку %d за 20 с, свои атаки: %s" % ["OK" if sok else "FAIL", g3.room.room_title, shits[0],
+		", ".join(specials.keys().map(func(k: int) -> String: return FatSven.Act.keys()[k]))])
+	if not sok:
+		fails += 1
 	FX.reset_time()
 	get_tree().quit(1 if fails > 0 else 0)

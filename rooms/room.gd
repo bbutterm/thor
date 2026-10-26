@@ -43,6 +43,9 @@ const ENEMY_SCENES := {
 	"shieldbearer": "res://enemies/shieldbearer.tscn",
 	"shaman": "res://enemies/shaman.tscn",
 	"merc": "res://enemies/merc.tscn",
+	# Боссы со своими атаками (enemies/bosses/)
+	"sven": "res://enemies/sven.tscn",
+	"jarl": "res://enemies/jarl.tscn",
 }
 
 var _player: Player

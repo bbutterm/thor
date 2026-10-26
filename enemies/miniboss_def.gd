@@ -1,9 +1,10 @@
 extends Resource
 class_name MinibossDef
-## Мини-босс (GDD 14.1) — заглушка: обычный враг (сцена base_kind) с переопределёнными характеристиками
-## и поведением босса (Kind.BOSS: удар по площади с телеграфом, не сбивается). Появляется последней
-## волной зала из Run.miniboss_rooms; за победу — выбор трейта Мьёльнира (scenes/game.gd).
-## Своя механика Толстого Свена (бочка, лужи браги, взрыв) — отдельный блок, позже.
+## Мини-босс (GDD 14.1): враг (сцена base_kind) с переопределёнными характеристиками и поведением босса
+## (Kind.BOSS: удар по площади с телеграфом, не сбивается). Появляется последней волной зала из
+## Run.miniboss_rooms; за победу — выбор трейта Мьёльнира (scenes/game.gd).
+## Толстый Свен — base_kind "sven" (enemies/bosses/sven.gd: таран на бочке, лужи браги, взрыв),
+## его арена — rooms/sven_arena.tscn (маркер MinibossSpot — где он появляется).
 
 @export var id: String = "fat_sven"
 ## Имя на полосе HP (HUD.show_boss)
@@ -41,6 +42,10 @@ class_name MinibossDef
 ## Сколько обычных врагов выходит вместе с ним
 @export var escort_count: int = 2
 @export var escort_kind: String = "grunt"
+@export_group("Реплики")
+## Пулы data/dialogues (пузырь в углу): при появлении и при смерти; пусто — не говорит
+@export var intro_pool: String = "sven.intro"
+@export var death_pool: String = "sven.death"
 
 ## Добавить залу волну с мини-боссом (и свитой). hud — для подсказки при появлении (может быть null).
 func add_to_room(room: Room, hud: Node = null) -> void:
@@ -66,6 +71,8 @@ func add_to_room(room: Room, hud: Node = null) -> void:
 ## Точки появления: маркеры зала, ближайший к их центру — мини-боссу, остальные — свите.
 func _spawn_spots(room: Room) -> Array[Vector3]:
 	var pts: Array[Vector3] = []
+	# Своя арена: точка мини-босса задана маркером MinibossSpot (не волна)
+	var spot := room.get_node_or_null("MinibossSpot") as Node3D
 	# Сначала маркеры грунтов (они на полу; метатели бывают на возвышениях)
 	for want in ["grunt", ""]:
 		for c in room.spawns.get_children():
@@ -81,6 +88,8 @@ func _spawn_spots(room: Room) -> Array[Vector3]:
 		center += p
 	center /= pts.size()
 	pts.sort_custom(func(a: Vector3, b: Vector3) -> bool: return a.distance_to(center) < b.distance_to(center))
+	if spot:
+		pts.insert(0, spot.global_position)
 	return pts
 
 ## Переопределить характеристики врага (до его _ready).
@@ -123,9 +132,14 @@ func apply(e: Enemy, hud: Node = null) -> void:
 	e.ready.connect(func() -> void:
 		if e._visual:
 			e._visual.scale = Vector3(fatness, 1.0, fatness) * model_scale, CONNECT_ONE_SHOT)
+	var dp := death_pool
 	e.died.connect(func(_e: Enemy) -> void:
 		Run.add_glory(glory)
+		if dp != "" and Dialogue.has_pool(dp):
+			Dialogue.bark_pool(dp)
 		Odin.say("miniboss_death"), CONNECT_ONE_SHOT)
 	Odin.say("miniboss_start")
+	if intro_pool != "" and Dialogue.has_pool(intro_pool):
+		Dialogue.bark_pool(intro_pool)
 	if hud and hud.has_method("toast"):
 		hud.call("toast", title + "!")

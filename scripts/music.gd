@@ -245,7 +245,10 @@ func _auto_state() -> void:
 		var mini: bool = run != null and run.has_method("is_miniboss_room") and run.call("is_miniboss_room")
 		var fighting: bool = g.room != null and is_instance_valid(g.room) and (g.room.alive_count() > 0 or g.room.pending_spawns() > 0)
 		var shop: bool = run != null and run.has_method("current_reward") and str(run.call("current_reward")) == "shop"
-		if boss and has_track("boss"):
+		if boss and has_track("jarl"):
+			# Своя тема Ярла Бьорна (блок О, заглушка); «boss» — запасная
+			play_track("jarl")
+		elif boss and has_track("boss"):
 			play_track("boss")
 		elif shop and has_track("shop"):
 			play_track("shop")

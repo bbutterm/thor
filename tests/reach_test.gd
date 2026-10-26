@@ -134,5 +134,49 @@ func _run() -> void:
 	print("[%s] Притяжение к молоту на башню 5 м: воткнулся=%s, y=%.2f" % ["OK" if ok3 else "FAIL", stuck, p.global_position.y])
 	if not ok3:
 		fails += 1
+	# Длинный дом Ярла (блок О): на каждый балкон (настил 3 м) — со ступени-ящика 1.5 м прыжками
+	g = await _start(Run.BOSS_SCENE)
+	for e in g.room.alive_enemies().duplicate():
+		e.queue_free()
+	g.room.set_physics_process(false)
+	var balconies := get_tree().get_nodes_in_group("balconies")
+	var reached := 0
+	for b in balconies:
+		var bc := b as Balcony
+		var top := bc.top_point()
+		p = g.player
+		# Ступень — со стороны середины зала по Z: встаём ещё дальше и бежим к балкону
+		var toward := -signf(top.z - g.room.global_position.z)
+		var start := Vector3(top.x, g.room.global_position.y + 0.1, top.z + toward * (6.0 + 5.5))
+		p.global_position = start
+		p.velocity = Vector3.ZERO
+		# Смотрим на балкон (вперёд = -Z камеры)
+		p.rotation_target = Vector2(0, 0.0 if toward > 0 else PI)
+		await frames(10)
+		Input.action_press("move_forward")
+		var on := false
+		for i in 300:
+			await get_tree().physics_frame
+			if p.is_on_floor() and (p.global_position.y < top.y - 0.5):
+				Input.action_press("jump")
+			elif not p.is_on_floor() and p.velocity.y < 0.5 and p.global_position.y < top.y + 0.2:
+				Input.action_press("jump")
+			else:
+				Input.action_release("jump")
+			if i % 2 == 1:
+				Input.action_release("jump")
+			if p.is_on_floor() and bc.has_point_on_top(p.global_position):
+				on = true
+				break
+		Input.action_release("move_forward")
+		Input.action_release("jump")
+		await frames(10)
+		if on:
+			reached += 1
+		print("  %s: %s (y=%.2f)" % [bc.name, "наверху" if on else "не залез", p.global_position.y - g.room.global_position.y])
+	var ok4 := balconies.size() == 4 and reached == balconies.size()
+	print("[%s] балконы длинного дома ярла: залез на %d из %d" % ["OK" if ok4 else "FAIL", reached, balconies.size()])
+	if not ok4:
+		fails += 1
 	FX.reset_time()
 	get_tree().quit(1 if fails > 0 else 0)

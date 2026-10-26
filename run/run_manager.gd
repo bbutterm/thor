@@ -46,6 +46,9 @@ const TRIALS_DIR := "res://run/trials/"
 @export var miniboss_rooms: PackedInt32Array = [3]
 ## Какой мини-босс (MinibossDef)
 @export var miniboss_def_path: String = "res://enemies/minibosses/fat_sven.tres"
+## Своя арена мини-босса (блок Н): зал мини-босса (miniboss_rooms) — эта сцена. Пусто — мини-босс
+## выходит последней волной обычного зала
+@export var miniboss_arena: String = "res://rooms/sven_arena.tscn"
 ## Множители Славы за убийство: добил мили / ренжем (GDD 15.2: ×1.5 / ×0.5)
 @export var glory_melee_kill_mult: float = 1.5
 @export var glory_ranged_kill_mult: float = 0.5
@@ -141,6 +144,7 @@ func start_run(forced_body_id: String = "") -> void:
 		body = BodyDef.new()
 	rune_power = maxi(1, int(body.stat(&"rune_power", 1)))
 	_build_room_order()
+	_place_miniboss_arenas()
 	room_index = 0
 	room_rewards.clear()
 	room_rewards.append(map.first_room_reward if map else "combat")
@@ -300,6 +304,14 @@ func verdict() -> String:
 ## В текущем зале есть мини-босс (финальный босс — не мини-босс)
 func is_miniboss_room() -> bool:
 	return not is_boss_room() and room_index in miniboss_rooms
+
+## Залы мини-босса (miniboss_rooms) — его своя арена (кроме финального зала).
+func _place_miniboss_arenas() -> void:
+	if miniboss_arena == "" or not ResourceLoader.exists(miniboss_arena):
+		return
+	for i in miniboss_rooms:
+		if i >= 0 and i < room_order.size() - 1:
+			room_order[i] = miniboss_arena
 
 func miniboss_def() -> Resource:
 	return load(miniboss_def_path) if miniboss_def_path != "" and ResourceLoader.exists(miniboss_def_path) else null

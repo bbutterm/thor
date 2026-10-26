@@ -28,6 +28,8 @@ const FILES := [
 	"res://enemies/shieldbearer.tscn",
 	"res://enemies/shaman.tscn",
 	"res://enemies/merc.tscn",
+	"res://enemies/sven.tscn",
+	"res://enemies/jarl.tscn",
 ]
 const EXTS := ["gltf", "glb", "fbx", "wav", "ogg", "tscn", "tres"]
 

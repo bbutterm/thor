@@ -215,6 +215,7 @@ func _run() -> void:
 	var silver_chance := Loot.elite_silver_chance
 	Loot.elite_silver_chance = 0.0  # элита роняет оружие или серебро — здесь проверяем оружие
 	elite.take_hit(9999, Vector3.ZERO, "melee")
+	Loot.elite_silver_chance = silver_chance
 	await wait(0.2)
 	Loot.elite_silver_chance = silver_chance
 	check(get_tree().get_nodes_in_group("pickups").size() == before + 1, "элита уронила оружие")

@@ -11,7 +11,8 @@ var _passes: int = 0
 var game: Game
 var p: Player
 var hand: MjolnirHand
-const START := Vector3(-3, 0.1, 2)
+## Длинный дом Ярла (Run.BOSS_SCENE): стена за «стенными» манекенами (16 м вперёд) — в 2 м от них, как в старой арене
+const START := Vector3(-3, 0.1, -4)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS

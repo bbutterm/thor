@@ -39,7 +39,8 @@ func _build() -> void:
 	# Враги: по одному каждого вида, со вспышкой урона и свечением замаха (общий оверлей на скин-мешах)
 	var i := 0
 	for path in ["res://enemies/grunt.tscn", "res://enemies/thrower.tscn", "res://enemies/boss.tscn",
-			"res://enemies/fodder.tscn", "res://enemies/bloated.tscn", "res://enemies/shieldbearer.tscn", "res://enemies/shaman.tscn", "res://enemies/merc.tscn"]:
+			"res://enemies/fodder.tscn", "res://enemies/bloated.tscn", "res://enemies/shieldbearer.tscn", "res://enemies/shaman.tscn", "res://enemies/merc.tscn",
+			"res://enemies/sven.tscn", "res://enemies/jarl.tscn"]:
 		var e := (load(path) as PackedScene).instantiate() as Enemy
 		e.process_mode = Node.PROCESS_MODE_DISABLED
 		if i == 0:
@@ -123,8 +124,21 @@ func _build() -> void:
 	proj.call("launch", p, Vector3.ZERO, 0.0, null)
 	proj.remove_from_group("reflectable")
 	proj.set_physics_process(false)
-	# Телеграф взрыва (Раздутый, элита «Взрывной»)
+	# Телеграф взрыва (Раздутый, элита «Взрывной», Свен)
 	Blast.warmup_sample(self, Vector3(0, 0.1, 0.5))
+	# Толстый Свен: плевок и лужа браги, полоса телеграфа тарана (у всех BossEnemy)
+	var puddle := BrewPuddle.new()
+	add_child(puddle)
+	puddle.position = Vector3(0.6, 0.05, 0.3)
+	puddle.set_physics_process(false)
+	puddle._disc.scale = Vector3(0.6, 0.02, 0.6)
+	var glob := BrewGlob.new()
+	add_child(glob)
+	glob.position = Vector3(-0.6, 1.0, 0.3)
+	glob.set_physics_process(false)
+	for e in _enemies:
+		if e is BossEnemy:
+			(e as BossEnemy).warmup_strip()
 	var hammer := WeaponMeshes.hammer()
 	add_child(hammer)
 	hammer.position = right * 0.6 + Vector3(0, 1.0, 0)
