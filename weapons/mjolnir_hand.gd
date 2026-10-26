@@ -173,6 +173,7 @@ func _grant_perfect() -> void:
 	Audio.play("sounds/sfx/perfect_catch.wav")
 	var p := hand_point() + player.get_aim_forward() * 0.7
 	FX.burst(player.get_parent(), p, 0.3, Color(1.0, 0.85, 0.4, 0.8), 0.16)
+	FX.perfect_catch(p)
 	player.camera_fx.kick_fov(4.0)
 	perfect_catch.emit()
 	trait_call(&"on_perfect_catch", [self])

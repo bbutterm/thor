@@ -117,6 +117,7 @@ func _test_rage() -> void:
 	var e := _dummy(_floor_pos() + Vector3(0, 0, -4))
 	check(is_equal_approx(p.outgoing_damage_mult(e, "melee"), 1.5), "урон ×1.5 (%.2f)" % p.outgoing_damage_mult(e, "melee"))
 	var hp0 := e.health
+	p.crit_chance_base = 0.0  # крит 5 % (GDD 8) делал проверку случайной
 	p.deal_damage(e, 10.0, Vector3.ZERO, "melee")
 	check(is_equal_approx(hp0 - e.health, 15.0), "deal_damage в берсерке: 10 → %.1f" % (hp0 - e.health))
 	check(is_equal_approx(p.effective_move_speed(), base_speed * 1.5), "скорость ×1.5 (%.1f → %.1f)" % [base_speed, p.effective_move_speed()])

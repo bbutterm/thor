@@ -15,13 +15,19 @@ extends Node
 ## - появление идёт в реальном времени (видно во время hit-stop), дрожь и исчезновение — в игровом:
 ##   пока длится стоп, слово «стоит» во весь размер;
 ## - словарь, цвета и приоритеты — `data/comic_words.json`; рисованный «взрыв» —
-##   `sprites/comic/<событие>.png` или общий `sprites/comic/burst.png` (если файла нет — процедурный).
+##   `sprites/comic/<событие>.png` или общий `sprites/comic/burst.png`, иначе — случайный из комплекта
+##   `sprites/vfx/comic_burst_01..06.webp`, перекрашенный в цвет события (один общий материал
+##   shaders/comic_burst.gdshader); нет и их — процедурный полигон.
 
 const WORDS_PATH := "res://data/comic_words.json"
 const SPRITE_DIR := "res://sprites/comic/"
 const FONT_PATH := "res://fonts/Bangers-Regular.ttf"
 const HALFTONE := preload("res://shaders/comic_halftone.gdshader")
 const VIGNETTE := preload("res://shaders/comic_vignette.gdshader")
+const KIT_BURST := preload("res://shaders/comic_burst.gdshader")
+## Рисованные «взрывы» VFX-комплекта
+const KIT_BURST_PATH := "res://sprites/vfx/comic_burst_%02d.webp"
+const KIT_BURST_COUNT := 6
 const BIG_PRIORITY := 1000
 
 @export_group("Когда показывать")
@@ -78,6 +84,16 @@ const BIG_PRIORITY := 1000
 @export var screen_margin_px: float = 24.0
 ## Сила виньетки под крупным словом (0 — нет)
 @export var vignette_alpha: float = 0.85
+## Рисованный «взрыв» комплекта: во сколько раз больше букв (с отступом burst_pad)
+@export var kit_burst_scale: float = 1.75
+## ...и насколько его можно вытянуть по ширине (ширина / высота, не больше)
+@export var kit_burst_max_aspect: float = 1.9
+## Перекраска в цвет события: 0 — авторский цвет картинки, 1 — полностью цвет события
+@export_range(0.0, 1.0) var kit_tint_strength: float = 0.85
+## Случайный доворот «взрыва» относительно слова ±, градусы
+@export var kit_burst_tilt_deg: float = 10.0
+## Тень под «взрывом»: прозрачность (0 — нет)
+@export var kit_shadow_alpha: float = 0.55
 
 @export_group("Анимация")
 ## Появление 0 → overshoot → 1.0 (реальное время, видно во время hit-stop)
@@ -102,6 +118,9 @@ var history: Array[Dictionary] = []
 var _data: Dictionary = {}
 var _textures: Dictionary = {}
 var _generic_texture: Texture2D
+var _kit_bursts: Array[Texture2D] = []
+var _kit_mat: ShaderMaterial
+var _last_kit: int = -1
 var _layer: CanvasLayer
 var _vignette: ColorRect
 var _pool: Array[ComicWord] = []
@@ -343,7 +362,39 @@ func _show(w: ComicWord, r: Dictionary) -> void:
 	var ry := ink.y * 0.5 * 1.05 + burst_pad.y
 	w.half = Vector2(rx, ry) * burst_spike.y + Vector2.ONE * burst_outline_px
 	var tex: Texture2D = _textures.get(ev, _generic_texture)
-	if tex:
+	w.sprite.material = null
+	w.sprite.rotation = 0.0
+	w.sprite.flip_h = false
+	w.sprite_shadow.visible = false
+	if tex == null and not _kit_bursts.is_empty():
+		# Рисованный «взрыв» комплекта: случайный (не тот же подряд), перекрашен в цвет события
+		var idx := randi() % _kit_bursts.size()
+		if idx == _last_kit and _kit_bursts.size() > 1:
+			idx = (idx + 1 + randi() % (_kit_bursts.size() - 1)) % _kit_bursts.size()
+		_last_kit = idx
+		var kt := _kit_bursts[idx]
+		var wpx := (ink.x + burst_pad.x * 2.0) * kit_burst_scale
+		var hpx := maxf((ink.y + burst_pad.y * 2.0) * kit_burst_scale, wpx / maxf(kit_burst_max_aspect, 1.0))
+		w.burst.visible = false
+		w.outline.visible = false
+		w.shadow.visible = false
+		w.sprite.visible = true
+		w.sprite.texture = kt
+		w.sprite.material = _kit_mat
+		w.sprite.scale = Vector2(wpx / kt.get_width(), hpx / kt.get_height())
+		w.sprite.rotation = deg_to_rad(randf_range(-kit_burst_tilt_deg, kit_burst_tilt_deg))
+		w.sprite.flip_h = randf() < 0.5
+		w.sprite.modulate = burst_c
+		w.half = Vector2(wpx, hpx) * 0.46
+		if kit_shadow_alpha > 0.0:
+			w.sprite_shadow.visible = true
+			w.sprite_shadow.texture = kt
+			w.sprite_shadow.scale = w.sprite.scale
+			w.sprite_shadow.rotation = w.sprite.rotation
+			w.sprite_shadow.flip_h = w.sprite.flip_h
+			w.sprite_shadow.position = shadow_offset * (1.6 if big else 1.0)
+			w.sprite_shadow.modulate = Color(0, 0, 0, kit_shadow_alpha)
+	elif tex:
 		w.burst.visible = false
 		w.outline.visible = false
 		w.shadow.visible = false
@@ -538,6 +589,10 @@ func _load_data() -> void:
 			_textures[ev] = load(path)
 	if ResourceLoader.exists(SPRITE_DIR + "burst.png"):
 		_generic_texture = load(SPRITE_DIR + "burst.png")
+	for i in KIT_BURST_COUNT:
+		var kp := KIT_BURST_PATH % (i + 1)
+		if ResourceLoader.exists(kp):
+			_kit_bursts.append(load(kp))
 
 func _build_resources() -> void:
 	var font: Font = load(FONT_PATH)
@@ -546,6 +601,9 @@ func _build_resources() -> void:
 	_text_mat = _halftone(false, font_size * 1.2, 9.0)
 	_text_mat_big = _halftone(false, big_font_size * 1.2, 14.0)
 	_burst_mat = _halftone(true, 1.0, 11.0)
+	_kit_mat = ShaderMaterial.new()
+	_kit_mat.shader = KIT_BURST
+	_kit_mat.set_shader_parameter("tint_strength", kit_tint_strength)
 
 func _label_settings(font: Font, size: int) -> LabelSettings:
 	var ls := LabelSettings.new()
@@ -590,6 +648,9 @@ func _new_word() -> ComicWord:
 	w.burst.material = _burst_mat
 	w.burst.antialiased = true
 	w.add_child(w.burst)
+	w.sprite_shadow = Sprite2D.new()
+	w.sprite_shadow.visible = false
+	w.add_child(w.sprite_shadow)
 	w.sprite = Sprite2D.new()
 	w.sprite.visible = false
 	w.add_child(w.sprite)
@@ -648,4 +709,5 @@ class ComicWord extends Node2D:
 	var outline: Polygon2D
 	var burst: Polygon2D
 	var sprite: Sprite2D
+	var sprite_shadow: Sprite2D
 	var label: Label

@@ -16,6 +16,7 @@ const DIRS := [
 	"res://weapons/defs/",
 	"res://sounds/sfx/",
 	"res://sounds/",
+	"res://sprites/vfx/",
 ]
 const FILES := [
 	"res://assets/quaternius/characters/gaits.glb",
@@ -31,7 +32,7 @@ const FILES := [
 	"res://enemies/sven.tscn",
 	"res://enemies/jarl.tscn",
 ]
-const EXTS := ["gltf", "glb", "fbx", "wav", "ogg", "tscn", "tres"]
+const EXTS := ["gltf", "glb", "fbx", "wav", "ogg", "tscn", "tres", "webp"]
 
 static var _held: Dictionary = {}
 static var _pending: PackedStringArray = []

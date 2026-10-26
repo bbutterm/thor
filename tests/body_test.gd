@@ -325,6 +325,7 @@ func _test_passives() -> void:
 	await wait(0.05)
 	check(is_equal_approx(p.outgoing_damage_mult(front, "melee"), 2.0), "Гонец: в спину ×%.2f" % p.outgoing_damage_mult(front, "melee"))
 	var hp0 := front.health
+	p.crit_chance_base = 0.0  # крит 5 % (GDD 8) делал проверку случайной
 	p.deal_damage(front, 10.0, Vector3.ZERO, "melee")
 	check(is_equal_approx(hp0 - front.health, 20.0), "deal_damage применяет множитель (−%.1f)" % (hp0 - front.health))
 	front.queue_free()

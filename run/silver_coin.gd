@@ -31,6 +31,7 @@ func launch(pos: Vector3) -> void:
 	var a := randf() * TAU
 	_vel = Vector3(cos(a), 0, sin(a)) * randf_range(0.4, 1.0) * c.coin_spread_speed + Vector3.UP * c.coin_up_speed * randf_range(0.8, 1.2)
 	_ground_y = Loot.floor_point(self, pos).y + 0.12
+	FX.coin_glint(get_parent(), pos, COLOR)  # блеск-звёздочка (VFX-комплект)
 
 func _physics_process(delta: float) -> void:
 	var c := Silver.cfg()
