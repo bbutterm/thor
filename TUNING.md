@@ -73,7 +73,13 @@
 
 ## Мини-босс — `enemies/minibosses/fat_sven.tres` (`MinibossDef`)
 
-Толстый Свен (заглушка): `max_health` 550 (25 У), `move_speed` 4.2, `knock_resist` 0.6, `attack_damage` 18, `windup_time` 0.75, удар по площади `slam_radius` 4.5 / `slam_damage` 20 / `slam_windup` 0.9, `far_slam_chance` 0.004 (за кадр, издалека; у финального босса `boss_far_slam_chance` 0.02), `glory` 50, вид `model_scale` 1.5 × `fatness` 1.35, свита `escort_count` 2.
+Толстый Свен: `max_health` 550 (25 У), `move_speed` 4.2, `knock_resist` 0.6, `attack_damage` 18, `windup_time` 0.75, удар по площади `slam_radius` 4.5 / `slam_damage` 20 / `slam_windup` 0.9, `far_slam_chance` 0.004 (за кадр, издалека; у финального босса `boss_far_slam_chance` 0.02), `glory` 50, вид `model_scale` 1.5 × `fatness` 1.35, свита `escort_count` 2. Реплики: `intro_pool` «sven.intro», `death_pool` «sven.death» (`data/dialogues/sven.json`).
+
+Своя механика Свена (блок Н) — `enemies/sven.tscn`, скрипт `enemies/bosses/sven.gd` (`FatSven`, поверх `BossEnemy`):
+- **Таран на бочке:** телеграф `charge_aim_time` 0.9 с (красная полоса на полу; направление замирает после `charge_lock_at` 0.7), `charge_speed` 15, `charge_max_dist` 20, `charge_damage` 22, `charge_knock` 13, `charge_cooldown` 6, не ближе `charge_min_dist` 4.5 м; врезался в стену — оглушён `charge_wall_stun` 1.8 с (урон по нему ×1.5). Перепрыгнуть: ноги выше `charge_jump_clear` 1.0 м (`BossEnemy`).
+- **Брага:** `spit_cooldown` 5, замах `spit_windup` 0.65, `spit_count` 3 плевка, разброс `spit_spread` 2.4 м, полёт `spit_flight_time` 0.85 / дуга `spit_arc` 3, прямое попадание `spit_damage` 6; лужа `puddle_radius` 1.8 м, `puddle_time` 7 с, скорость Тора в луже ×`puddle_slow` 0.55 (`PlayerSlow`, как у элиты «Ледяной»), не больше `BrewPuddle.max_puddles` 8.
+- **Раздувание:** с `swell_hp_fraction` 0.25 HP бежит ×`swell_speed_mult` 1.4 к Тору (не дольше `swell_max_time` 6 с), раздувается на `swell_amount` 0.5; ближе `fuse_range` 3 м — фитиль `fuse_time` 1.1 с (красный круг), взрыв `blast_radius` 5 / `blast_damage` 30 — его конец. Убит раздутым — взрыв ×`death_blast_mult` 0.6 через 0.45 с.
+- Арена — `rooms/sven_arena.tscn` (генератор, «Пивной погреб Свена»): `Run.miniboss_arena` подменяет ею зал мини-босса (`Run.miniboss_rooms`); пусто — Свен выходит последней волной обычного зала.
 
 ## Враги — `enemies/grunt.tscn`, `thrower.tscn`, `boss.tscn` (`enemies/enemy.gd`)
 
