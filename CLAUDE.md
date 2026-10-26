@@ -3,7 +3,7 @@
 Прототип рогалик-шутера от первого лица. Godot **4.6.3** (не .NET), физика Jolt, GDScript со статической типизацией. Общение с владельцем — на русском.
 
 ## Где что
-- `player/player.gd` — движение (рывок, двойной прыжок, удар-приземление, супер-прыжок), урон; `player/camera_fx.gd` — тряска/FOV/наклон.
+- `player/player.gd` — движение (рывок, двойной прыжок, удар-приземление, супер-прыжок; GDD 7.2: отскок от удара-приземления, прыжок по головам, залезание на уступ, отскок от стены — блок «Прыжки по GDD 7.2»), урон; `player/camera_fx.gd` — тряска/FOV/наклон.
 - `weapons/` — топор (`axe.gd`), Мьёльнир (`mjolnir_hand.gd` + `mjolnir_projectile.gd`: состояния OUT / HOVER / STUCK «воткнулся» / RETURN, идеальный хват), огонь (`fire_zone.gd`).
 - Трейты Мьёльнира: `weapons/mjolnir_trait.gd` (`MjolnirTrait`, данные + группа) и `weapons/mjolnir_trait_handler.gd` (`MjolnirTraitHandler`, хуки `on_throw`/`on_flight_tick`/`on_hit_enemy`/`on_hit_world`/`on_stuck_tick`/`on_recall_start`/`on_recall_tick`/`on_caught`/`on_player_slam`/`on_perfect_catch`, `modify(stat)`); сами трейты — `weapons/mjolnir_traits/<id>.tres` + `<id>.gd`. Активные — `Run.mjolnir_traits`, рука собирает копии обработчиков. Выбор — `ui/trait_pick.gd`, иконки — `ui/mjolnir_traits_hud.gd`.
 - Мини-босс: `enemies/miniboss_def.gd` (`MinibossDef`, `enemies/minibosses/*.tres`) — обычный враг с переопределёнными числами и `Kind.BOSS`; добавляется последней волной (`Room.add_wave`) в залах `Run.miniboss_rooms`, после него `Game` открывает выбор трейта, потом руны.
@@ -49,7 +49,9 @@ godot --headless --path . --fixed-fps 60 res://tests/ai_test.tscn    # враг�
 godot --headless --path . --fixed-fps 60 res://tests/trait_test.tscn # база молота, выбор трейтов, каждый трейт ур. 1–2
 godot --headless --path . --fixed-fps 60 res://tests/hitch_test.tscn -- 50  # фризы (CPU-часть)
 godot --headless --path . --fixed-fps 60 res://tests/comic_test.tscn  # комиксовые слова: события, кулдаун, лимит, выключатель
+godot --headless --path . --fixed-fps 60 res://tests/jump_test.tscn   # отскок от удара-приземления, по головам, уступ, от стены
 ```
+Правило: запускать **все** `tests/*_test.tscn` (dialogue_test, save_test и новые тоже), у каждого в конце строка «ИТОГ … 0 FAIL».
 Фризы с рендерингом (Forward+ на программном Vulkan: `apt-get install mesa-vulkan-drivers`):
 `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json xvfb-run -a godot --path . --fixed-fps 60 --rendering-method forward_plus --resolution 320x180 res://tests/hitch_test.tscn -- 50` (и то же с `gl_compatibility`). Прогон ~10 мин; кадры без событий — шум программного рендера, не считаются.
 Скриншоты (нужен xvfb): `xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/screenshots.tscn -- <папка>`.

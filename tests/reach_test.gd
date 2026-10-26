@@ -47,7 +47,14 @@ func _run() -> void:
 	Input.action_press("jump")
 	await frames(2)
 	Input.action_release("jump")
-	await frames(60)
+	# Платформа 7 м в глубину: держим «вперёд», пока не окажемся наверху (иначе пробегаем её насквозь;
+	# с залезанием на уступ (GDD 7.2) Тор бывает наверху уже после первого прыжка)
+	var top_y := p.global_position.y
+	for i in 60:
+		await get_tree().physics_frame
+		top_y = maxf(top_y, p.global_position.y)
+		if p.is_on_floor() and p.global_position.y > 2.4:
+			break
 	Input.action_release("move_forward")
 	await frames(20)
 	var ok1 := p.global_position.y > 2.4

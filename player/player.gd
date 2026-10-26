@@ -49,6 +49,30 @@ signal slammed(power: float)
 ## Во сколько раз выше обычного прыжка (по высоте)
 @export var super_jump_height_mult: float = 2.5
 
+@export_group("Прыжки по GDD 7.2")
+## Отскок от удара-приземления, если задет хотя бы один враг (доля высоты падения)
+@export var slam_bounce_ratio: float = 0.6
+## Минимальная высота отскока (м) — даже после низкого удара-приземления
+@export var slam_bounce_min_height: float = 1.2
+## Окно (с) после отскока: нажал прыжок — подбросит выше
+@export var slam_bounce_window: float = 0.2
+## Во сколько раз выше подбрасывает прыжок в окне отскока
+@export var slam_bounce_boost: float = 1.6
+## Прыжок по головам: урон (0.5 У), стан, скорость отскока вверх
+@export var stomp_damage: float = 11.0
+@export var stomp_stun: float = 0.8
+@export var stomp_bounce_velocity: float = 9.5
+## Залезание на уступ: высота края над ступнями (м) и время
+@export var ledge_min_height: float = 0.75
+@export var ledge_max_height: float = 2.2
+@export var ledge_climb_time: float = 0.3
+## С ренжем в руке залезание дольше (GDD 7.4)
+@export var ledge_climb_ranged_mult: float = 1.5
+## Отскок от стены в воздухе: сколько раз до касания земли, сила от стены и вверх
+@export var wall_jumps: int = 2
+@export var wall_jump_push: float = 7.0
+@export var wall_jump_up: float = 8.5
+
 @export_group("Физика толчков")
 @export var push_force: float = 1.6
 
@@ -75,6 +99,19 @@ var _jump_buffer_left: float = 0.0
 var _was_on_floor: bool = true
 
 var is_slamming: bool = false
+## Сколько врагов задел последний удар-приземление (для отскока)
+var _last_slam_hits: int = 0
+var _bounce_window_left: float = 0.0
+var _bounce_boost_velocity: float = 0.0
+var _stomp_cooldown: float = 0.0
+var is_climbing: bool = false
+var _climb_t: float = 0.0
+var _climb_time: float = 0.3
+var _climb_from: Vector3
+var _climb_mid: Vector3
+var _climb_to: Vector3
+var _climb_check_cooldown: float = 0.0
+var _wall_jumps_left: int = 2
 var _super_jump_left: float = 0.0
 ## Самая высокая точка текущего пребывания в воздухе — для силы приземления
 var _air_peak_y: float = 0.0
@@ -175,11 +212,16 @@ func _physics_process(delta: float) -> void:
 	wish = wish.normalized() if wish.length() > 0.01 else Vector3.ZERO
 
 	_update_timers(delta)
+	if is_climbing:
+		_process_climb(delta)
+		camera_fx.update_motion(self, input_dir, false, delta)
+		return
 	var on_floor := is_on_floor()
 
 	if on_floor:
 		_coyote_left = coyote_time
 		_jumps_left = extra_jumps
+		_wall_jumps_left = wall_jumps
 	if input_enabled and Input.is_action_just_pressed("jump"):
 		_jump_buffer_left = jump_buffer
 
@@ -203,6 +245,8 @@ func _physics_process(delta: float) -> void:
 	var pre_velocity := velocity
 	move_and_slide()
 	_push_rigid_bodies(pre_velocity)
+	_check_stomp(pre_velocity)
+	_check_ledge(wish)
 
 	var now_on_floor := is_on_floor()
 	if not now_on_floor:
@@ -224,6 +268,9 @@ func _update_timers(delta: float) -> void:
 	_jump_buffer_left = maxf(0.0, _jump_buffer_left - delta)
 	_invuln_left = maxf(0.0, _invuln_left - delta)
 	_super_jump_left = maxf(0.0, _super_jump_left - delta)
+	_bounce_window_left = maxf(0.0, _bounce_window_left - delta)
+	_stomp_cooldown = maxf(0.0, _stomp_cooldown - delta)
+	_climb_check_cooldown = maxf(0.0, _climb_check_cooldown - delta)
 	if dash_charges < dash_charges_max:
 		_dash_recharge_timer += delta
 		if _dash_recharge_timer >= dash_recharge:
@@ -261,6 +308,15 @@ func _process_walk(wish: Vector3, on_floor: bool, delta: float) -> void:
 func _process_jump(on_floor: bool) -> void:
 	if _jump_buffer_left <= 0.0:
 		return
+	if _bounce_window_left > 0.0:
+		# Прыжок в окне отскока от удара-приземления — подбрасывает выше
+		_jump_buffer_left = 0.0
+		_bounce_window_left = 0.0
+		velocity.y = maxf(velocity.y, _bounce_boost_velocity)
+		camera_fx.kick_fov(8.0)
+		Audio.play("sounds/sfx/super_jump.wav")
+		Perf.mark("slam_bounce_boost")
+		return
 	if _super_jump_left > 0.0:
 		_jump_buffer_left = 0.0
 		_super_jump_left = 0.0
@@ -281,6 +337,9 @@ func _process_jump(on_floor: bool) -> void:
 		velocity.y = jump_velocity * 0.92
 		camera_fx.kick_fov(3.0)
 		Audio.play("sounds/jump_b.ogg, sounds/jump_c.ogg")
+	elif _wall_jumps_left > 0 and _try_wall_jump():
+		# Отскок от стены — когда прыжки в воздухе кончились (иначе у стены платформы съедал бы двойной прыжок)
+		_jump_buffer_left = 0.0
 
 func _process_gravity(on_floor: bool, delta: float) -> void:
 	if on_floor and velocity.y <= 0.0:
@@ -348,9 +407,12 @@ func _on_landed() -> void:
 	if is_slamming:
 		is_slamming = false
 		_do_slam_impact(fall)
-		_super_jump_left = super_jump_window
 		velocity.x = 0
 		velocity.z = 0
+		if _last_slam_hits > 0:
+			_slam_bounce(fall)
+		else:
+			_super_jump_left = super_jump_window
 	else:
 		if fall > 1.5:
 			camera_fx.land_dip(clampf(fall / 10.0, 0.05, 0.35))
@@ -361,6 +423,7 @@ func _do_slam_impact(height: float) -> void:
 	var damage := slam_base_damage + height * slam_damage_per_meter
 	var knock := slam_base_knockback + height * slam_knockback_per_meter
 	var center := global_position
+	_last_slam_hits = 0
 	var space := get_world_3d().direct_space_state
 	var q := PhysicsShapeQueryParameters3D.new()
 	var s := SphereShape3D.new()
@@ -382,6 +445,8 @@ func _do_slam_impact(height: float) -> void:
 		var push := dir * knock * falloff + Vector3.UP * knock * 0.55 * falloff
 		if c.has_method("take_hit"):
 			c.take_hit(damage * falloff, push, "slam")
+			if c is Enemy:
+				_last_slam_hits += 1
 		elif c is RigidBody3D:
 			(c as RigidBody3D).apply_central_impulse(push * (c as RigidBody3D).mass * 0.6)
 	if Run.rune_count("slam_fire") > 0:
@@ -400,6 +465,151 @@ func _do_slam_impact(height: float) -> void:
 	slammed.emit(power)
 	if height >= 9.0:
 		Odin.say("big_slam")
+
+# --- Прыжки по GDD 7.2: отскок, прыжок по головам, залезание на уступ ---
+
+## Удар-приземление задел врагов — подбрасывает на долю высоты падения, двойной прыжок восстанавливается.
+func _slam_bounce(fall: float) -> void:
+	var h := maxf(fall * slam_bounce_ratio, slam_bounce_min_height)
+	velocity.y = sqrt(2.0 * gravity * h)
+	# Прыжок в окне — не ниже супер-прыжка: отскок от врагов не должен отнимать супер-прыжок
+	_bounce_boost_velocity = maxf(sqrt(2.0 * gravity * h * slam_bounce_boost), jump_velocity * sqrt(super_jump_height_mult))
+	_bounce_window_left = maxf(slam_bounce_window, super_jump_window)
+	_jumps_left = extra_jumps
+	_air_peak_y = global_position.y
+	Perf.mark("slam_bounce")
+
+## Приземлился на врага сверху (без удара-приземления) — отскок, как в Mario.
+func _check_stomp(pre_velocity: Vector3) -> void:
+	if _stomp_cooldown > 0.0 or is_slamming or pre_velocity.y > -1.0 or not can_stomp():
+		return
+	for i in get_slide_collision_count():
+		var col := get_slide_collision(i)
+		var e := col.get_collider() as Enemy
+		if e == null or e.is_dead or col.get_normal().y < 0.6:
+			continue
+		e.take_hit(stomp_damage, Vector3(0, -1, 0), "stomp")
+		if e.has_method("stun"):
+			e.stun(stomp_stun)
+		velocity.y = stomp_bounce_velocity
+		_jumps_left = extra_jumps
+		_air_peak_y = global_position.y
+		_stomp_cooldown = 0.2
+		camera_fx.add_trauma(0.12)
+		FX.ring(get_parent(), e.global_position + Vector3(0, 1.8 * e.model_scale, 0), 0.8, Color(1, 0.95, 0.7, 0.8), 0.2)
+		Audio.play("sounds/jump_b.ogg")
+		Perf.mark("stomp")
+		return
+
+## Прыжок по головам и залезание зависят от оружия в руке (этап 1): с ренжем по головам не прыгаем.
+func can_stomp() -> bool:
+	return not (has_method("is_ranged_active") and call("is_ranged_active"))
+
+## Край на уровне груди или чуть выше, игрок жмёт вперёд в стену — залезаем сами за ledge_climb_time.
+func _check_ledge(wish: Vector3) -> void:
+	if _climb_check_cooldown > 0.0 or is_slamming or _dash_time_left > 0.0 or wish == Vector3.ZERO:
+		return
+	if velocity.y > 4.0:
+		return
+	var fwd := -global_transform.basis.z
+	fwd.y = 0
+	fwd = fwd.normalized()
+	if wish.dot(fwd) < 0.5:
+		return
+	var space := get_world_3d().direct_space_state
+	var base := global_position
+	# 1) Стена перед грудью
+	var chest := PhysicsRayQueryParameters3D.create(base + Vector3(0, 1.0, 0), base + Vector3(0, 1.0, 0) + fwd * 0.75, 1)
+	chest.exclude = [get_rid()]
+	var wall := space.intersect_ray(chest)
+	if wall.is_empty() or absf((wall.normal as Vector3).y) > 0.3:
+		return
+	# 2) Верх уступа: луч вниз чуть за стеной
+	var probe_xz: Vector3 = (wall.position as Vector3) + fwd * 0.4
+	var top_q := PhysicsRayQueryParameters3D.create(Vector3(probe_xz.x, base.y + ledge_max_height + 0.3, probe_xz.z), Vector3(probe_xz.x, base.y + ledge_min_height - 0.05, probe_xz.z), 1)
+	top_q.exclude = [get_rid()]
+	var top := space.intersect_ray(top_q)
+	if top.is_empty() or (top.normal as Vector3).y < 0.7:
+		return
+	var top_y: float = (top.position as Vector3).y
+	var h := top_y - base.y
+	if h < ledge_min_height or h > ledge_max_height:
+		return
+	# 3) Место наверху: капсула игрока помещается
+	var dest := Vector3(probe_xz.x, top_y + 0.05, probe_xz.z) + fwd * 0.2
+	var col := get_node_or_null("Collider") as CollisionShape3D
+	if col and col.shape:
+		var q := PhysicsShapeQueryParameters3D.new()
+		q.shape = col.shape
+		q.transform = Transform3D(Basis.IDENTITY, dest + col.position + Vector3(0, 0.05, 0))
+		q.collision_mask = 1
+		q.exclude = [get_rid()]
+		if not space.intersect_shape(q, 1).is_empty():
+			return
+	_start_climb(dest)
+
+## Отскок от стены: стена рядом (лучи по 8 направлениям на уровне груди) — толчок от неё и вверх.
+func _try_wall_jump() -> bool:
+	var space := get_world_3d().direct_space_state
+	var origin := global_position + Vector3(0, 1.0, 0)
+	var best_n := Vector3.ZERO
+	var best_d := 0.75
+	for i in 8:
+		var a := TAU * i / 8.0
+		var dir := Vector3(cos(a), 0, sin(a))
+		var q := PhysicsRayQueryParameters3D.create(origin, origin + dir * 0.75, 1)
+		q.exclude = [get_rid()]
+		var hit := space.intersect_ray(q)
+		if hit.is_empty() or absf((hit.normal as Vector3).y) > 0.3:
+			continue
+		var d := origin.distance_to(hit.position)
+		if d < best_d:
+			best_d = d
+			best_n = hit.normal
+	if best_n == Vector3.ZERO:
+		return false
+	_wall_jumps_left -= 1
+	var n := Vector3(best_n.x, 0, best_n.z).normalized()
+	var horiz := Vector3(velocity.x, 0, velocity.z)
+	# Гасим скорость в стену, добавляем толчок от неё
+	horiz -= n * minf(horiz.dot(n), 0.0)
+	horiz += n * wall_jump_push
+	velocity = Vector3(horiz.x, wall_jump_up, horiz.z)
+	camera_fx.kick_fov(4.0)
+	FX.ring(get_parent(), global_position + Vector3(0, 1.0, 0) - n * best_d, 0.6, Color(0.8, 0.9, 1.0, 0.7), 0.2)
+	Audio.play("sounds/jump_b.ogg, sounds/jump_c.ogg")
+	Perf.mark("wall_jump")
+	return true
+
+func _start_climb(dest: Vector3) -> void:
+	is_climbing = true
+	_climb_t = 0.0
+	_climb_time = ledge_climb_time * (ledge_climb_ranged_mult if (has_method("is_ranged_active") and call("is_ranged_active")) else 1.0)
+	_climb_from = global_position
+	_climb_mid = Vector3(global_position.x, dest.y + 0.1, global_position.z)
+	_climb_to = dest
+	velocity = Vector3.ZERO
+	camera_fx.land_dip(0.12)
+	Audio.play("sounds/jump_a.ogg")
+	Perf.mark("ledge_climb")
+
+func _process_climb(delta: float) -> void:
+	_climb_t += delta
+	var k := clampf(_climb_t / maxf(_climb_time, 0.01), 0.0, 1.0)
+	# Сначала вверх (60 % времени), потом вперёд на уступ
+	if k < 0.6:
+		global_position = _climb_from.lerp(_climb_mid, ease(k / 0.6, 0.6))
+	else:
+		global_position = _climb_mid.lerp(_climb_to, (k - 0.6) / 0.4)
+	if k >= 1.0:
+		is_climbing = false
+		_climb_check_cooldown = 0.3
+		var fwd := -global_transform.basis.z
+		fwd.y = 0
+		velocity = fwd.normalized() * 3.0
+		_jumps_left = extra_jumps
+		_air_peak_y = global_position.y
+		_was_on_floor = true
 
 func _push_rigid_bodies(pre_velocity: Vector3) -> void:
 	for i in get_slide_collision_count():

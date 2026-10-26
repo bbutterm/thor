@@ -193,20 +193,23 @@ func _test_slam(p: Player) -> void:
 	await press("jump")
 	await wait(0.35)
 	await press("slam")
+	# Удар задел манекен → автоматический отскок (GDD 7.2), а Пробел в окне после приземления
+	# даёт не меньше супер-прыжка. Ждём окно (отскока или супер-прыжка), потом жмём прыжок.
 	var landed := false
-	for i in 120:
+	for i in 180:
 		await get_tree().physics_frame
-		if p.is_on_floor():
+		if p._bounce_window_left > 0.0 or p._super_jump_left > 0.0:
 			landed = true
 			break
-	check(landed, "приземлился после удара")
+	check(landed, "приземлился после удара (окно отскока/супер-прыжка)")
 	check(not p.is_slamming, "удар завершён")
-	await get_tree().physics_frame
 	Input.action_press("jump")
-	await get_tree().physics_frame
-	await get_tree().physics_frame
+	var vy_max := p.velocity.y
+	for i in 10:
+		await get_tree().physics_frame
+		vy_max = maxf(vy_max, p.velocity.y)
 	Input.action_release("jump")
-	check(p.velocity.y > p.jump_velocity * 1.25, "супер-прыжок (vy=%.1f при обычном %.1f)" % [p.velocity.y, p.jump_velocity])
+	check(vy_max > p.jump_velocity * 1.25, "супер-прыжок (vy=%.1f при обычном %.1f)" % [vy_max, p.jump_velocity])
 	await wait(0.2)
 	check(not is_instance_valid(dummy) or dummy.health < hp0, "волна удара задела врага")
 	await wait(2.0)

@@ -40,7 +40,7 @@ func _drop(proj: MjolnirProjectile, pos: Vector3) -> void:
 	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(pos, pos - Vector3(0, max_height, 0), 1))
 	if hit.is_empty() or (hit.normal as Vector3).y < 0.6:
 		return
-	_zones = _zones.filter(func(z: Node) -> bool: return is_instance_valid(z) and not z.is_queued_for_deletion())
+	_zones.assign(_zones.filter(func(z: Variant) -> bool: return is_instance_valid(z) and not (z as Node).is_queued_for_deletion()))
 	while _zones.size() >= max_zones:
 		_zones.pop_front().queue_free()
 	var fire := preload("res://weapons/fire_zone.gd").new()
