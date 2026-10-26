@@ -73,6 +73,7 @@ func _load_room() -> void:
 	player.velocity = Vector3.ZERO
 	player.rotation_target = Vector2(0.0, t.basis.get_euler().y)
 	player.mjolnir.force_return_instant()
+	player.on_room_start()  # пассивки тела «на зал» (скальд: первый удар не ранит)
 	room.cleared.connect(_on_room_cleared)
 	room.exit_reached.connect(_on_exit_reached)
 	room.boss_spawned.connect(hud.show_boss)
@@ -138,7 +139,7 @@ func _on_rune_picked(rune: RuneDef) -> void:
 	Run.add_rune(rune)
 	player.recalc_from_runes(Run)
 	if rune.id == "heal":
-		player.heal(50.0)
+		player.heal(50.0 * Run.rune_power)  # Старый жрец: руны ×2
 	Odin.say("rune_pick")
 	Audio.play("sounds/sfx/rune_pick.wav")
 	room.open_door()
@@ -183,15 +184,27 @@ func _after_run() -> void:
 	add_child(plan)
 	plan.open("В меню")
 	var start: bool = await plan.closed
-	if start:
-		restart_run()
-	else:
+	if not start:
 		go_to_menu()
+		return
+	# Выбор тела на следующий забег (ui/body_select.gd); «Назад» — в меню
+	var bs := BodySelect.new()
+	bs.name = "BodySelect"
+	add_child(bs)
+	bs.open("В меню", Run.body.id if Run.body else "")
+	var body_id: String = await bs.closed
+	if body_id == "":
+		go_to_menu()
+	else:
+		restart_run(body_id)
 
-func restart_run() -> void:
+## Новый забег. body_id — тело (пусто — то же тело, что сейчас: «Заново» из паузы).
+func restart_run(body_id: String = "") -> void:
 	FX.reset_time()
 	get_tree().paused = false
-	Run.start_run()
+	if body_id == "" and Run.body:
+		body_id = Run.body.id
+	Run.start_run(body_id)
 	get_tree().reload_current_scene()
 
 func go_to_menu() -> void:

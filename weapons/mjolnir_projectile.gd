@@ -292,7 +292,7 @@ func _on_hit(c: Object, dir: Vector3) -> void:
 	var knock := Vector3(dir.x, 0, dir.z).normalized() * 9.0 + Vector3.UP * 3.0
 	if c.has_method("take_hit"):
 		var dmg := damage()
-		c.take_hit(dmg, knock, "hammer")
+		hand.player.deal_damage(c, dmg, knock, "hammer")
 		ComicFX.on_hammer_hit(c, global_position, state == State.RETURN, bounces_done)
 		FX.hitstop(hand.hit_hitstop)
 		hand.player.camera_fx.add_trauma(0.12)
@@ -329,7 +329,7 @@ func chain_lightning(source: Node3D, dmg: float, count: int, radius: float) -> i
 		chained[best.get_instance_id()] = true
 		var to := best.global_position + Vector3(0, 1, 0)
 		FX.lightning(get_parent(), from, to)
-		best.take_hit(dmg, Vector3.UP * 2.0, "lightning")
+		hand.player.deal_damage(best, dmg, Vector3.UP * 2.0, "lightning")
 		ComicFX.on_lightning(best)
 		from = to
 		hits += 1

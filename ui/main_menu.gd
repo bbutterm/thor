@@ -72,7 +72,7 @@ func _ready() -> void:
 	var controls := UIStyle.panel(Color(0.08, 0.08, 0.1, 0.9), Color(UIStyle.ICE, 0.35))
 	var cl := UIStyle.label(
 		"WASD — бег   ·   Пробел — прыжок / двойной\n" +
-		"Shift — рывок   ·   Ctrl или C в воздухе — удар-приземление\n" +
+		"Shift — рывок   ·   Ctrl или C в воздухе — удар-приземление   ·   Ctrl+Shift — подкат\n" +
 		"Пробел сразу после приземления — СУПЕР-ПРЫЖОК\n" +
 		"ЛКМ — топор (комбо из 3)   ·   ПКМ — метнуть / вернуть Мьёльнир\n" +
 		"Топором можно отбивать фиолетовые снаряды   ·   Esc — пауза", 16, UIStyle.TEXT_DIM, 3)
@@ -92,19 +92,31 @@ func _on_plan() -> void:
 	add_child(tp)
 	tp.open("Назад")
 	if await tp.closed:
+		tp.queue_free()
 		_on_start()
 	else:
 		tp.queue_free()
 
+## «Начать забег»: экран выбора тела (ui/body_select.gd), потом забег этим телом.
 func _on_start() -> void:
-	Run.start_run()
+	var bs := BodySelect.new()
+	bs.name = "BodySelect"
+	add_child(bs)
+	bs.open("Назад", Run.body.id if Run.body else "")
+	var id: String = await bs.closed
+	bs.queue_free()
+	if id != "":
+		_start_with(id)
+
+func _start_with(body_id: String) -> void:
+	Run.start_run(body_id)
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 ## Проверка собранной игры: ./Thor.exe -- --selftest  (печатает, что ресурсы на месте, и выходит)
 func _selftest() -> void:
 	print("SELFTEST bodies=%d runes=%d odin=%s" % [Run.all_bodies.size(), Run.all_runes.size(), Odin.pick("death") != ""])
 	get_tree().root.add_child(SelfTestRunner.new())
-	_on_start()
+	_start_with("")
 
 class SelfTestRunner extends Node:
 	func _ready() -> void:

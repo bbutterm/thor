@@ -304,6 +304,11 @@ func _test_death_flow() -> void:
 	check(plan != null and plan.visible, "затем «План тренировок» (блок В)")
 	if plan:
 		plan._fight_btn.pressed.emit()
+	await wait(0.3)
+	# Блок Л: после «В бой» — выбор тела
+	var bs := game.get_node_or_null("BodySelect") as BodySelect
+	if bs:
+		bs.choose(bs.selected.id)
 	await wait(1.0)
 	var g2 := get_tree().current_scene as Game
 	check(g2 != null and g2 != game, "начался новый забег")

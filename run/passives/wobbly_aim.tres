@@ -1,6 +1,11 @@
-[gd_resource type="Resource" script_class="PassiveDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="PassiveDef" format=3]
 
 [ext_resource type="Script" path="res://run/passive_def.gd" id="1_s"]
+
+[ext_resource type="Script" path="res://run/passives/wobbly_aim.gd" id="h_script"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("h_script")
 
 [resource]
 script = ExtResource("1_s")
@@ -8,4 +13,5 @@ id = "wobbly_aim"
 title = "Пьяный прицел"
 description = "Прицел покачивается"
 is_flaw = true
-implemented = false
+implemented = true
+handler = SubResource("Resource_handler")

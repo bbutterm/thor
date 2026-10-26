@@ -176,7 +176,7 @@ func _test_permanent() -> void:
 	await wait(0.8)
 	var game := get_tree().current_scene as Game
 	check(game != null and is_equal_approx(game.player.max_health, 170.0), "игрок в забеге: 170 HP")
-	check(game != null and game.player.dash_charges_max == 3, "игрок в забеге: 3 рывка")
+	check(game != null and game.player.dash_charges_max == base.dash_charges + 1, "игрок в забеге: %d рывка (тело + 1)" % (base.dash_charges + 1))
 	game.player.recalc_from_runes(Run)
 	check(is_equal_approx(game.player.max_health, 170.0), "после пересчёта рун бонус не пропал")
 	# Слава забега уходит в копилку
@@ -222,6 +222,12 @@ func _test_screen() -> void:
 		done[0] = true
 		done[1] = start)
 	plan._fight_btn.pressed.emit()
+	await wait(0.3)
+	# Блок Л: после «В бой» — выбор тела
+	var bs := game.get_node_or_null("BodySelect") as BodySelect
+	check(bs != null and bs.visible, "после «В бой» — выбор тела")
+	if bs:
+		bs.choose(bs.selected.id)
 	await wait(1.0)
 	check(done[0] and done[1], "«В бой» закрывает экран")
 	var g2 := get_tree().current_scene as Game

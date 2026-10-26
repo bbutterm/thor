@@ -39,6 +39,18 @@ func _run() -> void:
 	await wait(0.15)
 	await shot("01b_settings")
 	sp.close()
+	# Выбор тела (блок Л): открытое и закрытое тело
+	var bsel := BodySelect.new()
+	get_tree().current_scene.add_child(bsel)
+	bsel.open("Назад", "berserker")
+	await wait(0.4)
+	await shot("01c_body_select")
+	bsel.select("smith")
+	await wait(0.1)
+	await shot("01d_body_locked")
+	bsel.close("")
+	bsel.queue_free()
+	get_tree().paused = false
 	Run.start_run("hunter")
 	Run.room_order.assign(["res://rooms/room_02.tscn", "res://rooms/room_03.tscn", "res://rooms/boss_arena.tscn"])
 	get_tree().change_scene_to_file("res://scenes/game.tscn")

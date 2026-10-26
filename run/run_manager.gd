@@ -5,6 +5,8 @@ signal glory_changed(total: int)
 signal runes_changed(runes: Array)
 signal kill_streak(count: int)
 signal mjolnir_traits_changed(traits: Array)
+## Убийство засчитано (после Славы). Слушают пассивки тела (Player) и Ярость.
+signal kill_registered(source: String)
 
 const BODIES_DIR := "res://run/bodies/"
 const RUNES_DIR := "res://run/runes/"
@@ -56,6 +58,8 @@ var all_mjolnir_traits: Array[MjolnirTrait] = []
 var mjolnir_traits: Array[MjolnirTrait] = []
 var mjolnir_trait_levels: Dictionary = {}
 var _recent_kill_times: Array[float] = []
+## Во сколько раз считается каждая руна (Старый жрец: «все руны ×2»), см. BodyDef.stat("rune_power")
+var rune_power: int = 1
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -102,6 +106,7 @@ func start_run(forced_body_id: String = "") -> void:
 		body = open_bodies[randi() % open_bodies.size()]
 	if body == null:
 		body = BodyDef.new()
+	rune_power = maxi(1, int(body.stat(&"rune_power", 1)))
 	var pool := ROOM_SCENES.duplicate()
 	pool.shuffle()
 	room_order.clear()
@@ -169,6 +174,7 @@ func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: Stri
 	add_glory(amount)
 	if streak > 0 and streak % 10 == 0:
 		kill_streak.emit(streak)
+	kill_registered.emit(source)
 
 func register_player_hit() -> void:
 	streak = 0
@@ -182,7 +188,7 @@ func rune_count(id: String) -> int:
 	for r in runes:
 		if r.id == id:
 			n += 1
-	return n
+	return n * rune_power
 
 func random_rune_choices(count: int = 3) -> Array[RuneDef]:
 	# Закрытые в «Плане тренировок» руны не выпадают (Save.is_in_pool)

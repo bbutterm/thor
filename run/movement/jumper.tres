@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MovementProfile" format=3]
+
+[ext_resource type="Script" path="res://player/movement_profile.gd" id="1_mp"]
+
+[resource]
+script = ExtResource("1_mp")
+id = "jumper"
+title = "Прыгун"
+description = "Тройной прыжок, отскок от стены 3 раза и сильнее. Рывок — только в воздухе."
+extra_jumps = 2
+wall_jumps = 3
+wall_jump_mult = 1.25
+dash_on_ground = false

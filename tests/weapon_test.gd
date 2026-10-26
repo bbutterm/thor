@@ -245,7 +245,8 @@ func _run() -> void:
 	d2.take_hit(10, Vector3.ZERO, "melee")
 	await wait(0.05)
 	var melee_glory := Run.glory - g0
-	check(absf(p.health - (50.0 + p.heal_per_kill + p.melee_kill_heal)) < 0.01, "добивание мили лечит %.0f+%.0f HP" % [p.heal_per_kill, p.melee_kill_heal])
+	var hm := float(p.modify_stat(&"heal_mult", 1.0))  # тело: Берсерк лечится вполовину (блок Л)
+	check(absf(p.health - (50.0 + (p.heal_per_kill + p.melee_kill_heal) * hm)) < 0.01, "добивание мили лечит (%.0f+%.0f)×%.1f HP" % [p.heal_per_kill, p.melee_kill_heal, hm])
 	await wait(1.0)
 	var d3 := _make_dummy(p, 3.0)
 	d3.health = 1.0
@@ -256,7 +257,7 @@ func _run() -> void:
 	d3.take_hit(10, Vector3.ZERO, "ranged")
 	await wait(0.05)
 	var ranged_glory := Run.glory - g0
-	check(absf(p.health - (50.0 + p.heal_per_kill)) < 0.01, "добивание ренжем лечит только %.0f HP" % p.heal_per_kill)
+	check(absf(p.health - (50.0 + p.heal_per_kill * hm)) < 0.01, "добивание ренжем лечит только %.0f×%.1f HP" % [p.heal_per_kill, hm])
 	check(melee_glory > ranged_glory * 2, "Слава: мили %d > ренж %d" % [melee_glory, ranged_glory])
 
 	print("-- Стартовое оружие тел")

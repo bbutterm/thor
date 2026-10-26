@@ -120,13 +120,14 @@ func clear_ranged() -> void:
 	slots_changed.emit()
 
 ## Стартовое оружие тела (поля BodyDef.start_melee / start_ranged).
-func apply_body(body: BodyDef) -> void:
+## level — уровень стартового оружия (Кузнец: +1, см. run/passives/smith_level.gd)
+func apply_body(body: BodyDef, level: int = 1) -> void:
 	if body == null:
 		return
 	if body.start_melee:
-		equip(body.start_melee, 1, false)
+		equip(body.start_melee, level, false)
 	if body.start_ranged:
-		equip(body.start_ranged, 1, false)
+		equip(body.start_ranged, level, false)
 	else:
 		clear_ranged()
 	switch_to(MELEE, true)
