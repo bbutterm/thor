@@ -30,6 +30,7 @@ static func break_barrel(rb: RigidBody3D) -> void:
 	var pos := rb.global_position + Vector3(0, 0.5, 0)
 	FX.sparks(parent, pos, WOOD, 16, 6.0, 14.0, 0.09, 0.5)
 	FX.burst(parent, pos, 0.7, Color(0.8, 0.6, 0.35, 0.5), 0.25)
+	FX.barrel_dust(parent, pos)  # облако пыли vfx_smoke (VFX-комплект)
 	Audio.play("sounds/sfx/barrel_break.wav")
 	rb.remove_from_group("props")
 	rb.queue_free()

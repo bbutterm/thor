@@ -164,6 +164,18 @@ func _run() -> void:
 		FX.smoke(game, ahead(4.0), 1.0)
 	check(FX.pool_size("smoke") <= c.smoke_limit, "пул дыма не больше %d" % c.smoke_limit)
 
+	print("-- Бочка и серебро")
+	await wait(c.smoke_time + 0.2)
+	var barrel := (load("res://props/barrel.tscn") as PackedScene).instantiate() as RigidBody3D
+	game.add_child(barrel)
+	barrel.global_position = ahead(4.0, 0.3)
+	await get_tree().physics_frame
+	var star0 := FX.pool_active("sparks")
+	BarrelWatch.break_barrel(barrel)
+	await get_tree().physics_frame
+	check(FX.pool_active("smoke") >= 1, "разбитая бочка — облако пыли")
+	check(FX.pool_active("sparks") > star0, "монеты из бочки — блеск-звёздочка")
+
 	print("-- Огонь")
 	var fire := preload("res://weapons/fire_zone.gd").new()
 	game.add_child(fire)

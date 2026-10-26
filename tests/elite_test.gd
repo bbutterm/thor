@@ -277,7 +277,11 @@ func _test_drop_and_rules() -> void:
 	var picks0 := get_tree().get_nodes_in_group("pickups").size()
 	var e := _elite("grunt", Loot.get_elite_modifier("fast"), Vector3(0, 0, -6))
 	await frames(10)
+	# С серебром (блок К) элита в 40 % роняет серебро вместо оружия — здесь проверяем оружие
+	var silver_chance := Loot.elite_silver_chance
+	Loot.elite_silver_chance = 0.0
 	e.take_hit(9999.0, Vector3.ZERO, "melee_finisher")
+	Loot.elite_silver_chance = silver_chance
 	await frames(5)
 	check(get_tree().get_nodes_in_group("pickups").size() > picks0, "элита гарантированно роняет оружие")
 	await _clear()

@@ -557,6 +557,21 @@ static func blast_smoke(parent: Node, pos: Vector3, radius: float) -> void:
 	var c := cfg()
 	smoke(parent, pos, c.smoke_size + radius * c.smoke_per_radius, Color(0.7, 0.66, 0.62))
 
+## Пыль разбитой бочки (run/barrel_watch.gd): дым коричневатого оттенка.
+static func barrel_dust(parent: Node, pos: Vector3) -> void:
+	smoke(parent, pos, cfg().barrel_dust_size, Color(0.78, 0.64, 0.48))
+
+static var _last_glint_ms: int = -100000
+
+## Блеск монеты серебра при вылете (run/silver_coin.gd): звёздочка vfx_sparks_*, не чаще cfg().coin_glint_interval.
+static func coin_glint(parent: Node, pos: Vector3, color: Color) -> void:
+	var c := cfg()
+	var now := Time.get_ticks_msec()
+	if now - _last_glint_ms < int(c.coin_glint_interval * 1000.0) or c.coin_glint_size <= 0.0:
+		return
+	_last_glint_ms = now
+	spark_star(parent, pos + Vector3(0, 0.15, 0), color, c.coin_glint_size)
+
 ## «Пуф» исчезающего трупа (enemy.gd → _spawn_debris, когда тело сжимается).
 static func corpse_smoke(body: Node3D) -> void:
 	if body and is_instance_valid(body) and body.is_inside_tree():

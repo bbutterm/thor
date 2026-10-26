@@ -57,6 +57,13 @@ class_name VfxTuning
 @export var smoke_rise: float = 0.8
 @export_range(0.0, 1.0) var smoke_transparency: float = 0.15
 @export var smoke_limit: int = 12
+## Пыль разбитой бочки, м
+@export var barrel_dust_size: float = 1.3
+
+@export_group("Серебро")
+## Блеск-звёздочка при вылете монеты: размер, м (0 — нет), и не чаще раза в столько секунд
+@export var coin_glint_size: float = 0.3
+@export var coin_glint_interval: float = 0.06
 
 @export_group("Огонь (vfx_fire)")
 ## Языков пламени на 1 м радиуса зоны (не больше fire_max)
