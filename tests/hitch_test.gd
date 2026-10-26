@@ -104,6 +104,10 @@ func _play_room() -> void:
 func _go_next() -> void:
 	var room := game.room
 	await wait(1.2)
+	if game.trait_pick.visible:
+		game.trait_pick._open_time = -10.0
+		game.trait_pick.choose(0, true)
+		await wait(1.0)
 	if game.rune_pick.visible:
 		game.rune_pick._open_time = -10.0
 		game.rune_pick.choose(0)

@@ -43,7 +43,31 @@
 
 ## Мьёльнир — узел **Mjolnir** (`weapons/mjolnir_hand.gd`)
 
-`throw_speed` 32, `base_damage` 30, `auto_return_after` 1.5 с, `return_speed` 36, `return_turn_accel` 140 (дуга возврата), `max_wall_bounces` 2, `chain_damage_ratio` 0.5, `chain_radius` 7, `hit_hitstop` 0.04.
+База по GDD 10: `throw_speed` 32, `base_damage` 33 (1.5 У), `max_range` 25 м (дальше — возврат), `auto_return_after` 1.5 с (полёт без попадания в стену), `sticks_to_world` вкл. (втыкается в стену/пол), `stuck_auto_return` 0.8 с (сколько воткнутый молот ждёт ПКМ; трейты «на воткнутый» продлевают до 3–5 с; 0 — ждёт всегда), `return_speed` 36, `return_turn_accel` 140 (дуга возврата), `max_wall_bounces` 0 (было 2: теперь отскоки даёт Рикошет), `chain_targets` 0 (базовой молнии нет — это трейт), `chain_damage_ratio` 0.5, `chain_radius` 7, `hit_hitstop` 0.04.
+Без молота: `dash_recharge_bonus` 0.2 (рывок перезаряжается на 20 % быстрее). Идеальный хват: `perfect_window` 0.15 с (ПКМ до или после поимки), `perfect_damage_mult` 2.
+
+## Трейты Мьёльнира — `weapons/mjolnir_traits/*.tres`
+
+Открой `.tres` → поле **handler** → там числа трейта (ур. 1 / ур. 2). Название, описание, руна, цвет, группа — в самом `.tres`. Новый трейт: скопируй `.tres` и скрипт-обработчик (наследник `MjolnirTraitHandler`), поменяй — в игре появится сам.
+
+| Трейт | Группа | Главные числа |
+|---|---|---|
+| Огненный след | след | `spacing` 1.8 м, `radius` 1.1 / 1.6, `duration` 3 / 5 с, `dps` 6.6 (0.3 У/с), `max_zones` 10, свет у каждого `light_every` 3-го |
+| Притяжение к молоту | возврат | `speed` 30, `max_time` 1.2 с, `damage` 22 (1 У), `hit_radius` 1.6, `knockback` 11, `exit_up` 10, `mantle_height` 2.2 м (залезть на уступ над молотом), `stuck_hold` 3 с; ур. 2 — `arrive_slam_*` |
+| Магнит | возврат | `radius` 6 / 9 м, `pull_speed` 7, `hold_distance` 1.6, `boss_factor` 0.25, `blast_damage` 11, `blast_knockback` 15, `stuck_hold` 3 с |
+| Бумеранг | возврат | `speed_mult` 1.25, `loop_time` 0.5 с, `turn_rate` 3.6 рад/с; ур. 2 — две петли |
+| Цепная молния | попадание | `targets` 3 / 5, `damage` 11 (0.5 У), `radius` 7 м |
+| Рикошет | воткнулся | `ricochets` 3 / 5, `seek_radius` 14 м |
+| Громоотвод | воткнулся | `interval` 1 / 0.6 с, `radius` 4 м, `damage` 15, `stuck_hold` 5 с |
+| Буря | бросок | `hold_delay` 0.18 с, `duration` 3 / 5 с, `radius` 3, `tick` 0.3 с, `tick_damage` 11; ур. 2 — `pull_speed_lvl2` 5, `pull_radius_lvl2` 7 |
+| Землетрясение | — | `trigger_distance` 5 м, `wave_delay` 0.12 с, `radius_mult`/`damage_mult` 1 (от удара-приземления игрока); ур. 2 — третья волна `third_wave_*` |
+| Гром небесный | — | `max_distance` 40, `radius` 3, `damage` 33; ур. 2 — `stun_time_lvl2` 1 с |
+
+Правила (GDD 10): трейт той же группы заменяет старый (на экране выбора — второе нажатие), повтор — уровень 2, на уровне 2 больше не выпадает, в одном предложении нет двух трейтов одной группы.
+
+## Мини-босс — `enemies/minibosses/fat_sven.tres` (`MinibossDef`)
+
+Толстый Свен (заглушка): `max_health` 550 (25 У), `move_speed` 4.2, `knock_resist` 0.6, `attack_damage` 18, `windup_time` 0.75, удар по площади `slam_radius` 4.5 / `slam_damage` 20 / `slam_windup` 0.9, `far_slam_chance` 0.004 (за кадр, издалека; у финального босса `boss_far_slam_chance` 0.02), `glory` 50, вид `model_scale` 1.5 × `fatness` 1.35, свита `escort_count` 2.
 
 ## Враги — `enemies/grunt.tscn`, `thrower.tscn`, `boss.tscn` (`enemies/enemy.gd`)
 
@@ -69,7 +93,7 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 ## Забег — автозагрузка `run/run_manager.gd`
 
-`rooms_per_run` 4, Слава: `glory_per_kill` 10, `glory_combo_finisher_bonus` 5, `glory_multikill_bonus` 15, `glory_wall_splat_bonus` 5, `glory_room_clear` 25, `glory_boss_kill` 150. Пороги вердикта — функция `verdict()` (150 «Сойдёт», 400 «Вальхалла»).
+`rooms_per_run` 4, `miniboss_rooms` [1, 3] (в каких залах, считая с 0, последней волной выходит мини-босс → выбор трейта), `miniboss_def_path`. Слава: `glory_per_kill` 10, `glory_combo_finisher_bonus` 5, `glory_multikill_bonus` 15, `glory_wall_splat_bonus` 5, `glory_room_clear` 25, `glory_boss_kill` 150. Пороги вердикта — функция `verdict()` (150 «Сойдёт», 400 «Вальхалла»).
 
 ## Тела и руны — ресурсы `run/bodies/*.tres`, `run/runes/*.tres`
 

@@ -209,6 +209,8 @@ func _clear_room_and_exit(is_last: bool) -> bool:
 	var waves := room.wave_count()
 	var safety := 0
 	var seen_boss := false
+	var seen_miniboss := false
+	var miniboss_room := Run.is_miniboss_room()
 	while not room._is_cleared and safety < 40:
 		safety += 1
 		await wait(1.2)
@@ -216,6 +218,8 @@ func _clear_room_and_exit(is_last: bool) -> bool:
 			if is_instance_valid(e):
 				if e.kind == Enemy.Kind.BOSS:
 					seen_boss = true
+				if e.has_meta("miniboss"):
+					seen_miniboss = true
 				e.take_hit(9999, Vector3(0, 3, -5), "axe_finisher")
 		game.player.heal(999)
 	check(room._is_cleared, "зал зачищен (%d волн)" % waves)
@@ -223,6 +227,23 @@ func _clear_room_and_exit(is_last: bool) -> bool:
 		check(seen_boss, "босс появился в финальном зале")
 		return true
 	await wait(1.2)
+	if miniboss_room:
+		# Мини-босс → выбор трейта Мьёльнира → выбор руны
+		check(seen_miniboss, "мини-босс появился последней волной")
+		check(game.trait_pick.visible, "показан выбор трейта Мьёльнира")
+		check(get_tree().paused, "игра на паузе во время выбора трейта")
+		var levels_before := 0
+		for v in Run.mjolnir_trait_levels.values():
+			levels_before += int(v)
+		game.trait_pick._open_time = -10.0
+		game.trait_pick.choose(randi() % game.trait_pick._choices.size(), true)
+		await wait(0.2)
+		var levels_after := 0
+		for v in Run.mjolnir_trait_levels.values():
+			levels_after += int(v)
+		check(levels_after == levels_before + 1, "трейт взят (%s)" % ", ".join(Run.mjolnir_traits.map(func(t: MjolnirTrait) -> String: return str(t.id))))
+		check(game.player.mjolnir.traits.size() == Run.mjolnir_traits.size(), "обработчики трейтов у молота (%d)" % game.player.mjolnir.traits.size())
+		await wait(1.0)
 	check(game.rune_pick.visible, "показан выбор руны")
 	check(get_tree().paused, "игра на паузе во время выбора")
 	await wait(0.4)

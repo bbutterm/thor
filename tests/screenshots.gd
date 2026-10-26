@@ -92,6 +92,41 @@ func _run() -> void:
 		p.rotation_target = Vector2(0.05, atan2(-to2.x, -to2.z))
 		await wait(0.2)
 	await shot("08_boss")
+	# Мьёльнир: трейты в HUD, воткнутый молот, экран выбора трейта, мини-босс
+	for en in game.room.alive_enemies():
+		en.set_physics_process(false)
+	for t in Run.all_mjolnir_traits:
+		if t.id in [&"fire_trail", &"chain_lightning", &"chain_lightning"]:
+			Run.add_mjolnir_trait(t)
+	p.rotation_target.x = -0.35
+	await wait(0.2)
+	p.mjolnir.throw_hammer()
+	await wait(0.5)
+	await shot("10_hammer_stuck")
+	var tchoices := Run.random_mjolnir_trait_choices(3)
+	game.trait_pick.open(tchoices)
+	await wait(0.5)
+	await shot("11_trait_pick")
+	game.trait_pick._open_time = -10.0
+	game.trait_pick.choose(0, true)
+	await wait(0.9)
+	if game.rune_pick.visible:
+		game.rune_pick._open_time = -10.0
+		game.rune_pick.choose(0)
+	var mb := Run.miniboss_def() as MinibossDef
+	if mb:
+		var sven := (load("res://enemies/grunt.tscn") as PackedScene).instantiate() as Enemy
+		mb.apply(sven, game.hud)
+		var fwd := p.get_aim_forward()
+		fwd.y = 0
+		sven.position = p.global_position + fwd.normalized() * 6.0
+		game.room.add_child(sven)
+		sven.rotation.y = p.rotation.y
+		game.hud.show_boss(sven)
+		p.rotation_target.x = 0.05
+		await wait(2.0)
+		sven.set_physics_process(false)
+		await shot("12_miniboss")
 	p.take_damage(99999.0, Vector3.ZERO, true)
 	await wait(2.2)
 	await shot("09_death")

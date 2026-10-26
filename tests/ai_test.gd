@@ -46,5 +46,36 @@ func _run() -> void:
 		print("[%s] %s: попаданий по игроку %d (урон %.0f за 15 с), снарядов в воздухе (сэмплы) %d, грунтов далеко от игрока %d" % ["OK" if ok else "FAIL", room.get_file(), hits[0], dmg[0], projectiles, stuck])
 		if not ok:
 			fails += 1
+	# Мини-босс (Толстый Свен — заглушка): доходит и бьёт, полоса HP с его именем
+	Run.start_run("berserker")
+	Run.room_order.assign([Run.ROOM_SCENES[0], Run.BOSS_SCENE])
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await frames(20)
+	var g2 := get_tree().current_scene as Game
+	g2.room.set_physics_process(false)
+	await frames(60)
+	g2.room._spawn_queue.clear()
+	for e in g2.room.alive_enemies().duplicate():
+		e.queue_free()
+	var mb := Run.miniboss_def() as MinibossDef
+	var w := g2.room.wave_count()
+	mb.add_to_room(g2.room, g2.hud)
+	var boss: Enemy = null
+	for m in g2.room.spawns.get_children():
+		if m.name == "Miniboss":
+			g2.room._spawn_enemy(m)
+	for e in g2.room.alive_enemies():
+		if e.has_meta("miniboss"):
+			boss = e
+	var mhits := [0]
+	g2.player.hurt.connect(func(_a: float) -> void: mhits[0] += 1)
+	for i in 60 * 20:
+		await get_tree().physics_frame
+		g2.player.health = g2.player.max_health
+	var title_ok: bool = g2.hud._boss_box.visible and g2.hud._boss_title.text == mb.title
+	var mok: bool = boss != null and g2.room.wave_count() == w + 1 and mhits[0] > 0 and title_ok
+	print("[%s] мини-босс %s: HP %.0f, попаданий по игроку %d за 20 с, полоса HP «%s»" % ["OK" if mok else "FAIL", mb.title, boss.max_health if boss else 0.0, mhits[0], g2.hud._boss_title.text])
+	if not mok:
+		fails += 1
 	FX.reset_time()
 	get_tree().quit(1 if fails > 0 else 0)
