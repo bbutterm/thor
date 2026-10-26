@@ -25,6 +25,7 @@ signal berserk_ended
 var player: Player
 var kills: int = 0
 var active: bool = false
+var _song_acc: float = 0.0
 var berserk_left: float = 0.0
 var _since_kill: float = 0.0
 
@@ -65,6 +66,11 @@ func add_kill() -> void:
 	if active:
 		return
 	kills += 1
+	# Руна «Песнь берсерка»: Ярость копится быстрее (+30 % → +80 %) — дробная часть копится отдельно
+	_song_acc += Run.rune_value("berserk_song")
+	while _song_acc >= 1.0:
+		_song_acc -= 1.0
+		kills += 1
 	_since_kill = 0.0
 	if kills >= kills_to_full:
 		start_berserk()

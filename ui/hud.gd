@@ -231,6 +231,9 @@ func _on_health_changed(current: float, maximum: float) -> void:
 	_hp_bar.max_value = maximum
 	_hp_bar.value = current
 	_hp_label.text = "%d / %d" % [int(ceil(current)), int(maximum)]
+	# Щит (руна «Щит Сиф», GDD 18: HP и щит)
+	if player and player.shield > 0.5:
+		_hp_label.text += "   ⛨ %d" % int(ceil(player.shield))
 
 func _on_dash_changed(current: int, maximum: int, progress: float) -> void:
 	if _dash_pips.size() != maximum:
@@ -280,7 +283,9 @@ func _on_runes_changed(runes: Array) -> void:
 		var rr := r as RuneDef
 		var txt := "%s %s" % [rr.glyph, rr.title]
 		if counts[rr.id] > 1:
-			txt += " ×%d" % counts[rr.id]
+			txt += " ур. %d" % mini(counts[rr.id], Run.RUNE_MAX_LEVEL)
+		if rr.cursed:
+			txt = "☠ " + txt
 		var l := UIStyle.label(txt, 16, rr.color, 4)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		_runes_box.add_child(l)

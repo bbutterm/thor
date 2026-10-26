@@ -31,7 +31,7 @@ func is_empty() -> bool:
 func add_ammo(amount: int) -> int:
 	if not is_ranged():
 		return 0
-	var take := clampi(amount, 0, maxi(0, def.reserve_max - reserve))
+	var take := clampi(amount, 0, maxi(0, reserve_cap() - reserve))
 	reserve += take
 	return take
 
@@ -39,3 +39,8 @@ func title() -> String:
 	if def == null:
 		return ""
 	return def.display_name + ("" if level <= 1 else " +%d" % (level - 1))
+
+## Предел запаса патронов: у оружия + руна «Бездонный колчан» (+50 % → +150 %)
+func reserve_cap() -> int:
+	return int(round(def.reserve_max * (1.0 + Run.rune_value("endless_quiver"))))
+

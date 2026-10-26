@@ -148,7 +148,10 @@ func is_switching() -> bool:
 ## Множитель скорости бега (активное оружие; ренж при стрельбе — ещё медленнее).
 func move_speed_mult() -> float:
 	if is_ranged_active():
-		return gun.move_mult()
+		# Руна «Рука Брокка»: штраф ренжа ×0.9 → ×0.95 → без штрафа (база ренжа — ×0.8)
+		var brokk := Run.rune_value("brokk_hand") if Run.rune_level("brokk_hand") > 0 else 0.0
+		var m := gun.move_mult()
+		return minf(1.0, m * brokk / 0.8) if brokk > 0.0 else m
 	return melee.def.move_speed_mult if melee else 1.0
 
 func dash_recharge_mult() -> float:
@@ -315,9 +318,9 @@ func _collect_ammo() -> void:
 
 ## Ящик патронов для ренжа в слоте. false — некуда (полный запас или нет ренжа).
 func give_ammo_box() -> bool:
-	if ranged == null or ranged.reserve >= ranged.def.reserve_max:
+	if ranged == null or ranged.reserve >= ranged.reserve_cap():
 		return false
-	var amount := maxi(ranged.def.mag_size, int(ceil(ranged.def.reserve_max * ammo_box_fraction)))
+	var amount := maxi(ranged.def.mag_size, int(ceil(ranged.reserve_cap() * ammo_box_fraction)))
 	ranged.add_ammo(amount)
 	Audio.play("sounds/sfx/ammo_pickup.wav")
 	ammo_changed.emit(ranged.mag, ranged.reserve)
@@ -328,7 +331,7 @@ func give_ammo_box() -> bool:
 
 ## Нужны ли патроны (для выпадения с врагов).
 func wants_ammo() -> bool:
-	return ranged != null and ranged.reserve < ranged.def.reserve_max
+	return ranged != null and ranged.reserve < ranged.reserve_cap()
 
 ## Прогрев: вспышка дула и все модели оружия во вьюмодели (свой SubViewport — свои пайплайны).
 func warmup_viewmodel(frames: int = 10) -> void:

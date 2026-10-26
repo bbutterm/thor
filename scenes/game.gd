@@ -78,6 +78,8 @@ func _load_room() -> void:
 	room.exit_reached.connect(_on_exit_reached)
 	room.boss_spawned.connect(hud.show_boss)
 	room.enemy_count_changed.connect(hud.set_enemy_count)
+	# Руна «Щит Сиф» восстанавливается между волнами
+	room.wave_started.connect(func(_i: int) -> void: player.refill_shield())
 	# Мини-босс — последней волной зала (Run.miniboss_rooms)
 	if Run.is_miniboss_room():
 		var mb := Run.miniboss_def() as MinibossDef
@@ -139,7 +141,7 @@ func _on_rune_picked(rune: RuneDef) -> void:
 	Run.add_rune(rune)
 	player.recalc_from_runes(Run)
 	if rune.id == "heal":
-		player.heal(50.0 * Run.rune_power)  # Старый жрец: руны ×2
+		player.heal(Run.rune_value("heal"))  # уровень 1–3: 50 → 100 (у жреца ×2)
 	Odin.say("rune_pick")
 	Audio.play("sounds/sfx/rune_pick.wav")
 	room.open_door()

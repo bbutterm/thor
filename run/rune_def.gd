@@ -13,3 +13,12 @@ class_name RuneDef
 @export var level_descriptions: PackedStringArray = []
 ## Механика есть в игре; false — руна только в данных и не выпадает
 @export var implemented: bool = true
+## Числа уровней 1–3 (GDD 11) и второе число, если руна даёт два эффекта (Гнев Мьёльнира: урон и возврат)
+@export var level_values: PackedFloat32Array = []
+@export var level_values_b: PackedFloat32Array = []
+## Как руна усиливается у Старого жреца («все руны ×2»): add — значение ×2, mult — (значение − 1) ×2 + 1,
+## interval — «каждый N-й» становится чаще (N / 2)
+@export_enum("add", "mult", "interval") var value_kind: String = "add"
+## Проклятая руна Локи: сильный плюс и смешной минус, выпадает только в особых событиях (сделка Локи)
+@export var cursed: bool = false
+

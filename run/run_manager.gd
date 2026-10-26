@@ -142,6 +142,8 @@ func advance_room() -> bool:
 
 func add_glory(amount: int) -> void:
 	var mult := body.glory_mult if body else 1.0
+	# Руна «Слава предков» (GDD 11)
+	mult *= 1.0 + rune_value("ancestor_glory")
 	glory += int(round(amount * mult))
 	glory_changed.emit(glory)
 
@@ -179,26 +181,70 @@ func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: Stri
 func register_player_hit() -> void:
 	streak = 0
 
+## Максимальный уровень руны (GDD 11: повторная руна повышает уровень, 1–3)
+const RUNE_MAX_LEVEL := 3
+
 func add_rune(rune: RuneDef) -> void:
+	if rune_level(rune.id) >= RUNE_MAX_LEVEL:
+		return
 	runes.append(rune)
 	runes_changed.emit(runes)
 
+## Сколько раз руна взята (без учёта жреца). Совместимость: старый код считает силу руны так.
 func rune_count(id: String) -> int:
+	return rune_level(id) * rune_power
+
+## Уровень руны 0–3 (0 — нет руны).
+func rune_level(id: String) -> int:
 	var n := 0
 	for r in runes:
 		if r.id == id:
 			n += 1
-	return n * rune_power
+	return mini(n, RUNE_MAX_LEVEL)
 
+func rune_def(id: String) -> RuneDef:
+	for r in all_runes:
+		if r.id == id:
+			return r
+	return null
+
+## Значение руны на её текущем уровне (GDD 11, поле level_values; b — второе число, level_values_b).
+## У Старого жреца (rune_power 2): «add» — ×2, «mult» — (v − 1) ×2 + 1, «interval» — «каждый N-й» → N / 2.
+## Нет руны — 0 (для mult — 1, для interval — 0 = выключено).
+func rune_value(id: String, b: bool = false) -> float:
+	var lvl := rune_level(id)
+	var d := rune_def(id)
+	if d == null:
+		return 0.0
+	var vals: PackedFloat32Array = d.level_values_b if b else d.level_values
+	var kind := d.value_kind if not b else "add"
+	if lvl <= 0 or vals.is_empty():
+		return 1.0 if kind == "mult" else 0.0
+	var v := vals[mini(lvl, vals.size()) - 1]
+	match kind:
+		"mult":
+			return (v - 1.0) * rune_power + 1.0
+		"interval":
+			return maxf(1.0, round(v / rune_power))
+		_:
+			return v * rune_power if not b else v
+
+## Обычный выбор рун: не проклятые, с механикой, открытые, ещё не на максимальном уровне.
 func random_rune_choices(count: int = 3) -> Array[RuneDef]:
 	# Закрытые в «Плане тренировок» руны не выпадают (Save.is_in_pool)
-	# Руны без механики (implemented = false, блок Г — пока только данные GDD 11) не выпадают
-	var pool := all_runes.filter(func(r: RuneDef) -> bool: return r.implemented and Save.is_in_pool("rune", r.id))
+	# Руны без механики (implemented = false) не выпадают
+	var pool := all_runes.filter(func(r: RuneDef) -> bool:
+		return r.implemented and not r.cursed and rune_level(r.id) < RUNE_MAX_LEVEL and Save.is_in_pool("rune", r.id))
 	pool.shuffle()
 	var out: Array[RuneDef] = []
 	for i in mini(count, pool.size()):
 		out.append(pool[i])
 	return out
+
+## Проклятая руна Локи (особые события — сделка Локи): ещё не взятая, или null.
+func random_cursed_rune() -> RuneDef:
+	var pool := all_runes.filter(func(r: RuneDef) -> bool: return r.cursed and rune_level(r.id) == 0)
+	return pool[randi() % pool.size()] if not pool.is_empty() else null
 
 func verdict() -> String:
 	if won:

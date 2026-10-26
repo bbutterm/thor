@@ -116,6 +116,18 @@ signal slammed(power: float)
 ## Подкат кончается, когда скорость упала ниже этой доли бега
 @export var slide_min_speed_ratio: float = 0.8
 
+@export_group("Криты и руны")
+## Базовый шанс крита и урон крита (GDD 8: 5 %, ×2; руна «Глаз ворона» прибавляет шанс)
+@export var crit_chance_base: float = 0.05
+@export var crit_mult: float = 2.0
+## Хит-стоп крита (GDD 19: 90 мс)
+@export var crit_hitstop: float = 0.09
+## «Зов грома»: урон молнии с неба (1 У)
+@export var thunder_call_damage: float = 22.0
+## Проклятые руны Локи: период икоты (с) и шанс «вертушки» камеры в секунду
+@export var hiccup_period: float = 10.0
+@export var spin_chance_per_sec: float = 0.03
+
 @export_group("Физика толчков")
 @export var push_force: float = 1.6
 
@@ -189,6 +201,14 @@ var hammer_damage_mult: float = 1.0
 @onready var footsteps: AudioStreamPlayer = $Footsteps
 ## Слоты оружия правой руки (мили + ренж), см. weapons/weapon_holder.gd
 var weapons: WeaponHolder
+## Руны (GDD 11): щит Сиф, крит, счётчик ударов «Зова грома», второе дыхание, проклятые руны Локи
+var shield: float = 0.0
+var shield_max: float = 0.0
+var _rune_dash_recharge_mult: float = 1.0
+var _thunder_hits: int = 0
+var _second_wind_used: bool = false
+var _hiccup_t: float = 0.0
+var _spin_t: float = 0.0
 ## Ярость и берсерк (GDD 8), см. player/rage.gd
 var rage: Rage
 
@@ -223,12 +243,16 @@ func recalc_from_runes(run: Node, full_heal: bool = false) -> void:
 	var body: BodyDef = run.body if run else null
 	var base_hp := body.max_health if body else max_health
 	var old_max := max_health
-	max_health = base_hp + 30.0 * run.rune_count("max_health")
-	dash_charges_max = (body.dash_charges if body else dash_charges_base) + run.rune_count("dash_charge")
-	axe.damage_mult = (body.axe_damage_mult if body else 1.0) * pow(1.25, run.rune_count("axe_damage"))
-	var hammer_runes: int = run.rune_count("hammer_power")
-	mjolnir.damage_mult = (body.hammer_damage_mult if body else 1.0) * pow(1.4, hammer_runes)
-	mjolnir.return_speed_mult = pow(1.3, hammer_runes)
+	# Руны по уровням (GDD 11, Run.rune_value: уровень 1–3, у жреца ×2)
+	max_health = base_hp + run.rune_value("max_health")
+	dash_charges_max = (body.dash_charges if body else dash_charges_base) + int(run.rune_value("dash_charge")) + int(run.rune_value("loki_spin"))
+	_rune_dash_recharge_mult = run.rune_value("dash_charge", true) if run.rune_level("dash_charge") > 0 else 1.0
+	axe.damage_mult = (body.axe_damage_mult if body else 1.0) * (1.0 + run.rune_value("axe_damage"))
+	mjolnir.damage_mult = (body.hammer_damage_mult if body else 1.0) * (1.0 + run.rune_value("hammer_power"))
+	mjolnir.return_speed_mult = 1.0 + run.rune_value("hammer_power", true)
+	extra_jumps = (movement_profile.extra_jumps if movement_profile else 1) + int(run.rune_value("valkyrie_wings"))
+	shield_max = run.rune_value("sif_shield")
+	shield = maxf(shield, shield_max) if full_heal else minf(shield, shield_max)
 	if full_heal:
 		health = max_health
 		dash_charges = dash_charges_max
@@ -281,6 +305,7 @@ func _physics_process(delta: float) -> void:
 	wish = wish.normalized() if wish.length() > 0.01 else Vector3.ZERO
 
 	_update_timers(delta)
+	_rune_tick(delta)
 	if is_climbing:
 		_process_climb(delta)
 		camera_fx.update_motion(self, input_dir, false, delta)
@@ -347,10 +372,10 @@ func _update_timers(delta: float) -> void:
 	_climb_check_cooldown = maxf(0.0, _climb_check_cooldown - delta)
 	if dash_charges < dash_charges_max:
 		_dash_recharge_timer += delta
-		if _dash_recharge_timer >= dash_recharge * weapon_dash_recharge_mult():
+		if _dash_recharge_timer >= dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult:
 			_dash_recharge_timer = 0.0
 			dash_charges += 1
-		dash_charges_changed.emit(dash_charges, dash_charges_max, _dash_recharge_timer / (dash_recharge * weapon_dash_recharge_mult()))
+		dash_charges_changed.emit(dash_charges, dash_charges_max, _dash_recharge_timer / (dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult))
 	else:
 		_dash_recharge_timer = 0.0
 
@@ -421,7 +446,8 @@ func _process_jump(on_floor: bool) -> void:
 	elif _jumps_left > 0:
 		_jump_buffer_left = 0.0
 		_jumps_left -= 1
-		velocity.y = jump_velocity * 0.92
+		# Крылья валькирии ур. 2+: прыжки в воздухе выше
+		velocity.y = jump_velocity * 0.92 * (Run.rune_value("valkyrie_wings", true) if Run.rune_level("valkyrie_wings") > 0 else 1.0)
 		camera_fx.kick_fov(3.0)
 		Audio.play("sounds/jump_b.ogg, sounds/jump_c.ogg")
 	elif _wall_jumps_left > 0 and _try_wall_jump():
@@ -484,6 +510,7 @@ func _start_dash(wish: Vector3) -> void:
 	Perf.mark("dash_ram" if dash_ram else "dash")
 	for h in body_handlers:
 		h.on_dash(self)
+	_rune_on_dash()
 
 func _process_dash(delta: float) -> void:
 	_dash_time_left -= delta
@@ -622,8 +649,9 @@ func _on_landed() -> void:
 
 func _do_slam_impact(height: float) -> void:
 	# Тяжёлый стиль: ×1.5 по радиусу и урону (slam_radius_mult / slam_damage_mult)
-	var radius := (slam_base_radius + height * slam_radius_per_meter) * slam_radius_mult
-	var damage := (slam_base_damage + height * slam_damage_per_meter) * slam_damage_mult
+	# Руны: Тяжесть горы (радиус), Падение звезды (урон за метр высоты)
+	var radius := (slam_base_radius + height * slam_radius_per_meter) * slam_radius_mult * (1.0 + Run.rune_value("mountain_weight"))
+	var damage := (slam_base_damage + height * slam_damage_per_meter * Run.rune_value("star_fall")) * slam_damage_mult
 	var knock := slam_base_knockback + height * slam_knockback_per_meter
 	var center := global_position
 	_last_slam_hits = 0
@@ -650,14 +678,16 @@ func _do_slam_impact(height: float) -> void:
 			deal_damage(c, damage * falloff, push, "slam")
 			if c is Enemy:
 				_last_slam_hits += 1
-				if slam_stun > 0.0 and is_instance_valid(c) and c.has_method("stun"):
-					c.call("stun", slam_stun)
+				# Руна «Оглушающий гром» — оглушение ударом-приземлением (берётся большее из стиля и руны)
+				var stun_time := maxf(slam_stun, Run.rune_value("stun_thunder"))
+				if stun_time > 0.0 and is_instance_valid(c) and c.has_method("stun"):
+					c.call("stun", stun_time)
 		elif c is RigidBody3D:
 			(c as RigidBody3D).apply_central_impulse(push * (c as RigidBody3D).mass * 0.6)
-	if Run.rune_count("slam_fire") > 0:
+	if Run.rune_level("slam_fire") > 0:
 		var fire := preload("res://weapons/fire_zone.gd").new()
 		get_parent().add_child(fire)
-		fire.setup(center, radius * 0.8, 2.0 + 0.5 * (Run.rune_count("slam_fire") - 1), 22.0 * Run.rune_count("slam_fire"))
+		fire.setup(center, radius * 0.8, Run.rune_value("slam_fire"), 22.0)
 	var power := clampf(0.25 + height / 14.0, 0.25, 1.0)
 	camera_fx.add_trauma(power)
 	camera_fx.land_dip(0.25 + power * 0.2)
@@ -854,6 +884,10 @@ func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln
 		_invuln_left = 0.25
 		RunTracker.pending_source = ""
 		return
+	amount = _rune_on_damaged(amount)
+	if amount <= 0.0:
+		_invuln_left = 0.25
+		return
 	health -= amount
 	# Берсерк: Тора не сбивают — удары не отбрасывают
 	if not (rage and rage.is_stun_immune()):
@@ -864,7 +898,7 @@ func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln
 	hurt.emit(amount)
 	health_changed.emit(maxf(health, 0.0), max_health)
 	Audio.play("sounds/sfx/player_hurt.wav")
-	if health <= 0.0:
+	if health <= 0.0 and not _rune_second_wind():
 		_die()
 
 func heal(amount: float) -> void:
@@ -907,7 +941,7 @@ func _setup_weapons() -> void:
 
 ## Скорость бега с учётом оружия в руке.
 func effective_move_speed() -> float:
-	return move_speed * weapon_move_mult() * (rage.current_speed_mult() if rage else 1.0)
+	return move_speed * weapon_move_mult() * (rage.current_speed_mult() if rage else 1.0) * (1.0 + Run.rune_value("njord_wind"))
 
 func weapon_move_mult() -> float:
 	var m := weapons.move_speed_mult() if weapons else 1.0
@@ -1020,8 +1054,13 @@ func outgoing_damage_mult(target: Object, source: String) -> float:
 func deal_damage(target: Object, amount: float, knock: Vector3, source: String) -> float:
 	if target == null or not is_instance_valid(target) or not target.has_method("take_hit"):
 		return 0.0
-	var dmg := amount * outgoing_damage_mult(target, source)
+	var dmg := amount * outgoing_damage_mult(target, source) * _rune_damage_mult(target, source)
+	var crit := _roll_crit(source)
+	if crit:
+		dmg *= crit_mult
+		_on_crit(target)
 	target.call("take_hit", dmg, knock, source)
+	_rune_on_hit(target, source)
 	for h in body_handlers:
 		h.on_hit(self, target, dmg, source)
 	return dmg
@@ -1034,6 +1073,9 @@ func on_room_start() -> void:
 func _on_kill_registered(source: String) -> void:
 	if is_dead:
 		return
+	# Клык Фенрира: лечение за добивание мили
+	if source.begins_with("melee") and Run.rune_level("fenrir_fang") > 0:
+		heal(Run.rune_value("fenrir_fang"))
 	for h in body_handlers:
 		h.on_kill(self, source)
 
@@ -1050,3 +1092,110 @@ func _setup_rage() -> void:
 func is_berserk() -> bool:
 	return rage != null and rage.active
 
+
+# --- Руны по GDD 11 (блок Т): значения — Run.rune_value(id) по уровню руны ---
+
+## Множитель урона от рун: «Нож в спину Локи» (удар мили в спину), проклятые руны Локи.
+func _rune_damage_mult(target: Object, source: String) -> float:
+	var m := 1.0
+	if Run.rune_level("loki_hiccup") > 0:
+		m *= Run.rune_value("loki_hiccup")
+	if Run.rune_level("loki_glass") > 0:
+		m *= Run.rune_value("loki_glass")
+	var e := target as Enemy
+	if e and source.begins_with("melee") and Run.rune_level("loki_backstab") > 0:
+		var to_p := global_position - e.global_position
+		to_p.y = 0
+		if to_p.length() > 0.01 and e.global_transform.basis.z.dot(to_p.normalized()) < -0.35:
+			m *= Run.rune_value("loki_backstab")
+	return m
+
+## Крит (GDD 8): базовые 5 % + «Глаз ворона». Молнии, огонь и стены не критуют.
+func _roll_crit(source: String) -> bool:
+	if not (source.begins_with("melee") or source == "ranged" or source == "hammer"):
+		return false
+	return randf() < crit_chance_base + Run.rune_value("raven_eye")
+
+func _on_crit(target: Object) -> void:
+	Perf.mark("crit")
+	FX.hitstop(crit_hitstop)
+	var t3 := target as Node3D
+	if t3:
+		FX.sparks(get_parent(), t3.global_position + Vector3(0, 1.4, 0), Color(1, 0.9, 0.2), 12, 6.0)
+
+## «Зов грома»: каждый N-й удар мили — молния с неба по цели (1 У).
+func _rune_on_hit(target: Object, source: String) -> void:
+	if not source.begins_with("melee") or Run.rune_level("thunder_call") == 0:
+		return
+	_thunder_hits += 1
+	if _thunder_hits < int(Run.rune_value("thunder_call")):
+		return
+	_thunder_hits = 0
+	var t3 := target as Node3D
+	if t3 == null or not is_instance_valid(t3):
+		return
+	var top := t3.global_position + Vector3(randf_range(-0.5, 0.5), 9.0, randf_range(-0.5, 0.5))
+	FX.lightning(get_parent(), top, t3.global_position + Vector3(0, 1.0, 0), 0.3)
+	Audio.play("sounds/sfx/lightning.wav")
+	Perf.mark("thunder_call")
+	if t3.has_method("take_hit") and not t3.get("is_dead"):
+		t3.call("take_hit", thunder_call_damage, Vector3.UP * 2.0, "lightning")
+
+## «Огненный шаг»: рывок оставляет огонь.
+func _rune_on_dash() -> void:
+	if Run.rune_level("fire_step") == 0:
+		return
+	var fire := preload("res://weapons/fire_zone.gd").new()
+	get_parent().add_child(fire)
+	fire.setup(global_position, 1.6, Run.rune_value("fire_step"), 18.0)
+
+## Входящий урон: «Стеклянная пушка» (×1.5), «Шкура медведя» (−%), «Щит Сиф» принимает урон первым.
+func _rune_on_damaged(amount: float) -> float:
+	if Run.rune_level("loki_glass") > 0:
+		amount *= 1.5
+	amount *= 1.0 - minf(0.6, Run.rune_value("bear_skin"))
+	if shield > 0.0:
+		var absorbed := minf(shield, amount)
+		shield -= absorbed
+		amount -= absorbed
+		health_changed.emit(health, max_health)
+	return amount
+
+## «Второе дыхание»: один раз за забег встать с частью HP вместо смерти.
+func _rune_second_wind() -> bool:
+	if _second_wind_used or Run.rune_level("second_wind") == 0:
+		return false
+	_second_wind_used = true
+	health = max_health * Run.rune_value("second_wind")
+	_invuln_left = 1.5
+	health_changed.emit(health, max_health)
+	FX.ring(get_parent(), global_position, 3.0, Color(0.5, 1.0, 0.6, 0.9), 0.5)
+	FX.hitstop(0.15)
+	camera_fx.add_trauma(0.4)
+	Perf.mark("second_wind")
+	Odin.say("second_wind")
+	return true
+
+## «Щит Сиф» восстанавливается между волнами (Game → Room.wave_started).
+func refill_shield() -> void:
+	if shield_max > 0.0 and shield < shield_max:
+		shield = shield_max
+		health_changed.emit(health, max_health)
+
+## Проклятые руны Локи: икота (подпрыгивает сам) и «вертушка» (камера крутится на 180°).
+func _rune_tick(delta: float) -> void:
+	if Run.rune_level("loki_hiccup") > 0:
+		_hiccup_t += delta
+		if _hiccup_t >= hiccup_period:
+			_hiccup_t = 0.0
+			if is_on_floor():
+				velocity.y = jump_velocity * 0.6
+			camera_fx.add_trauma(0.1)
+			Perf.mark("loki_hiccup")
+	if Run.rune_level("loki_spin") > 0:
+		_spin_t -= delta
+		if _spin_t <= 0.0 and randf() < spin_chance_per_sec * delta:
+			_spin_t = 6.0
+			rotation_target.y += PI
+			camera_fx.add_trauma(0.2)
+			Perf.mark("loki_spin")

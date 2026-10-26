@@ -271,3 +271,9 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 Бой-реплики Одина (GDD 17), лимит — `combat_cooldown` 12 с (`run/odin.gd`, «berserk» — без лимита): «ДВИГАЙСЯ!» `idle_time` 4 с, мульти-килл `multikill_count` 3 за `multikill_window` 0.8 с, «Скуф…» `big_damage_fraction` 0.35 HP за `big_damage_window` 3 с, «Позорище» — добил ренжем (`run/run_tracker.gd`; мульти-килл важнее), «Вот! ВОТ!» — удар-приземление с `big_slam_height` 9 м (узел Player). Тексты — пулы `idle`, `multikill`, `big_damage`, `ranged_kill`, `big_slam`, `berserk`, `rage_over` в `data/dialogues/odin.json`.
 
+## Руны по уровням (блок Т) — `run/runes/*.tres`
+
+У каждой руны `level_values` (ур. 1–3) и иногда `level_values_b` (второе число), `value_kind`: add / mult / interval (как руна усиливается у Старого жреца: значение ×2, множитель (v−1)×2+1, «каждый N-й» → N/2). Повтор руны повышает уровень, максимум 3 (`Run.RUNE_MAX_LEVEL`); руны ур. 3, проклятые и без механики в обычный выбор не попадают. Числа — по таблице GDD 11 (например, Яблоко Идунн 30/55/80, Руна Тюра +25/40/60 %, Зов грома — каждый 5/4/3-й удар).
+Игрок (`Player`, группа «Криты и руны»): `crit_chance_base` 0.05, `crit_mult` ×2, `crit_hitstop` 0.09 с (GDD 8, 19), `thunder_call_damage` 22 (1 У), `hiccup_period` 10 с, `spin_chance_per_sec` 0.03.
+Проклятые руны Локи (`cursed = true`, выдаются `Run.random_cursed_rune()` — для сделки Локи): Икота Локи (урон ×1.5, сам подпрыгивает раз в 10 с), Вертушка Локи (+2 рывка, камера иногда крутится на 180°), Стеклянная пушка (урон ×1.8, входящий ×1.5).
+

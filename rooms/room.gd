@@ -9,6 +9,8 @@ signal cleared
 signal exit_reached
 signal enemy_count_changed(alive: int)
 signal boss_spawned(boss: Enemy)
+## Началась волна (index с 0) — для «Щита Сиф» и подобного
+signal wave_started(index: int)
 
 @export var room_title: String = "Зал"
 @export var wave_delay: float = 0.9
@@ -81,6 +83,7 @@ func add_wave(markers: Array[Node3D]) -> int:
 
 func _spawn_wave(index: int) -> void:
 	Perf.mark("spawn_wave")
+	wave_started.emit(index)
 	var markers: Array = _waves.get(index, [])
 	if markers.is_empty():
 		_check_clear()

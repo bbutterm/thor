@@ -77,11 +77,19 @@ func _make_card(rune: RuneDef, index: int) -> Button:
 	var glyph := UIStyle.label(rune.glyph, 72, rune.color, 10)
 	glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(glyph)
-	var t := UIStyle.label(rune.title, 22, UIStyle.TEXT, 6)
+	# Уровень (GDD 11: повторная руна повышает уровень 1–3) и описание следующего уровня
+	var lvl := Run.rune_level(rune.id)
+	var title_txt := rune.title + ("  ур. %d → %d" % [lvl, lvl + 1] if lvl > 0 else "")
+	var t := UIStyle.label(title_txt, 22, UIStyle.TEXT, 6)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(t)
-	var d := UIStyle.label(rune.description, 16, UIStyle.TEXT_DIM, 3)
+	var desc := rune.description
+	if lvl < rune.level_descriptions.size():
+		desc = rune.level_descriptions[lvl]
+	if rune.cursed:
+		desc = "☠ Проклятие Локи\n" + desc
+	var d := UIStyle.label(desc, 16, UIStyle.TEXT_DIM, 3)
 	d.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(d)
