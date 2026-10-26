@@ -1,0 +1,353 @@
+ПРОМПТЫ: РИСОВАННАЯ ГРАФИКА И ТЕКСТУРЫ — Тор: Достойная смерть
+===================================================================
+Персонажи — CHARACTER_PROMPTS.txt, интерфейс и эффекты — UI_PROMPTS.txt.
+Здесь: тела, фоны, заставки боссов, сюжетные кадры, смерть, открытия,
+загрузки, Steam, небо, текстуры, декали, декор.
+
+ОБЩИЕ ПРАВИЛА
+- Без текста на картинках: "no text, no letters". Надписи добавит код.
+- Все персонажи взрослые.
+- Стиль один на всю игру: начните с одной серии, удачный seed или стиль
+  повторяйте в остальных.
+- Пути — куда класть файлы, агент подхватит. Нет файла — в игре остаётся заглушка.
+
+СТИЛЬ А — аниме-новелла (портреты, фоны, кадры). Вставлять в начало:
+anime visual novel art, soft cel shading, clean lineart, warm color palette,
+expressive comedic characters, norse mythology mixed with modern everyday items,
+adult characters, no text
+
+СТИЛЬ Б — комикс (заставки боссов, смерть, загрузки, Steam). Вставлять в начало:
+dynamic comic book illustration, bold black ink outlines, cel shading, halftone dot
+shading, dramatic angle, vibrant colors, norse viking comedy, no text, no letters
+
+СТИЛЬ В — текстуры. Вставлять в начало:
+stylized hand-painted game texture, low detail, big simple shapes, soft color
+variation, low-poly game style, flat lighting, no shadows baked, seamless tileable,
+top-down orthographic view, no text
+
+
+===================================================================
+1. ТЕЛА СМЕРТНЫХ (экран выбора тела)       → sprites/bodies/<id>.png
+   Стиль А + "waist-up portrait, simple light background" (или прозрачный).
+   Тор живёт в этих телах, поэтому у всех в глазах лёгкие голубые искры молнии.
+===================================================================
+
+1.1 Берсерк — berserker
+huge muscular viking berserker, wild braided red-brown beard, bear pelt on shoulders,
+bare scarred chest with war paint, holding a viking axe, screaming with bulging eyes,
+faint blue lightning sparks in his eyes, comedic
+
+1.2 Охотник — hunter
+lean fit hunter in green-brown leather and fur hood, short beard, sharp eyes,
+crossbow on shoulder, knife on belt, confident smirk, faint blue lightning sparks
+in his eyes
+
+1.3 Трэлл-раб — thrall
+skinny dirty peasant servant in a ragged sack tunic, messy hair with straw in it,
+holding a broom like a weapon, nervous hopeful grin, missing tooth, faint blue
+lightning sparks in his eyes, comedic
+
+1.4 Старый жрец — priest
+very old frail viking priest with long white beard reaching his belt, hunched back,
+rune-carved wooden staff, glowing rune amulets, squinting, grumbling, faint blue
+lightning sparks in his eyes, comedic
+
+1.5 Солдат — soldier
+modern-day soldier in camouflage with a viking fur cloak thrown over it,
+combat helmet with small horns taped on, assault rifle and a knife,
+confused tough face, faint blue lightning sparks in his eyes, comedic culture clash
+
+1.6 Пьяный скальд — skald
+cheerful drunk viking bard with rosy red nose and cheeks, flower in his hair,
+colorful patched cloak, holding a lute like a club and a drinking horn, singing
+with eyes half closed, faint blue lightning sparks in his eyes, comedic
+
+1.7 Трусливый гонец — courier
+thin nervous young adult messenger with big ears, oversized helmet slipping over
+his eyes, light running clothes, small knife, sweating, ready to run away,
+faint blue lightning sparks in his eyes, comedic
+
+1.8 Кузнец — smith
+broad stocky blacksmith with thick forearms, soot-covered leather apron, short
+burnt beard, pickaxe over shoulder, calm grumpy face, faint blue lightning sparks
+in his eyes
+
+1.9 Дева щита — shieldmaiden
+beautiful adult shieldmaiden warrior, athletic, long auburn braid, light chainmail
+and blue tunic, sword in hand, round painted shield on her back, determined smile,
+faint blue lightning sparks in her eyes
+
+1.10 Силуэт закрытого тела — locked
+dark mysterious silhouette of a viking warrior with a question mark-shaped glow
+where the face is, iron padlock chain across the image
+
+
+===================================================================
+2. ФОНЫ ДЛЯ ДИАЛОГОВ                       → sprites/backgrounds/<id>.png
+   Стиль А + "wide 16:9 background, no characters, empty center for character
+   sprites, slightly blurred depth".
+===================================================================
+
+2.1 Гостиная Тора (главный фон, после каждой смерти) — couch_room
+cozy messy viking longhouse living room, old worn sagging couch in the center with
+a body-shaped dent, empty beer mugs and chip bags on the floor, stone war hammer
+used as a TV remote stand, small glowing magic screen on the wall, fireplace,
+fur rugs, dumbbells covered in dust in the corner, warm evening light, comedic
+
+2.2 Вход в забег, пост Хеймдалля — bifrost_gate
+rainbow bridge gate at the edge of the sky, golden guard booth with a coffee mug
+and a stack of papers, giant horn hanging on the wall, starry sky, epic but funny
+
+2.3 Ларёк гномов — dwarf_shop
+small dwarven market stall on wooden wheels in a misty forest clearing, cloth
+awning, shelves with glowing rune stones, weapons on hooks, a grill with skewers,
+hanging lanterns, cozy funny atmosphere
+
+2.4 Тронный зал Хель — hel_throne
+cozy gloomy goth throne room in the underworld, bone throne with knitted cushions,
+cups of cocoa, candles, purple-green mist, skeleton cat bed, half the room bright
+half in deep shadow
+
+2.5 Вершина Иггдрасиля — yggdrasil_top
+top of a gigantic world tree above golden clouds, huge branches forming platforms,
+sunset sky, Odin's training equipment (wooden dummies, weights) on a branch, epic
+
+2.6 Мидгард, деревня ночью — midgard_village
+viking village at night, longhouses, torches, light fog, undead glowing blue eyes
+in the dark distance, warm and cold light contrast
+
+2.7 Йотунхейм — jotunheim
+frozen mountain giant land, ice cliffs, northern lights, giant footprints in snow,
+enormous stone giant silhouette in the distance
+
+
+===================================================================
+3. ЗАСТАВКИ БОССОВ (как в Hades)            → sprites/boss_cards/<id>.png
+   Стиль Б + "full body character splash art, dynamic pose, diagonal composition,
+   empty band on the bottom for a name, 16:9".
+===================================================================
+
+3.1 Толстый Свен — fat_sven
+huge bloated undead viking draugr riding on top of a giant beer barrel, beer belly,
+bluish skin, glowing blue eyes, drunk grin, spitting foam, comedic
+
+3.2 Ледяной тролль — ice_troll
+massive ice troll with a glowing crystal stone embedded in its back, holding a huge
+boulder over its head, frosty breath, angry
+
+3.3 Гарм, пёс Хель — garm
+giant skeletal hellhound with glowing purple eyes, chained collar, ghostly puppy
+spirits around it, leaping toward the viewer
+
+3.4 Ярл Бьорн Мёртвый — jarl_bjorn
+huge undead viking jarl, bluish skin, glowing blue eyes, rusty crown on horned helmet,
+swinging his own detached arm like a club, pompous furious shout, comedic
+
+3.5 Хрунгнир Каменное Сердце — hrungnir
+colossal stone giant made of cracked rock, glowing molten stone heart in its chest,
+tiny figure of a warrior on its arm for scale, mountains around, epic
+
+3.6 Хель — hel
+beautiful pale adult goddess of death, split black and white hair, glowing bone
+makeup on half her face, sleepy annoyed look, holding a mug of cocoa, giant
+skeleton cat rising behind her, purple mist
+
+3.7 Один (финал) — odin
+lean extremely muscular old man with eyepatch and long white braided beard, athletic
+shorts and dark blue cloak, whistle in his mouth, spear raised, two ravens diving,
+standing on a world tree branch above clouds, intense drill-sergeant energy, epic and
+comedic
+
+
+===================================================================
+4. СЮЖЕТНЫЕ КАДРЫ                         → sprites/story/<id>.png
+   Стиль А + "full screen cinematic illustration, 16:9".
+===================================================================
+
+4.1 Интро — комикс из 6 кадров (каждый кадр отдельно)
+intro_1: mighty young thunder god in shining armor striking lightning from a
+mountaintop, heroic golden age
+intro_2: the same god years later sitting on a couch, beer belly, chips, watching a
+glowing screen, dust on his hammer
+intro_3: lean muscular old one-eyed god with whistle bursting through the door,
+furious, the couch god spilling beer in shock
+intro_4: the old god pulling a glowing blue spirit out of the lazy god's body like
+pulling a sheet, comedic
+intro_5: the glowing spirit flying down from the sky into the body of a confused
+viking warrior on a battlefield full of undead
+intro_6: the warrior with blue lightning in his eyes raising an axe, undead horde
+in front, the old god's face in the clouds shouting
+
+4.2 Первая смерть — first_death
+lazy thunder god waking up on his couch in panic, sweaty, the muscular old one-eyed
+god standing over him with a stopwatch and disappointed face, comedic
+
+4.3 Первая победа над боссом — first_boss_win
+viking warrior with blue lightning eyes standing on a defeated undead jarl, raising a
+short-handled hammer, the old god in the clouds giving a tiny reluctant thumbs up
+
+4.4 Финал — finale
+old muscular one-eyed god lying on a world tree branch, exhausted, smiling proudly for
+the first time, the thunder god now fit and strong offering him a hand, golden sunset,
+heartwarming and funny
+
+
+===================================================================
+5. СМЕРТЬ — КОМИКС-КАДР                     → sprites/death/<причина>.png
+   Стиль Б + "single comic panel, slapstick cartoon, not gory, 4:3".
+===================================================================
+draugr:  viking warrior buried under a pile of goofy blue-skinned undead, one hand
+         sticking out
+barrel:  viking warrior flattened by a rolling barrel, cartoon stars around his head
+fall:    viking warrior stuck head-first in the ground after a huge fall, legs in the air
+boss:    viking warrior flying across the panel after a giant punch, stars and teeth
+fire:    viking warrior with a smoking burnt beard, blank face, tiny flames on his hair
+ranged:  viking warrior with a crossbow, shocked, shot by a tiny arrow in his helmet
+frame:   empty comic page frame with a torn edge, empty caption box in the corner
+         (без кадра внутри — для подписи Одина)
+
+
+===================================================================
+6. КАРТОЧКИ ОТКРЫТИЙ «ПЛАНА ТРЕНИРОВОК»     → sprites/unlocks/<id>.png
+   Стиль А + "small square illustration card, simple background, comedic, 1:1".
+   Герой карточек — Тор-скуф (big burly red-haired god with beer belly, tank top,
+   track pants).
+===================================================================
+belly:        big burly god squeezing into old armor, sucking in his beer belly
+no_whining:   big burly god with a sock in his mouth, the old god nodding approvingly
+catch:        big burly god catching a flying hammer, surprised that it worked
+morning_run:  big burly god jogging at dawn in a tracksuit, gasping, old god on a bike
+hammer_found: big burly god finding a dusty hammer under the couch cushions
+spear:        big burly god reading a book titled with a spear drawing, glasses on
+scythe:       big burly god pulling a scythe out of a messy shed
+pickaxe:      two dwarves handing a pickaxe to the big burly god with fake smiles
+knife:        big burly god holding a kitchen knife and a sausage
+loki_chest:   big burly god opening a green chest full of modern guns, shocked
+dwarf_exp:    dwarves proudly presenting a smoking nail gun and a rocket launcher
+greed:        big burly god hugging a small pile of silver coins
+discount:     dwarf merchant crying while lowering prices
+warmup:       big burly god doing a single push-up with enormous effort
+new_body:     glowing blue spirit choosing between warrior bodies like clothes in a shop
+
+
+===================================================================
+7. ЭКРАНЫ ЗАГРУЗКИ                          → sprites/loading/<n>.png
+   Стиль Б + "wide 16:9 illustration, empty area on the left for a tip".
+===================================================================
+1: viking warrior doing a ground pound from a high balcony into a crowd of undead,
+   shockwave
+2: thrown short-handled hammer flying through a line of undead, lightning trail
+3: two ravens in tiny glasses studying a battle map with notes
+4: dwarven merchants arguing over the price of a rune, one with an abacus
+5: crowd of goofy undead vikings waving, one with a bucket on its head
+6: old muscular one-eyed god timing a sprinting warrior with a stopwatch
+7: warrior bouncing from head to head over a crowd of undead like stepping stones
+8: icy giant land with northern lights and a warrior climbing a stone giant's arm
+
+
+===================================================================
+8. STEAM (к демо)                           → marketing/
+   Ключевой арт — главная картинка игры. Остальное — кадрирование её.
+===================================================================
+
+8.1 Ключевой арт — key_art
+epic comedic key art, a big burly red-haired thunder god with a beer belly in a
+stretched tank top and track pants, red cape flying, leaping down with a
+short-handled stone hammer crackling with lightning into a crowd of goofy blue-skinned
+undead vikings, shockwave and debris, lean muscular old one-eyed god with a whistle
+shouting from the clouds above, synthwave neon purple-pink sky mixed with stormy
+lightning, dynamic diagonal composition, empty space at the top for a logo, comic book
+style, bold outlines, vibrant colors, no text
+Размеры Steam: 920x430 (header), 462x174 (small), 1232x706 (main), 748x896 (vertical),
+3840x1240 (library hero, без персонажей в центре сверху), 600x900 (library capsule).
+Генерируйте крупно (2–4K), потом кадрируйте.
+
+8.2 Иконки достижений (лист 5x5) — achievements
+set of 25 square achievement icons in a round iron medallion: first kill, ground pound
+from great height, catching a hammer, killing 100 undead, defeating each boss,
+dying to a barrel, buying from dwarves, unlocking all bodies, using a lute, rocket
+jump, beating a trial, reaching max rage, finishing the game, comic style, bold outlines,
+no text, sprite sheet 5x5
+
+
+===================================================================
+9. НЕБО — ПАНОРАМЫ 360°                     → assets/sky/<мир>.png
+   "equirectangular 360 panorama, 2:1 aspect ratio, seamless left-right edges,
+   stylized painted sky, game skybox, no ground objects in the foreground, no text"
+   Размер — 4096x2048 и больше.
+===================================================================
+midgard:   warm sunset sky with orange and pink clouds, distant smoke columns from a
+           village, faint mountains on the horizon
+jotunheim: dark night sky with bright green and blue northern lights, snowy jagged
+           mountains on the horizon, cold stars
+helheim:   murky green-purple foggy sky, giant ribcage bones and broken towers on the
+           horizon, faint ghostly lights, oppressive
+yggdrasil: bright golden sky above a sea of clouds, giant world-tree branches
+           crossing the sky, sun rays, epic
+menu:      night sky with synthwave neon purple-pink horizon glow over a dark viking
+           fjord, stars, retro grid faintly visible on the water
+
+
+===================================================================
+10. БЕСШОВНЫЕ ТЕКСТУРЫ                      → assets/textures/<мир>/<имя>.png
+    Стиль В. Размер 1024x1024 (игра всё равно уменьшает до 1024).
+    Проверка: положите картинку плиткой 2x2 — швов быть не должно.
+===================================================================
+Мидгард:
+  wood_floor     — wooden plank floor, warm brown, a few knots and nails
+  stone_wall     — rough grey stone wall blocks, moss in the cracks
+  dirt_straw     — packed earth with scattered straw and small pebbles
+  thatch         — straw thatched roof texture
+Йотунхейм:
+  snow           — fresh snow surface, soft blue shadows, footprints-free
+  ice            — clear blue ice with white cracks and frozen bubbles
+  frost_rock     — dark rock with frost and ice patches
+Хельхейм:
+  bone_tiles     — floor tiles made of pale old bones and skulls, grey-ivory
+  dead_moss      — dark ground with glowing sickly green moss
+  basalt         — black basalt hexagonal columns seen from above, purple tint
+Иггдрасиль:
+  bark           — giant tree bark, deep vertical grooves, golden-brown
+  leaves         — dense leaf canopy, golden-green
+
+
+===================================================================
+11. ДЕКАЛИ                                  → assets/decals/<имя>.png
+    "game decal, top-down view, transparent background, stylized hand-painted,
+    no text"
+===================================================================
+rune_circle_jump — glowing blue rune circle on the floor (прыжковая руна)
+rune_circle_*    — set of 4 glowing rune circles: blue, gold, red, green, sprite sheet
+ichor_splat      — set of 4 splats of glowing blue-teal liquid, cartoon, not gory
+slam_crack       — radial ground cracks, dark lines, 3 sizes
+scorch           — burnt black scorch mark with ember edges
+footprints_giant — giant footprint in snow
+puddle_mead      — sticky brown mead puddle with foam (лужи Толстого Свена)
+
+
+===================================================================
+12. ДЕКОР С РИСУНКОМ                        → assets/decor/<имя>.png
+    Стиль В без "seamless tileable" + "flat front view, transparent background".
+===================================================================
+banner_emblems — set of 8 viking clan emblems for banners: raven, wolf, lightning
+                 bolt, hammer, serpent, bear, axe crossed, tree, painted on cloth,
+                 sprite sheet
+shield_paints  — set of 8 round viking shield paint designs, bold simple patterns,
+                 sprite sheet
+tapestry       — long vertical woven tapestry showing a thunder god fighting a giant
+                 serpent, naive medieval style
+odin_poster    — funny workout poster on parchment: drawings of a muscular old
+                 one-eyed god doing push-ups, squats and hammer throws, no text
+shop_sign      — carved wooden shop sign shaped like a hammer and a skewer, no text
+wanted_poster  — parchment wanted poster with a drawing of a smug trickster god with
+                 a green streak in his hair, no text
+
+
+===================================================================
+13. ТУМАН И ЧАСТИЦЫ (по желанию)            → sprites/vfx/
+    "soft particle texture, white on transparent background, for tinting"
+===================================================================
+fog_puff     — set of 4 soft round fog cloud puffs
+dust         — set of small dust specks and motes
+ember        — small glowing ember particles
+snowflake    — set of 6 stylized snowflakes
