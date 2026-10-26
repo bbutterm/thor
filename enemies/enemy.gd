@@ -177,6 +177,9 @@ var _burst_t: float = 0.0
 var _burst_dir: Vector3 = Vector3.FORWARD
 ## Урон не меньше этого — отладочное «убить» (тесты): проходит сквозь щит и броню
 const DEBUG_KILL_DAMAGE := 9999.0
+## Элита (GDD 12.4): обработчики модификаторов (EliteHandler, enemies/elite/) и цвет постоянного свечения
+var elite_handlers: Array[Node] = []
+var elite_glow: Color = Color(0, 0, 0, 0)
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -582,10 +585,8 @@ func _shield_blocks(knockback: Vector3, source: String) -> bool:
 	if source in ["slam", "stomp", "fire", "lightning", "explosion", "wall", "fall"]:
 		return false
 	if player and is_instance_valid(player):
-		if source.begins_with("melee"):
-			var w := player.current_weapon()
-			if w and w.special == "armor_break":
-				return false
+		if hit_breaks_armor(source):
+			return false
 		if player.global_position.y - global_position.y > 1.6 * model_scale:
 			return false
 	var from_dir := Vector3.ZERO
@@ -597,6 +598,13 @@ func _shield_blocks(knockback: Vector3, source: String) -> bool:
 	if from_dir.length() < 0.01:
 		return false
 	return from_dir.normalized().dot(global_transform.basis.z) > shield_front_dot
+
+## Удар мили оружием, ломающим броню и щиты (кирка: WeaponDef.special = "armor_break").
+func hit_breaks_armor(source: String) -> bool:
+	if not source.begins_with("melee") or player == null or not is_instance_valid(player):
+		return false
+	var w := player.current_weapon()
+	return w != null and w.special == "armor_break"
 
 func _on_blocked(knockback: Vector3) -> void:
 	Perf.mark("shield_block")
@@ -644,23 +652,31 @@ func _do_ritual() -> void:
 		en.health += amt
 		FX.damage_number(parent, en.global_position + Vector3(0, 1.8 * en.model_scale, 0), amt, Color(0.4, 1.0, 0.5))
 		FX.lightning(parent, top, en.global_position + Vector3(0, 1.0, 0), 0.3, Color(0.4, 1.0, 0.5))
-	var room := _room()
-	if room and get_tree().get_nodes_in_group("enemies").size() < ritual_raise_cap:
-		var raised := 0
-		for i in ritual_raise_count * 3:
-			if raised >= ritual_raise_count:
-				break
-			var a := randf() * TAU
-			var cand := global_position + Vector3(cos(a), 0, sin(a)) * randf_range(2.5, 4.5)
-			if not _clear_path(global_position + Vector3(0, 1.0, 0), cand + Vector3(0, 1.0, 0)):
-				continue
-			var ground := Loot.floor_point(self, cand)
-			if ground == cand:
-				continue
-			room.call("spawn_extra", "fodder", ground)
-			raised += 1
+	summon_around("fodder", ritual_raise_count, ritual_raise_cap)
 	FX.ring(parent, global_position, 3.5, Color(0.35, 1.0, 0.45, 0.9), 0.4)
 	Audio.play("sounds/sfx/lightning.wav")
+
+## Поднять/призвать count врагов вида kind в 2.5–4.5 м вокруг (не в стену, не за край); не больше cap врагов в зале.
+## Шаман и элита-Призыватель. Возвращает, сколько появилось.
+func summon_around(kind_name: String, count: int, cap: int) -> int:
+	var room := _room()
+	if room == null or get_tree().get_nodes_in_group("enemies").size() >= cap:
+		return 0
+	Perf.mark("summon_" + kind_name)
+	var made := 0
+	for i in count * 3:
+		if made >= count:
+			break
+		var a := randf() * TAU
+		var cand := global_position + Vector3(cos(a), 0, sin(a)) * randf_range(2.5, 4.5)
+		if not _clear_path(global_position + Vector3(0, 1.0, 0), cand + Vector3(0, 1.0, 0)):
+			continue
+		var ground := Loot.floor_point(self, cand)
+		if ground == cand:
+			continue
+		if room.call("spawn_extra", kind_name, ground) != null:
+			made += 1
+	return made
 
 # Наёмник Локи: держит дистанцию как метатель; лазер ведёт Тора windup_time (0.8 с), затем очередь по точке
 func _muzzle() -> Vector3:
@@ -746,6 +762,11 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	if kind == Kind.SHIELD and damage < DEBUG_KILL_DAMAGE and _shield_blocks(knockback, source):
 		_on_blocked(knockback)
 		return
+	if not elite_handlers.is_empty() and damage < DEBUG_KILL_DAMAGE:
+		for h in elite_handlers:
+			damage = (h as EliteHandler).filter_damage(damage, knockback, source)
+		if damage <= 0.0:
+			return
 	health -= damage
 	ComicFX.on_enemy_hit(self, damage, source)
 	_hurt_flash = 1.0
@@ -976,8 +997,12 @@ const FLASH_MATERIAL := preload("res://shaders/hit_flash.tres")
 
 ## Вспышка и свечение — общим оверлей-материалом с per-instance параметрами.
 ## Оверлей включается только пока есть что показывать (лишний проход рисования не нужен).
+## Элита светится постоянно (цвет модификатора, мягкая пульсация) — тот же материал, параметр "elite".
 func _set_overlay(flash: float, glow: float) -> void:
-	var on := flash > 0.001 or glow > 0.001
+	var el := 0.0
+	if elite_glow.a > 0.0 and not is_dead:
+		el = elite_glow.a * (0.75 + 0.25 * sin(Time.get_ticks_msec() * 0.004))
+	var on := flash > 0.001 or glow > 0.001 or el > 0.001
 	if not on and not _overlay_on:
 		return
 	for g in _flash_meshes:
@@ -988,6 +1013,7 @@ func _set_overlay(flash: float, glow: float) -> void:
 		if on:
 			g.set_instance_shader_parameter("flash", flash)
 			g.set_instance_shader_parameter("glow", glow)
+			g.set_instance_shader_parameter("elite", Color(elite_glow.r, elite_glow.g, elite_glow.b, el))
 	_overlay_on = on
 
 func _collect_meshes(root: Node) -> void:

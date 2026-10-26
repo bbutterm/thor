@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EliteModifier" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://enemies/elite/elite_modifier.gd" id="1_m"]
+[ext_resource type="Script" path="res://enemies/elite/vampire.gd" id="2_h"]
+
+[resource]
+script = ExtResource("1_m")
+id = "vampire"
+title = "Вампир"
+color = Color(0.9, 0.15, 0.3, 1)
+handler = ExtResource("2_h")
+heal_ratio = 2.0

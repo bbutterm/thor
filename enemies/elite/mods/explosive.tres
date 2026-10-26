@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EliteModifier" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://enemies/elite/elite_modifier.gd" id="1_m"]
+[ext_resource type="Script" path="res://enemies/elite/explosive.gd" id="2_h"]
+
+[resource]
+script = ExtResource("1_m")
+id = "explosive"
+title = "Взрывной"
+color = Color(1.0, 0.3, 0.15, 1)
+handler = ExtResource("2_h")
+blast_radius = 3.5
+blast_damage_u = 1.5
+blast_delay = 0.8

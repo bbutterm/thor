@@ -82,4 +82,20 @@ func _run() -> void:
 	await wait(2.5)
 	await shot("03_horde")
 	await _clear_room()
+	# Элиты (блок У): по одной с каждым модификатором
+	var mods := Loot.elite_modifiers()
+	var k := 0
+	for m in mods:
+		var e := game.room._make_enemy("grunt")
+		Loot.make_elite(e, m)
+		e.position = game.room.to_local(base + Vector3((k - (mods.size() - 1) / 2.0) * 1.7, 0.05, 0.0))
+		game.room.add_child(e)
+		game.room._register(e)
+		k += 1
+	await wait(1.6)
+	for e in game.room.alive_enemies():
+		e.set_physics_process(false)
+		e.rotation.y = 0.0
+	await wait(0.3)
+	await shot("04_elites")
 	get_tree().quit(0)
