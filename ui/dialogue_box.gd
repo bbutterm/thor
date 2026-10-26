@@ -14,6 +14,9 @@ signal line_shown(line: Dictionary)
 @export var punctuation_pause: float = 0.12
 ## Насколько «подпрыгивает» портрет при смене эмоции (доля высоты)
 @export var portrait_bounce: float = 0.06
+## Размер портрета в окне диалога (пропорции спрайтов 2:3) и сдвиг низа от низа экрана
+@export var portrait_size: Vector2 = Vector2(440, 660)
+@export var portrait_bottom: float = 40.0
 ## Затемнение неговорящего портрета (0 — не темнеет)
 @export var inactive_dim: float = 0.45
 ## Защита от случайного двойного клика сразу после открытия (с)
@@ -66,19 +69,22 @@ func _build() -> void:
 	_couch = _make_couch_backdrop()
 	_root.add_child(_couch)
 
+	# Портреты по пояс (1024×1536, привязка — низ по центру): нижний край уходит под плашку текста
 	_left = Portrait.new()
 	_left.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	_left.offset_left = 60
-	_left.offset_right = 60 + 330
-	_left.offset_top = -560
-	_left.offset_bottom = -170
+	_left.offset_left = 30
+	_left.offset_right = 30 + portrait_size.x
+	_left.offset_top = portrait_bottom - portrait_size.y
+	_left.offset_bottom = portrait_bottom
+	_left.fallback_area = Rect2(0.1, 0.06, 0.8, 0.56)
 	_root.add_child(_left)
 	_right = Portrait.new()
 	_right.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_right.offset_left = -60 - 330
-	_right.offset_right = -60
-	_right.offset_top = -560
-	_right.offset_bottom = -170
+	_right.offset_left = -30 - portrait_size.x
+	_right.offset_right = -30
+	_right.offset_top = portrait_bottom - portrait_size.y
+	_right.offset_bottom = portrait_bottom
+	_right.fallback_area = Rect2(0.1, 0.06, 0.8, 0.56)
 	_root.add_child(_right)
 
 	_panel = UIStyle.panel(Color(0.06, 0.055, 0.07, 0.94), Color(UIStyle.GOLD, 0.55))

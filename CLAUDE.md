@@ -24,6 +24,8 @@
 
 - **Данные по GDD (блок Г):** `enemies/enemy_def.gd` + `enemies/defs/*.tres` (враги всех миров; зал применяет к врагу `apply_def` по `game_kind`), `run/passive_def.gd` + `run/passives/*.tres` (пассивки/изъяны тел), расширенные `BodyDef` (стиль движения, пассивка, изъян, цена) и `RuneDef` (категория, уровни, `implemented`). Поле `implemented` = механика уже есть; без неё вещь в пул не попадает.
 
+- **Портреты** (комплект владельца): `sprites/portraits/<speaker>_<emotion>.webp` (thor, odin, loki, sif, freya, hild, hel, skadi, heimdall, jarl, hugin — он же munin, draugr; эмоции neutral/happy/angry/shocked/smug; нет эмоции → neutral, нет файла → процедурная заглушка). Точки лиц для крупного плана — `data/portrait_faces.json`. Новые портреты: положить файл, в `.import` поставить `compress/mode=1`, `process/size_limit=1024` (как у соседей). Кадры: `tests/portrait_shots.tscn`.
+
 ## Модели (Quaternius, CC0)
 - `assets/quaternius/characters/` — тела, одежда, волосы, анимации (`gaits.glb` = UAL1, `animations.glb` = UAL2). Скелет у всех один (65 костей, правая кисть `hand_r`).
 - `enemies/humanoid_model.gd` собирает персонажа: тело + одежда + волосы на одном скелете, красит, добавляет библиотеки анимаций `ual1/…`, `ual2/…`. Godot при импорте отрезает суффикс `_Loop` — `HumanoidModel.resolve()` ищет оба варианта.

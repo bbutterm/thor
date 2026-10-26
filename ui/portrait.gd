@@ -17,8 +17,13 @@ var compact: bool = false
 var _tex_rect: TextureRect
 var _bounce_tween: Tween
 
+## Где рисовать процедурную заглушку (доли размера): большой портрет по пояс уходит под плашку текста,
+## а карточка-заглушка должна оставаться над ней
+var fallback_area: Rect2 = Rect2(0, 0, 1, 1)
+
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_tex_rect = TextureRect.new()
 	_tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -26,14 +31,45 @@ func _init() -> void:
 	_tex_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_tex_rect)
 
+## Один спрайт на двоих: Хугин и Мунин нарисованы вместе
+const ALIASES := {"munin": "hugin"}
+const EXTS := ["png", "webp"]
+## Точки лица (центр глаз) на холсте исходника — для крупного плана в пузыре (data/portrait_faces.json)
+const FACES_PATH := "res://data/portrait_faces.json"
+## Крупный план лица в компактном режиме: сторона квадрата в долях ширины холста
+@export var face_crop: float = 0.34
+
+static var _faces: Dictionary = {}
+
 static func texture_path(sp: String, emo: String) -> String:
-	var p := DIR + "%s_%s.png" % [sp, emo]
-	if ResourceLoader.exists(p):
-		return p
-	p = DIR + "%s_neutral.png" % sp
-	if ResourceLoader.exists(p):
-		return p
+	sp = ALIASES.get(sp, sp)
+	for e in [emo, "neutral"]:
+		for ext in EXTS:
+			var p := DIR + "%s_%s.%s" % [sp, e, ext]
+			if ResourceLoader.exists(p):
+				return p
 	return ""
+
+static func face_of(sp: String) -> Dictionary:
+	if _faces.is_empty() and FileAccess.file_exists(FACES_PATH):
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(FACES_PATH))
+		if d is Dictionary:
+			_faces = (d as Dictionary).get("faces", {})
+	return _faces.get(ALIASES.get(sp, sp), {})
+
+## Компактный вид: квадрат вокруг лица (по центру глаз из данных комплекта портретов).
+func _face_texture(tex: Texture2D, sp: String) -> Texture2D:
+	var f := face_of(sp)
+	var canvas: Array = f.get("canvas", [tex.get_width(), tex.get_height()])
+	var eye: Array = f.get("eye_center", [canvas[0] * 0.5, canvas[1] * 0.24])
+	var k := float(tex.get_width()) / float(canvas[0])
+	var side := float(canvas[0]) * face_crop * k
+	var cx := float(eye[0]) * k
+	var cy := float(eye[1]) * k + side * 0.12
+	var at := AtlasTexture.new()
+	at.atlas = tex
+	at.region = Rect2(clampf(cx - side * 0.5, 0.0, tex.get_width() - side), clampf(cy - side * 0.5, 0.0, tex.get_height() - side), side, side)
+	return at
 
 ## Меняет говорящего/эмоцию. bounce — насколько «подпрыгнуть» при смене эмоции (0 — не прыгать).
 func set_speaker(sp: String, emo: String, def: Dictionary, bounce: float = 0.06) -> void:
@@ -44,7 +80,11 @@ func set_speaker(sp: String, emo: String, def: Dictionary, bounce: float = 0.06)
 	initial = str(def.get("initial", str(def.get("name", sp)).left(1)))
 	accessory = str(def.get("accessory", ""))
 	var tp := texture_path(sp, emo)
-	_tex_rect.texture = load(tp) if tp != "" else null
+	var tex: Texture2D = load(tp) if tp != "" else null
+	if tex and compact:
+		tex = _face_texture(tex, sp)
+	_tex_rect.texture = tex
+	_tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED if compact else TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	queue_redraw()
 	if bounce > 0.0 and changed:
 		do_bounce(bounce)
@@ -61,8 +101,10 @@ func do_bounce(amount: float = 0.06, time: float = 0.22) -> void:
 func _draw() -> void:
 	if _tex_rect.texture != null:
 		return
-	var w := size.x
-	var h := size.y
+	var area := Rect2(size * fallback_area.position, size * fallback_area.size)
+	draw_set_transform(area.position)
+	var w := area.size.x
+	var h := area.size.y
 	if w < 4.0 or h < 4.0:
 		return
 	var dark := color.darkened(0.55)
@@ -73,7 +115,7 @@ func _draw() -> void:
 	card.border_color = Color(color, 0.85)
 	card.set_border_width_all(3 if not compact else 2)
 	card.set_corner_radius_all(int(minf(w, h) * 0.08))
-	draw_style_box(card, Rect2(Vector2.ZERO, size))
+	draw_style_box(card, Rect2(Vector2.ZERO, area.size))
 	# Свечение за силуэтом
 	draw_circle(Vector2(w * 0.5, h * 0.42), w * 0.42, Color(color, 0.18))
 	# Плечи
