@@ -89,6 +89,9 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var anim_death: String = "Death01"
 
 var health: float
+## Описание по GDD 12 (EnemyDef), если враг появился в зале; Слава за убийство (-1 — по умолчанию забега)
+var enemy_def: EnemyDef
+var glory_value: int = -1
 var is_dead: bool = false
 var state: State = State.SPAWNING
 var knockback_velocity: Vector3 = Vector3.ZERO
@@ -437,6 +440,17 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 		_die(source)
 
 ## Оглушить на time секунд (трейты, эффекты, Мьёльнир — сильное оглушение: элиту тоже). Босса — нет.
+## HP, скорость, урон и Слава из описания GDD (вызывается залом до add_child).
+func apply_def(d: EnemyDef) -> void:
+	enemy_def = d
+	max_health = d.max_health()
+	move_speed = d.move_speed
+	if kind == Kind.THROWER:
+		projectile_damage = d.damage
+	else:
+		attack_damage = d.damage
+	glory_value = d.glory
+
 func stun(time: float) -> void:
 	apply_stun(time, true)
 
@@ -534,7 +548,9 @@ func _die(source: String) -> void:
 		_telegraph.queue_free()
 	var now := Time.get_ticks_msec() / 1000.0
 	# Мини-босс — тоже Kind.BOSS (поведение босса), но Славу за него даёт MinibossDef
-	Run.register_kill(source == "melee_finisher", now - _last_splat_time < 0.6, kind == Kind.BOSS and not has_meta("miniboss"), source)
+	# Слава по GDD 15.2: по слою врага (EnemyDef), элита — 15
+	var glory_base := Run.glory_elite_kill if has_meta("elite") else glory_value
+	Run.register_kill(source == "melee_finisher", now - _last_splat_time < 0.6, kind == Kind.BOSS and not has_meta("miniboss"), source, glory_base)
 	ComicFX.on_enemy_killed(self, source)
 	if player and is_instance_valid(player) and not player.is_dead:
 		player.heal(player.kill_heal(source))

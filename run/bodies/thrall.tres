@@ -3,6 +3,9 @@
 [ext_resource type="Script" path="res://run/body_def.gd" id="1_2relv"]
 [ext_resource type="Resource" path="res://weapons/defs/club.tres" id="2_melee"]
 
+[ext_resource type="Resource" path="res://run/passives/social_lift.tres" id="p_pas"]
+[ext_resource type="Resource" path="res://run/passives/weak.tres" id="p_flaw"]
+
 [resource]
 script = ExtResource("1_2relv")
 id = "thrall"
@@ -16,3 +19,8 @@ glory_mult = 2.0
 hand_color = Color(0.95, 0.82, 0.72, 1)
 sleeve_color = Color(0.55, 0.5, 0.42, 1)
 start_melee = ExtResource("2_melee")
+passive = ExtResource("p_pas")
+flaw = ExtResource("p_flaw")
+movement_style = "base"
+price = 0
+odin_comment = "Метла, лапти и мечты. Слава ему идёт вдвое — социальный лифт."

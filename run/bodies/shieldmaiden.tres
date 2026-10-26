@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="BodyDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://run/body_def.gd" id="1_s"]
+[ext_resource type="Resource" path="res://weapons/defs/sword.tres" id="2_e"]
+[ext_resource type="Resource" path="res://run/passives/parry_master.tres" id="3_e"]
+[ext_resource type="Resource" path="res://run/passives/ranged_weak.tres" id="4_e"]
+
+[resource]
+script = ExtResource("1_s")
+id = "shieldmaiden"
+display_name = "Дева щита"
+description = "Парирует лучше, чем ты споришь. Стрелять не любит."
+max_health = 110.0
+move_speed = 8.5
+dash_charges = 2
+axe_damage_mult = 1.0
+glory_mult = 1.0
+start_melee = ExtResource("2_e")
+passive = ExtResource("3_e")
+flaw = ExtResource("4_e")
+movement_style = "jumper"
+price = 600
+odin_comment = "Парирует лучше, чем ты споришь. Стрелять не любит."

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="BodyDef" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://run/body_def.gd" id="1_s"]
+[ext_resource type="Resource" path="res://weapons/defs/knife.tres" id="2_e"]
+[ext_resource type="Resource" path="res://weapons/defs/rifle.tres" id="3_e"]
+[ext_resource type="Resource" path="res://run/passives/dash_reload.tres" id="4_e"]
+[ext_resource type="Resource" path="res://run/passives/odin_scorn.tres" id="5_e"]
+
+[resource]
+script = ExtResource("1_s")
+id = "soldier"
+display_name = "Солдат"
+description = "Палка-стрелялка и железная каска. Я его презираю. Но он хорош."
+max_health = 100.0
+move_speed = 8.0
+dash_charges = 2
+axe_damage_mult = 1.0
+glory_mult = 0.7
+start_melee = ExtResource("2_e")
+start_ranged = ExtResource("3_e")
+passive = ExtResource("4_e")
+flaw = ExtResource("5_e")
+movement_style = "slider"
+price = 400
+odin_comment = "Палка-стрелялка и железная каска. Я его презираю. Но он хорош."

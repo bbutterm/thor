@@ -127,7 +127,7 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 ## Забег — автозагрузка `run/run_manager.gd`
 
-`rooms_per_run` 4, `miniboss_rooms` [1, 3] (в каких залах, считая с 0, последней волной выходит мини-босс → выбор трейта), `miniboss_def_path`. Слава: `glory_per_kill` 10, `glory_combo_finisher_bonus` 5, `glory_multikill_bonus` 15, `glory_wall_splat_bonus` 5, `glory_room_clear` 25, `glory_boss_kill` 150. Пороги вердикта — функция `verdict()` (150 «Сойдёт», 400 «Вальхалла»).
+`rooms_per_run` 4. **Слава по GDD 15.2** (блок Г): база — Слава врага из `enemies/defs/*.tres` (корм 1, боец 3, особый 5), элита `glory_elite_kill` 15, босс `glory_boss_kill` 150, мини-босс — 50 (в `MinibossDef`); враг без описания — `glory_per_kill` 3. Множители: добивание мили ×1.5 (`glory_melee_kill_mult`), ренжем ×0.5 (`glory_ranged_kill_mult`), тело (`BodyDef.glory_mult`: Трэлл ×2, Солдат ×0.7). Бонусы: серия 10 убийств `glory_streak_bonus` +10, мультикилл `glory_multikill_bonus` +1 за каждого, шмяк об стену `glory_wall_splat_bonus` +1, зал зачищен `glory_room_clear` +5, финишер `glory_combo_finisher_bonus` 0. Вердикт — `verdict()` (80 «Сойдёт», 200 «Вальхалла»).
 
 ## Тела и руны — ресурсы `run/bodies/*.tres`, `run/runes/*.tres`
 
@@ -200,3 +200,11 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 - Игрок: `melee_kill_heal` 2 (добивание мили лечит 3 + 2 HP).
 - Забег: `glory_melee_kill_mult` 1.5, `glory_ranged_kill_mult` 0.5 (Слава за убийство мили/ренжем).
 - Залы: `elite_chance` 0.1, `max_elites` 1 (элита: ×2.5 HP, урон ×1.5, золотая метка, роняет оружие 60 % мили / 40 % ренж), `chest_chance` 0.5 (сундук после зачистки; в первом зале всегда, у босса нет).
+
+## Данные по GDD (блок Г)
+
+- **Враги** — `enemies/defs/*.tres` (`EnemyDef`): HP в «У» (`hp_u`, 1 У = 22), скорость, урон, слой, мир, Слава, серебро. Применяются к врагам, которые уже есть (`game_kind` grunt → драугр-воин 2.5 У / 4.4 / 12; thrower → метатель 1.5 У / 3.8 / 15). Остальные — `implemented = false`, ждут блока З.
+- **Руны** — `run/runes/*.tres` (`RuneDef`): `category`, `level_descriptions` (ур. 1–3), `implemented`. Руны без механики не выпадают.
+- **Тела** — `run/bodies/*.tres` (`BodyDef`): + `movement_style`, `passive`, `flaw` (`run/passives/*.tres`, `PassiveDef`), `price`, `odin_comment`. 9 тел по GDD 6, закрытые открываются в «Плане тренировок».
+- Генератор сцен больше не перезаписывает существующие `run/bodies` и `run/runes` — это данные, правь их в инспекторе.
+

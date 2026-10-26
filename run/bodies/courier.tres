@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="BodyDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://run/body_def.gd" id="1_s"]
+[ext_resource type="Resource" path="res://weapons/defs/knife.tres" id="2_e"]
+[ext_resource type="Resource" path="res://run/passives/backstab_x2.tres" id="3_e"]
+[ext_resource type="Resource" path="res://run/passives/coward_front.tres" id="4_e"]
+
+[resource]
+script = ExtResource("1_s")
+id = "courier"
+display_name = "Трусливый гонец"
+description = "Быстрее всех убегает. Иногда — в правильную сторону."
+max_health = 80.0
+move_speed = 11.0
+dash_charges = 3
+axe_damage_mult = 1.0
+glory_mult = 1.0
+start_melee = ExtResource("2_e")
+passive = ExtResource("3_e")
+flaw = ExtResource("4_e")
+movement_style = "nimble_plus"
+price = 500
+odin_comment = "Быстрее всех убегает. Иногда — в правильную сторону."

@@ -103,6 +103,10 @@ func _spawn_enemy(marker: Node3D) -> void:
 	var path: String = ENEMY_SCENES.get(kind, ENEMY_SCENES["grunt"])
 	var enemy := (load(path) as PackedScene).instantiate() as Enemy
 	Perf.mark("spawn_" + kind)
+	# Характеристики по GDD 12 (enemies/defs/*.tres), если вид врага там описан
+	var def := EnemyDef.for_kind(kind)
+	if def:
+		enemy.apply_def(def)
 	# Маркер может переопределить характеристики врага до _ready (мини-босс — см. MinibossDef)
 	if marker.has_meta("setup"):
 		var setup: Variant = marker.get_meta("setup")

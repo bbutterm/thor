@@ -18,3 +18,13 @@ class_name BodyDef
 ## Стартовое оружие (этап 1): мили — обязательно, ренж — может быть пусто
 @export var start_melee: WeaponDef
 @export var start_ranged: WeaponDef
+## Стиль движения (GDD 7.3): base / nimble / nimble_plus / ram / jumper / heavy / slider — механика в блоке Л
+@export_enum("base", "nimble", "nimble_plus", "ram", "jumper", "heavy", "slider") var movement_style: String = "base"
+## Пассивка и изъян (GDD 6)
+@export var passive: PassiveDef
+@export var flaw: PassiveDef
+## Цена открытия в «Плане тренировок» (0 — открыто с начала; само открытие — run/unlocks/body_*.tres)
+@export var price: int = 0
+## Смешное описание от Одина для экрана выбора тела
+@export_multiline var odin_comment: String = ""
+

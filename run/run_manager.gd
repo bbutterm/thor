@@ -20,12 +20,15 @@ const BOSS_SCENE := "res://rooms/boss_arena.tscn"
 const MJOLNIR_TRAITS_DIR := "res://weapons/mjolnir_traits/"
 
 @export var rooms_per_run: int = 4
-@export var glory_per_kill: int = 10
-@export var glory_combo_finisher_bonus: int = 5
-@export var glory_multikill_bonus: int = 15
-@export var glory_wall_splat_bonus: int = 5
-@export var glory_room_clear: int = 25
+@export var glory_per_kill: int = 3
+@export var glory_combo_finisher_bonus: int = 0
+@export var glory_multikill_bonus: int = 1
+@export var glory_wall_splat_bonus: int = 1
+@export var glory_room_clear: int = 5
 @export var glory_boss_kill: int = 150
+## Слава за элиту и бонус за серию из 10 убийств (GDD 15.2)
+@export var glory_elite_kill: int = 15
+@export var glory_streak_bonus: int = 10
 @export var multikill_window: float = 0.6
 @export_group("Мини-боссы и трейты Мьёльнира")
 ## После каких залов (индекс с 0) в зале появляется мини-босс — последней волной; за него выбор трейта
@@ -138,11 +141,12 @@ func add_glory(amount: int) -> void:
 	glory_changed.emit(glory)
 
 ## Вызывается при убийстве врага. Считает мультикиллы и серии.
-func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: String = "") -> void:
+func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: String = "", base_glory: int = -1) -> void:
 	kills += 1
 	streak += 1
 	best_streak = maxi(best_streak, streak)
-	var amount := glory_per_kill
+	# База — Слава за врага по GDD 15.2 (корм 1, боец 3, особый 5, элита 15); враги без описания — glory_per_kill
+	var amount := glory_per_kill if base_glory < 0 else base_glory
 	if finisher:
 		amount += glory_combo_finisher_bonus
 	if wall_splat:
@@ -159,6 +163,9 @@ func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: Stri
 	if not _recent_kill_times.is_empty():
 		amount += glory_multikill_bonus * _recent_kill_times.size()
 	_recent_kill_times.append(now)
+	# Серия из 10+ убийств без урона — +10 (GDD 15.2)
+	if streak > 0 and streak % 10 == 0:
+		amount += glory_streak_bonus
 	add_glory(amount)
 	if streak > 0 and streak % 10 == 0:
 		kill_streak.emit(streak)
@@ -179,7 +186,8 @@ func rune_count(id: String) -> int:
 
 func random_rune_choices(count: int = 3) -> Array[RuneDef]:
 	# Закрытые в «Плане тренировок» руны не выпадают (Save.is_in_pool)
-	var pool := all_runes.filter(func(r: RuneDef) -> bool: return Save.is_in_pool("rune", r.id))
+	# Руны без механики (implemented = false, блок Г — пока только данные GDD 11) не выпадают
+	var pool := all_runes.filter(func(r: RuneDef) -> bool: return r.implemented and Save.is_in_pool("rune", r.id))
 	pool.shuffle()
 	var out: Array[RuneDef] = []
 	for i in mini(count, pool.size()):
@@ -189,9 +197,10 @@ func random_rune_choices(count: int = 3) -> Array[RuneDef]:
 func verdict() -> String:
 	if won:
 		return "Вальхалла ждёт"
-	if glory >= 400:
+	# Экономика GDD 15.2: удачный забег по Мидгарду — 150–250 Славы
+	if glory >= 200:
 		return "Вальхалла ждёт"
-	if glory >= 150:
+	if glory >= 80:
 		return "Сойдёт"
 	return "Недостоин"
 
