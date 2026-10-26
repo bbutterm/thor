@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="WeaponDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_def.gd" id="1_wd"]
+
+[resource]
+script = ExtResource("1_wd")
+id = "rocket_launcher"
+display_name = "Ракетница"
+description = "Взрыв 2 У по площади. Тора не ранит, но подбрасывает: рокет-джамп."
+weapon_class = "ranged"
+style = "blunt"
+damage = 44.0
+move_speed_mult = 0.75
+dash_recharge_mult = 1.4
+special = "rocket"
+drop_weight = 0.15
+model = "rocket_launcher"
+view_scale = 1.0
+pickup_scale = 1.1
+view_rest_pos = Vector3(0.3, -0.3, -0.7)
+view_rest_rot = Vector3(0.0, 3.0, 0.0)
+fire_interval = 0.4
+mag_size = 1
+reserve_start = 4
+reserve_max = 4
+reload_time = 1.6
+spread_deg = 0.0
+recoil_kick_deg = 4.0
+max_range = 60.0
+tracer_speed = 32.0
+shell_casing = false
+muzzle_offset = Vector3(0.0, 0.12, -0.7)
+muzzle_flash_size = 1.4
+sound_fire = "sounds/sfx/crossbow_fire.wav"
+sound_reload = "sounds/sfx/crossbow_reload.wav"
+shake = 0.18

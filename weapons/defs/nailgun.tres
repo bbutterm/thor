@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="WeaponDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_def.gd" id="1_wd"]
+
+[resource]
+script = ExtResource("1_wd")
+id = "nailgun"
+display_name = "Гвоздомёт"
+description = "Гномья поделка: очередь гвоздей, прибивает корм к полу на 1 с."
+weapon_class = "ranged"
+style = "pierce"
+damage = 4.4
+move_speed_mult = 0.8
+dash_recharge_mult = 1.3
+special = "pin_fodder"
+drop_weight = 0.4
+model = "nailgun"
+view_scale = 1.0
+pickup_scale = 1.3
+view_rest_pos = Vector3(0.3, -0.32, -0.75)
+view_rest_rot = Vector3(0.0, 3.0, 0.0)
+fire_interval = 0.09
+automatic = true
+mag_size = 25
+reserve_start = 50
+reserve_max = 50
+reload_time = 1.5
+spread_deg = 1.0
+spread_per_shot_deg = 0.2
+spread_max_deg = 4.0
+recoil_kick_deg = 0.6
+tracer_speed = 120.0
+shell_casing = false
+muzzle_offset = Vector3(0.0, 0.1, -0.42)
+muzzle_flash_size = 0.6
+sound_fire = "sounds/sfx/gun_smg.wav"
+sound_reload = "sounds/sfx/gun_reload.wav"
+shake = 0.03

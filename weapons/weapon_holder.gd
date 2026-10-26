@@ -47,6 +47,12 @@ const DEFAULT_MELEE := "res://weapons/defs/axe.tres"
 @export var casing_lifetime: float = 2.0
 @export var max_tracers: int = 40
 @export var bolt_stick_time: float = 1.5
+## Гвоздомёт: корм прибит к полу (с)
+@export var nail_pin_time: float = 1.0
+## Ракетница: радиус взрыва и рокет-джамп (толчок Тора вверх / от взрыва)
+@export var rocket_radius: float = 3.5
+@export var rocket_jump_up: float = 13.0
+@export var rocket_jump_side: float = 7.0
 
 var player: Player
 var axe: Axe

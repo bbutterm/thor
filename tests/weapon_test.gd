@@ -293,6 +293,57 @@ func _run() -> void:
 		h.equip(d, 1, false)
 		await wait(0.05)
 	check(n_melee >= 5 and n_ranged >= 4, "оружия: %d мили, %d ренж" % [n_melee, n_ranged])
+
+	print("-- Гвоздомёт и ракетница")
+	# Подобранное/выброшенное оружие на полу перекрывает выстрелы — убрать
+	for n in get_tree().get_nodes_in_group("pickups") + get_tree().get_nodes_in_group("enemies"):
+		n.queue_free()
+	await wait(0.1)
+	p.health = p.max_health
+	h.equip(load("res://weapons/defs/nailgun.tres") as WeaponDef, 1, false)
+	h.switch_to(WeaponHolder.RANGED, true)
+	await wait(h.switch_time + 0.1)
+	var fod := (load("res://enemies/fodder.tscn") as PackedScene).instantiate() as Enemy
+	fod.max_health = 500
+	game.add_child(fod)
+	fod.global_position = p.global_position + _fwd(p) * 4.0
+	fod.health = 500
+	fod.set_physics_process(false)
+	await wait(0.1)
+	h.gun._cooldown = 0.0
+	h.gun.try_fire()
+	await wait(0.05)
+	check(fod.health < 500 and fod.state == Enemy.State.STUNNED, "гвоздомёт прибил корм (стан)")
+	fod.queue_free()
+	h.equip(load("res://weapons/defs/rocket_launcher.tres") as WeaponDef, 1, false)
+	h.switch_to(WeaponHolder.RANGED, true)
+	await wait(h.switch_time + 0.1)
+	var tgt := _make_dummy(p, 7.0)
+	tgt.global_position.y = p.global_position.y
+	var side := _make_dummy(p, 7.0)
+	side.global_position = tgt.global_position + p.global_transform.basis.x * 2.0
+	await wait(0.1)
+	var hp_p := p.health
+	h.gun._cooldown = 0.0
+	check(h.gun.try_fire(), "ракетница стреляет")
+	await wait(0.6)
+	check(tgt.health < 500 and side.health < 500, "взрыв ракеты задел обоих врагов (по площади)")
+	check(is_equal_approx(p.health, hp_p), "своя ракета не ранит Тора")
+	tgt.queue_free()
+	side.queue_free()
+	# Рокет-джамп: выстрел под ноги
+	h.ranged.mag = 1
+	h.gun.reloading = false
+	p.rotation_target = Vector2(deg_to_rad(-89.0), p.rotation_target.y)
+	await wait(0.3)
+	h.gun._cooldown = 0.0
+	h.gun.try_fire()
+	var vy := 0.0
+	for i in 40:
+		await get_tree().physics_frame
+		vy = maxf(vy, p.velocity.y)
+	check(vy > 8.0 and is_equal_approx(p.health, hp_p), "рокет-джамп: подбросило (vy=%.1f), урона нет" % vy)
+	p.rotation_target = Vector2(0.0, p.rotation_target.y)
 	_finish()
 
 func _fwd(p: Player) -> Vector3:

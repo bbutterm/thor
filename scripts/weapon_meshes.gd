@@ -273,6 +273,9 @@ static func build(kind: String, layer: int = 1) -> Node3D:
 		"shield": n = shield(layer)
 		"crossbow": n = crossbow(layer)
 		"bolt": n = bolt(layer)
+		"nailgun": n = nailgun(layer)
+		"rocket_launcher": n = rocket_launcher(layer)
+		"rocket": n = rocket(layer)
 		_:
 			if GUN_MODELS.has(kind):
 				return gun(kind, layer)
@@ -344,6 +347,39 @@ static func crossbow(layer: int = 1) -> Node3D:
 	var b := bolt(layer)
 	b.position = Vector3(0, 0.12, -0.3)
 	r.add_child(b)
+	return r
+
+## Гвоздомёт гномов: короб с барабаном гвоздей, ствол в -Z, рукоять под кулак.
+static func nailgun(layer: int = 1) -> Node3D:
+	var r := Node3D.new()
+	r.name = "Nailgun"
+	_add(r, _box(Vector3(0.035, 0.12, 0.045)), Vector3(0, -0.01, 0.0), mat("leather"), Vector3(-12, 0, 0), layer)
+	_add(r, _box(Vector3(0.07, 0.09, 0.32)), Vector3(0, 0.09, -0.1), mat("iron"), Vector3.ZERO, layer)
+	_add(r, _cyl(0.06, 0.06, 0.05, 12), Vector3(0, 0.09, -0.02), mat("wood"), Vector3(0, 0, 90), layer)
+	_add(r, _cyl(0.016, 0.02, 0.16), Vector3(0, 0.1, -0.32), mat("steel"), Vector3(-90, 0, 0), layer)
+	_add(r, _box(Vector3(0.012, 0.012, 0.07)), Vector3(0, 0.03, -0.05), mat("iron"), Vector3.ZERO, layer)
+	return r
+
+## Ракетница: труба на плече (ствол в -Z), рукоять под кулак, боеголовка торчит спереди.
+static func rocket_launcher(layer: int = 1) -> Node3D:
+	var r := Node3D.new()
+	r.name = "RocketLauncher"
+	_add(r, _box(Vector3(0.035, 0.12, 0.045)), Vector3(0, -0.01, 0.0), mat("leather"), Vector3(-12, 0, 0), layer)
+	_add(r, _cyl(0.065, 0.065, 0.8, 14), Vector3(0, 0.12, -0.15), mat("iron"), Vector3(-90, 0, 0), layer)
+	_add(r, _cyl(0.075, 0.075, 0.06, 14), Vector3(0, 0.12, -0.55), mat("steel"), Vector3(-90, 0, 0), layer)
+	_add(r, _cyl(0.075, 0.075, 0.06, 14), Vector3(0, 0.12, 0.25), mat("steel"), Vector3(-90, 0, 0), layer)
+	_add(r, _box(Vector3(0.04, 0.06, 0.08)), Vector3(0, 0.2, -0.3), mat("wood"), Vector3.ZERO, layer)
+	var w := rocket(layer)
+	w.position = Vector3(0, 0.12, -0.6)
+	r.add_child(w)
+	return r
+
+## Ракета: корпус вдоль -Z, конус-боеголовка впереди.
+static func rocket(layer: int = 1) -> Node3D:
+	var r := Node3D.new()
+	r.name = "Rocket"
+	_add(r, _cyl(0.045, 0.045, 0.3), Vector3(0, 0, 0.05), mat("iron"), Vector3(-90, 0, 0), layer)
+	_add(r, _cyl(0.0, 0.045, 0.1), Vector3(0, 0, -0.15), mat("steel"), Vector3(-90, 0, 0), layer)
 	return r
 
 ## Болт арбалета: древко вдоль -Z (наконечник впереди), длина ~0.42 м.

@@ -114,7 +114,16 @@ func _fire() -> void:
 	var basis := player.camera.global_transform.basis
 	var muzzle := muzzle_world_position()
 	var dmg := d.damage * item.damage_mult()
-	for p in maxi(1, d.pellets):
+	if d.special == "rocket":
+		# Ракетница: снаряд вместо луча, взрыв по площади, рокет-джамп (weapons/rocket.gd)
+		var rk := Rocket.new()
+		player.get_parent().add_child(rk)
+		rk.max_range = d.max_range
+		rk.radius = holder.rocket_radius
+		rk.self_push_up = holder.rocket_jump_up
+		rk.self_push_side = holder.rocket_jump_side
+		rk.launch(player, muzzle, -basis.z * d.tracer_speed, dmg)
+	for p in (0 if d.special == "rocket" else maxi(1, d.pellets)):
 		var spread := deg_to_rad(d.spread_deg + _spread_extra)
 		var a := randf() * TAU
 		var r := sqrt(randf()) * tan(spread)
@@ -154,6 +163,9 @@ func _ray(origin: Vector3, dir: Vector3, dmg: float, pierce: int) -> Vector3:
 		var pos: Vector3 = hit.position
 		if c and c.has_method("take_hit"):
 			player.deal_damage(c, dmg, Vector3.ZERO, "ranged")
+			# Гвоздомёт: прибивает корм к полу
+			if item.def.special == "pin_fodder" and c is Enemy and (c as Enemy).kind == Enemy.Kind.FODDER:
+				(c as Enemy).apply_stun(holder.nail_pin_time, true)
 			FX.sparks(player.get_parent(), pos, Color(1.0, 0.55, 0.35), 5, 3.0, 12.0, 0.05, 0.25)
 			if left > 0 and c is CollisionObject3D:
 				left -= 1

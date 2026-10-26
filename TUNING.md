@@ -232,7 +232,7 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 **Уровень оружия 1–3:** +20 % урона за уровень (`WeaponDef.level_mult`).
 
 ### Узел **Weapons** игрока (`weapons/weapon_holder.gd`)
-`switch_time` 0.25 (свитч), `auto_switch_on_empty` (пустой ренж без запаса → мили), `auto_reload`, `interact_radius` 2.4 (подбор по E), `ammo_pickup_radius` 1.4, `ammo_box_fraction` 0.4 (ящик = 40 % запаса), `ammo_drop_chance` 0.15 (метатели ×2), `drop_all_weapons` false (true — в пуле всё оружие, а не только стартовое GDD), `drop_level2_chance` 0.2 / `drop_level3_chance` 0.05, `fire_slow_time` 0.3 (сколько длится замедление «при стрельбе»), `prop_bullet_impulse` 1.2, `max_casings` 24, `casing_lifetime` 2, `max_tracers` 40, `bolt_stick_time` 1.5.
+`switch_time` 0.25 (свитч), `auto_switch_on_empty` (пустой ренж без запаса → мили), `auto_reload`, `interact_radius` 2.4 (подбор по E), `ammo_pickup_radius` 1.4, `ammo_box_fraction` 0.4 (ящик = 40 % запаса), `ammo_drop_chance` 0.15 (метатели ×2), `drop_all_weapons` false (true — в пуле всё оружие, а не только стартовое GDD), `drop_level2_chance` 0.2 / `drop_level3_chance` 0.05, `fire_slow_time` 0.3 (сколько длится замедление «при стрельбе»), `prop_bullet_impulse` 1.2, `max_casings` 24, `casing_lifetime` 2, `max_tracers` 40, `bolt_stick_time` 1.5, `nail_pin_time` 1 (гвоздомёт прибивает корм), `rocket_radius` 3.5 / `rocket_jump_up` 13 / `rocket_jump_side` 7 (ракетница, рокет-джамп).
 
 ### Мили-удары — узел **Axe** (`weapons/axe.gd`)
 Базовые тайминги и отдача (массивы ступеней выше) — общие для всего мили; оружие масштабирует их своим `attack_speed`. Урон теперь берётся из `WeaponDef.damage` (поле `base_damage` — только запасной вариант без оружия).
