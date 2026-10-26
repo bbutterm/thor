@@ -100,7 +100,7 @@ func start(p: Player) -> void:
 	elapsed = 0.0
 	Perf.mark("trial_start")
 	Save.bump_event("challenge")
-	Run.enemy_killed.connect(_on_kill)
+	Run.kill_registered.connect(_on_kill)
 	room.cleared.connect(_on_room_cleared)
 	hud = TrialHUD.new()
 	hud.name = "TrialHUD"
@@ -110,8 +110,8 @@ func start(p: Player) -> void:
 	Dialogue.bark_pool(def.pool("intro"))
 
 func _exit_tree() -> void:
-	if Run.enemy_killed.is_connected(_on_kill):
-		Run.enemy_killed.disconnect(_on_kill)
+	if Run.kill_registered.is_connected(_on_kill):
+		Run.kill_registered.disconnect(_on_kill)
 
 func is_running() -> bool:
 	return state == "running"

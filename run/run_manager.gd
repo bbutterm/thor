@@ -9,8 +9,6 @@ signal mjolnir_traits_changed(traits: Array)
 signal kill_registered(source: String)
 ## Серебро — валюта забега (блок К, GDD 15.2), сгорает после смерти
 signal silver_changed(total: int)
-## Убийство врага с источником добивания (испытания, блок Ф)
-signal enemy_killed(source: String)
 
 const BODIES_DIR := "res://run/bodies/"
 const RUNES_DIR := "res://run/runes/"
@@ -190,7 +188,6 @@ func add_glory(amount: int) -> void:
 
 ## Вызывается при убийстве врага. Считает мультикиллы и серии.
 func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: String = "", base_glory: int = -1) -> void:
-	enemy_killed.emit(source)
 	kills += 1
 	streak += 1
 	best_streak = maxi(best_streak, streak)

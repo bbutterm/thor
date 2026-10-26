@@ -144,7 +144,7 @@ func _test_slam_hammer() -> void:
 	# Провал того же условия: добил топором
 	var t2 := TrialRunner.attach(game.room, t.def)
 	t2.start(game.player)
-	Run.enemy_killed.emit("melee")
+	Run.kill_registered.emit("melee")
 	check(t2.state == "failed", "добил топором — провал («%s»)" % t2.fail_reason)
 	t2.queue_free()
 	await wait(0.2)
