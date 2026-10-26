@@ -1,6 +1,7 @@
 extends RefCounted
 class_name UIStyle
 ## Общий стиль интерфейса: тёмный камень, золото Асгарда, лёд Мьёльнира.
+## Кнопки и панели — на графике комплекта владельца (ui/ui_skin.gd), цвета и шрифт — здесь.
 
 const GOLD := Color(0.93, 0.71, 0.3)
 const ICE := Color(0.5, 0.83, 1.0)
@@ -36,12 +37,25 @@ static func panel_style(bg: Color = STONE, border: Color = Color(GOLD, 0.6), rad
 	sb.shadow_size = 8
 	return sb
 
-static func panel(bg: Color = STONE, border: Color = Color(GOLD, 0.6)) -> PanelContainer:
+## Панель на графике комплекта (UISkin: тёмная рамка panel_dialogue); kind = "wood" — деревянная
+## рамка окна (panel_training). Нет картинок — плоская панель цветов bg/border.
+static func panel(bg: Color = STONE, border: Color = Color(GOLD, 0.6), kind: String = "") -> PanelContainer:
+	var p := PanelContainer.new()
+	var id := "panel_training" if kind == "wood" else "panel_dialogue"
+	if UISkin.texture(id):
+		p.add_theme_stylebox_override("panel", UISkin.stylebox(id, 0.42 if kind == "wood" else 0.3, 6))
+	else:
+		p.add_theme_stylebox_override("panel", panel_style(bg, border))
+	return p
+
+## Старая плоская панель (карточки, ячейки, где рамка комплекта не по размеру)
+static func flat_panel(bg: Color = STONE, border: Color = Color(GOLD, 0.6)) -> PanelContainer:
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", panel_style(bg, border))
 	return p
 
-static func button(text: String, size: int = 24) -> Button:
+## kind — картинка комплекта: main (основная), secondary (второстепенная), danger (опасное действие)
+static func button(text: String, size: int = 24, kind: String = "main") -> Button:
 	var b := Button.new()
 	b.text = text
 	b.focus_mode = Control.FOCUS_ALL
@@ -51,10 +65,16 @@ static func button(text: String, size: int = 24) -> Button:
 	b.add_theme_color_override("font_hover_color", GOLD)
 	b.add_theme_color_override("font_focus_color", GOLD)
 	b.add_theme_color_override("font_pressed_color", Color(1, 1, 1))
-	b.add_theme_stylebox_override("normal", panel_style(STONE_LIGHT, Color(GOLD, 0.35), 8))
-	b.add_theme_stylebox_override("hover", panel_style(Color(0.22, 0.19, 0.15, 0.98), GOLD, 8))
-	b.add_theme_stylebox_override("focus", panel_style(Color(0.22, 0.19, 0.15, 0.98), GOLD, 8))
-	b.add_theme_stylebox_override("pressed", panel_style(Color(0.3, 0.24, 0.14, 1.0), GOLD, 8))
+	b.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	b.add_theme_constant_override("outline_size", 5)
+	if UISkin.texture("button_main_normal"):
+		# Кнопки комплекта (UISkin): main / secondary / danger
+		UISkin.style_button(b, kind)
+	else:
+		b.add_theme_stylebox_override("normal", panel_style(STONE_LIGHT, Color(GOLD, 0.35), 8))
+		b.add_theme_stylebox_override("hover", panel_style(Color(0.22, 0.19, 0.15, 0.98), GOLD, 8))
+		b.add_theme_stylebox_override("focus", panel_style(Color(0.22, 0.19, 0.15, 0.98), GOLD, 8))
+		b.add_theme_stylebox_override("pressed", panel_style(Color(0.3, 0.24, 0.14, 1.0), GOLD, 8))
 	b.custom_minimum_size = Vector2(280, 56)
 	return b
 

@@ -28,6 +28,8 @@ const BUS := "Music"
 @export var stinger_duck_time: float = 0.18
 ## Выключить автоматический выбор трека по сцене (тесты, ручное управление)
 var auto: bool = true
+## Поправка громкости из настроек игрока (дБ, GameSettings [audio] music)
+var user_volume_db: float = 0.0
 
 var current_track: String = ""
 ## 0 — фон (бас и пэды), 1 — бой (+ барабаны), 2 — Ярость (полный трек)
@@ -66,7 +68,7 @@ func _setup_bus() -> void:
 		_bus_idx = AudioServer.bus_count - 1
 		AudioServer.set_bus_name(_bus_idx, BUS)
 		AudioServer.set_bus_send(_bus_idx, "Master")
-	AudioServer.set_bus_volume_db(_bus_idx, volume_db)
+	AudioServer.set_bus_volume_db(_bus_idx, volume_db + user_volume_db)
 	_lpf = AudioEffectLowPassFilter.new()
 	_lpf.cutoff_hz = 20000.0
 	AudioServer.add_bus_effect(_bus_idx, _lpf)
@@ -221,7 +223,7 @@ func _process(delta: float) -> void:
 				sync.set_sync_stream_volume(i, _layer_db[i])
 	# Провал под стингер
 	_duck_left = maxf(0.0, _duck_left - delta)
-	AudioServer.set_bus_volume_db(_bus_idx, volume_db + (stinger_duck_db if _duck_left > 0.0 else 0.0))
+	AudioServer.set_bus_volume_db(_bus_idx, volume_db + user_volume_db + (stinger_duck_db if _duck_left > 0.0 else 0.0))
 
 ## Выбор трека и слоя по тому, что сейчас на экране (GDD 21: адаптивность).
 func _auto_state() -> void:

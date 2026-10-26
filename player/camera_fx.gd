@@ -32,6 +32,8 @@ class_name CameraFX
 @export var crouch_speed: float = 12.0
 
 var trauma: float = 0.0
+## Сила тряски из настроек игрока 0..1 (GDD 22: «тряска камеры 0–100 %»)
+var shake_scale: float = 1.0
 ## 0..1 — насколько видны линии скорости (читает HUD)
 var speed_lines: float = 0.0
 
@@ -55,7 +57,7 @@ func _ready() -> void:
 	_noise.seed = randi()
 
 func add_trauma(amount: float) -> void:
-	trauma = clampf(trauma + amount, 0.0, 1.0)
+	trauma = clampf(trauma + amount * shake_scale, 0.0, 1.0)
 
 func kick_fov(deg: float) -> void:
 	_fov_kick += deg
