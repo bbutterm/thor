@@ -69,6 +69,7 @@ func _step_out(delta: float) -> void:
 		FX.burst(get_parent(), hit.position, 0.5, Color(0.6, 0.85, 1.0, 0.6), 0.15)
 		FX.sparks(get_parent(), hit.position, Color(0.7, 0.9, 1.0), 14, 6.0)
 		Audio.play("sounds/sfx/hammer_bounce.wav")
+		ComicFX.pop("ricochet", hit.position)
 		if _bounces > hand.max_wall_bounces:
 			start_return()
 		else:
@@ -125,6 +126,7 @@ func _on_hit(c: Object, dir: Vector3) -> void:
 	if c.has_method("take_hit"):
 		var dmg := hand.current_damage()
 		c.take_hit(dmg, knock, "hammer")
+		ComicFX.on_hammer_hit(c, global_position, state == State.RETURN, _bounces)
 		FX.hitstop(hand.hit_hitstop)
 		hand.player.camera_fx.add_trauma(0.12)
 		FX.burst(get_parent(), global_position, 0.6, Color(0.55, 0.85, 1.0, 0.7), 0.15)
@@ -153,3 +155,4 @@ func _chain_lightning(source: Node3D, dmg: float) -> void:
 		FX.lightning(get_parent(), source.global_position + Vector3(0, 1, 0), best.global_position + Vector3(0, 1, 0))
 		Audio.play("sounds/sfx/lightning.wav")
 		best.take_hit(dmg, Vector3.UP * 2.0, "lightning")
+		ComicFX.on_lightning(best)

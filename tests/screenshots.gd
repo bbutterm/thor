@@ -32,6 +32,13 @@ func _run() -> void:
 	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
 	await wait(0.5)
 	await shot("01_menu")
+	# Настройки из главного меню (с образцом слова)
+	var sp := SettingsPanel.new()
+	get_tree().current_scene.add_child(sp)
+	ComicFX.preview()
+	await wait(0.15)
+	await shot("01b_settings")
+	sp.close()
 	Run.start_run("hunter")
 	Run.room_order.assign(["res://rooms/room_02.tscn", "res://rooms/room_03.tscn", "res://rooms/boss_arena.tscn"])
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
@@ -56,6 +63,11 @@ func _run() -> void:
 		p.axe.request_attack()
 		await wait(0.12)
 		await shot("03_axe_swing")
+		# Комиксовое слово: крит (тяжёлый 3-й удар комбо по живому врагу)
+		ComicFX.reset_state()
+		e.take_hit(1.0, Vector3.ZERO, "axe_finisher")
+		await wait(0.12)
+		await shot("03b_comic_crit")
 		await wait(0.4)
 		p.mjolnir.throw_hammer()
 		await wait(0.18)
@@ -65,8 +77,15 @@ func _run() -> void:
 	p.global_position += Vector3(0, 6, 0)
 	p.rotation_target.x = -0.6
 	await wait(0.2)
+	ComicFX.reset_state()
 	p.call("_start_slam")
-	await wait(0.6)
+	var slam_frames := 0
+	while p.is_slamming and slam_frames < 60:
+		await get_tree().process_frame
+		slam_frames += 1
+	await wait(0.1)
+	await shot("05a_comic_slam")
+	await wait(0.6 - slam_frames / 60.0 - 0.1)
 	await shot("05_slam")
 	for en in game.room.alive_enemies().duplicate():
 		en.take_hit(9999, Vector3(0, 2, -6), "axe_finisher")
@@ -79,6 +98,10 @@ func _run() -> void:
 	game.rune_pick.choose(0)
 	await wait(1.0)
 	await shot("07_door_open")
+	game.pause_menu.toggle()
+	await wait(0.2)
+	await shot("07b_pause")
+	game.pause_menu.toggle()
 	# Босс
 	Run.room_index = 1
 	game.call("_on_exit_reached")
@@ -92,6 +115,11 @@ func _run() -> void:
 		p.rotation_target = Vector2(0.05, atan2(-to2.x, -to2.z))
 		await wait(0.2)
 	await shot("08_boss")
+	# Крупное слово на весь экран (добивание босса)
+	ComicFX.reset_state()
+	ComicFX.pop("boss_kill", Vector3.ZERO, true)
+	await wait(0.2)
+	await shot("08b_comic_big")
 	p.take_damage(99999.0, Vector3.ZERO, true)
 	await wait(2.2)
 	await shot("09_death")

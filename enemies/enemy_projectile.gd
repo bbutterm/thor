@@ -55,6 +55,7 @@ func reflect(new_velocity: Vector3) -> void:
 	_light.light_color = Color(0.4, 0.85, 1.0)
 	FX.burst(get_parent(), global_position, 0.6, Color(0.6, 0.9, 1.0, 0.7), 0.15)
 	Audio.play("sounds/sfx/reflect.wav")
+	ComicFX.pop("parry", global_position)
 	Run.add_glory(5)
 
 func _physics_process(delta: float) -> void:

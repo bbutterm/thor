@@ -6,6 +6,7 @@
 | Звуки прыжков, приземления, шагов, смерти врагов | Kenney, из Starter Kit FPS | CC0 |
 | Остальные звуки (топор, молот, молния, рывок, удар-приземление, двери, руны, босс…) | Синтезированы скриптом `tools/make_sfx.py` (шум + фильтры) | свои, CC0 |
 | Шрифт интерфейса Russo One | Google Fonts — https://github.com/google/fonts/tree/main/ofl/russoone | SIL OFL 1.1 (`fonts/RussoOne-OFL.txt`) |
+| Шрифт комиксовых слов-ударов Bangers | Google Fonts — https://github.com/google/fonts/tree/main/ofl/bangers (The Bangers Project Authors) | SIL OFL 1.1 (`fonts/Bangers-OFL.txt`) |
 | Шрифт для рун (ᚠ ᛗ ᚦ…) Noto Sans Runic | Google Fonts / Noto — https://github.com/google/fonts/tree/main/ofl/notosansrunic | SIL OFL 1.1 (`fonts/NotoSansRunic-OFL.txt`) |
 | Движок | Godot Engine 4.6 — https://godotengine.org | MIT |
 | Физика | Jolt Physics (встроен в Godot 4.6) | MIT |

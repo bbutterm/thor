@@ -395,6 +395,7 @@ func _do_slam_impact(height: float) -> void:
 	FX.burst(get_parent(), center + Vector3(0, 0.3, 0), radius * 0.35, Color(1, 0.9, 0.6, 0.45), 0.25)
 	FX.sparks(get_parent(), center + Vector3(0, 0.2, 0), Color(0.55, 0.47, 0.4), 26 + int(power * 20), 7.0 + power * 6.0, 18.0, 0.14, 0.7)
 	FX.hitstop(0.06 + power * 0.04)
+	ComicFX.on_slam(center, height)
 	Audio.play("sounds/sfx/slam.wav")
 	slammed.emit(power)
 	if height >= 9.0:
