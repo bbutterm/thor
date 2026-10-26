@@ -86,6 +86,7 @@ func bind_player(p: Player) -> void:
 	SilverHUD.attach(self)
 
 func _build() -> void:
+	UISkin.preload_game()
 	var root := Control.new()
 	root.name = "Root"
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE

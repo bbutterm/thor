@@ -167,6 +167,15 @@ static func stylebox(id: String, scale: float = 0.3, pad: float = 0.0) -> StyleB
 		sb.set_content_margin_all(pad)
 	return sb
 
+## Загрузить заранее всё, что HUD может показать посреди боя (иконки Мьёльнира, оружия, трейтов, рун):
+## иначе первая смена состояния молота или подбор оружия читали бы файл в бою. Зовёт HUD при загрузке игры
+## (под затемнением).
+static func preload_game() -> void:
+	for id in ids():
+		var p := path(id)
+		if p.begins_with("res://sprites/ui/hud/") or p.begins_with("res://sprites/ui/icons/"):
+			texture(id)
+
 ## Текстура, уменьшенная до size (иконки тем: ползунок, флажок рисуются в размер картинки).
 ## Уменьшаем один раз на CPU; в headless (нет данных картинки) — исходная текстура.
 static func scaled_texture(id: String, size: Vector2i) -> Texture2D:
