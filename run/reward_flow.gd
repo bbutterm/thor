@@ -273,7 +273,7 @@ func _loki_result(id: String) -> void:
 	var p := game.player
 	match id:
 		"blood":
-			p.take_damage(p.health * m.loki_hp_cost, Vector3.ZERO, true)
+			p.pay_health(p.health * m.loki_hp_cost)
 			var d := Loot.random_def("melee" if randf() < 0.6 else "ranged")
 			if d == null:
 				d = Loot.random_def()
@@ -292,7 +292,7 @@ func _loki_result(id: String) -> void:
 				Dialogue.bark_pool("loki.deal_dice_win")
 				game.hud.toast("КОСТИ: " + ", ".join(got))
 			else:
-				p.take_damage(p.health * m.loki_dice_hp_loss, Vector3.ZERO, true)
+				p.pay_health(p.health * m.loki_dice_hp_loss)
 				Dialogue.bark_pool("loki.deal_dice_lose")
 				game.hud.toast("КОСТИ: НЕ ПОВЕЗЛО")
 		"cursed":

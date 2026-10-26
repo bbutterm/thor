@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MjolnirTrait" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/mjolnir_trait.gd" id="1_trait"]
+[ext_resource type="Script" path="res://weapons/mjolnir_traits/ice_trail.gd" id="2_handler"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("2_handler")
+
+[resource]
+script = ExtResource("1_trait")
+id = &"ice_trail"
+title = "Ледяной след"
+description = "Молот в полёте оставляет на полу полосу льда: враги скользят и падают."
+description_lvl2 = "Падение — стан 1 с."
+glyph = "ᛁ"
+color = Color(0.55, 0.85, 1, 1)
+group = "след"
+handler = SubResource("Resource_handler")

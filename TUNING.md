@@ -61,6 +61,9 @@
 | Трейт | Группа | Главные числа |
 |---|---|---|
 | Огненный след | след | `spacing` 1.8 м, `radius` 1.1 / 1.6, `duration` 3 / 5 с, `dps` 6.6 (0.3 У/с), `max_zones` 10, свет у каждого `light_every` 3-го |
+| Ледяной след | след | `spacing` 1.8 м, `radius` 1.3, `duration` 4 с, падение — стан `fall_stun` 0.5 / 1 с, толчок `slide_push` 6, `max_zones` 12 (`weapons/ice_zone.gd`) |
+| Тяжесть | попадание | стан `pin_time` 1.5 с; ур. 2 — всем в `splash_radius` 2 м |
+| Два молота | бросок | копии веером через `spread_deg` 12°, каждый молот ×`damage_mult` 0.6; копии без трейтов, не втыкаются |
 | Притяжение к молоту | возврат | `speed` 30, `max_time` 1.2 с, `damage` 22 (1 У), `hit_radius` 1.6, `knockback` 11, `exit_up` 10, `mantle_height` 2.2 м (залезть на уступ над молотом), `stuck_hold` 3 с; ур. 2 — `arrive_slam_*` |
 | Магнит | возврат | `radius` 6 / 9 м, `pull_speed` 7, `hold_distance` 1.6, `boss_factor` 0.25, `blast_damage` 11, `blast_knockback` 15, `stuck_hold` 3 с |
 | Бумеранг | возврат | `speed_mult` 1.25, `loop_time` 0.5 с, `turn_rate` 3.6 рад/с; ур. 2 — две петли |

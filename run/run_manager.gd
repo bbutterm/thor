@@ -324,7 +324,8 @@ func mjolnir_trait_conflict(t: MjolnirTrait) -> MjolnirTrait:
 func random_mjolnir_trait_choices(count: int = 3) -> Array[MjolnirTrait]:
 	var pool: Array[MjolnirTrait] = []
 	for t in all_mjolnir_traits:
-		if mjolnir_trait_level(t.id) < t.max_level:
+		# Закрытые в «Плане тренировок» трейты не выпадают (Save.is_in_pool)
+		if mjolnir_trait_level(t.id) < t.max_level and Save.is_in_pool("trait", str(t.id)):
 			pool.append(t)
 	pool.shuffle()
 	var out: Array[MjolnirTrait] = []

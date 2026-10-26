@@ -938,6 +938,16 @@ func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln
 	if health <= 0.0 and not _rune_second_wind():
 		_die()
 
+## Плата здоровьем (сделка Локи, «Кот в мешке»): без защиты рун/тела, не убивает (остаётся ≥ 1 HP).
+func pay_health(amount: float) -> void:
+	if is_dead or amount <= 0.0:
+		return
+	health = maxf(1.0, health - amount)
+	camera_fx.add_trauma(0.2)
+	hurt.emit(amount)
+	health_changed.emit(health, max_health)
+	Audio.play("sounds/sfx/player_hurt.wav")
+
 func heal(amount: float) -> void:
 	# Изъян Берсерка: лечение −50 %
 	amount *= float(modify_stat(&"heal_mult", 1.0))

@@ -3,7 +3,7 @@ class_name MjolnirProjectile
 ## Летящий Мьёльнир. Кинематический (не RigidBody): двигаем сами, проверяем попадания вдоль отрезка.
 ## База (GDD 10): летит до max_range, бьёт всех на пути, втыкается в стену или пол; возврат по дуге
 ## сквозь стены (ПКМ или сам через auto_return_after / stuck_auto_return). Бьёт врагов в обе стороны.
-## Трейты (MjolnirTraitHandler) подключаются через хуки — см. вызовы hand.trait_call(...).
+## Трейты (MjolnirTraitHandler) подключаются через хуки — см. вызовы _trait(...) (→ hand.trait_call).
 ##
 ## Точки событий (для эффектов/комиксовых слов): _on_hit (попал по врагу), _on_world_hit (стена/пол:
 ## отскок или _stick — воткнулся), start_return (начало возврата), catch (поймал).
@@ -25,6 +25,8 @@ var bounces_left: int = 0
 var bounces_done: int = 0
 ## Множитель урона этого броска (идеальный хват ×2)
 var damage_mult: float = 1.0
+## Копия броска (трейт «Два молота»): без трейтов, не втыкается, у руки просто исчезает
+var is_clone: bool = false
 ## Возврат начат игроком (ПКМ), а не таймером
 var recalled_by_player: bool = false
 ## Возврат начат из воткнутого состояния (stuck_normal — нормаль поверхности)
@@ -58,7 +60,28 @@ func launch(owner_hand: MjolnirHand, origin: Vector3, velocity_: Vector3) -> voi
 	_auto_return_after = float(hand.trait_modify(&"auto_return_after", hand.auto_return_after))
 	_stuck_auto_return = float(hand.trait_modify(&"stuck_auto_return", hand.stuck_auto_return))
 	_build_visual()
-	hand.trait_call(&"on_throw", [self])
+	_trait(&"on_throw", [self])
+
+## Копия-молот веера (Два молота): летит по своей траектории, возвращается и исчезает у руки.
+func launch_clone(owner_hand: MjolnirHand, origin: Vector3, velocity_: Vector3, mult: float) -> void:
+	is_clone = true
+	hand = owner_hand
+	global_position = origin
+	vel = velocity_
+	damage_mult = mult
+	_sticks = false
+	bounces_left = 0
+	_max_range = hand.max_range
+	_auto_return_after = hand.auto_return_after
+	_stuck_auto_return = hand.stuck_auto_return
+	_build_visual()
+	if _light:
+		_light.light_energy = 0.8
+
+## Хуки трейтов — только у настоящего молота (у копий их нет, иначе трейты срабатывали бы дважды)
+func _trait(hook: StringName, args: Array) -> void:
+	if not is_clone:
+		hand.trait_call(hook, args)
 
 func _build_visual() -> void:
 	_mesh_root = Node3D.new()
@@ -133,7 +156,7 @@ func start_return(by_player: bool = false) -> void:
 	if vel.length() < 0.1:
 		vel = (hand.hand_point() - global_position).normalized() * 0.1
 	Audio.play("sounds/weapon_change.ogg")
-	hand.trait_call(&"on_recall_start", [self, by_player])
+	_trait(&"on_recall_start", [self, by_player])
 
 func _physics_process(delta: float) -> void:
 	if hand == null or not is_instance_valid(hand) or hand.player == null:
@@ -148,21 +171,21 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.OUT:
 			flight_time += delta
-			hand.trait_call(&"on_flight_tick", [self, delta])
+			_trait(&"on_flight_tick", [self, delta])
 			if state == State.OUT:
 				_step_out(delta)
 				if state == State.OUT and (flight_time >= _auto_return_after or travelled >= _max_range):
 					start_return(false)
 		State.HOVER:
-			hand.trait_call(&"on_flight_tick", [self, delta])
+			_trait(&"on_flight_tick", [self, delta])
 		State.STUCK:
 			stuck_time += delta
-			hand.trait_call(&"on_stuck_tick", [self, delta])
+			_trait(&"on_stuck_tick", [self, delta])
 			if state == State.STUCK and _stuck_auto_return > 0.0 and stuck_time >= _stuck_auto_return:
 				start_return(false)
 		State.RETURN:
 			return_time += delta
-			hand.trait_call(&"on_recall_tick", [self, delta])
+			_trait(&"on_recall_tick", [self, delta])
 			if _caught:
 				return
 			if _recall_controller:
@@ -199,7 +222,7 @@ func _on_world_hit(pos: Vector3, normal: Vector3) -> void:
 		FX.burst(get_parent(), pos, 0.5, Color(0.6, 0.85, 1.0, 0.6), 0.15)
 		FX.sparks(get_parent(), pos, Color(0.7, 0.9, 1.0), 14, 6.0)
 		Audio.play("sounds/sfx/hammer_bounce.wav")
-		hand.trait_call(&"on_hit_world", [self, pos, normal, false])
+		_trait(&"on_hit_world", [self, pos, normal, false])
 	elif _sticks:
 		_stick(pos, normal)
 	else:
@@ -208,7 +231,7 @@ func _on_world_hit(pos: Vector3, normal: Vector3) -> void:
 		FX.sparks(get_parent(), pos, Color(0.7, 0.9, 1.0), 14, 6.0)
 		Audio.play("sounds/sfx/hammer_bounce.wav")
 		vel = vel.bounce(normal) * 0.5
-		hand.trait_call(&"on_hit_world", [self, pos, normal, false])
+		_trait(&"on_hit_world", [self, pos, normal, false])
 		start_return(false)
 
 ## Молот воткнулся: боёк в поверхности, рукоять наружу (на полу — стоит рукоятью вверх).
@@ -229,7 +252,7 @@ func _stick(pos: Vector3, normal: Vector3) -> void:
 	FX.sparks(get_parent(), pos, Color(0.55, 0.5, 0.45), 18, 5.0, 14.0, 0.08, 0.5)
 	Audio.play("sounds/sfx/hammer_stick.wav")
 	hand.player.camera_fx.add_trauma(0.08)
-	hand.trait_call(&"on_hit_world", [self, pos, stuck_normal, true])
+	_trait(&"on_hit_world", [self, pos, stuck_normal, true])
 
 func _step_return(delta: float) -> void:
 	var target := hand.hand_point()
@@ -254,12 +277,13 @@ func catch() -> void:
 	if _caught:
 		return
 	_caught = true
-	hand.on_caught()
+	if not is_clone:
+		hand.on_caught()
 	queue_free()
 
 func _exit_tree() -> void:
 	if hand and is_instance_valid(hand):
-		hand.trait_call(&"on_projectile_removed", [self])
+		_trait(&"on_projectile_removed", [self])
 
 func _sweep_hits(from: Vector3, to: Vector3) -> void:
 	var space := get_world_3d().direct_space_state
@@ -298,10 +322,10 @@ func _on_hit(c: Object, dir: Vector3) -> void:
 		hand.player.camera_fx.add_trauma(0.12)
 		FX.burst(get_parent(), global_position, 0.6, Color(0.55, 0.85, 1.0, 0.7), 0.15)
 		Audio.play("sounds/sfx/hammer_hit.wav")
-		var chain := int(hand.trait_modify(&"chain_targets", hand.chain_targets))
+		var chain := 0 if is_clone else int(hand.trait_modify(&"chain_targets", hand.chain_targets))
 		if chain > 0:
 			chain_lightning(c as Node3D, dmg * hand.chain_damage_ratio, chain, hand.chain_radius)
-		hand.trait_call(&"on_hit_enemy", [self, c, dmg])
+		_trait(&"on_hit_enemy", [self, c, dmg])
 	elif c is RigidBody3D:
 		var rb := c as RigidBody3D
 		rb.apply_central_impulse(knock * rb.mass * 0.7)

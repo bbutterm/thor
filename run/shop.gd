@@ -245,7 +245,7 @@ static func _open_bag(game: Game, forced: String = "") -> String:
 			Run.add_silver(BAG_SILVER)
 			return "Брокк перепутал мешки: +%d серебра" % BAG_SILVER
 		"curse":
-			p.take_damage(p.health * BAG_CURSE, Vector3.ZERO, true)
+			p.pay_health(p.health * BAG_CURSE)
 			return "В мешке был кот. Злой. Проклятый."
 	return "Пустой мешок. Почти: записка «Брака не бывает»."
 

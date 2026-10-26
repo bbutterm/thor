@@ -54,7 +54,17 @@ func _run() -> void:
 	for e in game.room.alive_enemies().duplicate():
 		e.queue_free()
 	await frames(5)
-	check(Run.all_mjolnir_traits.size() >= 6, "трейтов загружено: %d" % Run.all_mjolnir_traits.size())
+	check(Run.all_mjolnir_traits.size() >= 13, "трейтов загружено: %d (13 по GDD 10)" % Run.all_mjolnir_traits.size())
+	# Закрытые в «Плане тренировок» не выпадают; дальше тест открывает все трейты
+	var locked_ok := true
+	for i in 40:
+		for t in Run.random_mjolnir_trait_choices(3):
+			if not Save.is_in_pool("trait", str(t.id)):
+				locked_ok = false
+	check(locked_ok, "закрытые трейты («План тренировок») в выбор не попадают")
+	for u in Save.all_unlocks:
+		if u.kind == "trait":
+			Save.data.unlocks[u.id] = 0
 
 	_test_choices()
 	await _test_pick_ui()
@@ -292,10 +302,16 @@ func _scenario_generic(t: MjolnirTrait) -> void:
 	var start_pos := p.global_position
 	var fires := 0
 	var saw_stuck := false
+	var clones_seen := 0
 	hand.throw_hammer()
 	check(not hand.in_hand, "бросок")
 	for i in 150:
 		await get_tree().physics_frame
+		var cl := 0
+		for c in p.get_parent().get_children():
+			if c is MjolnirProjectile and (c as MjolnirProjectile).is_clone:
+				cl += 1
+		clones_seen = maxi(clones_seen, cl)
 		if hand.projectile and is_instance_valid(hand.projectile) and hand.projectile.is_stuck():
 			saw_stuck = true
 			wall_d0 = _flat_dist(wall_l, hand.projectile.global_position)
@@ -315,6 +331,16 @@ func _scenario_generic(t: MjolnirTrait) -> void:
 			check(side.any(_hurt), "молния перескочила на врага в стороне")
 		&"fire_trail":
 			check(fires > 0, "огненный след: пятен %d" % fires)
+		&"ice_trail":
+			var ih := hand.traits[0]
+			check(int(ih.call("active_zones")) > 0, "ледяной след: пятен льда %d" % int(ih.call("active_zones")))
+		&"heaviness":
+			var pinned := line.filter(func(e: Enemy) -> bool: return is_instance_valid(e) and e.state == Enemy.State.STUNNED)
+			check(not pinned.is_empty(), "Тяжесть прибила врага (стан)")
+			if hand.traits[0].level >= 2:
+				check(side.any(func(e: Enemy) -> bool: return is_instance_valid(e) and e.state == Enemy.State.STUNNED) or pinned.size() >= 2, "Тяжесть ур. 2: стан по кругу")
+		&"two_hammers":
+			check(clones_seen >= hand.traits[0].level, "Два молота: копий в полёте %d" % clones_seen)
 	if t.id != &"ricochet":
 		check(saw_stuck, "молот воткнулся")
 	if saw_stuck:
