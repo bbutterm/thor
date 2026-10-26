@@ -54,4 +54,5 @@ godot --headless --path . --fixed-fps 60 res://tests/hitch_test.tscn -- 50  # ф
 - `ui/dialogue_box.gd` — окно новеллы (портреты, имя, печать, выбор ответа Тора, «Пропустить», журнал); `ui/portrait.gd` — портрет `sprites/portraits/<speaker>_<emotion>.png` или процедурная заглушка; `ui/bark_bubble.gd` — пузырь в углу для не-Одина.
 - `run/odin.gd` (`Odin`) — тонкая обёртка: `Odin.say(событие)` = пузырь HUD из пула `odin.<событие>`, лимит 12 с в бою.
 - `run/run_tracker.gd` (`RunTracker`, узел в сцене игры) — время забега, причина смерти, «ДВИГАЙСЯ!»/мульти-килл/«Скуф…». **Источник урона по Тору:** перед `player.take_damage()` вызывай `RunTracker.note_damage("barrel")` или `RunTracker.note_hit(enemy)` (id из `enemy_id`/`death_source_id`/`kind`). Падение определяется само.
+- `STORY.md` — сюжетная библия (черновик) и формат JSON диалогов.
 - `scripts/save_game.gd` (автозагрузка `Save`) — `user://save.json` с версией и миграцией. Тесты (`res://tests/*`) и `--selftest` пишут в `user://test_save.json`.

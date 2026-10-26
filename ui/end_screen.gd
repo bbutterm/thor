@@ -60,7 +60,7 @@ func show_result(victory: bool) -> void:
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	if victory:
-		_title.text = "ВАЛЬХАЛЛА!"
+		_title.text = "ЗАЧЁТ СДАН!"
 		_title.label_settings.font_color = UIStyle.GOLD
 		_quote.text = "«%s»" % Odin.pick("victory")
 	else:

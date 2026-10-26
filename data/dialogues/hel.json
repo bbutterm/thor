@@ -1,0 +1,196 @@
+{
+	"id": "hel",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"hel": {
+			"name": "Хель",
+			"color": "#7a3fb0",
+			"initial": "Х",
+			"accessory": "split",
+			"side": "right"
+		}
+	},
+	"scenes": [
+		{
+			"id": "hel_letter",
+			"trigger": "death",
+			"priority": 65,
+			"conditions": [
+				"deaths >= 10"
+			],
+			"lines": [
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Тебе письмо. Из Хельхейма. Пахнет какао.",
+					"id": "hel_letter_01"
+				},
+				{
+					"speaker": "hel",
+					"emotion": "neutral",
+					"text": "«Привет. Это Хель. Ты так часто умираешь, что я тебя уже жду».",
+					"id": "hel_letter_02"
+				},
+				{
+					"speaker": "hel",
+					"emotion": "embarrassed",
+					"text": "«Не приходи. Тут скучно. Хотя… приходи. Тут скучно».",
+					"id": "hel_letter_03"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Она меня… приглашает?",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Скажи ей, что я не умру!",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "smug",
+									"text": "Скажу. Она посмеётся. Монотонно.",
+									"id": "hel_letter_04_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "А какао там вкусное?",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "angry",
+									"text": "Даже не думай. Сначала форма, потом чай у богини смерти.",
+									"id": "hel_letter_04_agree_01"
+								}
+							]
+						}
+					],
+					"id": "hel_letter_04"
+				}
+			]
+		},
+		{
+			"id": "hel_intro",
+			"trigger": "boss_intro",
+			"priority": 90,
+			"conditions": [
+				"boss == hel",
+				"first_time"
+			],
+			"lines": [
+				{
+					"speaker": "hel",
+					"emotion": "neutral",
+					"text": "Ну что опять… А. Это ты. Привет.",
+					"id": "hel_intro_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Ты босс? Ты же мне письма писала!",
+					"id": "hel_intro_02"
+				},
+				{
+					"speaker": "hel",
+					"emotion": "smug",
+					"text": "Работа есть работа. Сначала бой, потом какао. Кот, фас. Ну или не фас. Как хочешь.",
+					"id": "hel_intro_03"
+				}
+			]
+		}
+	],
+	"pools": {
+		"intro": [
+			{
+				"speaker": "hel",
+				"emotion": "neutral",
+				"text": "Ну что опять…",
+				"id": "hel.intro.01"
+			},
+			{
+				"speaker": "hel",
+				"emotion": "neutral",
+				"text": "Опять ты. Ладно. Давай быстрее, какао стынет.",
+				"id": "hel.intro.02"
+			}
+		],
+		"defeat": [
+			{
+				"speaker": "hel",
+				"emotion": "happy",
+				"text": "Неплохо. Заходи на чай.",
+				"id": "hel.defeat.01"
+			},
+			{
+				"speaker": "hel",
+				"emotion": "embarrassed",
+				"text": "Ты пролил мой какао. Но… неплохо. Заходи ещё.",
+				"id": "hel.defeat.02"
+			}
+		],
+		"visit": [
+			{
+				"lines": [
+					{
+						"speaker": "hel",
+						"emotion": "neutral",
+						"text": "«Пишу из Хельхейма. Кот-скелет передаёт привет. Он сгрыз мою корону».",
+						"id": "hel.visit.01_01"
+					},
+					{
+						"speaker": "odin",
+						"emotion": "smug",
+						"text": "Опять письмо. Вы что, переписываетесь?",
+						"id": "hel.visit.01_02"
+					}
+				],
+				"conditions": [
+					"seen:hel_letter"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "hel",
+						"emotion": "neutral",
+						"text": "«Ты умер {deaths} раз. Я считаю. Мне больше нечем заняться».",
+						"id": "hel.visit.02_01"
+					},
+					{
+						"speaker": "thor",
+						"emotion": "embarrassed",
+						"text": "Мило. Наверное.",
+						"id": "hel.visit.02_02"
+					}
+				],
+				"conditions": [
+					"seen:hel_letter"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "hel",
+						"emotion": "smug",
+						"text": "«Если будешь в Хельхейме — захвати печенье. Тут всё мёртвое, даже печенье».",
+						"id": "hel.visit.03_01"
+					},
+					{
+						"speaker": "odin",
+						"emotion": "neutral",
+						"text": "Никакого печенья. Это диета.",
+						"id": "hel.visit.03_02"
+					}
+				],
+				"conditions": [
+					"seen:hel_letter"
+				]
+			}
+		]
+	}
+}

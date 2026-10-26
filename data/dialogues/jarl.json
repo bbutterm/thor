@@ -11,14 +11,102 @@
 			"side": "right"
 		}
 	},
-	"scenes": [],
+	"scenes": [
+		{
+			"id": "jarl_intro",
+			"trigger": "boss_intro",
+			"priority": 90,
+			"conditions": [
+				"boss == jarl",
+				"first_time"
+			],
+			"lines": [
+				{
+					"speaker": "jarl",
+					"emotion": "angry",
+					"text": "Кто посмел войти в МОЙ длинный дом?! Я ваш ярл!",
+					"id": "jarl_intro_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Ты же мёртвый. У тебя рука на нитке висит.",
+					"id": "jarl_intro_02"
+				},
+				{
+					"speaker": "jarl",
+					"emotion": "embarrassed",
+					"text": "Это не нитка! Это… крепкий шов! Мне его пришили! Почти профессионально!",
+					"id": "jarl_intro_03"
+				},
+				{
+					"speaker": "jarl",
+					"emotion": "angry",
+					"text": "На колени перед ярлом Бьорном Мёртвым!",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Колени у меня и так болят!",
+							"lines": [
+								{
+									"speaker": "jarl",
+									"emotion": "smug",
+									"text": "Значит, болеть будут ещё и уши! Ха-ха! Это была угроза!",
+									"id": "jarl_intro_04_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Ладно, можно я просто сяду?",
+							"lines": [
+								{
+									"speaker": "jarl",
+									"emotion": "shocked",
+									"text": "…Сядь. Нет, стой! Это бой! Я запутался!",
+									"id": "jarl_intro_04_agree_01"
+								}
+							]
+						}
+					],
+					"id": "jarl_intro_04"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Его рука — бумеранг. Пока летит — уворачивайся. Без руки — бей.",
+					"id": "jarl_intro_05"
+				}
+			]
+		}
+	],
 	"pools": {
 		"intro": [
 			{
 				"speaker": "jarl",
 				"emotion": "angry",
 				"text": "Я ваш ярл! На колени!",
-				"id": "jarl_intro_01"
+				"id": "jarl.intro.01"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "smug",
+				"text": "Опять ты? Я тебя запомнил! Ну, мой мозг запомнил. Пока он на месте.",
+				"id": "jarl.intro.02"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "angry",
+				"text": "Деревня моя! Длинный дом мой! Рука… тоже моя, отдай!",
+				"id": "jarl.intro.03"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "happy",
+				"text": "Гость! Сейчас будет пир! Ты — главное блюдо!",
+				"id": "jarl.intro.04"
 			}
 		],
 		"defeat": [
@@ -26,7 +114,45 @@
 				"speaker": "jarl",
 				"emotion": "shocked",
 				"text": "Я… ещё… вернусь… пришьют…",
-				"id": "jarl_defeat_01"
+				"id": "jarl.defeat.01"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "embarrassed",
+				"text": "Голова… моя голова… кто-нибудь, поймайте…",
+				"id": "jarl.defeat.02"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "angry",
+				"text": "Это не поражение! Это… временная разборка!",
+				"id": "jarl.defeat.03"
+			}
+		],
+		"taunt": [
+			{
+				"speaker": "jarl",
+				"emotion": "smug",
+				"text": "Пришить! ПРИШИТЬ!",
+				"id": "jarl.taunt.01"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "angry",
+				"text": "Рагнарёк деревни!",
+				"id": "jarl.taunt.02"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "happy",
+				"text": "Лови руку! Ха! Не поймал!",
+				"id": "jarl.taunt.03"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "angry",
+				"text": "Мои балконы! Ты мне за них заплатишь!",
+				"id": "jarl.taunt.04"
 			}
 		]
 	}

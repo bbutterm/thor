@@ -1,0 +1,183 @@
+{
+	"id": "hild",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"hild": {
+			"name": "Хильд",
+			"color": "#b8c2cc",
+			"initial": "Х",
+			"accessory": "wings",
+			"side": "right"
+		}
+	},
+	"scenes": [
+		{
+			"id": "hild_intro",
+			"trigger": "death",
+			"priority": 70,
+			"conditions": [
+				"deaths >= 4",
+				"last_rooms >= 1"
+			],
+			"lines": [
+				{
+					"speaker": "hild",
+					"emotion": "happy",
+					"text": "Ха! Дедуля, ты опять сдох?",
+					"id": "hild_intro_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "angry",
+					"text": "Я не дедуля! Мне всего… много тысяч лет. Это молодость для бога!",
+					"id": "hild_intro_02"
+				},
+				{
+					"speaker": "hild",
+					"emotion": "smug",
+					"text": "Хильд. Валькирия. Мой рекорд в Мидгарде — сто убийств за забег. А у тебя?",
+					"id": "hild_intro_03"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "У меня… {last_kills}. Но я разогревался!",
+					"id": "hild_intro_04"
+				},
+				{
+					"speaker": "hild",
+					"emotion": "smug",
+					"text": "Давай так: побьёшь мой рекорд — признаю тебя богом. Не побьёшь — будешь «дедуля».",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Договорились. Готовь корону!",
+							"lines": [
+								{
+									"speaker": "hild",
+									"emotion": "happy",
+									"text": "Вот это разговор! Ха! Посмотрим.",
+									"id": "hild_intro_05_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Может, сразу «дедуля»? Меньше бегать.",
+							"lines": [
+								{
+									"speaker": "hild",
+									"emotion": "angry",
+									"text": "Нет! Так неинтересно. Соревнуйся со мной!",
+									"id": "hild_intro_05_agree_01"
+								}
+							]
+						}
+					],
+					"id": "hild_intro_05"
+				}
+			]
+		},
+		{
+			"id": "hild_respect",
+			"trigger": "victory",
+			"priority": 55,
+			"conditions": [
+				"seen:hild_intro"
+			],
+			"lines": [
+				{
+					"speaker": "hild",
+					"emotion": "shocked",
+					"text": "Погоди. Ты прошёл Ярла? Сам?",
+					"id": "hild_respect_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "smug",
+					"text": "Сам. Почти без смертей. Ну, без смертей в этом забеге.",
+					"id": "hild_respect_02"
+				},
+				{
+					"speaker": "hild",
+					"emotion": "happy",
+					"text": "Ладно. Уважаю. Чуть-чуть. Ты всё равно «дедуля», но уважаемый.",
+					"id": "hild_respect_03"
+				}
+			]
+		}
+	],
+	"pools": {
+		"visit": [
+			{
+				"lines": [
+					{
+						"speaker": "hild",
+						"emotion": "happy",
+						"text": "Ха! Я видела этот прыжок. Ты летел, как мешок с репой.",
+						"id": "hild.visit.01_01"
+					}
+				],
+				"conditions": [
+					"seen:hild_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "hild",
+						"emotion": "smug",
+						"text": "Мой рекорд всё ещё мой. Поторопись, дедуля.",
+						"id": "hild.visit.02_01"
+					}
+				],
+				"conditions": [
+					"seen:hild_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "hild",
+						"emotion": "neutral",
+						"text": "Совет от профи: рывок вбок, не назад. Назад бегают только от Сиф.",
+						"id": "hild.visit.03_01"
+					}
+				],
+				"conditions": [
+					"seen:hild_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "hild",
+						"emotion": "happy",
+						"text": "Давай наперегонки до первого зала! Ой, ты же на диване. Ну ладно.",
+						"id": "hild.visit.04_01"
+					}
+				],
+				"conditions": [
+					"seen:hild_intro"
+				]
+			}
+		],
+		"challenge": [
+			{
+				"speaker": "hild",
+				"emotion": "smug",
+				"text": "Испытание: побей мой рекорд убийств за 30 секунд. Время пошло!",
+				"id": "hild.challenge.01"
+			},
+			{
+				"speaker": "hild",
+				"emotion": "happy",
+				"text": "Ну-ка, покажи, на что способен бывший бог!",
+				"id": "hild.challenge.02"
+			}
+		]
+	}
+}

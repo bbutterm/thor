@@ -36,9 +36,32 @@ func _run() -> void:
 	_test_data()
 	_test_conditions()
 	_test_selection()
+	_test_content()
+	_test_story_order()
 	await _test_box()
+	await _test_run_start_scene()
 	await _test_death_flow()
 	_finish()
+
+## Первый забег в настоящей игре: сцена-знакомство на паузе, после неё зал оживает
+func _test_run_start_scene() -> void:
+	print("-- Сцена на старте первого забега")
+	Save.reset()
+	Dialogue.in_run_scenes = true
+	Run.start_run("berserker")
+	Run.room_order.assign([Run.ROOM_SCENES[0], Run.BOSS_SCENE])
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await wait(0.6)
+	var box := Dialogue.box()
+	check(box.visible and Save.is_seen("odin_intro"), "первый забег начинается со сцены odin_intro")
+	check(get_tree().paused, "забег на паузе, пока идёт сцена")
+	var game := get_tree().current_scene as Game
+	check(game != null and game.room.alive_count() == 0, "враги ждут конца сцены")
+	box.skip()
+	await wait(2.0)
+	check(not get_tree().paused, "после сцены пауза снята")
+	check(game != null and game.room.alive_count() > 0, "после сцены пошла волна врагов")
+	Dialogue.in_run_scenes = false
 
 func _test_data() -> void:
 	print("-- Данные")
@@ -113,6 +136,76 @@ func _test_selection() -> void:
 	Save.bump_event("death")
 	first = Dialogue.pick_scene("death")
 	check(not first.is_empty(), "на первую смерть есть сюжетная сцена (%s)" % first.get("id", ""))
+	Save.reset()
+
+func _pool_size(prefix: String) -> int:
+	var n := 0
+	for p in Dialogue.pools:
+		if str(p).begins_with(prefix):
+			n += (Dialogue.pools[p] as Array).size()
+	return n
+
+## Объёмы текстов блока Б
+func _test_content() -> void:
+	print("-- Тексты")
+	var death := _pool_size("odin.death")
+	check(death >= 40, "реакций Одина на смерть: %d (нужно 40+)" % death)
+	for c in ["draugr", "boss", "fall", "barrel", "own_fire", "ranged", "quick", "long"]:
+		check(Dialogue.has_pool("odin.death_" + c), "есть реакции на причину «%s»" % c)
+	check(_pool_size("odin.run_start") >= 15, "реплик на старте забега: %d" % _pool_size("odin.run_start"))
+	var combat := 0
+	for p in ["odin.idle", "odin.multikill", "odin.big_damage", "odin.ranged_kill", "odin.big_slam"]:
+		combat += _pool_size(p)
+	check(combat >= 10, "боевых мини-реплик: %d" % combat)
+	var choices := 0
+	for sc in Dialogue.scenes:
+		for l in sc.lines:
+			if l is Dictionary and l.has("choices"):
+				choices += 1
+	check(choices >= 8, "мест с выбором ответа Тора: %d" % choices)
+	for who in ["ravens", "loki", "sif", "freya", "hild", "hel", "skadi", "heimdall", "dwarves", "jarl"]:
+		var has_scene := false
+		for sc in Dialogue.scenes:
+			if sc._file == who:
+				has_scene = true
+		check(has_scene and (_pool_size(who + ".visit") >= 3 or who == "jarl"), "персонаж %s: сцена + повторяемые реплики" % who)
+	for b in ["jarl", "hel"]:
+		check(Dialogue.has_pool(b + ".intro") and Dialogue.has_pool(b + ".defeat"), "босс %s: интро и поражение" % b)
+	var story := 0
+	for sc in Dialogue.scenes:
+		if sc.trigger in ["death", "victory", "run_start"]:
+			story += 1
+	check(story >= 10, "сюжетных сцен между забегами: %d" % story)
+
+## Симуляция 30 смертей: какие сцены открываются и когда (для отчёта)
+func _test_story_order() -> void:
+	print("-- Порядок сюжета (30 смертей, причины по кругу)")
+	Save.reset()
+	var causes := ["draugr_warrior", "fall", "boss_jarl", "draugr_thrower", "own_fire"]
+	var order: Array[String] = []
+	Save.begin_run("berserker")
+	Save.bump_event("run_start")
+	var s0 := Dialogue.pick_scene("run_start")
+	if not s0.is_empty():
+		Save.mark_seen(s0.id)
+		order.append("старт1:" + s0.id)
+	for i in 30:
+		var by: String = causes[i % causes.size()]
+		Save.end_run({"won": false, "cause": RunTracker.cause_of(by), "killed_by": by, "time": 30.0 + i * 20.0,
+			"rooms": i % 4, "tags": ["quick"] if i % 7 == 3 else []})
+		Save.bump_event("death")
+		var sc := Dialogue.pick_scene("death")
+		if not sc.is_empty():
+			Save.mark_seen(sc.id)
+			order.append("%d:%s" % [i + 1, sc.id])
+		Save.begin_run("berserker")
+		Save.bump_event("run_start")
+		var rs := Dialogue.pick_scene("run_start")
+		if not rs.is_empty():
+			Save.mark_seen(rs.id)
+			order.append("старт%d:%s" % [i + 2, rs.id])
+	print("    ", ", ".join(order))
+	check(order.size() >= 12, "за 30 смертей открылось сцен: %d" % order.size())
 	Save.reset()
 
 func _test_box() -> void:

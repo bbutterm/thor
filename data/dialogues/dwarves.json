@@ -1,0 +1,397 @@
+{
+	"id": "dwarves",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"brokk": {
+			"name": "Брокк",
+			"color": "#b0662a",
+			"initial": "Б",
+			"accessory": "beard",
+			"side": "right"
+		},
+		"eitri": {
+			"name": "Эйтри",
+			"color": "#8a8a90",
+			"initial": "Э",
+			"accessory": "beard",
+			"side": "right"
+		}
+	},
+	"scenes": [
+		{
+			"id": "dwarves_intro",
+			"trigger": "death",
+			"priority": 68,
+			"conditions": [
+				"deaths >= 6"
+			],
+			"lines": [
+				{
+					"speaker": "brokk",
+					"emotion": "happy",
+					"text": "Тук-тук! Ларёк на колёсах «Руны, шаурма, заточка»! Заехали к дивану — проездом.",
+					"id": "dwarves_intro_01"
+				},
+				{
+					"speaker": "eitri",
+					"emotion": "neutral",
+					"text": "Угу.",
+					"id": "dwarves_intro_02"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Брокк? Эйтри? Вы же… ковали мой молот!",
+					"id": "dwarves_intro_03"
+				},
+				{
+					"speaker": "brokk",
+					"emotion": "embarrassed",
+					"text": "Ковали! И рукоять короткая не брак — так задумано! Эргономика!",
+					"id": "dwarves_intro_04"
+				},
+				{
+					"speaker": "brokk",
+					"emotion": "smug",
+					"text": "Ладно. Муха тогда кусала. Не будем об этом. Брака не бывает.",
+					"id": "dwarves_intro_05"
+				},
+				{
+					"speaker": "brokk",
+					"emotion": "smug",
+					"text": "Для тебя скидка! Только сегодня. И завтра. И всегда — но не говори Одину.",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Вы мне молот с браком продали!",
+							"lines": [
+								{
+									"speaker": "brokk",
+									"emotion": "angry",
+									"text": "Не продали — подарили! И не брак — фича!",
+									"id": "dwarves_intro_06_snap_01"
+								},
+								{
+									"speaker": "eitri",
+									"emotion": "embarrassed",
+									"text": "Угу…",
+									"id": "dwarves_intro_06_snap_02"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "А шаурма свежая?",
+							"lines": [
+								{
+									"speaker": "brokk",
+									"emotion": "happy",
+									"text": "Свежайшая! Утренняя. Какого утра — не уточняю.",
+									"id": "dwarves_intro_06_agree_01"
+								},
+								{
+									"speaker": "eitri",
+									"emotion": "happy",
+									"text": "Угу!",
+									"id": "dwarves_intro_06_agree_02"
+								}
+							]
+						}
+					],
+					"id": "dwarves_intro_06"
+				},
+				{
+					"speaker": "brokk",
+					"emotion": "neutral",
+					"text": "Будешь в забеге — заглядывай. Мы стоим посреди Мидгарда. Ищи вывеску.",
+					"id": "dwarves_intro_07"
+				}
+			]
+		},
+		{
+			"id": "dwarves_secret",
+			"trigger": "death",
+			"priority": 52,
+			"conditions": [
+				"seen:dwarves_intro",
+				"deaths >= 14"
+			],
+			"lines": [
+				{
+					"speaker": "brokk",
+					"emotion": "smug",
+					"text": "Слушай, Тор. Я знаю, кто тебя сломал. Кто довёл до дивана.",
+					"id": "dwarves_secret_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Кто?!",
+					"id": "dwarves_secret_02"
+				},
+				{
+					"speaker": "brokk",
+					"emotion": "neutral",
+					"text": "Информация — товар. Тысяча серебра. Или две. Для тебя — три.",
+					"id": "dwarves_secret_03"
+				},
+				{
+					"speaker": "eitri",
+					"emotion": "embarrassed",
+					"text": "Угу. Дорого.",
+					"id": "dwarves_secret_04"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "angry",
+					"text": "Это же грабёж!",
+					"id": "dwarves_secret_05"
+				},
+				{
+					"speaker": "brokk",
+					"emotion": "happy",
+					"text": "Это торговля! Грабёж — это когда без чека. Я дам чек.",
+					"id": "dwarves_secret_06"
+				}
+			]
+		},
+		{
+			"id": "dwarves_shop_first",
+			"trigger": "shop_enter",
+			"priority": 90,
+			"conditions": [
+				"first_time"
+			],
+			"lines": [
+				{
+					"speaker": "brokk",
+					"emotion": "happy",
+					"text": "Добро пожаловать в ларёк! Руны, шаурма, заточка! Брака не бывает!",
+					"id": "dwarves_shop_first_01"
+				},
+				{
+					"speaker": "eitri",
+					"emotion": "neutral",
+					"text": "Угу.",
+					"id": "dwarves_shop_first_02"
+				}
+			]
+		}
+	],
+	"pools": {
+		"visit": [
+			{
+				"lines": [
+					{
+						"speaker": "brokk",
+						"emotion": "happy",
+						"text": "Новая поставка рун! Почти не проклятые!",
+						"id": "dwarves.visit.01_01"
+					},
+					{
+						"speaker": "eitri",
+						"emotion": "neutral",
+						"text": "Угу.",
+						"id": "dwarves.visit.01_02"
+					}
+				],
+				"conditions": [
+					"seen:dwarves_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "brokk",
+						"emotion": "smug",
+						"text": "Шаурма «Мидгардская»: лечит тело, калечит репутацию.",
+						"id": "dwarves.visit.02_01"
+					}
+				],
+				"conditions": [
+					"seen:dwarves_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "eitri",
+						"emotion": "happy",
+						"text": "Угу!",
+						"id": "dwarves.visit.03_01"
+					},
+					{
+						"speaker": "brokk",
+						"emotion": "neutral",
+						"text": "Это он говорит, что твой топор пора точить.",
+						"id": "dwarves.visit.03_02"
+					}
+				],
+				"conditions": [
+					"seen:dwarves_intro"
+				]
+			}
+		],
+		"shop_enter": [
+			{
+				"speaker": "brokk",
+				"emotion": "happy",
+				"text": "Подходи, не стесняйся! Только для тебя — цены как для всех!",
+				"id": "dwarves.shop_enter.01"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "smug",
+				"text": "Руны! Шаурма! Заточка! Совесть — не продаём, закончилась.",
+				"id": "dwarves.shop_enter.02"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "happy",
+				"text": "О, постоянный клиент! Ну, постоянно умирающий клиент.",
+				"id": "dwarves.shop_enter.03"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "neutral",
+				"text": "Сегодня всё со скидкой. Цены, правда, сначала подняли.",
+				"id": "dwarves.shop_enter.04"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "smug",
+				"text": "Рукоять у молота короткая? Это не брак. Это так задумано.",
+				"id": "dwarves.shop_enter.05"
+			}
+		],
+		"shop_buy": [
+			{
+				"speaker": "brokk",
+				"emotion": "happy",
+				"text": "Отличный выбор! Возвраты не принимаем. Но выбор отличный!",
+				"id": "dwarves.shop_buy.01"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "smug",
+				"text": "Носи на здоровье. Гарантия — до первой смерти.",
+				"id": "dwarves.shop_buy.02"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "happy",
+				"text": "Эйтри, заверни! Ну, он кивнул. Значит, завернул.",
+				"id": "dwarves.shop_buy.03"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "neutral",
+				"text": "Приятно иметь дело с богом. Даже с таким.",
+				"id": "dwarves.shop_buy.04"
+			}
+		],
+		"shop_broke": [
+			{
+				"speaker": "brokk",
+				"emotion": "angry",
+				"text": "Нет серебра — нет шаурмы. Это закон гномов.",
+				"id": "dwarves.shop_broke.01"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "smug",
+				"text": "Можно в долг. Под залог молота. Шучу. Нет, не шучу.",
+				"id": "dwarves.shop_broke.02"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "neutral",
+				"text": "Иди побей кого-нибудь, вернись с серебром. Я подожду.",
+				"id": "dwarves.shop_broke.03"
+			}
+		],
+		"shop_low_hp": [
+			{
+				"speaker": "brokk",
+				"emotion": "shocked",
+				"text": "Ты выглядишь как вчерашняя шаурма. Возьми свежую!",
+				"id": "dwarves.shop_low_hp.01"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "neutral",
+				"text": "Шаурма лечит. Медицински доказано. Мной.",
+				"id": "dwarves.shop_low_hp.02"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "smug",
+				"text": "Еле живой клиент — самый щедрый клиент.",
+				"id": "dwarves.shop_low_hp.03"
+			}
+		],
+		"shop_rich": [
+			{
+				"speaker": "brokk",
+				"emotion": "happy",
+				"text": "О-о, сколько серебра! Друг мой, давай я покажу тебе особую витрину.",
+				"id": "dwarves.shop_rich.01"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "smug",
+				"text": "С таким кошельком — и без заточки? Эйтри, разжигай горн!",
+				"id": "dwarves.shop_rich.02"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "happy",
+				"text": "Богатый Тор — счастливый Брокк!",
+				"id": "dwarves.shop_rich.03"
+			}
+		],
+		"shop_cursed": [
+			{
+				"speaker": "brokk",
+				"emotion": "shocked",
+				"text": "У тебя проклятая руна Локи? Давай сдадим. За двадцать. Ну, за пятнадцать.",
+				"id": "dwarves.shop_cursed.01"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "neutral",
+				"text": "От рун Локи у меня борода чешется. Может, продашь?",
+				"id": "dwarves.shop_cursed.02"
+			}
+		],
+		"eitri": [
+			{
+				"speaker": "brokk",
+				"emotion": "neutral",
+				"text": "Угу.",
+				"id": "dwarves.eitri.01"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "happy",
+				"text": "Угу!",
+				"id": "dwarves.eitri.02"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "embarrassed",
+				"text": "Угу…",
+				"id": "dwarves.eitri.03"
+			},
+			{
+				"speaker": "brokk",
+				"emotion": "smug",
+				"text": "Угу-угу.",
+				"id": "dwarves.eitri.04"
+			}
+		]
+	}
+}

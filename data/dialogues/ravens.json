@@ -1,0 +1,210 @@
+{
+	"id": "ravens",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"hugin": {
+			"name": "Хугин",
+			"color": "#3b3f52",
+			"initial": "Х",
+			"accessory": "beak",
+			"side": "right"
+		},
+		"munin": {
+			"name": "Мунин",
+			"color": "#4b3a5c",
+			"initial": "М",
+			"accessory": "beak",
+			"side": "right"
+		}
+	},
+	"scenes": [
+		{
+			"id": "ravens_intro",
+			"trigger": "death",
+			"priority": 80,
+			"conditions": [
+				"deaths >= 2"
+			],
+			"lines": [
+				{
+					"pool": "$reaction"
+				},
+				{
+					"speaker": "hugin",
+					"emotion": "smug",
+					"text": "Разрешите представиться. Хугин, «мысль». Веду статистику.",
+					"id": "ravens_intro_01"
+				},
+				{
+					"speaker": "munin",
+					"emotion": "happy",
+					"text": "А я Мунин, «память»! Я помню ВСЁ. Особенно смешное.",
+					"id": "ravens_intro_02"
+				},
+				{
+					"speaker": "hugin",
+					"emotion": "neutral",
+					"text": "Смертей: {deaths}. Убито врагов за всё время: {kills_total}. Вывод: есть куда расти.",
+					"id": "ravens_intro_03"
+				},
+				{
+					"speaker": "munin",
+					"emotion": "smug",
+					"text": "А помнишь, Тор, как ты на свадьбу к великану в платье ходил?",
+					"id": "ravens_intro_04"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Это было ради молота! Это была операция!",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "И мне шло, между прочим!",
+							"lines": [
+								{
+									"speaker": "munin",
+									"emotion": "happy",
+									"text": "Шло! Записал. Расскажу всем.",
+									"id": "ravens_intro_05_snap_01"
+								},
+								{
+									"speaker": "hugin",
+									"emotion": "neutral",
+									"text": "Не надо записывать. Я уже.",
+									"id": "ravens_intro_05_snap_02"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Давай не будем об этом.",
+							"lines": [
+								{
+									"speaker": "munin",
+									"emotion": "smug",
+									"text": "Будем. Но не сейчас. Сейчас — интереснее.",
+									"id": "ravens_intro_05_agree_01"
+								}
+							]
+						}
+					],
+					"id": "ravens_intro_05"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Вороны будут рядом. Подсказывать. Иногда — полезное.",
+					"id": "ravens_intro_06"
+				}
+			]
+		},
+		{
+			"id": "ravens_gossip",
+			"trigger": "death",
+			"priority": 55,
+			"conditions": [
+				"seen:loki_intro",
+				"deaths >= 8"
+			],
+			"lines": [
+				{
+					"speaker": "munin",
+					"emotion": "smug",
+					"text": "Свежая сплетня! Локи вчера хихикал над какими-то старыми письмами.",
+					"id": "ravens_gossip_01"
+				},
+				{
+					"speaker": "hugin",
+					"emotion": "neutral",
+					"text": "Не над письмами. Над почтовыми печатями норн. Я видел. Подделка неплохая.",
+					"id": "ravens_gossip_02"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Какими ещё письмами?",
+					"id": "ravens_gossip_03"
+				},
+				{
+					"speaker": "munin",
+					"emotion": "embarrassed",
+					"text": "Ой. Это было секретно? Я не помню. То есть помню. Но не скажу.",
+					"id": "ravens_gossip_04"
+				}
+			]
+		}
+	],
+	"pools": {
+		"visit": [
+			{
+				"lines": [
+					{
+						"speaker": "hugin",
+						"emotion": "neutral",
+						"text": "Подсказка: удар-приземление с высоты бьёт сильнее. Это физика, а не магия.",
+						"id": "ravens.visit.01_01"
+					}
+				],
+				"conditions": [
+					"seen:ravens_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "munin",
+						"emotion": "happy",
+						"text": "Я помню твою лучшую серию — {best_glory} Славы! Ну, я помню и худшую. Рассказать?",
+						"id": "ravens.visit.02_01"
+					}
+				],
+				"conditions": [
+					"seen:ravens_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "hugin",
+						"emotion": "smug",
+						"text": "Если бросить молот сквозь толпу и вернуть его через неё же — урон дважды. Я посчитал.",
+						"id": "ravens.visit.03_01"
+					}
+				],
+				"conditions": [
+					"seen:ravens_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "munin",
+						"emotion": "smug",
+						"text": "Помню, как ты боялся грозы. Бог грома. Боялся. Грозы.",
+						"id": "ravens.visit.04_01"
+					}
+				],
+				"conditions": [
+					"seen:ravens_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "hugin",
+						"emotion": "neutral",
+						"text": "Метатель держит дистанцию. Молот — нет. Совпадение? Не думаю.",
+						"id": "ravens.visit.05_01"
+					}
+				],
+				"conditions": [
+					"seen:ravens_intro"
+				]
+			}
+		]
+	}
+}

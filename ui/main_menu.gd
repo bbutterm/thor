@@ -36,7 +36,7 @@ func _ready() -> void:
 	var sub := UIStyle.label("ДОСТОЙНАЯ СМЕРТЬ", 36, UIStyle.TEXT, 8)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(sub)
-	var tag := UIStyle.label("Один выгнал тебя из Асгарда. Вселяйся в смертных и умри красиво.", 18, UIStyle.TEXT_DIM, 4)
+	var tag := UIStyle.label("Тор скуфнулся. Один вселяет его в смертных воинов — возвращать форму.", 18, UIStyle.TEXT_DIM, 4)
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(tag)
 

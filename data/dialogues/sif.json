@@ -1,0 +1,181 @@
+{
+	"id": "sif",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"sif": {
+			"name": "Сиф",
+			"color": "#e3b23c",
+			"initial": "С",
+			"accessory": "braid",
+			"side": "right"
+		}
+	},
+	"scenes": [
+		{
+			"id": "sif_intro",
+			"trigger": "death",
+			"priority": 78,
+			"conditions": [
+				"deaths >= 3"
+			],
+			"lines": [
+				{
+					"speaker": "sif",
+					"emotion": "angry",
+					"text": "Тор! Ты опять на диване? Я же утром тебя подняла!",
+					"id": "sif_intro_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "Сиф, солнце… Я не лежу. Я восстанавливаюсь. После смерти.",
+					"id": "sif_intro_02"
+				},
+				{
+					"speaker": "sif",
+					"emotion": "embarrassed",
+					"text": "После… Ой. Один говорил. Тренировки. Ну… ладно.",
+					"id": "sif_intro_03"
+				},
+				{
+					"speaker": "sif",
+					"emotion": "neutral",
+					"text": "Держи. Пирожки. Не потому что я волнуюсь. Просто испекла лишние.",
+					"id": "sif_intro_04"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "happy",
+					"text": "С капустой?!",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "А можно мне вместо тренировок — пирожки?",
+							"lines": [
+								{
+									"speaker": "sif",
+									"emotion": "angry",
+									"text": "Можно. Скалкой. Встал и пошёл!",
+									"id": "sif_intro_05_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Спасибо. Я вернусь в форму. Ради тебя.",
+							"lines": [
+								{
+									"speaker": "sif",
+									"emotion": "embarrassed",
+									"text": "Д-дурак. Ради себя возвращайся. Ну и… ради меня тоже.",
+									"id": "sif_intro_05_agree_01"
+								}
+							]
+						}
+					],
+					"id": "sif_intro_05"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Вот видишь. Тебя ждут. Даже я жду. Немножко.",
+					"id": "sif_intro_06"
+				}
+			]
+		},
+		{
+			"id": "sif_braid",
+			"trigger": "death",
+			"priority": 50,
+			"conditions": [
+				"seen:sif_intro",
+				"deaths >= 9"
+			],
+			"lines": [
+				{
+					"speaker": "sif",
+					"emotion": "neutral",
+					"text": "Знаешь, почему у меня золотые волосы?",
+					"id": "sif_braid_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "Ну… Локи когда-то тебя остриг, а гномы выковали новые.",
+					"id": "sif_braid_02"
+				},
+				{
+					"speaker": "sif",
+					"emotion": "smug",
+					"text": "Вот. Я тоже когда-то потеряла то, чем гордилась. И вернула.",
+					"id": "sif_braid_03"
+				},
+				{
+					"speaker": "sif",
+					"emotion": "happy",
+					"text": "Значит, и ты вернёшь. Только быстрее — пирожки не бесконечные.",
+					"id": "sif_braid_04"
+				}
+			]
+		}
+	],
+	"pools": {
+		"visit": [
+			{
+				"lines": [
+					{
+						"speaker": "sif",
+						"emotion": "angry",
+						"text": "Опять сдох? Ешь пирожок и марш обратно.",
+						"id": "sif.visit.01_01"
+					}
+				],
+				"conditions": [
+					"seen:sif_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "sif",
+						"emotion": "embarrassed",
+						"text": "Я не смотрела твой забег. Ну… одним глазком. Ты был ничего.",
+						"id": "sif.visit.02_01"
+					}
+				],
+				"conditions": [
+					"seen:sif_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "sif",
+						"emotion": "neutral",
+						"text": "Плечи шире, живот втяни. Вот. Почти тот, за кого я выходила.",
+						"id": "sif.visit.03_01"
+					}
+				],
+				"conditions": [
+					"seen:sif_intro"
+				]
+			},
+			{
+				"lines": [
+					{
+						"speaker": "sif",
+						"emotion": "happy",
+						"text": "Если дойдёшь до Ярла — испеку с мясом.",
+						"id": "sif.visit.04_01"
+					}
+				],
+				"conditions": [
+					"seen:sif_intro"
+				]
+			}
+		]
+	}
+}

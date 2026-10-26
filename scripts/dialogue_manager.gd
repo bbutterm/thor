@@ -24,6 +24,10 @@ const TRIGGERS := ["run_start", "death", "victory", "boss_intro", "boss_defeat",
 
 ## Вероятность, что после реакции Одина на смерть Тор ответит (с выбором «огрызнуться / согласиться»)
 @export var thor_reply_chance: float = 0.4
+## Вероятность, что к дивану заглянет знакомый персонаж (пулы *.visit, после его сцены знакомства)
+@export var visitor_chance: float = 0.3
+## Вероятность реплики Хеймдалля на старте забега (после знакомства с ним)
+@export var heimdall_chance: float = 0.35
 
 var speakers: Dictionary = {}
 var scenes: Array[Dictionary] = []
@@ -427,6 +431,8 @@ func on_run_start(body_id: String) -> void:
 		if not sc.is_empty():
 			play_scene(sc, "couch")
 			return
+	if randf() < heimdall_chance:
+		bark_pool("heimdall.run_start")
 	if body_id != "" and randf() < 0.5 and has_pool("odin.run_start_" + body_id):
 		Odin.say("run_start_" + body_id)
 	else:
@@ -434,6 +440,7 @@ func on_run_start(body_id: String) -> void:
 
 ## Вход в зал босса: сцена знакомства в первый раз, потом — интро-пузырь босса.
 func on_boss_intro(boss_id: String = "jarl") -> bool:
+	_extra_ctx["boss"] = boss_id
 	Save.bump_event("boss_intro")
 	if in_run_scenes:
 		var sc := pick_scene("boss_intro")
@@ -459,8 +466,24 @@ func after_run(won: bool) -> void:
 	var lines := pool_lines(reaction_pool(won))
 	if not won and randf() < thor_reply_chance:
 		lines.append_array(pool_lines("thor.reply_death"))
+	if randf() < visitor_chance:
+		lines.append_array(visitor_lines())
 	await play_lines(lines, "", "couch")
 	Save.save_game()
+
+## Короткий визит знакомого персонажа: случайный пул *.visit, у которого выполнены условия.
+func visitor_lines() -> Array:
+	var keys: Array = []
+	var ctx := context()
+	for k in pools:
+		if str(k).ends_with(".visit"):
+			for it in pools[k]:
+				if check(it._conds, ctx):
+					keys.append(k)
+					break
+	if keys.is_empty():
+		return []
+	return pool_lines(keys[randi() % keys.size()])
 
 # --- Проверка данных (тест) ---
 
