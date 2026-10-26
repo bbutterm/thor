@@ -21,6 +21,8 @@ var stuck_normal: Vector3 = Vector3.UP
 var return_time: float = 0.0
 ## Отскоки от стен, которые ещё остались (база 0; Рикошет добавляет и тратит их же на врагов)
 var bounces_left: int = 0
+## Сколько раз уже отскочил (для комиксового слова при попадании после рикошета)
+var bounces_done: int = 0
 ## Множитель урона этого броска (идеальный хват ×2)
 var damage_mult: float = 1.0
 ## Возврат начат игроком (ПКМ), а не таймером
@@ -51,6 +53,7 @@ func launch(owner_hand: MjolnirHand, origin: Vector3, velocity_: Vector3) -> voi
 	vel = velocity_
 	_sticks = bool(hand.trait_modify(&"sticks", hand.sticks_to_world))
 	bounces_left = int(hand.trait_modify(&"wall_bounces", hand.max_wall_bounces))
+	bounces_done = 0
 	_max_range = float(hand.trait_modify(&"max_range", hand.max_range))
 	_auto_return_after = float(hand.trait_modify(&"auto_return_after", hand.auto_return_after))
 	_stuck_auto_return = float(hand.trait_modify(&"stuck_auto_return", hand.stuck_auto_return))
@@ -189,6 +192,8 @@ func _step_out(delta: float) -> void:
 func _on_world_hit(pos: Vector3, normal: Vector3) -> void:
 	if bounces_left > 0:
 		bounces_left -= 1
+		bounces_done += 1
+		ComicFX.pop("ricochet", pos)
 		global_position = pos + normal * 0.3
 		vel = vel.bounce(normal) * 0.85
 		FX.burst(get_parent(), pos, 0.5, Color(0.6, 0.85, 1.0, 0.6), 0.15)
@@ -288,6 +293,7 @@ func _on_hit(c: Object, dir: Vector3) -> void:
 	if c.has_method("take_hit"):
 		var dmg := damage()
 		c.take_hit(dmg, knock, "hammer")
+		ComicFX.on_hammer_hit(c, global_position, state == State.RETURN, bounces_done)
 		FX.hitstop(hand.hit_hitstop)
 		hand.player.camera_fx.add_trauma(0.12)
 		FX.burst(get_parent(), global_position, 0.6, Color(0.55, 0.85, 1.0, 0.7), 0.15)
@@ -324,6 +330,7 @@ func chain_lightning(source: Node3D, dmg: float, count: int, radius: float) -> i
 		var to := best.global_position + Vector3(0, 1, 0)
 		FX.lightning(get_parent(), from, to)
 		best.take_hit(dmg, Vector3.UP * 2.0, "lightning")
+		ComicFX.on_lightning(best)
 		from = to
 		hits += 1
 	if hits > 0:

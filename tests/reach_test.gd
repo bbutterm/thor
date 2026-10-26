@@ -76,7 +76,12 @@ func _run() -> void:
 	Input.action_press("jump")
 	await frames(2)
 	Input.action_release("jump")
-	await frames(22)
+	# Второй прыжок — у вершины супер-прыжка (а не через N кадров: hit-stop удара-приземления
+	# замедляет время, и фиксированное число кадров попадает в разную точку дуги)
+	for i in 60:
+		if p.velocity.y < 3.0:
+			break
+		await get_tree().physics_frame
 	Input.action_press("jump")
 	await frames(2)
 	Input.action_release("jump")

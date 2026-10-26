@@ -41,6 +41,7 @@ func _ready() -> void:
 	var m := UIStyle.button("В главное меню")
 	m.pressed.connect(func() -> void: menu_requested.emit())
 	vb.add_child(m)
+	vb.add_child(SettingsPanel.comic_controls())
 
 func toggle() -> void:
 	visible = not visible

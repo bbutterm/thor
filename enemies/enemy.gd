@@ -353,6 +353,7 @@ func _do_melee() -> void:
 	to_p.y = 0
 	var reach := attack_range * 1.35 + 0.3
 	if to_p.length() <= reach and fwd.dot(to_p.normalized()) > 0.25:
+		ComicFX.on_player_struck(self, player)
 		player.take_damage(attack_damage, to_p.normalized() * 6.0 + Vector3.UP * 2.5)
 	FX.burst(get_parent(), global_position + fwd * attack_range * 0.8 + Vector3(0, 1, 0), 0.5 * model_scale, Color(1, 0.3, 0.2, 0.5), 0.15)
 	Audio.play("sounds/enemy_attack.ogg")
@@ -368,6 +369,7 @@ func _do_boss_slam() -> void:
 		var d := player.global_position - global_position
 		d.y = 0
 		if d.length() <= boss_slam_radius and player.is_on_floor():
+			ComicFX.on_player_struck(self, player)
 			player.take_damage(boss_slam_damage, d.normalized() * 10.0 + Vector3.UP * 6.0)
 	for c in get_tree().get_nodes_in_group("props"):
 		var rb := c as RigidBody3D
@@ -405,6 +407,7 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	if is_dead:
 		return
 	health -= damage
+	ComicFX.on_enemy_hit(self, damage, source)
 	_hurt_flash = 1.0
 	var big := source == "axe_finisher" or source == "slam"
 	if source != "fire":
@@ -525,6 +528,7 @@ func _die(source: String) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	# Мини-босс — тоже Kind.BOSS (поведение босса), но Славу за него даёт MinibossDef
 	Run.register_kill(source == "axe_finisher", now - _last_splat_time < 0.6, kind == Kind.BOSS and not has_meta("miniboss"))
+	ComicFX.on_enemy_killed(self, source)
 	if player and is_instance_valid(player) and not player.is_dead:
 		player.heal(player.heal_per_kill)
 	Audio.play("sounds/enemy_destroy.ogg")

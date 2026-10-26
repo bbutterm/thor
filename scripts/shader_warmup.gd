@@ -85,6 +85,7 @@ func _build() -> void:
 	FX.burst(game, p, 0.5, Color(1, 1, 1, 0.5), 0.2)
 	FX.ring(game, center, 1.0, Color(1, 1, 1, 0.8), 0.2)
 	FX.sparks(game, p, Color(1, 0.8, 0.4), 8, 3.0, 10.0, 0.07, 0.2)
+	ComicFX.warmup()
 	var fire := preload("res://weapons/fire_zone.gd").new()
 	add_child(fire)
 	fire.setup(center, 0.8, 0.2, 0.0)

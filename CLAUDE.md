@@ -15,6 +15,9 @@
 - `scripts/perf.gd` (автозагрузка `Perf`) — F3-оверлей, лог фризов `user://hitches.log`, `Perf.mark("событие")` в игровом коде, счётчики компиляций пайплайнов (`pso_draw` = фриз на отрисовке).
 - `scripts/asset_cache.gd` (`AssetCache`) — фоновая загрузка и удержание моделей/анимаций/звуков (старт в `Run._ready`, ожидание в `Game._ready`).
 - `scripts/shader_warmup.gd` (`ShaderWarmup`) — прогрев шейдеров при входе в каждый зал (под затемнением).
+- `scripts/comic_fx.gd` (автозагрузка `ComicFX`) — комиксовые слова-удары: `ComicFX.pop(event, pos, big)` и хуки `ComicFX.on_*` (однострочные вызовы в player/enemy/mjolnir/enemy_projectile). Словарь, цвета, приоритеты — `data/comic_words.json`; рисованные «взрывы» — `sprites/comic/<событие>.png` или `burst.png` (иначе процедурные); шейдеры `shaders/comic_halftone.gdshader`, `comic_vignette.gdshader`; шрифт `fonts/Bangers-Regular.ttf`. Рисуется в 2D (CanvasLayer 6) с проекцией точки мира; пул слов, общие материалы.
+- `scripts/settings.gd` (`GameSettings`) — настройки игрока в `user://settings.cfg` (секция `[comic]`; чужие секции сохраняются). UI — `ui/settings_panel.gd` (`SettingsPanel`: экран из главного меню + блок `comic_controls()` в паузе).
+- Hit-stop: `FX.real_delta(delta)` — реальная длительность кадра при `Engine.time_scale` ≠ 1 (delta кадра масштабирован значением на НАЧАЛО кадра).
 
 ## Модели (Quaternius, CC0)
 - `assets/quaternius/characters/` — тела, одежда, волосы, анимации (`gaits.glb` = UAL1, `animations.glb` = UAL2). Скелет у всех один (65 костей, правая кисть `hand_r`).
@@ -45,6 +48,7 @@ godot --headless --path . --fixed-fps 60 res://tests/reach_test.tscn # дост�
 godot --headless --path . --fixed-fps 60 res://tests/ai_test.tscn    # враги доходят и бьют во всех залах
 godot --headless --path . --fixed-fps 60 res://tests/trait_test.tscn # база молота, выбор трейтов, каждый трейт ур. 1–2
 godot --headless --path . --fixed-fps 60 res://tests/hitch_test.tscn -- 50  # фризы (CPU-часть)
+godot --headless --path . --fixed-fps 60 res://tests/comic_test.tscn  # комиксовые слова: события, кулдаун, лимит, выключатель
 ```
 Фризы с рендерингом (Forward+ на программном Vulkan: `apt-get install mesa-vulkan-drivers`):
 `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json xvfb-run -a godot --path . --fixed-fps 60 --rendering-method forward_plus --resolution 320x180 res://tests/hitch_test.tscn -- 50` (и то же с `gl_compatibility`). Прогон ~10 мин; кадры без событий — шум программного рендера, не считаются.
