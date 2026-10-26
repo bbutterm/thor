@@ -28,7 +28,9 @@ func play(sound_path):  # Path (or multiple, separated by commas)
 
 func _process(_delta):
 	if not queue.is_empty() and not available.is_empty():
-		available[0].stream = load(queue.pop_front())
+		var path: String = queue.pop_front()
+		Perf.mark("sfx:" + path.get_file())
+		available[0].stream = load(path)
 		available[0].play()
 		available[0].pitch_scale = randf_range(0.9, 1.1)
 

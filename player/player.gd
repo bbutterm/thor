@@ -423,6 +423,7 @@ func is_invulnerable() -> bool:
 	return _invuln_left > 0.0 or is_dead
 
 func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln: bool = false) -> void:
+	Perf.mark("player_hurt")
 	if is_dead:
 		return
 	if is_invulnerable() and not ignore_invuln:

@@ -6,23 +6,19 @@ var duration: float = 2.0
 var dps: float = 20.0
 var _time: float = 0.0
 var _tick: float = 0.0
-var _mat: StandardMaterial3D
+var _mi: MeshInstance3D
 
 func setup(pos: Vector3, radius_: float, duration_: float, dps_: float) -> void:
+	Perf.mark("fire_zone")
 	radius = radius_
 	duration = duration_
 	dps = dps_
 	global_position = pos
 	var mi := MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = radius
-	cyl.bottom_radius = radius
-	cyl.height = 0.05
-	mi.mesh = cyl
-	_mat = FX.make_material(Color(1.0, 0.45, 0.1, 0.55), 1.0, 2.5)
-	_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mi.material_override = _mat
+	_mi = mi
+	mi.mesh = FX.shared_mesh("disc")
+	mi.scale = Vector3(radius, 0.05, radius)
+	FX.fx_apply(mi, "alpha", Color(1.0, 0.45, 0.1, 1.0), 1.4)
 	mi.position.y = 0.05
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(mi)
@@ -36,8 +32,9 @@ func setup(pos: Vector3, radius_: float, duration_: float, dps_: float) -> void:
 func _physics_process(delta: float) -> void:
 	_time += delta
 	_tick += delta
-	if _mat:
-		_mat.albedo_color.a = 0.35 + 0.2 * sin(_time * 18.0)
+	if _mi:
+		# Мерцание — прозрачностью экземпляра (материал общий для всех огней)
+		_mi.transparency = 1.0 - (0.35 + 0.2 * sin(_time * 18.0))
 	if _tick >= 0.25:
 		_tick = 0.0
 		for e in get_tree().get_nodes_in_group("enemies"):

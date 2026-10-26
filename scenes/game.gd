@@ -27,6 +27,8 @@ func _ready() -> void:
 	pause_menu.menu_requested.connect(go_to_menu)
 	hud.bind_player(player)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# Дожидаемся фоновой загрузки моделей (обычно уже готово, пока игрок был в меню)
+	AssetCache.finish()
 	_load_room()
 	var body_id := Run.body.id if Run.body else ""
 	if randf() < 0.5:
@@ -43,6 +45,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _load_room() -> void:
+	Perf.mark("room_load")
 	if room and is_instance_valid(room):
 		level.remove_child(room)
 		room.queue_free()
@@ -50,7 +53,12 @@ func _load_room() -> void:
 		# Убираем «мусор» прошлого зала (снаряды, огонь), оставляя постоянные узлы
 		if c.has_meta("transient") or c is Area3D or (c.get_script() and c.get_script().resource_path.ends_with("fire_zone.gd")):
 			c.queue_free()
-	var scene := load(Run.current_room_path()) as PackedScene
+	var path := Run.current_room_path()
+	var scene: PackedScene
+	if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+		scene = ResourceLoader.load_threaded_get(path) as PackedScene
+	else:
+		scene = load(path) as PackedScene
 	room = scene.instantiate() as Room
 	level.add_child(room)
 	var t := room.get_spawn_transform()
@@ -64,6 +72,8 @@ func _load_room() -> void:
 	room.enemy_count_changed.connect(hud.set_enemy_count)
 	hud.set_room(Run.room_index + 1, Run.total_rooms(), room.room_title, Run.is_boss_room())
 	hud.fade_in()
+	# Пока экран затемнён — прогреваем шейдеры (в каждом зале: свои материалы под светом огня/снарядов)
+	ShaderWarmup.run(self)
 	if Run.is_boss_room():
 		Odin.say("boss_start")
 	# Даём осмотреться полсекунды
@@ -73,6 +83,9 @@ func _load_room() -> void:
 
 func _on_room_cleared() -> void:
 	Run.add_glory(Run.glory_room_clear)
+	# Следующий зал грузим в фоне, пока игрок выбирает руну
+	if Run.room_index + 1 < Run.room_order.size():
+		ResourceLoader.load_threaded_request(Run.room_order[Run.room_index + 1], "", true)
 	if Run.is_boss_room():
 		Run.won = true
 		_ending = true

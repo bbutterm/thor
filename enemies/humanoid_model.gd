@@ -110,14 +110,25 @@ func _tint(mi: MeshInstance3D, tint: Color, glow: bool, is_cloth: bool = false) 
 	for s in mi.mesh.get_surface_count():
 		var src := mi.get_active_material(s)
 		if src is BaseMaterial3D:
-			var m := (src as BaseMaterial3D).duplicate() as BaseMaterial3D
 			var t := skin_tint if is_cloth and is_skin_material(src) else tint
-			m.albedo_color = m.albedo_color * t
-			if glow:
-				m.emission_enabled = true
-				m.emission = eye_glow
-				m.emission_energy_multiplier = 4.0
-			mi.set_surface_override_material(s, m)
+			mi.set_surface_override_material(s, _tinted(src as BaseMaterial3D, t, eye_glow if glow else Color(0, 0, 0, 0)))
+
+static var _tint_cache: Dictionary = {}
+
+## Покрашенная копия материала — общая для всех персонажей с тем же цветом (палитры дискретные),
+## чтобы у толпы драугров было несколько материалов, а не по копии на каждую поверхность каждого врага.
+static func _tinted(src: BaseMaterial3D, tint: Color, glow: Color) -> BaseMaterial3D:
+	var key := "%d|%s|%s" % [src.get_instance_id(), tint.to_html(), glow.to_html()]
+	if _tint_cache.has(key):
+		return _tint_cache[key]
+	var m := src.duplicate() as BaseMaterial3D
+	m.albedo_color = m.albedo_color * tint
+	if glow.a > 0.0:
+		m.emission_enabled = true
+		m.emission = glow
+		m.emission_energy_multiplier = 4.0
+	_tint_cache[key] = m
+	return m
 
 ## Случайный комплект «массовки»: смешиваем части одежды крестьянина и рейнджера, причёски, цвета.
 ## Возвращает словарь полей для HumanoidModel (или для enemy.gd: model_body, model_outfit="", model_parts...).
@@ -195,10 +206,25 @@ func _tint_skin_surfaces(m: MeshInstance3D) -> void:
 
 static var _head_cache: Dictionary = {}
 
+## Заранее режет меш головы для тела (AssetCache.finish) — иначе это делает первый враг волны.
+static func warm_head_mesh(body_path: String) -> void:
+	if _head_cache.has(body_path) or not ResourceLoader.exists(BASE_DIR + body_path):
+		return
+	var base := (load(BASE_DIR + body_path) as PackedScene).instantiate()
+	var skel := base.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	for mi in skel.find_children("*", "MeshInstance3D", false, false):
+		if not mi.name.begins_with("Eye"):
+			_head_only((mi as MeshInstance3D).mesh, body_path)
+			break
+	base.free()
+
 ## Отрезает от меша тела всё ниже шеи (по позе привязки, 83% роста). Кешируется по пути тела.
 static func _head_only(src: Mesh, key: String) -> Mesh:
 	if _head_cache.has(key):
 		return _head_cache[key]
+	if DisplayServer.get_name() == "headless":
+		# Без рендеринга данных вершин нет — меш оставляем как есть (тесты, --selftest)
+		return src
 	var out := ArrayMesh.new()
 	for sidx in src.get_surface_count():
 		var arrays := src.surface_get_arrays(sidx)

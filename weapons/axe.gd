@@ -109,6 +109,7 @@ func _tick(delta: float) -> void:
 				_animate_to(REST_POS, REST_ROT, 0.18, Tween.TRANS_QUAD)
 
 func _begin_stage(s: int) -> void:
+	Perf.mark("axe_swing")
 	stage = s
 	phase = Phase.WINDUP
 	_phase_time = 0.0

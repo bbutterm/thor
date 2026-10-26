@@ -64,6 +64,7 @@ func request_throw_or_recall() -> void:
 		projectile.call("start_return")
 
 func throw_hammer() -> void:
+	Perf.mark("hammer_throw")
 	if not in_hand:
 		return
 	in_hand = false
@@ -83,6 +84,7 @@ func throw_hammer() -> void:
 
 ## Вызывается снарядом, когда молот вернулся в руку.
 func on_caught() -> void:
+	Perf.mark("hammer_caught")
 	in_hand = true
 	projectile = null
 	if pivot:

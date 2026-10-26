@@ -50,6 +50,10 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var wall_splat_stun: float = 1.0
 
 @export_group("Вид")
+## Сколько трупов-«рэгдоллов» может лежать одновременно (каждый — физтело с анимацией)
+@export var max_debris: int = 10
+## Сколько секунд труп лежит, прежде чем исчезнуть
+@export var debris_lifetime: float = 4.0
 @export var body_color: Color = Color(0.32, 0.45, 0.33)
 @export var model_scale: float = 1.0
 
@@ -97,8 +101,9 @@ var _attack_count: int = 0
 var _doing_slam: bool = false
 var _strafe_sign: float = 1.0
 var _visual: Node3D
-var _flash_mats: Array[StandardMaterial3D] = []
-var _base_colors: Array[Color] = []
+## Меши врага — для общего оверлея вспышки/свечения (см. shaders/hit_flash.gdshader)
+var _flash_meshes: Array[GeometryInstance3D] = []
+var _overlay_on: bool = false
 var _hurt_flash: float = 0.0
 var _windup_glow: float = 0.0
 var _telegraph: Node3D
@@ -151,7 +156,7 @@ func _ready() -> void:
 		_humanoid = _visual as HumanoidModel
 	if _visual == null:
 		_visual = _build_procedural_model()
-	_collect_materials(_visual)
+	_collect_meshes(_visual)
 	FX.ring(get_parent(), global_position, 1.5 * model_scale, Color(0.7, 0.2, 1.0, 0.8), 0.45)
 	if _humanoid:
 		# Появление: драугр поднимается с земли
@@ -301,6 +306,7 @@ func _face_player(delta: float) -> void:
 # --- Атаки ---
 
 func _begin_windup(slam: bool) -> void:
+	Perf.mark("enemy_windup")
 	_doing_slam = slam
 	_set_state(State.WINDUP)
 	if kind != Kind.THROWER and (slam or randf() < 0.5):
@@ -367,22 +373,20 @@ func _do_boss_slam() -> void:
 			rb.apply_central_impulse((rb.global_position - global_position).normalized() * 6.0 * rb.mass + Vector3.UP * 4.0 * rb.mass)
 
 func _show_slam_telegraph() -> void:
+	Perf.mark("boss_telegraph")
 	_telegraph = MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = boss_slam_radius
-	cyl.bottom_radius = boss_slam_radius
-	cyl.height = 0.03
-	(_telegraph as MeshInstance3D).mesh = cyl
-	var m := FX.make_material(Color(1, 0.2, 0.1, 0.0), 1.0)
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	(_telegraph as MeshInstance3D).material_override = m
+	(_telegraph as MeshInstance3D).mesh = FX.shared_mesh("disc")
+	_telegraph.scale = Vector3(boss_slam_radius, 0.03, boss_slam_radius)
+	var tele := _telegraph as MeshInstance3D
+	FX.fx_apply(tele, "alpha", Color(1, 0.2, 0.1, 1.0))
+	tele.transparency = 1.0
 	get_parent().add_child(_telegraph)
 	_telegraph.global_position = global_position + Vector3(0, 0.06, 0)
 	var tw := _telegraph.create_tween()
-	tw.tween_property(m, "albedo_color:a", 0.45, boss_slam_windup)
+	tw.tween_property(tele, "transparency", 0.55, boss_slam_windup)
 
 func _throw_projectile() -> void:
+	Perf.mark("enemy_projectile")
 	if player == null:
 		return
 	var origin := global_position + Vector3(0, 1.4 * model_scale, 0) + global_transform.basis.z * 0.6
@@ -395,6 +399,7 @@ func _throw_projectile() -> void:
 # --- Урон ---
 
 func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
+	Perf.mark("enemy_hit")
 	if is_dead:
 		return
 	health -= damage
@@ -516,9 +521,15 @@ func _die(source: String) -> void:
 	queue_free()
 
 func _spawn_debris() -> void:
+	Perf.mark("enemy_death")
 	if _visual == null:
 		return
+	# Не копим трупы: сверх лимита самый старый исчезает сразу
+	var old := get_tree().get_nodes_in_group("debris").filter(func(n: Node) -> bool: return not n.is_queued_for_deletion())
+	for k in maxi(0, old.size() - max_debris + 1):
+		old[k].queue_free()
 	var rb := RigidBody3D.new()
+	rb.add_to_group("debris")
 	rb.collision_layer = 1 << 6
 	rb.collision_mask = 1 | (1 << 3) | (1 << 6)
 	rb.mass = 2.0 * model_scale
@@ -534,8 +545,7 @@ func _spawn_debris() -> void:
 	vis.get_parent().remove_child(vis)
 	rb.add_child(vis)
 	vis.scale = Vector3.ONE * model_scale
-	for m in _flash_mats:
-		m.emission_enabled = false
+	_set_overlay(0.0, 0.0)
 	var knock := _last_knock if _last_knock.length() > 0.5 else -global_transform.basis.z * 4.0
 	if _humanoid:
 		# Персонаж с анимацией: тело летит от удара, но не кувыркается — играет анимация смерти
@@ -549,7 +559,7 @@ func _spawn_debris() -> void:
 		rb.apply_torque_impulse(Vector3(randf_range(-3, 3), randf_range(-2, 2), randf_range(-3, 3)) * rb.mass)
 	# Через 4 с «рэгдолл» сжимается и исчезает (твин привязан к телу и умрёт вместе с ним)
 	var tw := rb.create_tween()
-	tw.tween_interval(4.0)
+	tw.tween_interval(debris_lifetime)
 	tw.tween_property(vis, "scale", Vector3(0.01, 0.01, 0.01), 0.3)
 	tw.tween_callback(rb.queue_free)
 
@@ -572,52 +582,35 @@ func _update_visual_feedback(delta: float) -> void:
 			lean = 0.38
 		_visual.rotation.x = lerp_angle(_visual.rotation.x, lean, clampf(delta * 14.0, 0.0, 1.0))
 		_visual.rotation.z = sin(_walk_t) * 0.06 if hs > 0.5 else lerpf(_visual.rotation.z, 0.0, clampf(delta * 10.0, 0.0, 1.0))
-	for i in _flash_mats.size():
-		var m := _flash_mats[i]
-		var c := _base_colors[i]
-		if _hurt_flash > 0.0:
-			m.albedo_color = c.lerp(Color.WHITE, _hurt_flash)
-		else:
-			m.albedo_color = c
-		if m.has_meta("glow"):
-			continue
-		if _windup_glow > 0.0:
-			m.emission_enabled = true
-			var pulse := 0.5 + 0.5 * sin(_state_time * 30.0)
-			m.emission = Color(1, 0.15, 0.05)
-			m.emission_energy_multiplier = _windup_glow * (1.0 + pulse) * (0.55 if _humanoid else 1.5)
-		elif m.emission_enabled:
-			m.emission_enabled = false
+	var glow := 0.0
+	if _windup_glow > 0.0:
+		var pulse := 0.5 + 0.5 * sin(_state_time * 30.0)
+		glow = _windup_glow * (1.0 + pulse) * (0.35 if _humanoid else 0.8)
+	_set_overlay(_hurt_flash, glow)
 
-func _collect_materials(root: Node) -> void:
-	for mi in root.find_children("*", "MeshInstance3D", true, false):
-		var mesh_inst := mi as MeshInstance3D
-		var over := mesh_inst.material_override as StandardMaterial3D
-		if over:
-			# Своя копия: общий материал (например, оружие) иначе мигал бы у всех сразу
-			if over.emission_enabled:
-				over.set_meta("glow", true)
-			if not over.has_meta("glow"):
-				over = over.duplicate() as StandardMaterial3D
-				mesh_inst.material_override = over
-			_flash_mats.append(over)
-			_base_colors.append(over.albedo_color)
+const FLASH_MATERIAL := preload("res://shaders/hit_flash.tres")
+
+## Вспышка и свечение — общим оверлей-материалом с per-instance параметрами.
+## Оверлей включается только пока есть что показывать (лишний проход рисования не нужен).
+func _set_overlay(flash: float, glow: float) -> void:
+	var on := flash > 0.001 or glow > 0.001
+	if not on and not _overlay_on:
+		return
+	for g in _flash_meshes:
+		if not is_instance_valid(g):
 			continue
-		if mesh_inst.mesh == null:
-			continue
-		# Модели из нескольких поверхностей: свой материал на каждую (для вспышки при уроне)
-		for sidx in mesh_inst.mesh.get_surface_count():
-			var cur := mesh_inst.get_surface_override_material(sidx) as StandardMaterial3D
-			if cur == null:
-				var src := mesh_inst.get_active_material(sidx) as StandardMaterial3D
-				if src == null:
-					continue
-				cur = src.duplicate() as StandardMaterial3D
-				mesh_inst.set_surface_override_material(sidx, cur)
-			if cur.emission_enabled:
-				cur.set_meta("glow", true)
-			_flash_mats.append(cur)
-			_base_colors.append(cur.albedo_color)
+		if on != _overlay_on:
+			g.material_overlay = FLASH_MATERIAL if on else null
+		if on:
+			g.set_instance_shader_parameter("flash", flash)
+			g.set_instance_shader_parameter("glow", glow)
+	_overlay_on = on
+
+func _collect_meshes(root: Node) -> void:
+	_flash_meshes.clear()
+	for mi in root.find_children("*", "GeometryInstance3D", true, false):
+		if mi is MeshInstance3D:
+			_flash_meshes.append(mi as GeometryInstance3D)
 
 ## Оружие в правую руку (процедурное, в текстурах Quaternius).
 func _attach_weapon(kind_name: String) -> void:

@@ -39,6 +39,7 @@ func _ready() -> void:
 	vb.add_child(_cards)
 
 func open(choices: Array[RuneDef]) -> void:
+	Perf.mark("rune_pick")
 	_choices = choices
 	for c in _cards.get_children():
 		c.queue_free()

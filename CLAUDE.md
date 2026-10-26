@@ -9,7 +9,10 @@
 - `rooms/room.gd` + `rooms/*.tscn` — залы, волны (маркеры в `Spawns` с метаданными `kind`/`wave`), дверь, выход.
 - `run/run_manager.gd` (автозагрузка `Run`) — забег, Слава, руны; `run/odin.gd` (`Odin`) — реплики из `data/odin_lines.json`.
 - `ui/` — HUD, выбор рун, пауза, экран конца, меню (всё строится кодом, `.tscn` — пустые обёртки со скриптом).
-- `scripts/fx.gd` — hit-stop (тикает из `Run._process`), цифры урона, молнии, кольца, искры.
+- `scripts/fx.gd` — hit-stop (тикает из `Run._process`), цифры урона, молнии, кольца, искры. Материалы эффектов — общие (`FX.fx_apply`, шейдеры `shaders/fx_*.gdshader`, цвет per-instance), меши — общие (`FX.shared_mesh`).
+- `scripts/perf.gd` (автозагрузка `Perf`) — F3-оверлей, лог фризов `user://hitches.log`, `Perf.mark("событие")` в игровом коде, счётчики компиляций пайплайнов (`pso_draw` = фриз на отрисовке).
+- `scripts/asset_cache.gd` (`AssetCache`) — фоновая загрузка и удержание моделей/анимаций/звуков (старт в `Run._ready`, ожидание в `Game._ready`).
+- `scripts/shader_warmup.gd` (`ShaderWarmup`) — прогрев шейдеров при входе в каждый зал (под затемнением).
 
 ## Модели (Quaternius, CC0)
 - `assets/quaternius/characters/` — тела, одежда, волосы, анимации (`gaits.glb` = UAL1, `animations.glb` = UAL2). Скелет у всех один (65 костей, правая кисть `hand_r`).
@@ -22,6 +25,7 @@
 - Витрина ассетов: `xvfb-run -a godot --path . --rendering-method gl_compatibility --resolution 1280x720 res://tools/preview_assets.tscn -- out.png lineup|characters|village|props`.
 
 ## Важно
+- **Фризы.** Не создавай материал на каждый эффект/удар: новый материал = компиляция пайплайна (Forward+), а когда последний материал вида умирает, его пайплайны выкидываются. Бери общий (`FX.fx_apply`, `WeaponMeshes.mat`, `HumanoidModel._tinted`), меняй вид через per-instance (`set_instance_shader_parameter`, `GeometryInstance3D.transparency`, оверлей `shaders/hit_flash.tres` у врагов). Новый вид эффекта — добавь его в `ShaderWarmup`. Новые ассеты персонажей/оружия/звуков — в папки из `AssetCache.DIRS`.
 - Сцены игрока, врагов, бочек, залов, UI и `scenes/game.tscn` **генерирует** `tools/build_scenes.gd`. Меняешь структуру сцены — правь генератор и перезапускай его. ⚠️ Если владелец правил залы руками в редакторе, генератор их перезапишет — спроси сначала.
 - Блоки уровней — StaticBody3D, не CSG (CSG давал провалы сквозь пол в первые кадры).
 - Слои физики: 1 world, 2 player, 3 enemies, 4 props, 5 projectiles, 6 triggers, 7 debris.
@@ -37,7 +41,10 @@ godot --headless --path . res://tools/build_scenes.tscn              # если 
 godot --headless --path . --fixed-fps 60 res://tests/smoke_test.tscn # полный забег, ожидается 0 FAIL
 godot --headless --path . --fixed-fps 60 res://tests/reach_test.tscn # достижимость платформ
 godot --headless --path . --fixed-fps 60 res://tests/ai_test.tscn    # враги доходят и бьют во всех залах
+godot --headless --path . --fixed-fps 60 res://tests/hitch_test.tscn -- 50  # фризы (CPU-часть)
 ```
+Фризы с рендерингом (Forward+ на программном Vulkan: `apt-get install mesa-vulkan-drivers`):
+`VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json xvfb-run -a godot --path . --fixed-fps 60 --rendering-method forward_plus --resolution 320x180 res://tests/hitch_test.tscn -- 50` (и то же с `gl_compatibility`). Прогон ~10 мин; кадры без событий — шум программного рендера, не считаются.
 Скриншоты (нужен xvfb): `xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/screenshots.tscn -- <папка>`.
 
 Экспорт: `godot --headless --path . --export-release "Windows Desktop" export/windows/ThorDostoynayaSmert.exe` (нужны export templates 4.6.3). Проверка сборки: `<exe> --headless -- --selftest`.

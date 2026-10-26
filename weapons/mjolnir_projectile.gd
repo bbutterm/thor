@@ -34,6 +34,7 @@ func _build_visual() -> void:
 	add_child(_light)
 
 func start_return() -> void:
+	Perf.mark("hammer_return")
 	if state == State.RETURN:
 		return
 	state = State.RETURN

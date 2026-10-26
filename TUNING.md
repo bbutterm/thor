@@ -57,6 +57,16 @@
 
 Ещё: `wall_splat_speed` 8.5 (с какой скорости отбрасывания враг «шмякается» об стену), `wall_splat_damage` 12, `wall_splat_stun` 1.0, `keep_min_dist`/`keep_max_dist` 8/12 (метатель), `boss_slam_radius` 6.5. **Удар босса по площади попадает, только если ты на земле — прыгай!**
 
+Трупы: `max_debris` 10 (сколько «рэгдоллов» лежит одновременно, лишние исчезают), `debris_lifetime` 4 с.
+
+## Залы — `rooms/*.tscn`, корневой узел (`rooms/room.gd`)
+
+`wave_delay` 0.9 (пауза между волнами), `spawn_interval` 0.12 (враги волны появляются по одному с этим шагом — сборка персонажа дорогая, все сразу давали фриз).
+
+## Отладка — автозагрузка `scripts/perf.gd` (`Perf`)
+
+F3 — оверлей кадров. `hitch_ms` 33: кадр дольше этого пишется в `user://hitches.log`.
+
 ## Забег — автозагрузка `run/run_manager.gd`
 
 `rooms_per_run` 4, Слава: `glory_per_kill` 10, `glory_combo_finisher_bonus` 5, `glory_multikill_bonus` 15, `glory_wall_splat_bonus` 5, `glory_room_clear` 25, `glory_boss_kill` 150. Пороги вердикта — функция `verdict()` (150 «Сойдёт», 400 «Вальхалла»).

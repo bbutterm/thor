@@ -274,6 +274,7 @@ func _on_runes_changed(runes: Array) -> void:
 		_runes_box.add_child(l)
 
 func show_odin_line(text: String) -> void:
+	Perf.mark("odin_line")
 	if text == "" or _odin_label == null:
 		return
 	_odin_label.text = text

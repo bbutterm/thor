@@ -12,6 +12,8 @@ signal boss_spawned(boss: Enemy)
 
 @export var room_title: String = "Зал"
 @export var wave_delay: float = 0.9
+## Пауза между появлением врагов одной волны (с)
+@export var spawn_interval: float = 0.12
 
 const ENEMY_SCENES := {
 	"grunt": "res://enemies/grunt.tscn",
@@ -26,6 +28,8 @@ var _alive: Array[Enemy] = []
 var _started: bool = false
 var _is_cleared: bool = false
 var door_open: bool = false
+var _spawn_queue: Array = []
+var _spawn_timer: float = 0.0
 
 @onready var spawns: Node3D = $Spawns
 @onready var door: Node3D = get_node_or_null("Door")
@@ -54,31 +58,51 @@ func wave_count() -> int:
 	return _waves.size()
 
 func _spawn_wave(index: int) -> void:
+	Perf.mark("spawn_wave")
 	var markers: Array = _waves.get(index, [])
-	for m in markers:
-		var marker := m as Node3D
-		var kind: String = str(marker.get_meta("kind", "grunt"))
-		var path: String = ENEMY_SCENES.get(kind, ENEMY_SCENES["grunt"])
-		var enemy := (load(path) as PackedScene).instantiate() as Enemy
-		add_child(enemy)
-		enemy.global_position = marker.global_position
-		enemy.rotation.y = marker.global_rotation.y
-		enemy.player = _player
-		enemy.died.connect(_on_enemy_died)
-		_alive.append(enemy)
-		if enemy.kind == Enemy.Kind.BOSS:
-			boss_spawned.emit(enemy)
-	enemy_count_changed.emit(_alive.size())
 	if markers.is_empty():
 		_check_clear()
+		return
+	# Враги волны появляются по одному: сборка персонажа дорогая, все сразу в одном кадре давали фриз
+	_spawn_queue.append_array(markers)
+	_spawn_timer = 0.0
+
+func _physics_process(delta: float) -> void:
+	if _spawn_queue.is_empty():
+		return
+	_spawn_timer -= delta
+	if _spawn_timer > 0.0:
+		return
+	_spawn_timer = spawn_interval
+	_spawn_enemy(_spawn_queue.pop_front() as Node3D)
+
+func _spawn_enemy(marker: Node3D) -> void:
+	var kind: String = str(marker.get_meta("kind", "grunt"))
+	var path: String = ENEMY_SCENES.get(kind, ENEMY_SCENES["grunt"])
+	var enemy := (load(path) as PackedScene).instantiate() as Enemy
+	Perf.mark("spawn_" + kind)
+	# Позиция до add_child: в _ready враг рисует кольцо появления там, где стоит
+	enemy.position = to_local(marker.global_position)
+	enemy.rotation.y = marker.global_rotation.y - global_rotation.y
+	add_child(enemy)
+	enemy.player = _player
+	enemy.died.connect(_on_enemy_died)
+	_alive.append(enemy)
+	if enemy.kind == Enemy.Kind.BOSS:
+		boss_spawned.emit(enemy)
+	enemy_count_changed.emit(_alive.size() + _spawn_queue.size())
+
+## Враги волны, которые ещё не появились.
+func pending_spawns() -> int:
+	return _spawn_queue.size()
 
 func _on_enemy_died(enemy: Enemy) -> void:
 	_alive.erase(enemy)
-	enemy_count_changed.emit(_alive.size())
+	enemy_count_changed.emit(_alive.size() + _spawn_queue.size())
 	_check_clear()
 
 func _check_clear() -> void:
-	if _is_cleared or not _alive.is_empty():
+	if _is_cleared or not _alive.is_empty() or not _spawn_queue.is_empty():
 		return
 	_wave_index += 1
 	if _waves.has(_wave_index):
@@ -95,6 +119,7 @@ func alive_enemies() -> Array[Enemy]:
 	return _alive
 
 func open_door() -> void:
+	Perf.mark("door_open")
 	door_open = true
 	if door == null:
 		return

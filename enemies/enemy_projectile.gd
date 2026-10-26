@@ -6,7 +6,8 @@ var damage: float = 10.0
 var reflected: bool = false
 var shooter: Node = null
 var _life: float = 0.0
-var _mat: StandardMaterial3D
+var _mi: MeshInstance3D
+var _color: Color = Color(0.7, 0.2, 1.0)
 var _light: OmniLight3D
 
 const RADIUS := 0.35
@@ -28,12 +29,10 @@ func launch(origin: Vector3, velocity_: Vector3, damage_: float, shooter_: Node)
 	shape.shape = s
 	add_child(shape)
 	var mi := MeshInstance3D.new()
-	var sm := SphereMesh.new()
-	sm.radius = RADIUS
-	sm.height = RADIUS * 2.0
-	mi.mesh = sm
-	_mat = FX.make_material(Color(0.7, 0.2, 1.0), 0.4, 4.0)
-	mi.material_override = _mat
+	mi.mesh = FX.shared_mesh("sphere")
+	mi.scale = Vector3.ONE * RADIUS * 2.0
+	_mi = mi
+	FX.fx_apply(mi, "glow", _color, 4.0)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(mi)
 	_light = OmniLight3D.new()
@@ -44,14 +43,15 @@ func launch(origin: Vector3, velocity_: Vector3, damage_: float, shooter_: Node)
 
 ## Вызывается топором.
 func reflect(new_velocity: Vector3) -> void:
+	Perf.mark("projectile_reflect")
 	if reflected:
 		return
 	reflected = true
 	vel = new_velocity.normalized() * maxf(vel.length() * 2.2, 18.0)
 	damage *= 3.0
 	_life = 0.0
-	_mat.albedo_color = Color(0.4, 0.85, 1.0)
-	_mat.emission = Color(0.4, 0.85, 1.0)
+	_color = Color(0.4, 0.85, 1.0)
+	_mi.set_instance_shader_parameter("color", _color)
 	_light.light_color = Color(0.4, 0.85, 1.0)
 	FX.burst(get_parent(), global_position, 0.6, Color(0.6, 0.9, 1.0, 0.7), 0.15)
 	Audio.play("sounds/sfx/reflect.wav")
@@ -93,5 +93,5 @@ func _physics_process(delta: float) -> void:
 				_pop(global_position)
 
 func _pop(pos: Vector3) -> void:
-	FX.burst(get_parent(), pos, 0.5, _mat.albedo_color * Color(1, 1, 1, 0.6), 0.15)
+	FX.burst(get_parent(), pos, 0.5, _color * Color(1, 1, 1, 0.6), 0.15)
 	queue_free()
