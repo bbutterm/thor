@@ -42,6 +42,12 @@ func _ready() -> void:
 	m.pressed.connect(func() -> void: menu_requested.emit())
 	vb.add_child(m)
 	vb.add_child(SettingsPanel.comic_controls())
+	# «Сообщить о лаге» (GDD 23): zip с логом фризов и сохранением на рабочий стол
+	var lag := UIStyle.button("Сообщить о лаге", 18)
+	lag.pressed.connect(func() -> void:
+		var path := Perf.report_lag()
+		lag.text = "Сохранено на рабочий стол" if path != "" else "Не удалось сохранить")
+	vb.add_child(lag)
 
 func toggle() -> void:
 	visible = not visible

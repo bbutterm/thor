@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Автозагрузка «Perf» — поиск фризов. F3 — оверлей: график времени кадра, FPS, враги, частицы, физтела.
 ## Каждый кадр дольше hitch_ms пишется в user://hitches.log вместе с метками событий этого кадра
 ## (Perf.mark("spawn_wave") и т.п. из игрового кода). Работает и в релизной сборке.
-## Путь к логу на Windows: %APPDATA%/ThorDostoynayaSmert/hitches.log (F4 — открыть папку).
+## Путь к логу на Windows: %APPDATA%/ThorDostoynayaSmert/hitches.log (F4 — открыть папку, F5 — «Сообщить о лаге»: zip на рабочий стол).
 
 const LOG_PATH := "user://hitches.log"
 const HISTORY := 240
@@ -69,6 +69,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_F3:
 			_panel.visible = not _panel.visible
 			get_viewport().set_input_as_handled()
+		KEY_F5:
+			# «Сообщить о лаге»: zip с логом и сохранением на рабочий стол
+			var path := report_lag()
+			_flash("Отчёт о лаге: " + path if path != "" else "Не удалось сохранить отчёт")
+			get_viewport().set_input_as_handled()
 		KEY_F4:
 			# Папка с логом фризов — чтобы прислать его
 			OS.shell_open(ProjectSettings.globalize_path("user://"))
@@ -116,6 +121,46 @@ func _record(ms: float) -> void:
 	if _log:
 		_log.store_line("%.2f\t%.1f\t%s\t(до этого: %s)" % [info.t, ms, info.events, info.prev])
 		_log.flush()
+
+## «Сообщить о лаге» (GDD 23): zip на рабочий стол — лог фризов, сохранение, настройки, сведения о системе.
+## Возвращает путь к архиву или "" при ошибке.
+func report_lag() -> String:
+	if _log:
+		_log.flush()
+	var dir := OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
+	if dir == "" or not DirAccess.dir_exists_absolute(dir):
+		dir = ProjectSettings.globalize_path("user://")
+	var stamp := Time.get_datetime_string_from_system().replace(":", "-").replace("T", "_")
+	var path := dir.path_join("Thor_lag_%s.zip" % stamp)
+	var zip := ZIPPacker.new()
+	if zip.open(path) != OK:
+		return ""
+	for f in ["user://hitches.log", "user://save.json", "user://settings.cfg"]:
+		if FileAccess.file_exists(f):
+			zip.start_file(f.get_file())
+			zip.write_file(FileAccess.get_file_as_bytes(f))
+			zip.close_file()
+	var info := PackedStringArray([
+		"Тор: Достойная смерть — отчёт о лаге",
+		"Время: %s" % Time.get_datetime_string_from_system(),
+		"ОС: %s %s" % [OS.get_name(), OS.get_version()],
+		"Процессор: %s, потоков %d" % [OS.get_processor_name(), OS.get_processor_count()],
+		"Видеокарта: %s (%s)" % [RenderingServer.get_video_adapter_name(), RenderingServer.get_video_adapter_vendor()],
+		"API: %s, рендерер: %s" % [RenderingServer.get_video_adapter_api_version(), RenderingServer.get_current_rendering_method()],
+		"Godot: %s" % Engine.get_version_info().string,
+		"Окно: %s" % str(DisplayServer.window_get_size()),
+		"Фризов > %d мс за сессию: %d" % [int(hitch_ms), _hitch_count],
+		"",
+		"Последние фризы (время с, кадр мс, события):",
+	])
+	for h in hitches.slice(maxi(0, hitches.size() - 40)):
+		info.append("%.2f\t%.1f\t%s\t(до: %s)" % [h.t, h.ms, h.events, h.prev])
+	zip.start_file("system.txt")
+	zip.write_file("\n".join(info).to_utf8_buffer())
+	zip.close_file()
+	zip.close()
+	Perf.mark("lag_report")
+	return path
 
 func _update_label() -> void:
 	var tree := get_tree()
@@ -170,3 +215,18 @@ func _draw_graph() -> void:
 		var ms := _times[(_head + i) % HISTORY]
 		var c := Color(0.4, 1, 0.4) if ms < 17.5 else (Color(1, 0.85, 0.3) if ms < hitch_ms else Color(1, 0.3, 0.3))
 		_graph.draw_line(Vector2(i * 2, h), Vector2(i * 2, h - minf(ms, 50.0) * scale), c, 2.0)
+
+## Короткое сообщение в углу экрана (поверх всего).
+func _flash(text: String) -> void:
+	var l := Label.new()
+	l.text = text
+	l.position = Vector2(12, 120)
+	l.add_theme_font_size_override("font_size", 16)
+	l.add_theme_color_override("font_outline_color", Color.BLACK)
+	l.add_theme_constant_override("outline_size", 6)
+	add_child(l)
+	var tw := l.create_tween()
+	tw.tween_interval(3.0)
+	tw.tween_property(l, "modulate:a", 0.0, 0.6)
+	tw.tween_callback(l.queue_free)
+
