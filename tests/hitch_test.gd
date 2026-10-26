@@ -34,6 +34,9 @@ func wait(sec: float) -> void:
 	for i in int(ceil(sec * 60.0)):
 		await get_tree().physics_frame
 
+const DoorHelper := preload("res://tests/door_helper.gd")
+var _door_pick: int = 0
+
 func _now() -> int:
 	return Engine.get_process_frames()
 
@@ -71,6 +74,10 @@ func _play_room() -> void:
 	var p := game.player
 	var safety := 0
 	var step := 0
+	if Run.is_peaceful_room():
+		await wait(1.2)
+		print("  тихий зал: %s (%s)" % [room.room_title, Run.current_reward()])
+		return
 	while not room._is_cleared and safety < 120:
 		safety += 1
 		step += 1
@@ -115,17 +122,16 @@ func _play_room() -> void:
 func _go_next() -> void:
 	var room := game.room
 	await wait(1.2)
-	if game.trait_pick.visible:
-		game.trait_pick._open_time = -10.0
-		game.trait_pick.choose(0, true)
-		await wait(1.0)
-	if game.rune_pick.visible:
-		game.rune_pick._open_time = -10.0
-		game.rune_pick.choose(0)
-	await wait(0.6)
+	# Награда зала (трейт, руна, отдых, Локи…) → двери-награды (блок И) → входим в дверь по кругу
+	await DoorHelper.resolve_reward(get_tree(), game)
+	await wait(1.0)
+	var doors := game.rewards.doors
+	var d: RewardDoor = doors[_door_pick % doors.size()] if not doors.is_empty() else null
+	_door_pick += 1
 	_load_frames.append(_now())
-	game.player.global_position = room.exit_area.global_position + Vector3(0, 0.2, 1.5)
-	game.player.velocity = Vector3(0, 0, -6)
+	if d:
+		game.player.global_position = d.trigger_position()
+	game.player.velocity = Vector3(0, 0, -2)
 	for i in 120:
 		await get_tree().physics_frame
 		if game.room != room:

@@ -115,10 +115,18 @@ func _run() -> void:
 		en.take_hit(9999, Vector3(0, 2, -6), "melee_finisher")
 	await wait(2.0)
 	await shot("06_rune_pick")
+	Run.forced_offers.assign([["elite", "rest", "freya"]])
 	game.rune_pick._open_time = -10.0
 	game.rune_pick.choose(0)
-	await wait(1.0)
-	await shot("07_door_open")
+	await wait(1.6)
+	# Двери-награды (блок И): встаём посреди зала лицом к северной стене
+	if not game.rewards.doors.is_empty():
+		var dz := game.rewards.doors[0].global_position
+		p.global_position = Vector3(game.room.global_position.x, dz.y + 0.1, dz.z + 8.5)
+		p.velocity = Vector3.ZERO
+		p.rotation_target = Vector2(0.12, 0.0)
+		await wait(0.4)
+	await shot("07_doors")
 	game.pause_menu.toggle()
 	await wait(0.2)
 	await shot("07b_pause")
@@ -176,6 +184,34 @@ func _run() -> void:
 		await wait(2.0)
 		sven.set_physics_process(false)
 		await shot("12_miniboss")
+	# Ларёк Брокка и Эйтри (блок К): зал-ларёк, прилавок, экран покупки
+	Run.room_index = 1
+	Run.room_rewards.assign(["combat", "shop"])
+	game.call("_load_room")
+	await wait(1.6)
+	var stall := game.room.get_node_or_null("ShopStall") as Node3D
+	if stall:
+		p.global_position = stall.global_position + Vector3(1.2, 0.1, 5.2)
+		p.velocity = Vector3.ZERO
+		p.rotation_target = Vector2(0.05, 0.22)
+		Run.add_silver(230)
+		await wait(1.0)
+		await shot("13_shop_stall")
+		game.rewards.open_shop()
+		await wait(0.6)
+		await shot("14_shop_screen")
+		game.rewards.shop.close()
+		await wait(0.3)
+	# Испытание Локи «пол — лава» (блок Ф): лава, панель испытания, реплика
+	Run.room_rewards.assign(["combat", "trial"])
+	Run.forced_trial = "loki_lava"
+	game.call("_load_room")
+	await wait(2.4)
+	for en in game.room.alive_enemies():
+		en.set_physics_process(false)
+	p.rotation_target = Vector2(-0.25, 0.0)
+	await wait(0.3)
+	await shot("15_trial_lava")
 	p.take_damage(99999.0, Vector3.ZERO, true)
 	await wait(2.2)
 	await shot("09_death")

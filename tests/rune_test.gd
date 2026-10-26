@@ -73,7 +73,7 @@ func _run() -> void:
 			impl += 1
 			if r.level_values.size() != 3:
 				check(false, "у руны %s три значения уровней" % r.id)
-	check(impl >= 24, "рун с механикой: %d (из 25 по GDD)" % impl)
+	check(impl >= 25, "рун с механикой: %d (из 25 по GDD)" % impl)
 	clear_runes()
 	give("max_health", 4)
 	check(Run.rune_level("max_health") == 3, "повтор повышает уровень, максимум 3")
@@ -189,6 +189,11 @@ func _run() -> void:
 	var g0 := Run.glory
 	Run.add_glory(100)
 	check(Run.glory - g0 == 140, "Слава предков ур. 3: +40%% (%d)" % (Run.glory - g0))
+	clear_runes()
+	give("brokk_greed", 3)
+	var sv0 := Run.silver
+	Run.add_silver(10)
+	check(Run.silver - sv0 == 16, "Жадность Брокка ур. 3: серебро +60%% (%d)" % (Run.silver - sv0))
 	clear_runes()
 
 	print("-- Проклятые руны Локи")

@@ -244,8 +244,11 @@ func _auto_state() -> void:
 		var boss: bool = run != null and run.call("is_boss_room")
 		var mini: bool = run != null and run.has_method("is_miniboss_room") and run.call("is_miniboss_room")
 		var fighting: bool = g.room != null and is_instance_valid(g.room) and (g.room.alive_count() > 0 or g.room.pending_spawns() > 0)
+		var shop: bool = run != null and run.has_method("current_reward") and str(run.call("current_reward")) == "shop"
 		if boss and has_track("boss"):
 			play_track("boss")
+		elif shop and has_track("shop"):
+			play_track("shop")
 		elif mini and fighting and has_track("miniboss"):
 			play_track("miniboss")
 		else:

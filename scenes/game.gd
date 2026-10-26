@@ -15,6 +15,8 @@ var _ending: bool = false
 var trait_pick: TraitPick
 ## Время забега, причина смерти, бой-реплики Одина (run/run_tracker.gd)
 var tracker: RunTracker
+## Двери-награды и выдача наград залов (run/reward_flow.gd, блок И)
+var rewards: RewardFlow
 var _after_run_started: bool = false
 
 func _ready() -> void:
@@ -31,6 +33,7 @@ func _ready() -> void:
 	trait_pick.name = "TraitPick"
 	add_child(trait_pick)
 	trait_pick.picked.connect(_on_trait_picked)
+	rewards = RewardFlow.attach(self)
 	end_screen.restart_requested.connect(_after_run)
 	end_screen.menu_requested.connect(go_to_menu)
 	pause_menu.restart_requested.connect(restart_run)
@@ -45,7 +48,7 @@ func _ready() -> void:
 	Dialogue.on_run_start(Run.body.id if Run.body else "")
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("pause") and not _ending and not rune_pick.visible and not trait_pick.visible:
+	if event.is_action_pressed("pause") and not _ending and not rune_pick.visible and not trait_pick.visible and not rewards.is_screen_open():
 		pause_menu.toggle()
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.pressed and not get_tree().paused and not _ending:
@@ -81,6 +84,7 @@ func _load_room() -> void:
 	room.enemy_count_changed.connect(hud.set_enemy_count)
 	# Руна «Щит Сиф» восстанавливается между волнами
 	room.wave_started.connect(func(_i: int) -> void: player.refill_shield())
+	rewards.on_room_loaded(room)
 	# Мини-босс — последней волной зала (Run.miniboss_rooms)
 	if Run.is_miniboss_room():
 		var mb := Run.miniboss_def() as MinibossDef
@@ -95,7 +99,7 @@ func _load_room() -> void:
 	# Даём осмотреться полсекунды
 	get_tree().create_timer(0.6, false).timeout.connect(func() -> void:
 		if is_instance_valid(room) and not player.is_dead:
-			room.start(player))
+			rewards.start_room(room, player))
 
 func _on_room_cleared() -> void:
 	Run.add_glory(Run.glory_room_clear)
@@ -123,6 +127,10 @@ func _on_room_cleared() -> void:
 		_offer_rune())
 
 func _offer_rune() -> void:
+	# Двери-награды: награда зала по типу двери (руна, оружие, отдых, Локи, Фрейя…)
+	if Run.doors_enabled:
+		rewards.grant()
+		return
 	var choices := Run.random_rune_choices(3)
 	if choices.is_empty():
 		room.open_door()
@@ -140,13 +148,24 @@ func _on_trait_picked(t: MjolnirTrait) -> void:
 
 func _on_rune_picked(rune: RuneDef) -> void:
 	Run.add_rune(rune)
+	var reward_done := rewards.on_rune_picked(rune)
 	player.recalc_from_runes(Run)
 	if rune.id == "heal":
 		player.heal(Run.rune_value("heal"))  # уровень 1–3: 50 → 100 (у жреца ×2)
 	Odin.say("rune_pick")
 	Audio.play("sounds/sfx/rune_pick.wav")
-	room.open_door()
-	hud.toast("Дверь открыта — вперёд!")
+	if reward_done:
+		_after_reward()
+
+## Награда зала выдана: двери с наградами (блок И) или старая единственная дверь.
+func _after_reward() -> void:
+	if player.is_dead or _ending:
+		return
+	if Run.doors_enabled:
+		rewards.show_doors()
+	else:
+		room.open_door()
+		hud.toast("Дверь открыта — вперёд!")
 
 func _on_exit_reached() -> void:
 	if _ending:

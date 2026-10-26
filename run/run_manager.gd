@@ -7,6 +7,10 @@ signal kill_streak(count: int)
 signal mjolnir_traits_changed(traits: Array)
 ## Убийство засчитано (после Славы). Слушают пассивки тела (Player) и Ярость.
 signal kill_registered(source: String)
+## Серебро — валюта забега (блок К, GDD 15.2), сгорает после смерти
+signal silver_changed(total: int)
+## Убийство врага с источником добивания (испытания, блок Ф)
+signal enemy_killed(source: String)
 
 const BODIES_DIR := "res://run/bodies/"
 const RUNES_DIR := "res://run/runes/"
@@ -20,8 +24,14 @@ const ROOM_SCENES := [
 ]
 const BOSS_SCENE := "res://rooms/boss_arena.tscn"
 const MJOLNIR_TRAITS_DIR := "res://weapons/mjolnir_traits/"
+## Двери-награды (блок И, GDD 15.1): награды и структура мира
+const REWARDS_DIR := "res://run/rewards/"
+const MAP_PATH := "res://run/maps/midgard.tres"
+## Испытания (блок Ф): run/trials/*.tres
+const TRIALS_DIR := "res://run/trials/"
 
-@export var rooms_per_run: int = 4
+## Залов до босса, если нет карты мира (с картой — RunMap.rooms, Мидгард: 7)
+@export var rooms_per_run: int = 7
 @export var glory_per_kill: int = 3
 @export var glory_combo_finisher_bonus: int = 0
 @export var glory_multikill_bonus: int = 1
@@ -34,7 +44,8 @@ const MJOLNIR_TRAITS_DIR := "res://weapons/mjolnir_traits/"
 @export var multikill_window: float = 0.6
 @export_group("Мини-боссы и трейты Мьёльнира")
 ## После каких залов (индекс с 0) в зале появляется мини-босс — последней волной; за него выбор трейта
-@export var miniboss_rooms: PackedInt32Array = [1, 3]
+## (с картой мира — RunMap.miniboss_room: Мидгард — 4-й зал, индекс 3)
+@export var miniboss_rooms: PackedInt32Array = [3]
 ## Какой мини-босс (MinibossDef)
 @export var miniboss_def_path: String = "res://enemies/minibosses/fat_sven.tres"
 ## Множители Славы за убийство: добил мили / ренжем (GDD 15.2: ×1.5 / ×0.5)
@@ -54,6 +65,27 @@ var won: bool = false
 var all_bodies: Array[BodyDef] = []
 var all_runes: Array[RuneDef] = []
 var all_mjolnir_traits: Array[MjolnirTrait] = []
+## Двери-награды (блок И): структура мира, награды залов
+var map: RunMap
+var all_rewards: Array[RewardDef] = []
+var all_trials: Array[TrialDef] = []
+## Для тестов: id испытания следующего зала «Испытание» ("" — случайное)
+var forced_trial: String = ""
+## Награда каждого зала по индексу (id RewardDef); зал без записи — обычный бой
+var room_rewards: Array[String] = []
+## Сколько раз в этом мире входили в зал с наградой (id → n): ларёк гарантирован shop_per_world раз
+var reward_visits: Dictionary = {}
+## Двери с наградами после зачистки (false — старый линейный порядок: руна → одна дверь)
+var doors_enabled: bool = true
+## Серебро забега (GDD 15.2): с врагов, бочек, сундуков; тратится в ларьке; новый забег — с нуля
+## (или со стартовыми 30 у открытия «Жадность»)
+var silver: int = 0
+## Всего собрано за забег (итог, реакции Брокка)
+var silver_earned: int = 0
+## «Обслуживание Мьёльнира» без трейтов: переброс выбора трейта у следующего мини-босса
+var trait_rerolls: int = 0
+## Для тестов: наборы дверей по очереди (каждый — массив id наград); пусто — случайно по GDD
+var forced_offers: Array = []
 ## Активные трейты Мьёльнира (не больше одного на группу) и их уровни (id → 1..2)
 var mjolnir_traits: Array[MjolnirTrait] = []
 var mjolnir_trait_levels: Dictionary = {}
@@ -71,6 +103,9 @@ func _ready() -> void:
 	all_bodies.assign(_load_dir(BODIES_DIR))
 	all_runes.assign(_load_dir(RUNES_DIR))
 	all_mjolnir_traits.assign(_load_dir(MJOLNIR_TRAITS_DIR))
+	all_rewards.assign(_load_dir(REWARDS_DIR))
+	all_trials.assign(_load_dir(TRIALS_DIR))
+	map = load(MAP_PATH) as RunMap if ResourceLoader.exists(MAP_PATH) else null
 	# Модели, анимации и звуки грузятся в фоне, пока игрок в меню (см. AssetCache)
 	AssetCache.start()
 
@@ -107,13 +142,16 @@ func start_run(forced_body_id: String = "") -> void:
 	if body == null:
 		body = BodyDef.new()
 	rune_power = maxi(1, int(body.stat(&"rune_power", 1)))
-	var pool := ROOM_SCENES.duplicate()
-	pool.shuffle()
-	room_order.clear()
-	for i in mini(rooms_per_run, pool.size()):
-		room_order.append(pool[i])
-	room_order.append(BOSS_SCENE)
+	_build_room_order()
 	room_index = 0
+	room_rewards.clear()
+	room_rewards.append(map.first_room_reward if map else "combat")
+	reward_visits.clear()
+	forced_offers.clear()
+	silver = int(Save.perk("start_silver"))
+	silver_earned = 0
+	trait_rerolls = 0
+	silver_changed.emit(silver)
 	runes.clear()
 	glory = 0
 	kills = 0
@@ -128,6 +166,9 @@ func start_run(forced_body_id: String = "") -> void:
 	glory_changed.emit(glory)
 
 func current_room_path() -> String:
+	# Ларёк — свой зал (блок К), остальные награды — в залах из room_order
+	if current_reward() == "shop" and map and ResourceLoader.exists(map.shop_scene):
+		return map.shop_scene
 	return room_order[room_index] if room_index < room_order.size() else BOSS_SCENE
 
 func is_boss_room() -> bool:
@@ -149,6 +190,7 @@ func add_glory(amount: int) -> void:
 
 ## Вызывается при убийстве врага. Считает мультикиллы и серии.
 func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: String = "", base_glory: int = -1) -> void:
+	enemy_killed.emit(source)
 	kills += 1
 	streak += 1
 	best_streak = maxi(best_streak, streak)
@@ -310,3 +352,103 @@ func add_mjolnir_trait(t: MjolnirTrait) -> void:
 		mjolnir_traits.append(t)
 		mjolnir_trait_levels[t.id] = 1
 	mjolnir_traits_changed.emit(mjolnir_traits)
+
+# --- Двери-награды (блок И, GDD 15.1) ---
+
+## Порядок сцен залов на мир: RunMap.rooms залов из ROOM_SCENES (по кругу, без повтора подряд) + босс.
+## Тесты могут задать room_order сами — двери тогда назначают только награды.
+func _build_room_order() -> void:
+	var n := map.rooms if map else rooms_per_run
+	room_order.clear()
+	var pool: Array = []
+	while room_order.size() < n:
+		if pool.is_empty():
+			pool = ROOM_SCENES.duplicate()
+			pool.shuffle()
+			if not room_order.is_empty() and pool[0] == room_order[room_order.size() - 1] and pool.size() > 1:
+				pool.append(pool.pop_front())
+		room_order.append(pool.pop_front())
+	room_order.append(BOSS_SCENE)
+	if map:
+		miniboss_rooms = PackedInt32Array([map.miniboss_index()])
+
+func reward_def(id: String) -> RewardDef:
+	for r in all_rewards:
+		if r.id == id:
+			return r
+	return null
+
+## Награда текущего зала (id RewardDef).
+func current_reward() -> String:
+	if room_index < room_rewards.size() and room_rewards[room_index] != "":
+		return room_rewards[room_index]
+	if room_index == 0 and map:
+		return map.first_room_reward
+	if room_index < room_order.size() and room_order[room_index] == BOSS_SCENE:
+		return "boss"
+	if room_index in miniboss_rooms:
+		return "miniboss"
+	return "combat"
+
+## Тихий зал: без врагов (отдых, ларёк).
+func is_peaceful_room() -> bool:
+	if is_boss_room() or is_miniboss_room():
+		return false
+	var d := reward_def(current_reward())
+	return d != null and not d.combat
+
+## Можно ли вести дверь в ларёк (сцена зала-ларька уже есть).
+func shop_available() -> bool:
+	var d := reward_def("shop")
+	return map != null and d != null and d.enabled and ResourceLoader.exists(map.shop_scene)
+
+## Набор дверей после зачистки текущего зала: 2–3 награды (GDD 15.1), к мини-боссу и боссу — одна дверь.
+func roll_door_offers() -> Array[String]:
+	var out: Array[String] = []
+	if not forced_offers.is_empty():
+		for id in forced_offers.pop_front():
+			out.append(str(id))
+		return out
+	var next := room_index + 1
+	var boss_index := room_order.size() - 1
+	if map == null:
+		out.append("boss" if next >= boss_index else "combat")
+		return out
+	return map.roll_offers(all_rewards, next, boss_index, reward_visits, current_reward(), shop_available())
+
+## Игрок вошёл в дверь: следующий зал получит эту награду.
+func choose_door(id: String) -> void:
+	Perf.mark("door_choose")
+	var next := room_index + 1
+	while room_rewards.size() <= next:
+		room_rewards.append("")
+	room_rewards[next] = id
+	reward_visits[id] = int(reward_visits.get(id, 0)) + 1
+
+# --- Серебро (блок К) ---
+
+func add_silver(amount: int) -> void:
+	if amount <= 0:
+		return
+	# Руна «Жадность Брокка»: +25 % → +60 %
+	amount = int(round(amount * (1.0 + rune_value("brokk_greed"))))
+	silver += amount
+	silver_earned += amount
+	silver_changed.emit(silver)
+
+## Списать серебро; false — не хватает (ничего не списано).
+func spend_silver(amount: int) -> bool:
+	if amount > silver:
+		return false
+	silver -= maxi(0, amount)
+	silver_changed.emit(silver)
+	return true
+
+## Убрать одну копию руны (уровень −1; «Сдать руну» в ларьке).
+func remove_rune(id: String) -> bool:
+	for i in range(runes.size() - 1, -1, -1):
+		if runes[i].id == id:
+			runes.remove_at(i)
+			runes_changed.emit(runes)
+			return true
+	return false
