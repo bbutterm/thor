@@ -35,3 +35,12 @@ func _process(_delta):
 		available[0].pitch_scale = randf_range(0.9, 1.1)
 
 		available.pop_front()
+
+## Останавливаем все звуки при выходе: висящие воспроизведения на выходе изредка роняли
+## headless-тесты (abort уже после «ИТОГ ... 0 FAIL»)
+func _exit_tree():
+	queue.clear()
+	for p in get_children():
+		if p is AudioStreamPlayer:
+			p.stop()
+			p.stream = null
