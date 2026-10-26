@@ -351,6 +351,7 @@ func _do_melee() -> void:
 	to_p.y = 0
 	var reach := attack_range * 1.35 + 0.3
 	if to_p.length() <= reach and fwd.dot(to_p.normalized()) > 0.25:
+		RunTracker.note_hit(self)
 		player.take_damage(attack_damage, to_p.normalized() * 6.0 + Vector3.UP * 2.5)
 	FX.burst(get_parent(), global_position + fwd * attack_range * 0.8 + Vector3(0, 1, 0), 0.5 * model_scale, Color(1, 0.3, 0.2, 0.5), 0.15)
 	Audio.play("sounds/enemy_attack.ogg")
@@ -366,6 +367,7 @@ func _do_boss_slam() -> void:
 		var d := player.global_position - global_position
 		d.y = 0
 		if d.length() <= boss_slam_radius and player.is_on_floor():
+			RunTracker.note_hit(self)
 			player.take_damage(boss_slam_damage, d.normalized() * 10.0 + Vector3.UP * 6.0)
 	for c in get_tree().get_nodes_in_group("props"):
 		var rb := c as RigidBody3D

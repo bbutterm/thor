@@ -1,0 +1,257 @@
+{
+	"id": "odin",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"odin": {
+			"name": "Один",
+			"color": "#2a3f8f",
+			"initial": "О",
+			"accessory": "eyepatch",
+			"side": "right"
+		}
+	},
+	"scenes": [
+		{
+			"id": "odin_intro",
+			"trigger": "run_start",
+			"priority": 100,
+			"conditions": [
+				"run_count == 1"
+			],
+			"lines": [
+				{
+					"speaker": "odin",
+					"emotion": "angry",
+					"text": "Подъём! Сколько можно лежать?",
+					"id": "odin_intro_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "Пап, ещё серию… одну…",
+					"id": "odin_intro_02"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "angry",
+					"text": "Ты бог грома. А гремит у тебя только пузо.",
+					"choices": [
+						{
+							"id": "snap",
+							"label": "Огрызнуться",
+							"text": "Это не пузо, это запас грома!",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "smug",
+									"text": "Вот и потратишь. Марш в тело смертного.",
+									"id": "odin_intro_03_snap_01"
+								}
+							]
+						},
+						{
+							"id": "agree",
+							"label": "Согласиться",
+							"text": "Ну… может, чуть-чуть размяться.",
+							"lines": [
+								{
+									"speaker": "odin",
+									"emotion": "happy",
+									"text": "Чуть-чуть — это до первой смерти. Пошёл.",
+									"id": "odin_intro_03_agree_01"
+								}
+							]
+						}
+					],
+					"id": "odin_intro_03"
+				}
+			]
+		},
+		{
+			"id": "odin_first_death",
+			"trigger": "death",
+			"priority": 100,
+			"conditions": [
+				"first_time"
+			],
+			"lines": [
+				{
+					"pool": "$reaction"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Тело смертного погибло — ты снова на диване. Так будет каждый раз.",
+					"id": "odin_first_death_01"
+				},
+				{
+					"speaker": "thor",
+					"emotion": "shocked",
+					"text": "Каждый?!",
+					"id": "odin_first_death_02"
+				},
+				{
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Пока не вернёшь форму. Добро пожаловать на тренировки.",
+					"id": "odin_first_death_03"
+				}
+			]
+		}
+	],
+	"pools": {
+		"run_start": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Это тело выбрал не я. Ладно, это тело выбрал я.",
+				"id": "odin_run_start_01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Новое тело, старая лень. Удиви меня.",
+				"id": "odin_run_start_02"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Помни: топор — острым концом к врагу.",
+				"id": "odin_run_start_03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Мама просила за тобой присмотреть. Смотрю. Пока стыдно.",
+				"id": "odin_run_start_04"
+			}
+		],
+		"run_start_berserker": [
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Берсерк. Много мяса, мало мыслей. Тебе подойдёт.",
+				"id": "odin_run_start_berserker_01"
+			}
+		],
+		"run_start_hunter": [
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Охотник. Быстрый, хрупкий. Как твоё самолюбие.",
+				"id": "odin_run_start_hunter_01"
+			}
+		],
+		"run_start_thrall": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Трэлл. Слабое тело, двойная слава. Социальный лифт.",
+				"id": "odin_run_start_thrall_01"
+			}
+		],
+		"death": [
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Смерть засчитана. Достоинство — нет.",
+				"id": "odin_death_01"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Я видел, как гномы дерутся лучше. Пьяные гномы.",
+				"id": "odin_death_02"
+			}
+		],
+		"rune_pick": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Руна выбрана. Не потеряй, как молот в прошлый раз.",
+				"id": "odin_rune_pick_01"
+			}
+		],
+		"streak10": [
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Десять подряд! Я почти горжусь. Почти.",
+				"id": "odin_streak10_01"
+			}
+		],
+		"room_clear": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Зал чист. Иди, пока я добрый.",
+				"id": "odin_room_clear_01"
+			}
+		],
+		"boss_start": [
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Большой. Злой. Как мама до завтрака.",
+				"id": "odin_boss_start_01"
+			}
+		],
+		"victory": [
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Неплохо. Для скуфа.",
+				"id": "odin_victory_01"
+			}
+		],
+		"victory_reaction": [
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Хм. Сдал зачёт. Не зазнавайся.",
+				"id": "odin_victory_reaction_01"
+			}
+		],
+		"big_slam": [
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Вот! ВОТ!",
+				"id": "odin_big_slam_01"
+			}
+		],
+		"idle": [
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "ДВИГАЙСЯ!",
+				"id": "odin_idle_01"
+			}
+		],
+		"multikill": [
+			{
+				"speaker": "odin",
+				"emotion": "neutral",
+				"text": "Хоть что-то.",
+				"id": "odin_multikill_01"
+			}
+		],
+		"big_damage": [
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Скуф…",
+				"id": "odin_big_damage_01"
+			}
+		],
+		"ranged_kill": [
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "Позорище.",
+				"id": "odin_ranged_kill_01"
+			}
+		]
+	}
+}

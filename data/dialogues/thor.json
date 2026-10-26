@@ -1,0 +1,57 @@
+{
+	"id": "thor",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца",
+	"speakers": {
+		"thor": {
+			"name": "Тор",
+			"color": "#d23a2a",
+			"initial": "Т",
+			"accessory": "bun",
+			"side": "left"
+		}
+	},
+	"scenes": [],
+	"pools": {
+		"reply_death": [
+			{
+				"lines": [
+					{
+						"speaker": "thor",
+						"emotion": "embarrassed",
+						"text": "Я просто разогревался.",
+						"choices": [
+							{
+								"id": "snap",
+								"label": "Огрызнуться",
+								"text": "И вообще, драугры жульничали!",
+								"lines": [
+									{
+										"speaker": "odin",
+										"emotion": "angry",
+										"text": "Драугры не жульничают. У них мозгов нет.",
+										"id": "thor_reply_death_01_01_snap_01"
+									}
+								]
+							},
+							{
+								"id": "agree",
+								"label": "Согласиться",
+								"text": "Ладно. Я был медленный.",
+								"lines": [
+									{
+										"speaker": "odin",
+										"emotion": "neutral",
+										"text": "Признание — первый шаг. Второй — пробежка.",
+										"id": "thor_reply_death_01_01_agree_01"
+									}
+								]
+							}
+						],
+						"id": "thor_reply_death_01_01"
+					}
+				]
+			}
+		]
+	}
+}

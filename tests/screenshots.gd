@@ -95,5 +95,20 @@ func _run() -> void:
 	p.take_damage(99999.0, Vector3.ZERO, true)
 	await wait(2.2)
 	await shot("09_death")
+	# Диалог у дивана после смерти (блок А)
+	game.end_screen.restart_requested.emit()
+	await wait(1.6)
+	await shot("10_dialogue")
+	var box := Dialogue.box()
+	for i in 60:
+		if not box.visible or box._waiting_choice:
+			break
+		box.advance()
+		await wait(0.15)
+	if box.visible and box._waiting_choice:
+		await wait(0.2)
+		await shot("11_dialogue_choice")
+	box.skip()
+	await wait(1.0)
 	FX.reset_time()
 	get_tree().quit(0)

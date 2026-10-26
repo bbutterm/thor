@@ -48,7 +48,7 @@ func _ready() -> void:
 	hb.alignment = BoxContainer.ALIGNMENT_CENTER
 	hb.add_theme_constant_override("separation", 16)
 	vb.add_child(hb)
-	_restart = UIStyle.button("Новое тело")
+	_restart = UIStyle.button("К Одину ▸")
 	_restart.pressed.connect(func() -> void: restart_requested.emit())
 	hb.add_child(_restart)
 	var menu := UIStyle.button("В меню")
@@ -66,7 +66,7 @@ func show_result(victory: bool) -> void:
 	else:
 		_title.text = "ТЫ ПАЛ"
 		_title.label_settings.font_color = UIStyle.BLOOD
-		_quote.text = "«%s»" % Odin.pick("death")
+		_quote.text = RunTracker.describe_last_death()
 	_verdict.text = "Вердикт Одина: %s" % Run.verdict()
 	var body_name := Run.body.display_name if Run.body else "—"
 	_stats.text = "Тело: %s\nСлава: %d\nУбито врагов: %d\nЛучшая серия: %d\nПройдено залов: %d из %d\nРун собрано: %d" % [

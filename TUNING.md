@@ -78,3 +78,22 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 ## Реплики Одина — `data/odin_lines.json`
 
 Обычный JSON: событие → список фраз. Добавляй сколько хочешь.
+
+## Диалоги — `ui/dialogue_box.gd`, `ui/bark_bubble.gd`, `scripts/dialogue_manager.gd`, `run/odin.gd`
+
+| Где | Параметр | По умолчанию | Что делает |
+|---|---|---|---|
+| DialogueBox | `chars_per_second` | 48 | Скорость печати текста |
+| DialogueBox | `punctuation_pause` | 0.12 | Пауза после . ! ? … |
+| DialogueBox | `portrait_bounce` | 0.06 | «Подпрыгивание» портрета при смене эмоции |
+| DialogueBox | `inactive_dim` | 0.45 | Затемнение неговорящего портрета |
+| DialogueBox | `open_guard` | 0.25 | Защита от двойного клика после открытия |
+| BarkBubble | `hold_time` / `max_hold_time` | 2.2 / 4.0 | Сколько держится пузырь в бою |
+| Dialogue | `thor_reply_chance` | 0.4 | Шанс ответа Тора (с выбором) после реакции Одина на смерть |
+| Odin | `combat_cooldown` | 12 | Реплика Одина в бою не чаще (GDD 17) |
+
+## Бой-реплики и причина смерти — `run/run_tracker.gd`
+
+`idle_time` 4 с / `idle_speed` 0.6 («ДВИГАЙСЯ!»), `multikill_count` 3 за `multikill_window` 0.8 с («Хоть что-то»), `big_damage_fraction` 0.35 HP за `big_damage_window` 3 с («Скуф…»), `quick_death_time` 45 с («быстро сдох»), `long_life_time` 420 с («долго жил»), `fall_death_y` −15 (ниже — смерть от падения).
+
+Тексты — `data/dialogues/*.json`: правь прямо в JSON (формат в `STORY.md`).
