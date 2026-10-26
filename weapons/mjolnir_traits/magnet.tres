@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MjolnirTrait" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/mjolnir_trait.gd" id="1_trait"]
+[ext_resource type="Script" path="res://weapons/mjolnir_traits/magnet.gd" id="2_handler"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("2_handler")
+
+[resource]
+script = ExtResource("1_trait")
+id = &"magnet"
+title = "Магнит"
+description = "Воткнутый молот стягивает врагов в радиусе 6 м, а по возврату раскидывает."
+description_lvl2 = "Радиус 9 м."
+glyph = "ᛟ"
+color = Color(0.75, 0.6, 1, 1)
+group = "возврат"
+handler = SubResource("Resource_handler")

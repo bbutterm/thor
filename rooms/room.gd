@@ -57,6 +57,20 @@ func start(player: Player) -> void:
 func wave_count() -> int:
 	return _waves.size()
 
+## Добавить волну после всех существующих (маркеры станут детьми Spawns). Возвращает номер волны.
+## Вызывать до start() или пока зал не зачищен.
+func add_wave(markers: Array[Node3D]) -> int:
+	var w := 0
+	for k in _waves.keys():
+		w = maxi(w, int(k) + 1)
+	_waves[w] = []
+	for m in markers:
+		m.set_meta("wave", w)
+		if m.get_parent() == null:
+			spawns.add_child(m)
+		_waves[w].append(m)
+	return w
+
 func _spawn_wave(index: int) -> void:
 	Perf.mark("spawn_wave")
 	var markers: Array = _waves.get(index, [])
@@ -81,6 +95,11 @@ func _spawn_enemy(marker: Node3D) -> void:
 	var path: String = ENEMY_SCENES.get(kind, ENEMY_SCENES["grunt"])
 	var enemy := (load(path) as PackedScene).instantiate() as Enemy
 	Perf.mark("spawn_" + kind)
+	# Маркер может переопределить характеристики врага до _ready (мини-босс — см. MinibossDef)
+	if marker.has_meta("setup"):
+		var setup: Variant = marker.get_meta("setup")
+		if setup is Callable and (setup as Callable).is_valid():
+			(setup as Callable).call(enemy)
 	# Позиция до add_child: в _ready враг рисует кольцо появления там, где стоит
 	enemy.position = to_local(marker.global_position)
 	enemy.rotation.y = marker.global_rotation.y - global_rotation.y

@@ -4,7 +4,9 @@
 
 ## Где что
 - `player/player.gd` — движение (рывок, двойной прыжок, удар-приземление, супер-прыжок), урон; `player/camera_fx.gd` — тряска/FOV/наклон.
-- `weapons/` — топор (`axe.gd`), Мьёльнир (`mjolnir_hand.gd` + `mjolnir_projectile.gd`), огонь (`fire_zone.gd`).
+- `weapons/` — топор (`axe.gd`), Мьёльнир (`mjolnir_hand.gd` + `mjolnir_projectile.gd`: состояния OUT / HOVER / STUCK «воткнулся» / RETURN, идеальный хват), огонь (`fire_zone.gd`).
+- Трейты Мьёльнира: `weapons/mjolnir_trait.gd` (`MjolnirTrait`, данные + группа) и `weapons/mjolnir_trait_handler.gd` (`MjolnirTraitHandler`, хуки `on_throw`/`on_flight_tick`/`on_hit_enemy`/`on_hit_world`/`on_stuck_tick`/`on_recall_start`/`on_recall_tick`/`on_caught`/`on_player_slam`/`on_perfect_catch`, `modify(stat)`); сами трейты — `weapons/mjolnir_traits/<id>.tres` + `<id>.gd`. Активные — `Run.mjolnir_traits`, рука собирает копии обработчиков. Выбор — `ui/trait_pick.gd`, иконки — `ui/mjolnir_traits_hud.gd`.
+- Мини-босс: `enemies/miniboss_def.gd` (`MinibossDef`, `enemies/minibosses/*.tres`) — обычный враг с переопределёнными числами и `Kind.BOSS`; добавляется последней волной (`Room.add_wave`) в залах `Run.miniboss_rooms`, после него `Game` открывает выбор трейта, потом руны.
 - `enemies/enemy.gd` — один скрипт на грунта/метателя/босса (поле `kind`); `enemy_projectile.gd`.
 - `rooms/room.gd` + `rooms/*.tscn` — залы, волны (маркеры в `Spawns` с метаданными `kind`/`wave`), дверь, выход.
 - `run/run_manager.gd` (автозагрузка `Run`) — забег, Слава, руны; `run/odin.gd` (`Odin`) — реплики из `data/odin_lines.json`.
@@ -41,6 +43,7 @@ godot --headless --path . res://tools/build_scenes.tscn              # если 
 godot --headless --path . --fixed-fps 60 res://tests/smoke_test.tscn # полный забег, ожидается 0 FAIL
 godot --headless --path . --fixed-fps 60 res://tests/reach_test.tscn # достижимость платформ
 godot --headless --path . --fixed-fps 60 res://tests/ai_test.tscn    # враги доходят и бьют во всех залах
+godot --headless --path . --fixed-fps 60 res://tests/trait_test.tscn # база молота, выбор трейтов, каждый трейт ур. 1–2
 godot --headless --path . --fixed-fps 60 res://tests/hitch_test.tscn -- 50  # фризы (CPU-часть)
 ```
 Фризы с рендерингом (Forward+ на программном Vulkan: `apt-get install mesa-vulkan-drivers`):

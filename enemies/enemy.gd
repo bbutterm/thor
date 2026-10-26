@@ -43,6 +43,8 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var boss_slam_radius: float = 6.5
 @export var boss_slam_damage: float = 25.0
 @export var boss_slam_windup: float = 1.0
+## Шанс (за кадр) начать удар по площади издалека (> 5 м) — давление на игрока, но и задержка подхода
+@export var boss_far_slam_chance: float = 0.02
 
 @export_group("Об стену")
 @export var wall_splat_speed: float = 8.5
@@ -249,7 +251,7 @@ func _think_chase() -> Vector3:
 	match kind:
 		Kind.GRUNT, Kind.BOSS:
 			var reach := attack_range
-			if kind == Kind.BOSS and dist > 5.0 and _cooldown <= 0.0 and randf() < 0.02:
+			if kind == Kind.BOSS and dist > 5.0 and _cooldown <= 0.0 and randf() < boss_far_slam_chance:
 				_begin_windup(true)
 				return Vector3.ZERO
 			if dist <= reach and _cooldown <= 0.0:
@@ -428,6 +430,15 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	if health <= 0.0:
 		_die(source)
 
+## Оглушить на time секунд (босса и мини-босса — нет). Для трейтов и эффектов.
+func stun(time: float) -> void:
+	if is_dead or kind == Kind.BOSS:
+		return
+	if _telegraph and is_instance_valid(_telegraph):
+		_telegraph.queue_free()
+	_stun_left = maxf(_stun_left, time)
+	_set_state(State.STUNNED)
+
 func _apply_movement(move_dir: Vector3, delta: float) -> void:
 	var can_move := state == State.CHASE
 	var target := move_dir * move_speed if can_move else Vector3.ZERO
@@ -512,7 +523,8 @@ func _die(source: String) -> void:
 	if _telegraph and is_instance_valid(_telegraph):
 		_telegraph.queue_free()
 	var now := Time.get_ticks_msec() / 1000.0
-	Run.register_kill(source == "axe_finisher", now - _last_splat_time < 0.6, kind == Kind.BOSS)
+	# Мини-босс — тоже Kind.BOSS (поведение босса), но Славу за него даёт MinibossDef
+	Run.register_kill(source == "axe_finisher", now - _last_splat_time < 0.6, kind == Kind.BOSS and not has_meta("miniboss"))
 	if player and is_instance_valid(player) and not player.is_dead:
 		player.heal(player.heal_per_kill)
 	Audio.play("sounds/enemy_destroy.ogg")

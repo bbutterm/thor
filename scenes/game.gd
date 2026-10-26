@@ -11,6 +11,8 @@ class_name Game
 
 var room: Room
 var _ending: bool = false
+## Выбор трейта Мьёльнира после мини-босса (строится кодом, не из game.tscn)
+var trait_pick: TraitPick
 
 func _ready() -> void:
 	FX.reset_time()
@@ -21,6 +23,10 @@ func _ready() -> void:
 	player.died.connect(_on_player_died)
 	Run.kill_streak.connect(_on_kill_streak)
 	rune_pick.picked.connect(_on_rune_picked)
+	trait_pick = TraitPick.new()
+	trait_pick.name = "TraitPick"
+	add_child(trait_pick)
+	trait_pick.picked.connect(_on_trait_picked)
 	end_screen.restart_requested.connect(restart_run)
 	end_screen.menu_requested.connect(go_to_menu)
 	pause_menu.restart_requested.connect(restart_run)
@@ -37,7 +43,7 @@ func _ready() -> void:
 		Odin.say("run_start")
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("pause") and not _ending and not rune_pick.visible:
+	if event.is_action_pressed("pause") and not _ending and not rune_pick.visible and not trait_pick.visible:
 		pause_menu.toggle()
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.pressed and not get_tree().paused and not _ending:
@@ -70,6 +76,11 @@ func _load_room() -> void:
 	room.exit_reached.connect(_on_exit_reached)
 	room.boss_spawned.connect(hud.show_boss)
 	room.enemy_count_changed.connect(hud.set_enemy_count)
+	# Мини-босс — последней волной зала (Run.miniboss_rooms)
+	if Run.is_miniboss_room():
+		var mb := Run.miniboss_def() as MinibossDef
+		if mb:
+			mb.add_to_room(room, hud)
 	hud.set_room(Run.room_index + 1, Run.total_rooms(), room.room_title, Run.is_boss_room())
 	hud.fade_in()
 	# Пока экран затемнён — прогреваем шейдеры (в каждом зале: свои материалы под светом огня/снарядов)
@@ -97,11 +108,29 @@ func _on_room_cleared() -> void:
 	get_tree().create_timer(0.7, false).timeout.connect(func() -> void:
 		if player.is_dead:
 			return
-		var choices := Run.random_rune_choices(3)
-		if choices.is_empty():
-			room.open_door()
-		else:
-			rune_pick.open(choices))
+		# После мини-босса — сначала трейт Мьёльнира, потом руна
+		if Run.is_miniboss_room():
+			var traits := Run.random_mjolnir_trait_choices(3)
+			if not traits.is_empty():
+				trait_pick.open(traits)
+				return
+		_offer_rune())
+
+func _offer_rune() -> void:
+	var choices := Run.random_rune_choices(3)
+	if choices.is_empty():
+		room.open_door()
+	else:
+		rune_pick.open(choices)
+
+func _on_trait_picked(t: MjolnirTrait) -> void:
+	Run.add_mjolnir_trait(t)
+	Odin.say("trait_pick")
+	Audio.play("sounds/sfx/rune_pick.wav")
+	hud.toast("%s %s — %s" % [t.glyph, t.title, "уровень 2" if Run.mjolnir_trait_level(t.id) > 1 else "Мьёльнир"])
+	get_tree().create_timer(0.5, false).timeout.connect(func() -> void:
+		if not player.is_dead:
+			_offer_rune())
 
 func _on_rune_picked(rune: RuneDef) -> void:
 	Run.add_rune(rune)

@@ -8,7 +8,8 @@ var _time: float = 0.0
 var _tick: float = 0.0
 var _mi: MeshInstance3D
 
-func setup(pos: Vector3, radius_: float, duration_: float, dps_: float) -> void:
+## with_light = false — без источника света (много мелких зон «Огненного следа»)
+func setup(pos: Vector3, radius_: float, duration_: float, dps_: float, with_light: bool = true) -> void:
 	Perf.mark("fire_zone")
 	radius = radius_
 	duration = duration_
@@ -22,6 +23,8 @@ func setup(pos: Vector3, radius_: float, duration_: float, dps_: float) -> void:
 	mi.position.y = 0.05
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(mi)
+	if not with_light:
+		return
 	var light := OmniLight3D.new()
 	light.light_color = Color(1, 0.5, 0.15)
 	light.light_energy = 2.0

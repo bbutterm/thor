@@ -25,6 +25,8 @@ var _fade_rect: ColorRect
 var _boss_box: VBoxContainer
 var _boss_bar: ProgressBar
 var _boss: Enemy
+var _boss_title: Label
+var _mjolnir_traits: MjolnirTraitsHud
 var _crosshair: TextureRect
 var _glory_shown: float = 0.0
 
@@ -46,6 +48,8 @@ func bind_player(p: Player) -> void:
 	_on_health_changed(player.health, player.max_health)
 	_on_dash_changed(player.dash_charges, player.dash_charges_max, 0.0)
 	_on_hammer_state(true)
+	if _mjolnir_traits:
+		_mjolnir_traits.player = p
 	if Run.body:
 		_body_label.text = "Тело: " + Run.body.display_name
 
@@ -140,9 +144,9 @@ func _build() -> void:
 	_boss_box.visible = false
 	_boss_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_boss_box)
-	var bl2 := UIStyle.label("ХРИМТУРС ПОЖИРАТЕЛЬ ГЕРОЕВ", 20, UIStyle.GOLD)
-	bl2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_boss_box.add_child(bl2)
+	_boss_title = UIStyle.label("ХРИМТУРС ПОЖИРАТЕЛЬ ГЕРОЕВ", 20, UIStyle.GOLD)
+	_boss_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_box.add_child(_boss_title)
 	_boss_bar = _make_bar(Color(0.75, 0.15, 0.1), Vector2(600, 18))
 	_boss_box.add_child(_boss_bar)
 
@@ -169,6 +173,10 @@ func _build() -> void:
 	_toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_toast_label.modulate.a = 0.0
 	root.add_child(_toast_label)
+
+	# Трейты Мьёльнира — слева внизу над здоровьем (отдельно от рун)
+	_mjolnir_traits = MjolnirTraitsHud.new()
+	root.add_child(_mjolnir_traits)
 
 	# Затемнение между залами
 	_fade_rect = ColorRect.new()
@@ -304,6 +312,8 @@ func set_enemy_count(alive: int) -> void:
 func show_boss(boss: Enemy) -> void:
 	_boss = boss
 	_boss_box.visible = true
+	# Имя на полосе — из метаданных врага (мини-босс), иначе финальный босс
+	_boss_title.text = str(boss.get_meta("boss_title", "ХРИМТУРС ПОЖИРАТЕЛЬ ГЕРОЕВ"))
 	boss.died.connect(func(_e: Enemy) -> void: _boss_box.visible = false)
 
 func fade_in(time: float = 0.35) -> void:

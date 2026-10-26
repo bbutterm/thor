@@ -1,6 +1,6 @@
 extends Node
 ## Проверка «достижимости»: можно ли запрыгнуть на центральную платформу (зал 2, 2.6 м) двойным прыжком
-## и на башню (зал 3, 5 м) супер-прыжком + двойным.
+## и на башню (зал 3, 5 м) супер-прыжком + двойным, а также трейтом «Притяжение к молоту».
 ## godot --headless --path . --fixed-fps 60 res://tests/reach_test.tscn
 
 var fails := 0
@@ -87,6 +87,34 @@ func _run() -> void:
 	var ok2 := p.global_position.y > 4.8
 	print("[%s] супер+двойной на башню 5 м: y=%.2f" % ["OK" if ok2 else "FAIL", p.global_position.y])
 	if not ok2:
+		fails += 1
+
+	# Зал 3 ещё раз: трейт «Притяжение к молоту» — метнуть молот в стену башни под самым верхом
+	# и «дёрнуть» себя к нему (ПКМ) — это способ перемещения
+	g = await _start("res://rooms/room_03.tscn")
+	p = g.player
+	for t in Run.all_mjolnir_traits:
+		if t.id == &"pull_to_hammer":
+			Run.add_mjolnir_trait(t)
+	p.global_position = Vector3(0, 0.1, 8.0)
+	p.velocity = Vector3.ZERO
+	await frames(10)
+	var cam := p.get_aim_origin()
+	p.rotation_target = Vector2(atan2(4.7 - cam.y, cam.z - 0.0), 0)
+	await frames(5)
+	p.mjolnir.throw_hammer()
+	var stuck := false
+	for i in 60:
+		await get_tree().physics_frame
+		var pr := p.mjolnir.projectile
+		if pr and is_instance_valid(pr) and pr.is_stuck():
+			stuck = true
+			break
+	p.mjolnir.request_throw_or_recall()
+	await frames(120)
+	var ok3 := stuck and p.global_position.y > 4.8 and p.mjolnir.in_hand
+	print("[%s] Притяжение к молоту на башню 5 м: воткнулся=%s, y=%.2f" % ["OK" if ok3 else "FAIL", stuck, p.global_position.y])
+	if not ok3:
 		fails += 1
 	FX.reset_time()
 	get_tree().quit(1 if fails > 0 else 0)
