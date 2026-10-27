@@ -362,6 +362,19 @@ func _test_select_screen() -> void:
 	await wait(0.1)
 	check(bs.visible and bs.bodies.size() == 9, "экран открыт, тел 9")
 	check(bs.selected != null and bs.selected.id == "hunter", "выбрано прошлое тело")
+	check(bs._stats_label.text.contains("рун 3"), "общий запас назван рунами")
+	for pair in [["hunter", "1.67"], ["courier", "1.25"], ["berserker", "3.33"]]:
+		bs.select(pair[0])
+		check(bs._move_desc.text.contains(pair[1]) and bs._move_desc.text.contains("на земле"),
+			"%s: базовое время руны на экране выбора (%s)" % [pair[0], bs._move_desc.text])
+	bs.select("hunter")
+	var mp := bs.selected.movement_profile()
+	var saved_recharge := mp.dash_recharge
+	mp.dash_recharge = 4.21
+	bs.select("hunter")
+	check(bs._move_desc.text.contains("4.21"), "описание берёт время из данных профиля")
+	mp.dash_recharge = saved_recharge
+	bs.select("hunter")
 	var locked := 0
 	for b in bs.bodies:
 		if bs.card(b.id).get_meta("locked"):

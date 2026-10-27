@@ -400,6 +400,16 @@ func _test_screens() -> void:
 	check(_find_text(menu, "Start Run") and not _find_text(menu, "Начать забег"), "главное меню перестроилось на en")
 	menu.queue_free()
 	await wait(0.1)
+	var bs := BodySelect.new()
+	get_tree().root.add_child(bs)
+	bs.open("Назад", "hunter")
+	check(bs._stats_label.text.contains("runes 3"), "общий запас рун переведён в выборе тела")
+	for pair in [["hunter", "1.67"], ["courier", "1.25"], ["berserker", "3.33"]]:
+		bs.select(pair[0])
+		check(bs._move_desc.text.contains(pair[1]) and bs._move_desc.text.contains("ground") and not bs._move_desc.text.contains("%s"),
+			"%s: описание руны и её время переведены (%s)" % [pair[0], bs._move_desc.text])
+	bs.close("")
+	bs.queue_free()
 
 # --- В бою: HUD, пауза, Один ---
 

@@ -403,7 +403,7 @@ func _update_detail() -> void:
 	_show_portrait(b.id, locked)
 	_name_label.text = tr(b.display_name).to_upper()
 	_stats_label.text = (tr("ЗАКРЫТО · %d ᛟ\n") % price_of(b) if locked else "") + \
-		tr("HP %d  ·  скорость %s  ·  рывков %d") % [int(b.max_health), _num(b.move_speed), b.dash_charges]
+		tr("HP %d  ·  скорость %s  ·  рун %d") % [int(b.max_health), _num(b.move_speed), b.dash_charges]
 	_stats_label.label_settings.font_color = Color(0.95, 0.7, 0.5) if locked else UIStyle.TEXT
 	var start := tr(b.start_melee.display_name) if b.start_melee else "—"
 	if b.start_ranged:
@@ -411,7 +411,7 @@ func _update_detail() -> void:
 	_start_label.text = tr("Старт: %s") % start
 	var mp := b.movement_profile()
 	_move_title.text = tr(mp.title) if mp else b.movement_style
-	_move_desc.text = tr(mp.description) if mp else ""
+	_move_desc.text = mp.description_text() if mp else ""
 	_fill_trait(b.passive, _passive_title, _passive_desc)
 	_fill_trait(b.flaw, _flaw_title, _flaw_desc)
 	_odin_text.text = tr(b.odin_comment if b.odin_comment != "" else b.description)
