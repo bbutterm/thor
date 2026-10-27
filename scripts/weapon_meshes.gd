@@ -346,7 +346,6 @@ static func _painted_mat(key: String, src: Material) -> Material:
 		m.albedo_texture = b.albedo_texture
 	m.metallic = 0.0
 	m.roughness = 0.75
-	m.specular = 0.35
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	_painted_mats[key] = m
 	return m
