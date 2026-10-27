@@ -4,6 +4,7 @@ extends Node
 ## Для ускорения программного рендера фон 3D отключён; все 2D-контролы настоящие.
 
 var output: String = "user://deck_shots"
+var layout_failures: int = 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -33,6 +34,14 @@ func shot(name: String) -> void:
 		return
 	print("shot: %s (%d×%d)" % [name, img.get_width(), img.get_height()])
 
+func check_bounds(control: Control, label: String) -> void:
+	var rect := control.get_global_rect()
+	var viewport := get_viewport().get_visible_rect().size
+	var ok := rect.position.x >= 8.0 and rect.position.y >= 8.0 and rect.end.x <= viewport.x - 8.0 and rect.end.y <= viewport.y - 8.0
+	print("layout: %s %s in %s: %s" % [label, rect, viewport, "OK" if ok else "FAIL"])
+	if not ok:
+		layout_failures += 1
+
 func _run() -> void:
 	Save.use_path("user://deck_shots_save.json")
 	Save.reset()
@@ -58,6 +67,22 @@ func _run() -> void:
 	body.open("Назад", "berserker")
 	await frames()
 	await shot("04_body")
+	check_bounds(body._detail_panel, "body detail")
+	check_bounds(body._back_btn, "body back")
+	check_bounds(body._fight_btn, "body fight")
+	var joy := InputEventJoypadMotion.new()
+	joy.device = 0
+	joy.axis = JOY_AXIS_RIGHT_Y
+	joy.axis_value = 1.0
+	Input.parse_input_event(joy)
+	await frames(30)
+	joy.axis_value = 0.0
+	Input.parse_input_event(joy)
+	await frames()
+	print("detail scroll: %d" % body._detail_scroll.scroll_vertical)
+	if body._detail_scroll.scroll_vertical <= 0:
+		layout_failures += 1
+	await shot("04_body_scrolled")
 	body.close("")
 	body.queue_free()
 	await frames()
@@ -82,16 +107,16 @@ func _run() -> void:
 	rune.queue_free()
 	get_tree().paused = false
 	await frames()
-	var trait := TraitPick.new()
-	get_tree().current_scene.add_child(trait)
+	var trait_picker := TraitPick.new()
+	get_tree().current_scene.add_child(trait_picker)
 	await frames()
 	var traits: Array[MjolnirTrait] = []
 	traits.assign(Run.all_mjolnir_traits.slice(0, 3))
-	trait.open(traits)
+	trait_picker.open(traits)
 	await frames()
 	await shot("07_traits")
-	trait.visible = false
-	trait.queue_free()
+	trait_picker.visible = false
+	trait_picker.queue_free()
 	get_tree().paused = false
 	await frames()
 	var choice := ChoicePick.new()
@@ -139,4 +164,4 @@ func _run() -> void:
 	game.end_screen.show_result(false)
 	await frames()
 	await shot("12_end")
-	get_tree().quit()
+	get_tree().quit(1 if layout_failures > 0 else 0)
