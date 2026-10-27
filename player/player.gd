@@ -301,7 +301,7 @@ func recalc_from_runes(run: Node, full_heal: bool = false) -> void:
 
 func _emit_all() -> void:
 	health_changed.emit(health, max_health)
-	dash_charges_changed.emit(dash_charges, dash_charges_max, 0.0)
+	dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
 
 # --- Ввод мышью ---
 
@@ -419,7 +419,7 @@ func _update_timers(delta: float) -> void:
 		if _dash_recharge_timer >= dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult:
 			_dash_recharge_timer = 0.0
 			dash_charges += 1
-		dash_charges_changed.emit(dash_charges, dash_charges_max, _dash_recharge_timer / (dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult))
+		dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
 	elif dash_charges >= dash_charges_max:
 		_dash_recharge_timer = 0.0
 
@@ -543,13 +543,17 @@ func restore_mjolnir_runes(amount: int) -> void:
 	dash_charges = mini(dash_charges_max, dash_charges + maxi(0, amount))
 	if dash_charges >= dash_charges_max:
 		_dash_recharge_timer = 0.0
+	dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
+
+## В воздухе таймер приостановлен, но его сохранённая доля остаётся видимой в HUD.
+func _rune_recharge_progress() -> float:
 	var duration := maxf(dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult, 0.001)
-	dash_charges_changed.emit(dash_charges, dash_charges_max, _dash_recharge_timer / duration)
+	return clampf(_dash_recharge_timer / duration, 0.0, 1.0)
 
 func _spend_dash_charge() -> void:
 	dash_charges -= 1
 	_dash_recharge_timer = 0.0 if dash_charges == dash_charges_max - 1 else _dash_recharge_timer
-	dash_charges_changed.emit(dash_charges, dash_charges_max, 0.0)
+	dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
 
 func _start_dash(wish: Vector3) -> void:
 	_spend_dash_charge()
