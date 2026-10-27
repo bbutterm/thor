@@ -807,680 +807,721 @@ _surfaces = [{
 "vertex_data": PackedByteArray("AAAAvwAAgD8AAAAAAAAAP/MENT/zBDU/AAAAv/MENT/zBDU/AAAAvwAAgD8AAAAAAAAAPwAAgD8AAAAAAAAAP/MENT/zBDU/AAAAv/MENT/zBDU/AAAAPzIxjSQAAIA/AAAAvzIxjSQAAIA/AAAAv/MENT/zBDU/AAAAP/MENT/zBDU/AAAAPzIxjSQAAIA/AAAAvzIxjSQAAIA/AAAAP/MENb/zBDU/AAAAv/MENb/zBDU/AAAAvzIxjSQAAIA/AAAAPzIxjSQAAIA/AAAAP/MENb/zBDU/AAAAv/MENb/zBDU/AAAAPwAAgL8yMQ0lAAAAvwAAgL8yMQ0lAAAAv/MENb/zBDU/AAAAP/MENb/zBDU/AAAAPwAAgL8yMQ0lAAAAvwAAgL8yMQ0lAAAAP/MENb/zBDW/AAAAv/MENb/zBDW/AAAAvwAAgL8yMQ0lAAAAPwAAgL8yMQ0lAAAAP/MENb/zBDW/AAAAv/MENb/zBDW/AAAAP8rJU6UAAIC/AAAAv8rJU6UAAIC/AAAAv/MENb/zBDW/AAAAP/MENb/zBDW/AAAAP8rJU6UAAIC/AAAAv8rJU6UAAIC/AAAAP/MENT/zBDW/AAAAv/MENT/zBDW/AAAAv8rJU6UAAIC/AAAAP8rJU6UAAIC/AAAAP/MENT/zBDW/AAAAv/MENT/zBDW/AAAAPwAAgD8yMY2lAAAAvwAAgD8yMY2lAAAAv/MENT/zBDW/AAAAP/MENT/zBDW/AAAAPwAAgD8yMY2l/3+B2kgvErn/f4HaSC8Suf9/gdpILxK5/3+B2kgvErn/f4HaSC8Suf9/gdpILxK5/398pSZyo5f/f3ylJnKjl/9/fKUmcqOX/398pSZyo5f/f3ylJnKjl/9/fKUmcqOX/3+CWrdQ7Ib/f4Jat1Dshv9/glq3UOyG/3+CWrdQ7Ib/f4Jat1Dshv9/glq3UOyG/399JdkNW6j/f30l2Q1bqP9/fSXZDVuo/399JdkNW6j/f30l2Q1bqP9/fSXZDVuofKUAAEgvErl8pQAASC8SuXylAABILxK5fKUAAEgvErl8pQAASC8SuXylAABILxK5gdoAACZyo5eB2gAAJnKjl4HaAAAmcqOXgdoAACZyo5eB2gAAJnKjl4HaAAAmcqOXgdr//7dQ7IaB2v//t1DshoHa//+3UOyGgdr//7dQ7IaB2v//t1DshoHa//+3UOyGfKX//9kNW6h8pf//2Q1bqHyl///ZDVuofKX//9kNW6h8pf//2Q1bqHyl///ZDVuo")
 }]
 
-[node name="Room05" type="Node3D" unique_id=417483019]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_a30k7"]
+resource_name = "surface_ground"
+render_priority = 0
+shader = ExtResource("3_bnk3f")
+shader_parameter/albedo_tex = ExtResource("7_h7hai")
+shader_parameter/normal_strength = null
+shader_parameter/tint = Color(0.7, 0.62, 0.55, 1)
+shader_parameter/uv_scale = 0.1
+shader_parameter/roughness_base = null
+shader_parameter/blend_sharpness = null
+shader_parameter/noise_tex = ExtResource("5_a20k5")
+shader_parameter/detail_mix = null
+shader_parameter/detail_scale = 0.37
+shader_parameter/detail_angle = null
+shader_parameter/antitile_scale = null
+shader_parameter/macro_scale = 0.012
+shader_parameter/macro_strength = 0.45
+shader_parameter/macro_tint = null
+shader_parameter/overlay_color = Color(0.24, 0.3, 0.14, 1)
+shader_parameter/overlay_uv = null
+shader_parameter/overlay_amount = 0.5
+shader_parameter/overlay_scale = 0.03
+shader_parameter/overlay_softness = null
+shader_parameter/overlay_top = 0.0
+shader_parameter/overlay_roughness = null
+shader_parameter/grime_color = null
+shader_parameter/grime_height = null
+shader_parameter/grime_strength = 0.0
+shader_parameter/vertex_ao = null
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_04e1c"]
+_surfaces = [{
+"aabb": AABB(-30, -0.05, -30, 60, 1e-05, 60),
+"attribute_data": PackedByteArray("/////5qZlcHNzEy9/////zMzJULNzEy9/////wAAcELNzEy9/////5qZlcHNzEy9/////wAAcELNzEy9/////wAAAADNzEy9/////wAAcMLNzEy9/////wAAAADNzEy9/////zQzU0HNzEy9/////wAAcMLNzEy9/////zQzU0HNzEy9/////zMzO8LNzEy9/////zMzO8LNzEy9/////2ZmAMLNzEy9/////wAAgMDNzEy9/////zMzO8LNzEy9/////wAAgMDNzEy9/////5qZlcHNzEy9//////j/v7/NzEy9/////zQzU0HNzEy9/////zMzJULNzEy9//////j/v7/NzEy9/////zMzJULNzEy9/////83M1EHNzEy9/////2ZmAMLNzEy9/////8zMmMHNzEy9/////5qZWcHNzEy9/////2ZmAMLNzEy9/////5qZWcHNzEy9/////83M1MHNzEy9////////Z8HNzEy9//////j/v7/NzEy9/////wAAgEDNzEy9////////Z8HNzEy9/////wAAgEDNzEy9/////wAAEMHNzEy9"),
+"format": 34359738399,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 36,
+"vertex_data": PackedByteArray("AADwwc3MTL3NzDRBAADwQc3MTL3NzDRBAADwQc3MTL0AAPBBAADwwc3MTL3NzDRBAADwQc3MTL0AAPBBAADwwc3MTL0AAPBBAADwwc3MTL0AAPDBAADwQc3MTL0AAPDBAADwQc3MTL1mZobBAADwwc3MTL0AAPDBAADwQc3MTL1mZobBAADwwc3MTL1mZobBAADwwc3MTL1mZobBzcx0wc3MTL1mZobBzcx0wc3MTL3NzDRBAADwwc3MTL1mZobBzcx0wc3MTL3NzDRBAADwwc3MTL3NzDRBzcx0Qc3MTL1mZobBAADwQc3MTL1mZobBAADwQc3MTL3NzDRBzcx0Qc3MTL1mZobBAADwQc3MTL3NzDRBzcx0Qc3MTL3NzDRBzcx0wc3MTL1mZobBMzMTwM3MTL1mZobBMzMTwM3MTL3NzDTBzcx0wc3MTL1mZobBMzMTwM3MTL3NzDTBzcx0wc3MTL3NzDTBMzMTQM3MTL1mZobBzcx0Qc3MTL1mZobBzcx0Qc3MTL3NzDTBMzMTQM3MTL1mZobBzcx0Qc3MTL3NzDTBMzMTQM3MTL3NzDTB/3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+/")
+}]
+
+[node name="Room05" type="Node3D" unique_id=257635274]
 script = ExtResource("1_v4eyg")
 room_title = "Мост Биврёст (сломан)"
 
-[node name="Geometry" type="Node3D" parent="." unique_id=175650552]
+[node name="Geometry" type="Node3D" parent="." unique_id=912738199]
 
-[node name="Floor" type="StaticBody3D" parent="Geometry" unique_id=1706600319]
+[node name="Floor" type="StaticBody3D" parent="Geometry" unique_id=639103264]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Floor" unique_id=60923021]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Floor" unique_id=236667595]
 shape = SubResource("BoxShape3D_wudyh")
 
-[node name="WallN_L" type="StaticBody3D" parent="Geometry" unique_id=854606442]
+[node name="WallN_L" type="StaticBody3D" parent="Geometry" unique_id=1486220496]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 3, -11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_L" unique_id=1522671107]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_L" unique_id=940502992]
 shape = SubResource("BoxShape3D_b468w")
 
-[node name="WallN_R" type="StaticBody3D" parent="Geometry" unique_id=881071942]
+[node name="WallN_R" type="StaticBody3D" parent="Geometry" unique_id=926842730]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 3, -11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_R" unique_id=1377906831]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_R" unique_id=1711703060]
 shape = SubResource("BoxShape3D_fqftu")
 
-[node name="WallS" type="StaticBody3D" parent="Geometry" unique_id=2072548868]
+[node name="WallS" type="StaticBody3D" parent="Geometry" unique_id=438886606]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallS" unique_id=924345242]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallS" unique_id=590081889]
 shape = SubResource("BoxShape3D_n1sv5")
 
-[node name="WallW" type="StaticBody3D" parent="Geometry" unique_id=539256240]
+[node name="WallW" type="StaticBody3D" parent="Geometry" unique_id=1751770615]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.5, 3, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallW" unique_id=1862763542]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallW" unique_id=186425766]
 shape = SubResource("BoxShape3D_86mk2")
 
-[node name="WallE" type="StaticBody3D" parent="Geometry" unique_id=1065179301]
+[node name="WallE" type="StaticBody3D" parent="Geometry" unique_id=450412779]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 3, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallE" unique_id=1601258214]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallE" unique_id=746711546]
 shape = SubResource("BoxShape3D_0m04e")
 
-[node name="WallModels" type="Node3D" parent="Geometry" unique_id=1900530450]
+[node name="WallModels" type="Node3D" parent="Geometry" unique_id=830003621]
 
 [node name="N_L_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1850393886 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -14.071428, 0, -11.1)
 
-[node name="N_L_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=2101061171 instance=ExtResource("2_7dnnj")]
+[node name="N_L_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=108947117 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -12.214286, 0, -11.1)
 
-[node name="N_L_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=480468067 instance=ExtResource("2_7dnnj")]
+[node name="N_L_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1631736081 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -10.357143, 0, -11.1)
 
-[node name="N_L_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=395869958 instance=ExtResource("2_7dnnj")]
+[node name="N_L_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=954032858 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 0, -11.1)
 
-[node name="N_L_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=773870113 instance=ExtResource("2_7dnnj")]
+[node name="N_L_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=1673751740 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -6.6428576, 0, -11.1)
 
-[node name="N_L_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=1341852087 instance=ExtResource("2_7dnnj")]
+[node name="N_L_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=59080533 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -4.785714, 0, -11.1)
 
-[node name="N_L_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=1760148154 instance=ExtResource("2_7dnnj")]
+[node name="N_L_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=1649542643 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, -2.9285717, 0, -11.1)
 
-[node name="N_L_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1897339657 instance=ExtResource("2_7dnnj")]
+[node name="N_L_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1792387927 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285618, 0, -0.004539565, 0, 1.0164347, 0, 0.0042153103, 0, 0.9999897, -14.071428, 3.12, -11.1)
 
-[node name="N_L_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=703611527 instance=ExtResource("2_7dnnj")]
+[node name="N_L_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1541233696 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.928571, 0, -0.00095061265, 0, 1.011177, 0, 0.0008827117, 0, 0.9999995, -12.214286, 3.12, -11.1)
 
-[node name="N_L_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1256250491 instance=ExtResource("2_7dnnj")]
+[node name="N_L_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=610699495 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285628, 0, 0.004300007, 0, 1.006392, 0, -0.0039928635, 0, 0.99999076, -10.357143, 3.12, -11.1)
 
-[node name="N_L_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=1061605469 instance=ExtResource("2_7dnnj")]
+[node name="N_L_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=1448197514 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285588, 0, -0.0051966486, 0, 1.0250521, 0, 0.0048254593, 0, 0.99998647, -8.5, 3.12, -11.1)
 
-[node name="N_L_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=67997664 instance=ExtResource("2_7dnnj")]
+[node name="N_L_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=278845373 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.92856205, 0, -0.004486752, 0, 0.99188995, 0, 0.0041662697, 0, 0.9999899, -6.6428576, 3.12, -11.1)
 
-[node name="N_L_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=718209696 instance=ExtResource("2_7dnnj")]
+[node name="N_L_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=2094285070 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285632, 0, 0.004213666, 0, 1.0024507, 0, -0.0039126896, 0, 0.9999911, -4.785714, 3.12, -11.1)
 
-[node name="N_L_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=1525799768 instance=ExtResource("2_7dnnj")]
+[node name="N_L_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=388608650 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285624, 0, 0.0044136415, 0, 1.0390108, 0, -0.0040983814, 0, 0.9999903, -2.9285717, 3.12, -11.1)
 
-[node name="N_R_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=561387659 instance=ExtResource("2_7dnnj")]
+[node name="N_R_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=2133733968 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 2.9285715, 0, -11.1)
 
-[node name="N_R_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1081018770 instance=ExtResource("2_7dnnj")]
+[node name="N_R_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1483521141 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 4.785714, 0, -11.1)
 
-[node name="N_R_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=705418348 instance=ExtResource("2_7dnnj")]
+[node name="N_R_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1126213402 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 6.642857, 0, -11.1)
 
-[node name="N_R_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=460528227 instance=ExtResource("2_7dnnj")]
+[node name="N_R_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=643123920 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, -11.1)
 
-[node name="N_R_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=325819059 instance=ExtResource("2_7dnnj")]
+[node name="N_R_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=689387288 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 10.357142, 0, -11.1)
 
-[node name="N_R_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=1382205484 instance=ExtResource("2_7dnnj")]
+[node name="N_R_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=852387601 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 12.214286, 0, -11.1)
 
-[node name="N_R_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=2104352959 instance=ExtResource("2_7dnnj")]
+[node name="N_R_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=376032815 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 0, 0, 1, 0, 0, 0, 1, 14.071428, 0, -11.1)
 
-[node name="N_R_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=903795411 instance=ExtResource("2_7dnnj")]
+[node name="N_R_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=553733707 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285636, 0, -0.0041006, 0, 1.0133033, 0, 0.0038076998, 0, 0.9999916, 2.9285715, 3.12, -11.1)
 
-[node name="N_R_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=576876681 instance=ExtResource("2_7dnnj")]
+[node name="N_R_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=179117623 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.92857134, 0, 0.00035717775, 0, 0.98127013, 0, -0.00033166504, 0, 0.99999994, 4.785714, 3.12, -11.1)
 
-[node name="N_R_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1349713867 instance=ExtResource("2_7dnnj")]
+[node name="N_R_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1393016693 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.92855597, 0, -0.0057628374, 0, 1.0056354, 0, 0.005351206, 0, 0.9999834, 6.642857, 3.12, -11.1)
 
-[node name="N_R_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=1773352249 instance=ExtResource("2_7dnnj")]
+[node name="N_R_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=2020605793 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285708, 0, -0.0011273168, 0, 1.0235027, 0, 0.0010467942, 0, 0.99999934, 8.5, 3.12, -11.1)
 
-[node name="N_R_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=1620111341 instance=ExtResource("2_7dnnj")]
+[node name="N_R_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=1248139254 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285714, 0, 3.4997684e-05, 0, 1.0483706, 0, -3.2497846e-05, 0, 1, 10.357142, 3.12, -11.1)
 
-[node name="N_R_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=344630531 instance=ExtResource("2_7dnnj")]
+[node name="N_R_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=1591655022 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.92855763, 0, -0.0054488434, 0, 1.0140591, 0, 0.00505964, 0, 0.99998516, 12.214286, 3.12, -11.1)
 
-[node name="N_R_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=1804731769 instance=ExtResource("2_7dnnj")]
+[node name="N_R_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=311622308 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.9285487, 0, -0.006993477, 0, 1.035846, 0, 0.006493943, 0, 0.99997556, 14.071428, 3.12, -11.1)
 
-[node name="S_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=543855835 instance=ExtResource("2_7dnnj")]
+[node name="S_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=150134817 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 14, 0, 11.1)
 
-[node name="S_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1489961513 instance=ExtResource("2_7dnnj")]
+[node name="S_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1534341564 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 12, 0, 11.1)
 
-[node name="S_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=299077606 instance=ExtResource("2_7dnnj")]
+[node name="S_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1203448479 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 10, 0, 11.1)
 
-[node name="S_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=309374934 instance=ExtResource("2_7dnnj")]
+[node name="S_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=1761237174 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 8, 0, 11.1)
 
-[node name="S_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=471730272 instance=ExtResource("2_7dnnj")]
+[node name="S_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=1455779423 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6, 0, 11.1)
 
-[node name="S_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=1472027979 instance=ExtResource("2_7dnnj")]
+[node name="S_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=417946346 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 4, 0, 11.1)
 
-[node name="S_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=330621296 instance=ExtResource("2_7dnnj")]
+[node name="S_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=978598224 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 2, 0, 11.1)
 
-[node name="S_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=497335370 instance=ExtResource("2_7dnnj")]
+[node name="S_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=791946541 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 11.1)
 
-[node name="S_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=65739313 instance=ExtResource("2_7dnnj")]
+[node name="S_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=2118472945 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -2, 0, 11.1)
 
-[node name="S_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=61987249 instance=ExtResource("2_7dnnj")]
+[node name="S_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=1350470832 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -4, 0, 11.1)
 
-[node name="S_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=667752439 instance=ExtResource("2_7dnnj")]
+[node name="S_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=1701861525 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -6, 0, 11.1)
 
-[node name="S_0_11" type="Node3D" parent="Geometry/WallModels" unique_id=1078986273 instance=ExtResource("2_7dnnj")]
+[node name="S_0_11" type="Node3D" parent="Geometry/WallModels" unique_id=55581949 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -8, 0, 11.1)
 
-[node name="S_0_12" type="Node3D" parent="Geometry/WallModels" unique_id=155010129 instance=ExtResource("2_7dnnj")]
+[node name="S_0_12" type="Node3D" parent="Geometry/WallModels" unique_id=411932314 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -10, 0, 11.1)
 
-[node name="S_0_13" type="Node3D" parent="Geometry/WallModels" unique_id=1972367753 instance=ExtResource("2_7dnnj")]
+[node name="S_0_13" type="Node3D" parent="Geometry/WallModels" unique_id=1570971061 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -12, 0, 11.1)
 
-[node name="S_0_14" type="Node3D" parent="Geometry/WallModels" unique_id=1775055222 instance=ExtResource("2_7dnnj")]
+[node name="S_0_14" type="Node3D" parent="Geometry/WallModels" unique_id=129797500 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -14, 0, 11.1)
 
-[node name="S_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1527445458 instance=ExtResource("2_7dnnj")]
+[node name="S_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=720699545 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.99998194, 0, 0.006007071, 0, 1.0120232, 0, -0.006007071, 0, -0.99998194, 14, 3.12, 11.1)
 
-[node name="S_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=443304768 instance=ExtResource("2_7dnnj")]
+[node name="S_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=648321903 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.9999815, 0, 0.0060759727, 0, 1.0530412, 0, -0.0060759727, 0, -0.9999815, 12, 3.12, 11.1)
 
-[node name="S_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1500951000 instance=ExtResource("2_7dnnj")]
+[node name="S_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1848015601 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.99998266, 0, 0.00588691, 0, 1.0369402, 0, -0.00588691, 0, -0.99998266, 10, 3.12, 11.1)
 
-[node name="S_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=929981862 instance=ExtResource("2_7dnnj")]
+[node name="S_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=628726644 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.9999731, 0, -0.0073344926, 0, 0.9880825, 0, 0.0073344926, 0, -0.9999731, 8, 3.12, 11.1)
 
-[node name="S_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=153235914 instance=ExtResource("2_7dnnj")]
+[node name="S_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=263223261 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.99999726, 0, -0.0023406404, 0, 0.98956287, 0, 0.0023406404, 0, -0.99999726, 6, 3.12, 11.1)
 
-[node name="S_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=54289688 instance=ExtResource("2_7dnnj")]
+[node name="S_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=981814615 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.9999646, 0, -0.008412826, 0, 0.998489, 0, 0.008412826, 0, -0.9999646, 4, 3.12, 11.1)
 
-[node name="S_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=934581826 instance=ExtResource("2_7dnnj")]
+[node name="S_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=1607439607 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.99999434, 0, -0.0033586835, 0, 1.0248616, 0, 0.0033586835, 0, -0.99999434, 2, 3.12, 11.1)
 
-[node name="S_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=1954531255 instance=ExtResource("2_7dnnj")]
+[node name="S_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=1608291543 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.99996763, 0, -0.008046151, 0, 0.9995885, 0, 0.008046151, 0, -0.99996763, 0, 3.12, 11.1)
 
-[node name="S_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=354842495 instance=ExtResource("2_7dnnj")]
+[node name="S_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=172012531 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.9999949, 0, -0.0031936988, 0, 1.0497061, 0, 0.0031936988, 0, -0.9999949, -2, 3.12, 11.1)
 
-[node name="S_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=723044612 instance=ExtResource("2_7dnnj")]
+[node name="S_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=2057622782 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.9999909, 0, 0.004268069, 0, 0.9740908, 0, -0.004268069, 0, -0.9999909, -4, 3.12, 11.1)
 
-[node name="S_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=1480128004 instance=ExtResource("2_7dnnj")]
+[node name="S_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=1982761501 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.9999962, 0, 0.0027705713, 0, 1.0666246, 0, -0.0027705713, 0, -0.9999962, -6, 3.12, 11.1)
 
-[node name="S_1_11" type="Node3D" parent="Geometry/WallModels" unique_id=680972008 instance=ExtResource("2_7dnnj")]
+[node name="S_1_11" type="Node3D" parent="Geometry/WallModels" unique_id=40254755 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.9999714, 0, -0.007562891, 0, 0.97645724, 0, 0.007562891, 0, -0.9999714, -8, 3.12, 11.1)
 
-[node name="S_1_12" type="Node3D" parent="Geometry/WallModels" unique_id=111127883 instance=ExtResource("2_7dnnj")]
+[node name="S_1_12" type="Node3D" parent="Geometry/WallModels" unique_id=386862140 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.99999636, 0, 0.0026895094, 0, 1.0477687, 0, -0.0026895094, 0, -0.99999636, -10, 3.12, 11.1)
 
-[node name="S_1_13" type="Node3D" parent="Geometry/WallModels" unique_id=169278969 instance=ExtResource("2_7dnnj")]
+[node name="S_1_13" type="Node3D" parent="Geometry/WallModels" unique_id=1727355986 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.99997115, 0, -0.0075919772, 0, 1.0539376, 0, 0.0075919772, 0, -0.99997115, -12, 3.12, 11.1)
 
-[node name="S_1_14" type="Node3D" parent="Geometry/WallModels" unique_id=2092662393 instance=ExtResource("2_7dnnj")]
+[node name="S_1_14" type="Node3D" parent="Geometry/WallModels" unique_id=1409067508 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-1, 0, 0.00020972092, 0, 1.0472533, 0, -0.00020972092, 0, -1, -14, 3.12, 11.1)
 
-[node name="W_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1540617521 instance=ExtResource("2_7dnnj")]
+[node name="W_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1626190285 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 10)
 
-[node name="W_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1051330256 instance=ExtResource("2_7dnnj")]
+[node name="W_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=715638473 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 8)
 
-[node name="W_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1979471686 instance=ExtResource("2_7dnnj")]
+[node name="W_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1780754232 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 6)
 
-[node name="W_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=1929408769 instance=ExtResource("2_7dnnj")]
+[node name="W_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=568556020 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 4)
 
-[node name="W_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=553180025 instance=ExtResource("2_7dnnj")]
+[node name="W_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=937986321 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 2)
 
-[node name="W_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=107745910 instance=ExtResource("2_7dnnj")]
+[node name="W_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=840219218 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, 0)
 
-[node name="W_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=1457901503 instance=ExtResource("2_7dnnj")]
+[node name="W_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=231602216 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, -2)
 
-[node name="W_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=1247372340 instance=ExtResource("2_7dnnj")]
+[node name="W_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=1426732740 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, -4)
 
-[node name="W_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=1514792837 instance=ExtResource("2_7dnnj")]
+[node name="W_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=1728150884 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, -6)
 
-[node name="W_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=2041072815 instance=ExtResource("2_7dnnj")]
+[node name="W_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=679771295 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, -8)
 
-[node name="W_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=1268205897 instance=ExtResource("2_7dnnj")]
+[node name="W_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=1600093934 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -15.1, 0, -10)
 
-[node name="W_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=95380298 instance=ExtResource("2_7dnnj")]
+[node name="W_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=151885072 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.003744073, 0, 0.99999297, 0, 0.9883285, 0, -0.99999297, 0, 0.003744073, -15.1, 3.12, 10)
 
-[node name="W_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=332764346 instance=ExtResource("2_7dnnj")]
+[node name="W_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=2009181674 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-5.035003e-05, 0, 1, 0, 1.0516015, 0, -1, 0, -5.035003e-05, -15.1, 3.12, 8)
 
-[node name="W_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=2079650936 instance=ExtResource("2_7dnnj")]
+[node name="W_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1400399921 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.0034583302, 0, 0.99999404, 0, 1.0333692, 0, -0.99999404, 0, 0.0034583302, -15.1, 3.12, 6)
 
-[node name="W_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=972118210 instance=ExtResource("2_7dnnj")]
+[node name="W_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=1872444136 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.0040980023, 0, 0.9999916, 0, 0.9947559, 0, -0.9999916, 0, 0.0040980023, -15.1, 3.12, 4)
 
-[node name="W_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=1739850635 instance=ExtResource("2_7dnnj")]
+[node name="W_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=134434620 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.0038467988, 0, 0.9999926, 0, 1.0077753, 0, -0.9999926, 0, -0.0038467988, -15.1, 3.12, 2)
 
-[node name="W_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=675398473 instance=ExtResource("2_7dnnj")]
+[node name="W_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=1738645063 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.0026401689, 0, 0.99999654, 0, 0.9981616, 0, -0.99999654, 0, -0.0026401689, -15.1, 3.12, 0)
 
-[node name="W_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=420797170 instance=ExtResource("2_7dnnj")]
+[node name="W_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=534327332 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.005779548, 0, 0.9999833, 0, 1.0459707, 0, -0.9999833, 0, 0.005779548, -15.1, 3.12, -2)
 
-[node name="W_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=1802028232 instance=ExtResource("2_7dnnj")]
+[node name="W_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=1482535752 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.0069072135, 0, 0.99997616, 0, 0.9729804, 0, -0.99997616, 0, -0.0069072135, -15.1, 3.12, -4)
 
-[node name="W_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=1896785946 instance=ExtResource("2_7dnnj")]
+[node name="W_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=712468745 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.0036589263, 0, 0.9999933, 0, 1.0340195, 0, -0.9999933, 0, -0.0036589263, -15.1, 3.12, -6)
 
-[node name="W_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=1557168762 instance=ExtResource("2_7dnnj")]
+[node name="W_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=551822309 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.005948584, 0, 0.9999823, 0, 1.0210906, 0, -0.9999823, 0, 0.005948584, -15.1, 3.12, -8)
 
-[node name="W_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=1197658104 instance=ExtResource("2_7dnnj")]
+[node name="W_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=1534143810 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(4.6447913e-05, 0, 1, 0, 1.0523133, 0, -1, 0, 4.6447913e-05, -15.1, 3.12, -10)
 
-[node name="E_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1500068489 instance=ExtResource("2_7dnnj")]
+[node name="E_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1010035691 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, -10)
 
-[node name="E_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1093240424 instance=ExtResource("2_7dnnj")]
+[node name="E_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=348899967 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, -8)
 
-[node name="E_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1397647008 instance=ExtResource("2_7dnnj")]
+[node name="E_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=187465898 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, -6)
 
-[node name="E_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=915769172 instance=ExtResource("2_7dnnj")]
+[node name="E_0_3" type="Node3D" parent="Geometry/WallModels" unique_id=416848062 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, -4)
 
-[node name="E_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=462972580 instance=ExtResource("2_7dnnj")]
+[node name="E_0_4" type="Node3D" parent="Geometry/WallModels" unique_id=807668015 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, -2)
 
-[node name="E_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=1719065110 instance=ExtResource("2_7dnnj")]
+[node name="E_0_5" type="Node3D" parent="Geometry/WallModels" unique_id=399987777 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 0)
 
-[node name="E_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=279056298 instance=ExtResource("2_7dnnj")]
+[node name="E_0_6" type="Node3D" parent="Geometry/WallModels" unique_id=402672 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 2)
 
-[node name="E_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=1781824157 instance=ExtResource("2_7dnnj")]
+[node name="E_0_7" type="Node3D" parent="Geometry/WallModels" unique_id=1701243441 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 4)
 
-[node name="E_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=113507200 instance=ExtResource("2_7dnnj")]
+[node name="E_0_8" type="Node3D" parent="Geometry/WallModels" unique_id=1988089071 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 6)
 
-[node name="E_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=707902054 instance=ExtResource("2_7dnnj")]
+[node name="E_0_9" type="Node3D" parent="Geometry/WallModels" unique_id=1902880275 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 8)
 
-[node name="E_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=1010674970 instance=ExtResource("2_7dnnj")]
+[node name="E_0_10" type="Node3D" parent="Geometry/WallModels" unique_id=43548995 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15.1, 0, 10)
 
-[node name="E_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=2009525863 instance=ExtResource("2_7dnnj")]
+[node name="E_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=248346193 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.00596238, 0, -0.99998224, 0, 1.0474769, 0, 0.99998224, 0, -0.00596238, 15.1, 3.12, -10)
 
-[node name="E_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=995281428 instance=ExtResource("2_7dnnj")]
+[node name="E_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1201065689 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.0051159197, 0, -0.9999869, 0, 1.063215, 0, 0.9999869, 0, 0.0051159197, 15.1, 3.12, -8)
 
-[node name="E_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=976076563 instance=ExtResource("2_7dnnj")]
+[node name="E_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=103103133 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.006763482, 0, -0.9999771, 0, 0.99296236, 0, 0.9999771, 0, 0.006763482, 15.1, 3.12, -6)
 
-[node name="E_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=7996485 instance=ExtResource("2_7dnnj")]
+[node name="E_1_3" type="Node3D" parent="Geometry/WallModels" unique_id=1013156852 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.008414689, 0, -0.9999646, 0, 0.9922566, 0, 0.9999646, 0, -0.008414689, 15.1, 3.12, -4)
 
-[node name="E_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=852631286 instance=ExtResource("2_7dnnj")]
+[node name="E_1_4" type="Node3D" parent="Geometry/WallModels" unique_id=1129342992 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.0056105996, 0, -0.99998426, 0, 1.0579457, 0, 0.99998426, 0, -0.0056105996, 15.1, 3.12, -2)
 
-[node name="E_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=1047088622 instance=ExtResource("2_7dnnj")]
+[node name="E_1_5" type="Node3D" parent="Geometry/WallModels" unique_id=1219215843 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.007343985, 0, -0.99997306, 0, 1.0686477, 0, 0.99997306, 0, -0.007343985, 15.1, 3.12, 0)
 
-[node name="E_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=987886118 instance=ExtResource("2_7dnnj")]
+[node name="E_1_6" type="Node3D" parent="Geometry/WallModels" unique_id=1691664503 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.006001035, 0, -0.999982, 0, 0.9921366, 0, 0.999982, 0, 0.006001035, 15.1, 3.12, 2)
 
-[node name="E_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=1006003570 instance=ExtResource("2_7dnnj")]
+[node name="E_1_7" type="Node3D" parent="Geometry/WallModels" unique_id=11685105 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.005416323, 0, -0.99998534, 0, 0.9759223, 0, 0.99998534, 0, 0.005416323, 15.1, 3.12, 4)
 
-[node name="E_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=264971905 instance=ExtResource("2_7dnnj")]
+[node name="E_1_8" type="Node3D" parent="Geometry/WallModels" unique_id=703832899 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.0047009257, 0, -0.999989, 0, 0.97136384, 0, 0.999989, 0, -0.0047009257, 15.1, 3.12, 6)
 
-[node name="E_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=570962611 instance=ExtResource("2_7dnnj")]
+[node name="E_1_9" type="Node3D" parent="Geometry/WallModels" unique_id=2122795850 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.0072456403, 0, -0.9999738, 0, 0.9802911, 0, 0.9999738, 0, -0.0072456403, 15.1, 3.12, 8)
 
-[node name="E_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=394932474 instance=ExtResource("2_7dnnj")]
+[node name="E_1_10" type="Node3D" parent="Geometry/WallModels" unique_id=162192741 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.0015778972, 0, -0.99999875, 0, 1.0417231, 0, 0.99999875, 0, -0.0015778972, 15.1, 3.12, 10)
 
-[node name="CL_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=658456804 instance=ExtResource("2_7dnnj")]
+[node name="CL_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=399545629 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -12.333333)
 
-[node name="CL_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=296907016 instance=ExtResource("2_7dnnj")]
+[node name="CL_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=540865300 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -14)
 
-[node name="CL_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=989202122 instance=ExtResource("2_7dnnj")]
+[node name="CL_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1988815773 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -15.666666)
 
-[node name="CL_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=225861284 instance=ExtResource("2_7dnnj")]
+[node name="CL_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=257186736 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.0067609167, 0, 0.9999671, 0, 1.0439774, 0, -0.8333059, 0, -0.0081131, -2.1, 3.12, -12.333333)
 
-[node name="CL_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=816004410 instance=ExtResource("2_7dnnj")]
+[node name="CL_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1603194224 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.005397299, 0, 0.999979, 0, 1.0574448, 0, -0.83331585, 0, -0.0064767585, -2.1, 3.12, -14)
 
-[node name="CL_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=29426912 instance=ExtResource("2_7dnnj")]
+[node name="CL_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=2010178533 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.0069887973, 0, 0.99996483, 0, 0.9876692, 0, -0.833304, 0, -0.008386557, -2.1, 3.12, -15.666666)
 
-[node name="CR_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1282444381 instance=ExtResource("2_7dnnj")]
+[node name="CR_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1277223286 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -15.666667)
 
-[node name="CR_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=3285788 instance=ExtResource("2_7dnnj")]
+[node name="CR_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1058424241 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -14)
 
-[node name="CR_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=424176125 instance=ExtResource("2_7dnnj")]
+[node name="CR_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=2009119260 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -12.333334)
 
-[node name="CR_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1202201049 instance=ExtResource("2_7dnnj")]
+[node name="CR_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=891043668 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.002632299, 0, -0.999995, 0, 0.97425216, 0, 0.83332914, 0, 0.0031587589, 2.1, 3.12, -15.666667)
 
-[node name="CR_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1580798644 instance=ExtResource("2_7dnnj")]
+[node name="CR_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1553551516 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(-0.0028848953, 0, -0.999994, 0, 0.98750037, 0, 0.8333283, 0, -0.0034618746, 2.1, 3.12, -14)
 
-[node name="CR_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=17786807 instance=ExtResource("2_7dnnj")]
+[node name="CR_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1656048992 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.0059711053, 0, -0.9999743, 0, 0.98738766, 0, 0.8333119, 0, 0.0071653267, 2.1, 3.12, -12.333334)
 
-[node name="CE_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=900147342 instance=ExtResource("2_7dnnj")]
+[node name="CE_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1989825389 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -16.6)
 
-[node name="CE_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=106150172 instance=ExtResource("2_7dnnj")]
+[node name="CE_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1076428672 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -16.6)
 
-[node name="CE_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1552701582 instance=ExtResource("2_7dnnj")]
+[node name="CE_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1720609124 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -16.6)
 
-[node name="CE_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=109258001 instance=ExtResource("2_7dnnj")]
+[node name="CE_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1512185724 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.99999803, 0, 0.001986644, 0, 0.9883013, 0, -0.001986644, 0, 0.99999803, -2, 3.12, -16.6)
 
-[node name="CE_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=960558047 instance=ExtResource("2_7dnnj")]
+[node name="CE_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=2001757179 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.99999285, 0, -0.0037839033, 0, 1.0402503, 0, 0.0037839033, 0, 0.99999285, 0, 3.12, -16.6)
 
-[node name="CE_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=2142642338 instance=ExtResource("2_7dnnj")]
+[node name="CE_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=283944420 instance=ExtResource("2_7dnnj")]
 transform = Transform3D(0.99999976, 0, -0.00071815774, 0, 0.993779, 0, 0.00071815774, 0, 0.99999976, 2, 3.12, -16.6)
 
-[node name="CorridorFloor" type="StaticBody3D" parent="Geometry" unique_id=1982401356]
+[node name="CorridorFloor" type="StaticBody3D" parent="Geometry" unique_id=869225100]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -14)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorFloor" unique_id=883872364]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorFloor" unique_id=1486161408]
 shape = SubResource("BoxShape3D_x8oqm")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/CorridorFloor" unique_id=1776641712]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CorridorFloor" unique_id=1899713753]
 material_override = SubResource("ShaderMaterial_7j53m")
 mesh = SubResource("BoxMesh_mlk3l")
 
-[node name="CorridorL" type="StaticBody3D" parent="Geometry" unique_id=355337202]
+[node name="CorridorL" type="StaticBody3D" parent="Geometry" unique_id=246352777]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 3, -14)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorL" unique_id=870714947]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorL" unique_id=1598798915]
 shape = SubResource("BoxShape3D_hlqx7")
 
-[node name="CorridorR" type="StaticBody3D" parent="Geometry" unique_id=1895809281]
+[node name="CorridorR" type="StaticBody3D" parent="Geometry" unique_id=974472115]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 3, -14)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorR" unique_id=1225924081]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorR" unique_id=1713290638]
 shape = SubResource("BoxShape3D_jh611")
 
-[node name="CorridorEnd" type="StaticBody3D" parent="Geometry" unique_id=1612512512]
+[node name="CorridorEnd" type="StaticBody3D" parent="Geometry" unique_id=1764067808]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -17)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorEnd" unique_id=673724471]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorEnd" unique_id=126379101]
 shape = SubResource("BoxShape3D_p23bt")
 
-[node name="Portal" type="Node3D" parent="Geometry" unique_id=1798093458]
+[node name="Portal" type="Node3D" parent="Geometry" unique_id=2093806329]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, -16.45)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Portal" unique_id=1979964851]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Portal" unique_id=952171970]
 material_override = SubResource("StandardMaterial3D_yesfs")
 mesh = SubResource("BoxMesh_puj16")
 
-[node name="Block0" type="StaticBody3D" parent="Geometry" unique_id=901190551]
+[node name="Block0" type="StaticBody3D" parent="Geometry" unique_id=1653082445]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 1, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Block0" unique_id=1502944292]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Block0" unique_id=506902590]
 shape = SubResource("BoxShape3D_qcvnc")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block0" unique_id=1365961395]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block0" unique_id=310523809]
 material_override = SubResource("ShaderMaterial_ugbpw")
 mesh = SubResource("ArrayMesh_cfnti")
 
-[node name="Block1" type="StaticBody3D" parent="Geometry" unique_id=511996681]
+[node name="Block1" type="StaticBody3D" parent="Geometry" unique_id=157082576]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 1, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Block1" unique_id=2146835647]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Block1" unique_id=960550392]
 shape = SubResource("BoxShape3D_noph7")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block1" unique_id=1424505982]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block1" unique_id=1406489930]
 material_override = SubResource("ShaderMaterial_ugbpw")
 mesh = SubResource("ArrayMesh_yfk7t")
 
-[node name="Block2" type="StaticBody3D" parent="Geometry" unique_id=538300096]
+[node name="Block2" type="StaticBody3D" parent="Geometry" unique_id=1949091736]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, -2)
 collision_mask = 0
 script = ExtResource("9_d0kft")
 slam_breakable = true
 
-[node name="Deck" type="CollisionShape3D" parent="Geometry/Block2" unique_id=249026604]
+[node name="Deck" type="CollisionShape3D" parent="Geometry/Block2" unique_id=1433908695]
 shape = SubResource("BoxShape3D_q0qtm")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block2" unique_id=2105369223]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block2" unique_id=541536452]
 material_override = SubResource("ShaderMaterial_5oal6")
 mesh = SubResource("BoxMesh_ha7fo")
 
-[node name="Scatter" type="Node3D" parent="Geometry/Block2" unique_id=711675261]
+[node name="Scatter" type="Node3D" parent="Geometry/Block2" unique_id=780399777]
 
-[node name="Beam" type="MultiMeshInstance3D" parent="Geometry/Block2/Scatter" unique_id=1835819240]
+[node name="Beam" type="MultiMeshInstance3D" parent="Geometry/Block2/Scatter" unique_id=1495696199]
 material_override = SubResource("StandardMaterial3D_4m5fj")
 gi_mode = 0
 script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_wsfvb")
 xforms = PackedFloat32Array(0.55998546, 0.014408097, 0, 6.085129e-08, -0.004037607, 1.9982936, 0, -0.05411285, 0, 0, 0.83458334, 0.27458352, 0.55998677, -0.013755218, 0, 7.239227e-08, 0.0038546496, 1.9982983, 0, -0.041839525, 0, 0, 0.83458334, 1.3945835)
 
-[node name="Pillar0" type="StaticBody3D" parent="Geometry" unique_id=1444783990]
+[node name="Pillar0" type="StaticBody3D" parent="Geometry" unique_id=840929763]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 3, 6)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar0" unique_id=426937]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar0" unique_id=85824104]
 shape = SubResource("CylinderShape3D_6t3fi")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar0" unique_id=1383225762]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar0" unique_id=324167861]
 material_override = SubResource("ShaderMaterial_r32em")
 mesh = SubResource("CylinderMesh_buucv")
 
-[node name="PillarBase0" type="StaticBody3D" parent="Geometry" unique_id=1759143940]
+[node name="PillarBase0" type="StaticBody3D" parent="Geometry" unique_id=1184505934]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.25, 6)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase0" unique_id=666498485]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase0" unique_id=1764923486]
 shape = SubResource("CylinderShape3D_ah7fx")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase0" unique_id=529220411]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase0" unique_id=62844847]
 material_override = SubResource("ShaderMaterial_r32em")
 mesh = SubResource("CylinderMesh_fkbri")
 
-[node name="PillarCap0" type="StaticBody3D" parent="Geometry" unique_id=243662688]
+[node name="PillarCap0" type="StaticBody3D" parent="Geometry" unique_id=827253334]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 5.8, 6)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap0" unique_id=394060149]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap0" unique_id=389791041]
 shape = SubResource("CylinderShape3D_vuwux")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap0" unique_id=708218927]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap0" unique_id=1863053732]
 material_override = SubResource("ShaderMaterial_r32em")
 mesh = SubResource("CylinderMesh_erhpq")
 
-[node name="Pillar1" type="StaticBody3D" parent="Geometry" unique_id=891066207]
+[node name="Pillar1" type="StaticBody3D" parent="Geometry" unique_id=1028680477]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 3, -7)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar1" unique_id=1884101060]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar1" unique_id=1134067214]
 shape = SubResource("CylinderShape3D_vg5eg")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar1" unique_id=1653183757]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar1" unique_id=1409131634]
 material_override = SubResource("ShaderMaterial_r32em")
 mesh = SubResource("CylinderMesh_eal30")
 
-[node name="PillarBase1" type="StaticBody3D" parent="Geometry" unique_id=2039612414]
+[node name="PillarBase1" type="StaticBody3D" parent="Geometry" unique_id=1930376643]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.25, -7)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase1" unique_id=1739439845]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase1" unique_id=624642283]
 shape = SubResource("CylinderShape3D_dmabn")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase1" unique_id=1239674268]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase1" unique_id=1149570263]
 material_override = SubResource("ShaderMaterial_r32em")
 mesh = SubResource("CylinderMesh_nld32")
 
-[node name="PillarCap1" type="StaticBody3D" parent="Geometry" unique_id=547848284]
+[node name="PillarCap1" type="StaticBody3D" parent="Geometry" unique_id=50175803]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 5.8, -7)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap1" unique_id=473161819]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap1" unique_id=8643038]
 shape = SubResource("CylinderShape3D_ktfld")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap1" unique_id=169912548]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap1" unique_id=1482387466]
 material_override = SubResource("ShaderMaterial_r32em")
 mesh = SubResource("CylinderMesh_1sf10")
 
-[node name="Door" type="StaticBody3D" parent="." unique_id=126056052]
+[node name="Door" type="StaticBody3D" parent="." unique_id=845892604]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Door" unique_id=1684587728]
+[node name="Shape" type="CollisionShape3D" parent="Door" unique_id=595216351]
 shape = SubResource("BoxShape3D_4r6ww")
 
-[node name="Mesh" type="MeshInstance3D" parent="Door" unique_id=2144880615]
+[node name="Mesh" type="MeshInstance3D" parent="Door" unique_id=1936026356]
 material_override = SubResource("StandardMaterial3D_rq1wu")
 mesh = SubResource("BoxMesh_cisdx")
 
-[node name="Rune" type="Node3D" parent="Door" unique_id=1020678079]
+[node name="Rune" type="Node3D" parent="Door" unique_id=497456753]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.33)
 
-[node name="Mesh" type="MeshInstance3D" parent="Door/Rune" unique_id=1445238302]
+[node name="Mesh" type="MeshInstance3D" parent="Door/Rune" unique_id=1365285938]
 material_override = SubResource("StandardMaterial3D_0sdfc")
 mesh = SubResource("BoxMesh_4jcnm")
 
-[node name="RuneBar" type="Node3D" parent="Door" unique_id=203487475]
+[node name="RuneBar" type="Node3D" parent="Door" unique_id=762566028]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.33)
 
-[node name="Mesh" type="MeshInstance3D" parent="Door/RuneBar" unique_id=460763441]
+[node name="Mesh" type="MeshInstance3D" parent="Door/RuneBar" unique_id=486202058]
 material_override = SubResource("StandardMaterial3D_0sdfc")
 mesh = SubResource("BoxMesh_24uh3")
 
-[node name="Exit" type="Area3D" parent="." unique_id=1205242740]
+[node name="Exit" type="Area3D" parent="." unique_id=2013927166]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -15)
 collision_layer = 32
 collision_mask = 2
 
-[node name="Shape" type="CollisionShape3D" parent="Exit" unique_id=900118891]
+[node name="Shape" type="CollisionShape3D" parent="Exit" unique_id=1515730246]
 shape = SubResource("BoxShape3D_1d743")
 
-[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=1013835856]
+[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=1268120727]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 2.1, 8.5)
 
-[node name="Spawns" type="Node3D" parent="." unique_id=1244038719]
+[node name="Spawns" type="Node3D" parent="." unique_id=2076279848]
 
-[node name="grunt_0" type="Marker3D" parent="Spawns" unique_id=630620669]
+[node name="grunt_0" type="Marker3D" parent="Spawns" unique_id=1803918541]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="grunt_1" type="Marker3D" parent="Spawns" unique_id=1921375312]
+[node name="grunt_1" type="Marker3D" parent="Spawns" unique_id=52820254]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="grunt_2" type="Marker3D" parent="Spawns" unique_id=140429133]
+[node name="grunt_2" type="Marker3D" parent="Spawns" unique_id=815263300]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="thrower_3" type="Marker3D" parent="Spawns" unique_id=607686775]
+[node name="thrower_3" type="Marker3D" parent="Spawns" unique_id=1519396610]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, 6)
 metadata/kind = "thrower"
 metadata/wave = 0
 
-[node name="fodder_4" type="Marker3D" parent="Spawns" unique_id=565027195]
+[node name="fodder_4" type="Marker3D" parent="Spawns" unique_id=425750703]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, -2)
 metadata/kind = "fodder"
 metadata/wave = 0
 metadata/count = 6
 metadata/spread = 1.5
 
-[node name="grunt_5" type="Marker3D" parent="Spawns" unique_id=753095672]
+[node name="grunt_5" type="Marker3D" parent="Spawns" unique_id=2122361239]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, 4)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="grunt_6" type="Marker3D" parent="Spawns" unique_id=1219770063]
+[node name="grunt_6" type="Marker3D" parent="Spawns" unique_id=1670749511]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, 2)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="thrower_7" type="Marker3D" parent="Spawns" unique_id=81081336]
+[node name="thrower_7" type="Marker3D" parent="Spawns" unique_id=2108161224]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 2.05, -8)
 metadata/kind = "thrower"
 metadata/wave = 1
 
-[node name="grunt_8" type="Marker3D" parent="Spawns" unique_id=1993601253]
+[node name="grunt_8" type="Marker3D" parent="Spawns" unique_id=77509947]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 3)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="merc_9" type="Marker3D" parent="Spawns" unique_id=2143040170]
+[node name="merc_9" type="Marker3D" parent="Spawns" unique_id=147907347]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2.05, -8)
 metadata/kind = "merc"
 metadata/wave = 1
 
-[node name="fodder_10" type="Marker3D" parent="Spawns" unique_id=1174499709]
+[node name="fodder_10" type="Marker3D" parent="Spawns" unique_id=972047530]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 5)
 metadata/kind = "fodder"
 metadata/wave = 1
 metadata/count = 6
 metadata/spread = 1.5
 
-[node name="shaman_11" type="Marker3D" parent="Spawns" unique_id=575376975]
+[node name="shaman_11" type="Marker3D" parent="Spawns" unique_id=866501541]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2.05, -5)
 metadata/kind = "shaman"
 metadata/wave = 2
 
-[node name="shieldbearer_12" type="Marker3D" parent="Spawns" unique_id=115786856]
+[node name="shieldbearer_12" type="Marker3D" parent="Spawns" unique_id=240708392]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.1499999, -2)
 metadata/kind = "shieldbearer"
 metadata/wave = 2
 
-[node name="fodder_13" type="Marker3D" parent="Spawns" unique_id=178577659]
+[node name="fodder_13" type="Marker3D" parent="Spawns" unique_id=2101955278]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -8)
 metadata/kind = "fodder"
 metadata/wave = 2
 metadata/count = 6
 metadata/spread = 1.5
 
-[node name="Props" type="Node3D" parent="." unique_id=795392727]
+[node name="Props" type="Node3D" parent="." unique_id=1592433269]
 
 [node name="barrel_0" type="RigidBody3D" parent="Props" unique_id=1472643364 groups=["props"] instance=ExtResource("17_ldkl3")]
 transform = Transform3D(0.38442773, 0, 0.92315507, 0, 1, 0, -0.92315507, 0, 0.38442773, -12, 2.02, 3)
@@ -1489,7 +1530,7 @@ collision_mask = 79
 mass = 1.2
 script = ExtResource("18_l87mj")
 
-[node name="barrel_1" type="RigidBody3D" parent="Props" unique_id=1165674087 groups=["props"] instance=ExtResource("17_ldkl3")]
+[node name="barrel_1" type="RigidBody3D" parent="Props" unique_id=1675249685 groups=["props"] instance=ExtResource("17_ldkl3")]
 transform = Transform3D(-0.9960359, 0, 0.08895274, 0, 1, 0, -0.08895274, 0, -0.9960359, 12, 2.02, -3)
 collision_layer = 8
 collision_mask = 79
@@ -1508,7 +1549,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_3" type="RigidBody3D" parent="Props" unique_id=1127024781 groups=["props"] instance=ExtResource("19_gvt3v")]
+[node name="crate_3" type="RigidBody3D" parent="Props" unique_id=1524827640 groups=["props"] instance=ExtResource("19_gvt3v")]
 transform = Transform3D(-0.36378387, 0, 0.9314834, 0, 1, 0, -0.9314834, 0, -0.36378387, 2, 0.02, 6)
 collision_layer = 8
 collision_mask = 79
@@ -1520,337 +1561,337 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="barrel_4" type="RigidBody3D" parent="Props" unique_id=794574016 groups=["props"] instance=ExtResource("17_ldkl3")]
+[node name="barrel_4" type="RigidBody3D" parent="Props" unique_id=723088294 groups=["props"] instance=ExtResource("17_ldkl3")]
 transform = Transform3D(0.989107, 0, -0.14719813, 0, 1, 0, 0.14719813, 0, 0.989107, -2, 0.02, -8)
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
 script = ExtResource("18_l87mj")
 
-[node name="Torches" type="Node3D" parent="." unique_id=1701288978]
+[node name="Torches" type="Node3D" parent="." unique_id=884704302]
 
-[node name="Torch0" type="Node3D" parent="Torches" unique_id=1571536733]
+[node name="Torch0" type="Node3D" parent="Torches" unique_id=1014465810]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.8, 3.2, -5.5)
 
 [node name="Model" type="Node3D" parent="Torches/Torch0" unique_id=729834509 instance=ExtResource("20_p5q5q")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch0" unique_id=1784207535]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch0" unique_id=548635069]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_pfm2k")
 mesh = SubResource("CylinderMesh_jpm5o")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch0" unique_id=946196116]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch0" unique_id=2144755077]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch1" type="Node3D" parent="Torches" unique_id=1928477452]
+[node name="Torch1" type="Node3D" parent="Torches" unique_id=426100140]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.8, 3.2, -5.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch1" unique_id=1006219999 instance=ExtResource("20_p5q5q")]
+[node name="Model" type="Node3D" parent="Torches/Torch1" unique_id=1996591031 instance=ExtResource("20_p5q5q")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch1" unique_id=1929051305]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch1" unique_id=1022870483]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_pfm2k")
 mesh = SubResource("CylinderMesh_voml8")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch1" unique_id=1245688410]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch1" unique_id=1795421417]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch2" type="Node3D" parent="Torches" unique_id=1285326507]
+[node name="Torch2" type="Node3D" parent="Torches" unique_id=1192995732]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.8, 3.2, 5.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch2" unique_id=1612815708 instance=ExtResource("20_p5q5q")]
+[node name="Model" type="Node3D" parent="Torches/Torch2" unique_id=192584477 instance=ExtResource("20_p5q5q")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch2" unique_id=1074044777]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch2" unique_id=1827198518]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_pfm2k")
 mesh = SubResource("CylinderMesh_2xxhq")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch2" unique_id=144777240]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch2" unique_id=945044888]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch3" type="Node3D" parent="Torches" unique_id=162605411]
+[node name="Torch3" type="Node3D" parent="Torches" unique_id=1156420514]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.8, 3.2, 5.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch3" unique_id=936741561 instance=ExtResource("20_p5q5q")]
+[node name="Model" type="Node3D" parent="Torches/Torch3" unique_id=850009110 instance=ExtResource("20_p5q5q")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch3" unique_id=968202787]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch3" unique_id=1742161089]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_pfm2k")
 mesh = SubResource("CylinderMesh_7mfav")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch3" unique_id=1009217805]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch3" unique_id=1393700667]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch4" type="Node3D" parent="Torches" unique_id=587105305]
+[node name="Torch4" type="Node3D" parent="Torches" unique_id=781151424]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2, 3.6, -10.9)
 
-[node name="Model" type="Node3D" parent="Torches/Torch4" unique_id=1069247065 instance=ExtResource("20_p5q5q")]
+[node name="Model" type="Node3D" parent="Torches/Torch4" unique_id=164962902 instance=ExtResource("20_p5q5q")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch4" unique_id=1618475605]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch4" unique_id=3924583]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_pfm2k")
 mesh = SubResource("CylinderMesh_hrcc3")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch4" unique_id=1062380372]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch4" unique_id=1405529910]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch5" type="Node3D" parent="Torches" unique_id=590029859]
+[node name="Torch5" type="Node3D" parent="Torches" unique_id=761464110]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 3.6, -10.9)
 
-[node name="Model" type="Node3D" parent="Torches/Torch5" unique_id=1170583341 instance=ExtResource("20_p5q5q")]
+[node name="Model" type="Node3D" parent="Torches/Torch5" unique_id=1816346546 instance=ExtResource("20_p5q5q")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch5" unique_id=1886639239]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch5" unique_id=1469396406]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_pfm2k")
 mesh = SubResource("CylinderMesh_c4bcg")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch5" unique_id=1892683252]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch5" unique_id=765195612]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Banners" type="Node3D" parent="." unique_id=787607497]
+[node name="Banners" type="Node3D" parent="." unique_id=1979826710]
 
-[node name="BannerW0" type="Node3D" parent="Banners" unique_id=1922617918]
+[node name="BannerW0" type="Node3D" parent="Banners" unique_id=814555530]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.97, 4.35, 0)
 script = ExtResource("21_owja3")
 art = "banner_wolf"
 height = 2.3
 
-[node name="BannerE0" type="Node3D" parent="Banners" unique_id=1460110939]
+[node name="BannerE0" type="Node3D" parent="Banners" unique_id=1811377787]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.97, 4.35, 0)
 script = ExtResource("21_owja3")
 art = "banner_hammer"
 height = 2.3
 
-[node name="ShieldW-8" type="Node3D" parent="Banners" unique_id=1785404891]
+[node name="ShieldW-8" type="Node3D" parent="Banners" unique_id=1036182946]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.97, 4.55, -8.25)
 script = ExtResource("21_owja3")
 art = "shield_crossed_stripes"
 height = 1.05
 
-[node name="ShieldE-8" type="Node3D" parent="Banners" unique_id=344865159]
+[node name="ShieldE-8" type="Node3D" parent="Banners" unique_id=1710996228]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.97, 4.55, -8.25)
 script = ExtResource("21_owja3")
 height = 1.05
 
-[node name="ShieldW8" type="Node3D" parent="Banners" unique_id=802388739]
+[node name="ShieldW8" type="Node3D" parent="Banners" unique_id=1076082020]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.97, 4.55, 8.25)
 script = ExtResource("21_owja3")
 art = "shield_quartered"
 height = 1.05
 
-[node name="ShieldE8" type="Node3D" parent="Banners" unique_id=1612843508]
+[node name="ShieldE8" type="Node3D" parent="Banners" unique_id=365630858]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.97, 4.55, 8.25)
 script = ExtResource("21_owja3")
 art = "shield_tree"
 height = 1.05
 
-[node name="ShieldW-2" type="Node3D" parent="Banners" unique_id=2135662958]
+[node name="ShieldW-2" type="Node3D" parent="Banners" unique_id=932948952]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.97, 4.55, -2.75)
 script = ExtResource("21_owja3")
 art = "shield_raven"
 height = 1.05
 
-[node name="ShieldE-2" type="Node3D" parent="Banners" unique_id=1787837393]
+[node name="ShieldE-2" type="Node3D" parent="Banners" unique_id=465539144]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.97, 4.55, -2.75)
 script = ExtResource("21_owja3")
 art = "shield_triangles"
 height = 1.05
 
-[node name="ShieldW2" type="Node3D" parent="Banners" unique_id=1793022262]
+[node name="ShieldW2" type="Node3D" parent="Banners" unique_id=1023083904]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.97, 4.55, 2.75)
 script = ExtResource("21_owja3")
 art = "shield_spiral"
 height = 1.05
 
-[node name="ShieldE2" type="Node3D" parent="Banners" unique_id=128539836]
+[node name="ShieldE2" type="Node3D" parent="Banners" unique_id=827569425]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.97, 4.55, 2.75)
 script = ExtResource("21_owja3")
 art = "shield_waves"
 height = 1.05
 
-[node name="BannerN-1" type="Node3D" parent="Banners" unique_id=814145699]
+[node name="BannerN-1" type="Node3D" parent="Banners" unique_id=1809995110]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.6, 4.2, -10.97)
 script = ExtResource("21_owja3")
 art = "banner_raven"
 height = 2.1
 
-[node name="BannerN1" type="Node3D" parent="Banners" unique_id=853515344]
+[node name="BannerN1" type="Node3D" parent="Banners" unique_id=1388310812]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 4.2, -10.97)
 script = ExtResource("21_owja3")
 art = "banner_serpent"
 height = 2.1
 
-[node name="ShieldS-1" type="Node3D" parent="Banners" unique_id=403364791]
+[node name="ShieldS-1" type="Node3D" parent="Banners" unique_id=2057015139]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -7.5, 4.3, 10.97)
 script = ExtResource("21_owja3")
 art = "shield_triangles"
 height = 1.15
 
-[node name="ShieldS1" type="Node3D" parent="Banners" unique_id=1452144615]
+[node name="ShieldS1" type="Node3D" parent="Banners" unique_id=2048658501]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 7.5, 4.3, 10.97)
 script = ExtResource("21_owja3")
 art = "shield_waves"
 height = 1.15
 
-[node name="PortalLight" type="OmniLight3D" parent="." unique_id=1792517983]
+[node name="PortalLight" type="OmniLight3D" parent="." unique_id=1859391462]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -15.5)
 light_color = Color(0.45, 0.8, 1, 1)
 light_energy = 2.5
 omni_range = 7.0
 
-[node name="Dress" type="Node3D" parent="." unique_id=1562991384]
+[node name="Dress" type="Node3D" parent="." unique_id=1038061171]
 
-[node name="FloorVisual" type="MeshInstance3D" parent="Dress" unique_id=979408560]
+[node name="FloorVisual" type="MeshInstance3D" parent="Dress" unique_id=1864337654]
 material_override = SubResource("ShaderMaterial_7j53m")
 mesh = SubResource("ArrayMesh_555u8")
 
-[node name="Vines" type="Node3D" parent="Dress" unique_id=53831485]
+[node name="Vines" type="Node3D" parent="Dress" unique_id=1959796289]
 
 [node name="Vine0" type="Node3D" parent="Dress/Vines" unique_id=1457211682 instance=ExtResource("22_opsan")]
 transform = Transform3D(-1.3152221, 0, -1.14980374e-07, 0, 1.3152221, 0, 1.14980374e-07, 0, -1.3152221, -11.785263, 5.582389, 10.95)
 
-[node name="Vine1" type="Node3D" parent="Dress/Vines" unique_id=752355109 instance=ExtResource("22_opsan")]
+[node name="Vine1" type="Node3D" parent="Dress/Vines" unique_id=340824248 instance=ExtResource("22_opsan")]
 transform = Transform3D(-1.2577481, 0, -1.09955835e-07, 0, 1.2577481, 0, 1.09955835e-07, 0, -1.2577481, -1.6664972, 5.611126, 10.95)
 
-[node name="Vine2" type="Node3D" parent="Dress/Vines" unique_id=271769157 instance=ExtResource("22_opsan")]
+[node name="Vine2" type="Node3D" parent="Dress/Vines" unique_id=202953134 instance=ExtResource("22_opsan")]
 transform = Transform3D(-1.2819477, 0, -1.1207143e-07, 0, 1.2819477, 0, 1.1207143e-07, 0, -1.2819477, 3.3414154, 5.599026, 10.95)
 
 [node name="Vine3" type="Node3D" parent="Dress/Vines" unique_id=1431855525 instance=ExtResource("23_d01fm")]
 transform = Transform3D(-1.1167375, 0, -9.7628295e-08, 0, 1.1167375, 0, 9.7628295e-08, 0, -1.1167375, -4.1026955, 5.681631, 10.95)
 
-[node name="Decals" type="Node3D" parent="Dress" unique_id=1726108744]
+[node name="Decals" type="Node3D" parent="Dress" unique_id=1752810263]
 
-[node name="SlamCrackSmall_1" type="Node3D" parent="Dress/Decals" unique_id=1434478906]
+[node name="SlamCrackSmall_1" type="Node3D" parent="Dress/Decals" unique_id=817004373]
 transform = Transform3D(0.76229125, 0, 0.64723414, 0, 1, 0, -0.64723414, 0, 0.76229125, 2.5747156, 0.004, 7.596114)
 script = ExtResource("24_rfht8")
 art = "slam_crack_small"
 size = 1.9824729
 
-[node name="SlamCrackMedium_2" type="Node3D" parent="Dress/Decals" unique_id=52921371]
+[node name="SlamCrackMedium_2" type="Node3D" parent="Dress/Decals" unique_id=547954783]
 transform = Transform3D(0.9914152, 0, -0.13075125, 0, 1, 0, 0.13075125, 0, 0.9914152, -3.477687, 0.008, 2.3535414)
 script = ExtResource("24_rfht8")
 art = "slam_crack_medium"
 size = 2.079757
 
-[node name="Scorch_3" type="Node3D" parent="Dress/Decals" unique_id=717066787]
+[node name="Scorch_3" type="Node3D" parent="Dress/Decals" unique_id=1910239448]
 transform = Transform3D(0.48111093, 0, 0.87665975, 0, 1, 0, -0.87665975, 0, 0.48111093, 3.1322985, 0.012, -3.2120647)
 script = ExtResource("24_rfht8")
 size = 2.173985
 
-[node name="SlamCrackSmall_4" type="Node3D" parent="Dress/Decals" unique_id=1920913573]
+[node name="SlamCrackSmall_4" type="Node3D" parent="Dress/Decals" unique_id=360849509]
 transform = Transform3D(0.17341805, 0, -0.9848483, 0, 1, 0, 0.9848483, 0, 0.17341805, -5.0903873, 0, -0.5618496)
 script = ExtResource("24_rfht8")
 art = "slam_crack_small"
 size = 1.3943663
 
-[node name="SlamCrackMedium_5" type="Node3D" parent="Dress/Decals" unique_id=2016683818]
+[node name="SlamCrackMedium_5" type="Node3D" parent="Dress/Decals" unique_id=1576439416]
 transform = Transform3D(0.7309826, 0, 0.6823961, 0, 1, 0, -0.6823961, 0, 0.7309826, -3.4203644, 0.004, -4.1903443)
 script = ExtResource("24_rfht8")
 art = "slam_crack_medium"
 size = 2.7409346
 
-[node name="IchorSplat04_6" type="Node3D" parent="Dress/Decals" unique_id=1039319677]
+[node name="IchorSplat04_6" type="Node3D" parent="Dress/Decals" unique_id=1634576870]
 transform = Transform3D(-0.20091991, 0, 0.97960764, 0, 1, 0, -0.97960764, 0, -0.20091991, -5.0529594, 0.008, -9.568751)
 script = ExtResource("24_rfht8")
 art = "ichor_splat_04"
 size = 1.2219521
 
-[node name="SlamCrackSmall_7" type="Node3D" parent="Dress/Decals" unique_id=1475745422]
+[node name="SlamCrackSmall_7" type="Node3D" parent="Dress/Decals" unique_id=813594729]
 transform = Transform3D(-0.65316856, 0, -0.7572125, 0, 1, 0, 0.7572125, 0, -0.65316856, 3.6933641, 0.012, 0.5019827)
 script = ExtResource("24_rfht8")
 art = "slam_crack_small"
 size = 1.9529899
 
-[node name="SlamCrackSmall_8" type="Node3D" parent="Dress/Decals" unique_id=585809748]
+[node name="SlamCrackSmall_8" type="Node3D" parent="Dress/Decals" unique_id=1494770471]
 transform = Transform3D(-0.35083783, 0, -0.93643624, 0, 1, 0, 0.93643624, 0, -0.35083783, 4.7187624, 0, 4.424016)
 script = ExtResource("24_rfht8")
 art = "slam_crack_small"
 size = 1.6310682
 
-[node name="SlamCrackLarge_9" type="Node3D" parent="Dress/Decals" unique_id=816935933]
+[node name="SlamCrackLarge_9" type="Node3D" parent="Dress/Decals" unique_id=2053783372]
 transform = Transform3D(0.9242155, 0, -0.38187134, 0, 1, 0, 0.38187134, 0, 0.9242155, -1.3290586, 0.004, -5.9840746)
 script = ExtResource("24_rfht8")
 art = "slam_crack_large"
 size = 2.6084926
 
-[node name="SlamCrackSmall_10" type="Node3D" parent="Dress/Decals" unique_id=1389807709]
+[node name="SlamCrackSmall_10" type="Node3D" parent="Dress/Decals" unique_id=476337367]
 transform = Transform3D(0.40772653, 0, 0.9131041, 0, 1, 0, -0.9131041, 0, 0.40772653, -0.0648489, 0.008, 7.9009733)
 script = ExtResource("24_rfht8")
 art = "slam_crack_small"
 size = 1.6945949
 
-[node name="SlamCrackSmall_11" type="Node3D" parent="Dress/Decals" unique_id=1512717610]
+[node name="SlamCrackSmall_11" type="Node3D" parent="Dress/Decals" unique_id=1287236200]
 transform = Transform3D(0.95194435, 0, -0.3062711, 0, 1, 0, 0.3062711, 0, 0.95194435, -4.307434, 0.012, 4.6766214)
 script = ExtResource("24_rfht8")
 art = "slam_crack_small"
 size = 1.3209785
 
-[node name="Scorch_12" type="Node3D" parent="Dress/Decals" unique_id=1565125906]
+[node name="Scorch_12" type="Node3D" parent="Dress/Decals" unique_id=975229138]
 transform = Transform3D(-0.44847083, 0, 0.89379746, 0, 1, 0, -0.89379746, 0, -0.44847083, -0.9253559, 0, 3.4304113)
 script = ExtResource("24_rfht8")
 size = 2.210972
 
-[node name="Scorch_13" type="Node3D" parent="Dress/Decals" unique_id=1277548706]
+[node name="Scorch_13" type="Node3D" parent="Dress/Decals" unique_id=1605066735]
 transform = Transform3D(0.2694282, 0, 0.9630205, 0, 1, 0, -0.9630205, 0, 0.2694282, -3.2771997, 0.004, 8.624568)
 script = ExtResource("24_rfht8")
 size = 2.5845237
 
-[node name="IchorSplat04_14" type="Node3D" parent="Dress/Decals" unique_id=992216351]
+[node name="IchorSplat04_14" type="Node3D" parent="Dress/Decals" unique_id=742417090]
 transform = Transform3D(-0.9007524, 0, 0.43433294, 0, 1, 0, -0.43433294, 0, -0.9007524, -5.453471, 0.008, -5.3577056)
 script = ExtResource("24_rfht8")
 art = "ichor_splat_04"
 size = 1.09858
 
-[node name="Bones" type="Node3D" parent="Dress" unique_id=561104584]
+[node name="Bones" type="Node3D" parent="Dress" unique_id=827896874]
 
-[node name="Scatter" type="Node3D" parent="Dress" unique_id=152192556]
+[node name="Scatter" type="Node3D" parent="Dress" unique_id=1421131063]
 
-[node name="Kerb1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=650884797]
+[node name="Kerb1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1036348496]
 material_override = SubResource("StandardMaterial3D_od6qp")
 gi_mode = 0
 script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_ahrvp")
 xforms = PackedFloat32Array(0.7715654, 0, 0.01156583, -6.7207146, 0, 0.8954022, 0, 1.9639148, -0.012494949, 0, 0.7141921, -11.039968, -0.77159667, 0, 0.009613108, -12.773365, 0, 0.8954022, 0, 1.9585272, -0.010385359, 0, -0.71422106, -10.540023, 0.7716665, 0, 6.906986e-05, -14.283357, 0, 0.8954022, 0, 1.9727231, -7.461845e-05, 0, 0.71428573, -11.04, -0.771413, 0, 0.01830725, -14.289741, 0, 0.8954022, 0, 1.9685725, -0.019777928, 0, -0.7140511, 11.039918, -0.7716352, 0, -0.006439529, -12.767747, 0, 0.8954022, 0, 1.9757782, 0.006956836, 0, -0.7142567, 11.039989, -0.77166545, 0, 0.0011946918, -11.257084, 0, 0.8954022, 0, 1.9615332, -0.001290665, 0, -0.7142848, 11.04, 0.020776968, 0, 0.7140596, -15.039921, 0, 0.8954022, 0, 1.9755663, -0.8255077, 0, 0.017971963, -8.113983, -0.0090399925, 0, -0.71424294, -14.540015, 0, 0.8954022, 0, 1.9768304, 0.82571965, 0, -0.007819544, -1.6188017, 0.01841136, 0, 0.71410817, -15.039938, 0, 0.8954022, 0, 1.9659523, -0.82556385, 0, 0.015925726, -0.005574004, -0.0032110505, 0, -0.7142803, -14.540002, 0, 0.8954022, 0, 1.9596568, 0.82576287, 0, -0.0027775408, 1.6225107, 0.013052616, 0, -0.7141965, -14.540031, 0, 0.8954022, 0, 1.9748052, 0.82566595, 0, 0.011290441, 4.860664, 0.013449461, 0, 0.714191, -15.039967, 0, 0.8954022, 0, 1.9808005, -0.82565963, 0, 0.011633709, 6.4820824, -0.010586226, 0, -0.714227, -14.540021, 0, 0.8954022, 0, 1.9805981, 0.82570124, 0, -0.009157027, 9.732436, -0.010693945, 0, 0.7142258, -6.4599786, 0, 0.8954022, 0, 1.9623686, -0.82569987, 0, -0.009250203, 9.732469, -0.014095194, 0, -0.71418166, -5.960036, 0, 0.8954022, 0, 1.9659418, 0.82564884, 0, -0.012192265, 8.11196, -0.0015146392, 0, -0.71428454, -5.9600005, 0, 0.8954022, 0, 1.9591683, 0.82576776, 0, -0.0013101546, 4.865074, 0.017864639, 0, -0.71411854, -5.9600587, 0, 0.8954022, 0, 1.9602951, 0.8255758, 0, 0.015452814, 3.2376685, 0.010614811, 0, -0.7142267, -5.9600205, 0, 0.8954022, 0, 1.9648408, 0.8257009, 0, 0.009181753, -0.0032136135, 0.017603388, 0, -0.71412337, -5.960057, 0, 0.8954022, 0, 1.9714864, 0.82558143, 0, 0.0152268335, -1.6268679, 0.7716233, 0, -0.007555175, 14.285977, 0, 0.8954022, 0, 1.9756695, 0.008162105, 0, 0.71424574, -11.039986, 0.771464, 0, -0.016365282, 11.262394, 0, 0.8954022, 0, 1.9618846, 0.017679958, 0, 0.7140982, -11.039934, 0.7715897, 0, -0.010080864, 9.746862, 0, 0.8954022, 0, 1.976859, 0.010890692, 0, 0.71421456, -11.039975, -0.7716048, 0, 0.009038413, 6.7135034, 0, 0.8954022, 0, 1.9813184, -0.009764496, 0, -0.7142286, -10.54002, 0.7715093, 0, -0.014417699, 9.74838, 0, 0.8954022, 0, 1.9641668, 0.015575917, 0, 0.71414024, 10.5400505, 0.77156144, 0, 0.011788096, 12.765875, 0, 0.8954022, 0, 1.9777206, -0.012735071, 0, 0.71418846, 10.540034, -0.01704708, 0, 0.7141335, 5.960054, 0, 0.8954022, 0, 1.9713303, -0.8255932, 0, -0.014745629, -9.72407, 0.01778711, 0, -0.71412, 6.4599423, 0, 0.8954022, 0, 1.9642111, 0.8255775, 0, 0.015385753, -8.113078, 0.010276404, 0, -0.7142304, 6.4599805, 0, 0.8954022, 0, 1.9589943, 0.8257052, 0, 0.0088890325, -3.2461882, -0.007833944, 0, -0.7142536, 6.4599886, 0, 0.8954022, 0, 1.980471, 0.825732, 0, -0.006776318, -1.6191669, 0.013073667, 0, 0.7141962, 5.9600315, 0, 0.8954022, 0, 1.973775, -0.8256656, 0, 0.01130865, -0.0039580273, -0.010403754, 0, -0.71422905, 6.45998, 0, 0.8954022, 0, 1.9644698, 0.82570356, 0, -0.00899919, 1.6246883, -0.018210169, 0, -0.71411204, 6.4599395, 0, 0.8954022, 0, 1.9759461, 0.8255683, 0, -0.015751695, 3.2485902, -0.010629516, 0, -0.71422654, 6.4599795, 0, 0.8954022, 0, 1.9773535, 0.8257007, 0, -0.009194473, 4.8678336, -0.018215286, 0, -0.7141119, 6.4599385, 0, 0.8954022, 0, 1.9760474, 0.8255682, 0, -0.01575612, 6.4916687, 0.01655345, 0, -0.7141422, 6.4599495, 0, 0.8954022, 0, 1.9752575, 0.8256032, 0, 0.014318643, 8.102681, -0.0039029876, 0, 0.71427774, 14.540003, 0, 0.8954022, 0, 1.962274, -0.82575995, 0, -0.0033760627, 9.7304125, -0.013945893, 0, -0.71418387, 15.039965, 0, 0.8954022, 0, 1.9725627, 0.82565135, 0, -0.0120631205, 8.111915, 0.013086481, 0, 0.714196, 14.540031, 0, 0.8954022, 0, 1.9698433, -0.8256654, 0, 0.011319734, 4.8606534, 0.019018434, 0, 0.71409625, 14.540067, 0, 0.8954022, 0, 1.9632052, -0.8255501, 0, 0.01645084, 3.2373192, 0.020652132, 0, 0.7140623, 14.540078, 0, 0.8954022, 0, 1.9585274, -0.8255108, 0, 0.017863981, -3.2493293)
 
-[node name="Kerb2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1650775472]
+[node name="Kerb2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=472736804]
 material_override = SubResource("StandardMaterial3D_od6qp")
 gi_mode = 0
 script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_gjxat")
 xforms = PackedFloat32Array(0.77166265, 0, 0.0022670345, -8.230793, 0, 0.8954022, 0, 1.963848, -0.0024491523, 0, 0.71428216, -11.039999, -0.77165073, 0, 0.0045671044, -9.744932, 0, 0.8954022, 0, 1.9611169, -0.004933994, 0, -0.7142711, -10.540005, 0.77161664, 0, -0.008121746, -11.253823, 0, 0.8954022, 0, 1.9685825, 0.008774191, 0, 0.71423954, -11.039984, -0.7716598, 0, -0.0029795188, -9.742291, 0, 0.8954022, 0, 1.9594926, 0.003218873, 0, -0.71427953, 11.039998, 0.7716459, 0, -0.005219669, -8.228172, 0, 0.8954022, 0, 1.9693943, 0.0056389812, 0, 0.71426666, 10.540007, 0.7715186, 0, 0.013985176, -6.7215614, 0, 0.8954022, 0, 1.9666914, -0.015108648, 0, 0.7141488, 10.540048, -0.0025089432, 0, 0.71428245, -15.039999, 0, 0.8954022, 0, 1.9594814, -0.8257653, 0, -0.0021702219, -9.728472, 0.016351787, 0, 0.71414566, -15.039951, 0, 0.8954022, 0, 1.9810885, -0.8256072, 0, 0.0141442055, -6.4911046, 0.014770307, 0, 0.71417147, -15.03996, 0, 0.8954022, 0, 1.9708976, -0.82563704, 0, 0.012776233, -4.869087, -0.018297242, 0, -0.7141104, -14.540061, 0, 0.8954022, 0, 1.9686517, 0.8255664, 0, -0.015827013, -3.2375376, 0.005564076, 0, -0.7142695, -14.540006, 0, 0.8954022, 0, 1.9637579, 0.82575035, 0, 0.004812895, 3.2413926, -0.014445259, 0, 0.7141764, -15.039962, 0, 0.8954022, 0, 1.9776455, -0.82564276, 0, -0.01249507, 8.112066, 0.019127365, 0, 0.7140941, -6.4599323, 0, 0.8954022, 0, 1.9665645, -0.8255476, 0, 0.016545065, 6.4803634, -0.020505328, 0, 0.7140655, -6.459923, 0, 0.8954022, 0, 1.9791139, -0.8255145, 0, -0.017736996, 1.6277465, -0.016317006, 0, -0.71414626, -5.9600487, 0, 0.8954022, 0, 1.9618102, 0.8256079, 0, -0.014114119, -3.238137, -0.004605626, 0, 0.71427464, -6.459996, 0, 0.8954022, 0, 1.9653295, -0.82575625, 0, -0.0039838413, -4.863221, 0.008866134, 0, 0.71424454, -6.459986, 0, 0.8954022, 0, 1.9819983, -0.8257215, 0, 0.007669157, -6.488838, 0.003644842, 0, -0.7142788, -5.960003, 0, 0.8954022, 0, 1.9751741, 0.8257611, 0, 0.0031527681, -8.108796, 0.00080786337, 0, 0.7142854, -6.4600005, 0, 0.8954022, 0, 1.9679755, -0.8257687, 0, 0.00069879735, -9.729475, -0.7716351, 0, -0.006444858, 12.772256, 0, 0.8954022, 0, 1.9680294, 0.0069625936, 0, -0.71425664, -10.54001, -0.77166426, 0, 0.0017194852, 8.229398, 0, 0.8954022, 0, 1.9704157, -0.0018576167, 0, -0.71428365, -10.540001, 0.77164525, 0, 0.0053090565, 6.7148085, 0, 0.8954022, 0, 1.979103, -0.005735549, 0, 0.714266, 10.540007, -0.77166647, 0, 0.00027975673, 8.229901, 0, 0.8954022, 0, 1.9791528, -0.00030223047, 0, -0.7142857, 11.04, 0.7715372, 0, -0.013077432, 11.261243, 0, 0.8954022, 0, 1.9797632, 0.014127983, 0, 0.714166, 10.540042, 0.7715747, 0, 0.011021282, 14.279475, 0, 0.8954022, 0, 1.9782609, -0.0119066555, 0, 0.71420074, 10.54003, 0.016268868, 0, 0.7141471, 5.960049, 0, 0.8954022, 0, 1.9763004, -0.82560885, 0, 0.014072482, -6.4910793, 0.00279388, 0, 0.7142816, 5.9600015, 0, 0.8954022, 0, 1.9807914, -0.8257644, 0, 0.0024166906, -4.8654613, -0.014286775, 0, -0.7141788, 6.4599624, 0, 0.8954022, 0, 1.9795316, 0.8256455, 0, -0.012357982, 9.733556, -0.014583924, 0, 0.71417433, 14.540039, 0, 0.8954022, 0, 1.9649192, -0.8256403, 0, -0.012615013, 6.490569, -0.007163462, 0, 0.71425885, 14.5400095, 0, 0.8954022, 0, 1.9618543, -0.8257381, 0, -0.0061963554, 1.6237073, 0.008886554, 0, 0.71424437, 14.540014, 0, 0.8954022, 0, 1.9751815, -0.82572126, 0, 0.00768682, -0.002690387, 0.012775299, 0, -0.71420026, 15.03997, 0, 0.8954022, 0, 1.9607321, 0.8256703, 0, 0.011050563, -1.6254063, -0.009018843, 0, -0.7142431, 15.039985, 0, 0.8954022, 0, 1.9666322, 0.82571983, 0, -0.007801249, -4.861885, 0.007110755, 0, 0.71425927, 14.5400095, 0, 0.8954022, 0, 1.975329, -0.8257385, 0, 0.006150764, -6.488307, -0.016622618, 0, -0.71414095, 15.039949, 0, 0.8954022, 0, 1.981794, 0.82560176, 0, -0.014378473, -8.10266, 0.014213089, 0, 0.71417993, 14.540037, 0, 0.8954022, 0, 1.97589, -0.8256468, 0, 0.012294243, -9.733534)
 
-[node name="Column" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1650519240]
+[node name="Column" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1227282995]
 material_override = SubResource("StandardMaterial3D_od6qp")
 gi_mode = 0
 script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_mwx3m")
 xforms = PackedFloat32Array(-0.1654785, 0, 0.8047001, -15.027652, 0, 0.64085567, 0, 0.011865377, -0.85453874, 0, -0.15582742, -10.969911, 0.7934644, 0, -0.33694926, -14.721379, 0, 0.64085567, 0, 0.011865377, 0.357818, 0, 0.74718773, 10.811266, -0.097602285, 0, 0.81447953, -6.260104, 0, 0.64085567, 0, 0.011865377, -0.8649239, 0, -0.0919099, -10.98127, 0.43629023, 0, -0.7092467, -5.951042, 0, 0.64085567, 0, 0.011865377, 0.75317353, 0, 0.4108448, 10.916579, -0.745072, 0, 0.4237416, 5.954308, 0, 0.64085567, 0, 0.011865377, -0.4499858, 0, -0.7016177, -10.830694, -0.23484388, 0, -0.7892517, 6.2117333, 0, 0.64085567, 0, 0.011865377, 0.8381336, 0, -0.22114724, 11.026526, 0.43108636, 0, 0.71206284, 14.826539, 0, 0.64085567, 0, 0.011865377, -0.7561641, 0, 0.4059444, -11.044398, -0.09502655, 0, 0.8147496, 14.740198, 0, 0.64085567, 0, 0.011865377, -0.86521065, 0, -0.089484386, 10.778314, -1.0950361, 0, -9.014785e-08, -15.146365, 0, 1.031942, 0, 0.009106159, 9.57311e-08, 0, -1.0311712, -10.839138, 1.0950361, 0, 0, -14.853635, 0, 1.031942, 0, 3.129106, 0, 0, 1.0311712, -11.160862, 1.3058175e-08, 0, -1.0311712, 15.160862, 0, 1.031942, 0, 0.009106159, 1.0950361, 0, 1.2296593e-08, -10.853635, 1.0950361, 0, 0, 15.146365, 0, 1.031942, 0, 3.129106, 0, 0, 1.0311712, -11.160862, 1.0950361, 0, 0, -14.853635, 0, 1.031942, 0, 0.009106159, 0, 0, 1.0311712, 10.839138, -1.0950361, 0, -9.014785e-08, -15.146365, 0, 1.031942, 0, 3.129106, 9.57311e-08, 0, -1.0311712, 11.160862, -4.786555e-08, 0, 1.0311712, 14.839138, 0, 1.031942, 0, 0.009106159, -1.0950361, 0, -4.5073925e-08, 10.853635, 1.3058175e-08, 0, -1.0311712, 15.160862, 0, 1.031942, 0, 3.129106, 1.0950361, 0, 1.2296593e-08, 11.146365, -1.0950361, 0, -9.014785e-08, -2.3663652, 0, 1.031942, 0, 0.009106159, 9.57311e-08, 0, -1.0311712, -10.839138, 1.3058175e-08, 0, -1.0311712, -2.0591376, 0, 1.031942, 0, 3.129106, 1.0950361, 0, 1.2296593e-08, -10.853635, -1.0950361, 0, -9.014785e-08, 2.0736349, 0, 1.031942, 0, 0.009106159, 9.57311e-08, 0, -1.0311712, -10.839138, 1.3058175e-08, 0, -1.0311712, 2.3808625, 0, 1.031942, 0, 3.129106, 1.0950361, 0, 1.2296593e-08, -10.853635)
 
-[node name="Rock3" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1941660388]
+[node name="Rock3" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=687581502]
 material_override = SubResource("ShaderMaterial_fafkv")
 cast_shadow = 0
 gi_mode = 0
@@ -1858,7 +1899,7 @@ script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_ilhs8")
 xforms = PackedFloat32Array(0.2644048, -0.052405532, 0.53001857, -5.566143, 0, 0.57648075, 0.06005018, -0.047579687, -0.53274107, -0.0260094, 0.26305363, -2.8436253, -0.114846885, 0.040950596, 0.47175208, -5.8069987, 0, 0.30370942, -0.06730731, -0.039193563, -0.47626814, -0.00987479, -0.11375788, 7.1160154, -0.14450558, -0.056561798, 0.59815174, -5.659767, 0, 0.54191345, 0.066033885, -0.049496017, -0.601588, 0.013586532, -0.14368017, -1.3770602, 0.59648836, -0.021617096, 0.35404477, 5.850609, 0, 0.44079807, 0.06619855, -0.05555799, -0.35566425, -0.036254264, 0.59377223, 3.2148151, -0.56006795, -0.0028365825, -0.038423777, 5.5569887, 0, 0.39311656, -0.058542162, -0.044911914, 0.03863441, -0.04112083, -0.5570145, -10.42682, -0.15467452, 0.052527618, -0.37313652, 5.7816834, 0, 0.39794585, 0.057547197, -0.032593444, 0.37691543, 0.021555722, -0.15312378, -10.624373, 0.623604, 0.0015901487, -0.006570401, 5.5874395, 0, 0.59442335, 0.14927757, -0.04989126, 0.006767123, -0.1465354, 0.60547566, -9.118812, 0.24656726, -0.03927797, 0.29602003, -4.130698, 0, 0.3372859, 0.057856854, -0.031026982, -0.29936987, -0.032350153, 0.24380825, 6.5039043, 0.17356914, -0.028496813, -0.27453557, 1.97887, 0, 0.24979225, -0.04361556, -0.02615181, 0.2770123, 0.017855408, 0.1720173, -6.1937904, -0.8501035, 0.039626647, -0.38380122, 1.186165, 0, 0.58567494, 0.15008362, -0.0747851, 0.3888454, 0.086632766, -0.8390758, 10.614218, 0.37731776, 0.08808417, -0.48825923, 4.8559794, 0, 0.4607364, 0.1460755, -0.0502411, 0.5020285, -0.06620286, 0.36696893, 10.596277)
 
-[node name="Brick4" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1610610111]
+[node name="Brick4" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1598212609]
 material_override = SubResource("ShaderMaterial_fafkv")
 cast_shadow = 0
 gi_mode = 0
@@ -1866,7 +1907,7 @@ script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_u343b")
 xforms = PackedFloat32Array(1.2997979, 0.33000877, 1.0516949, -5.268057, -0.41938806, 1.6518341, 0, 0.0681697, -1.0193534, -0.25880605, 1.341037, -2.8346014, 1.4390998, 0.32601276, 0.56035423, -5.41878, -0.3487292, 1.5393757, 0, 0.063135274, -0.5465063, -0.12380519, 1.4755652, 6.961842, 1.4465897, 0.091928765, 1.0968897, -5.5806875, -0.11528337, 1.8140975, 0, 0.072710276, -1.0946815, -0.06956549, 1.4495078, 7.470829, 0.008271634, -0.0024218177, -1.2978247, -5.3020144, 0.36468354, 1.2455639, 0, 0.051914133, 1.2455363, -0.3646755, 0.008618881, 9.619254, 1.0051447, -0.2873348, 0.39721662, -5.2532005, 0.30737737, 1.0752568, 0, 0.044733133, -0.38191816, 0.109176695, 1.0454077, 2.0912242, -1.8190926, -0.011999938, -0.28431225, -5.15716, -0.012145612, 1.8411758, 0, 0.07364863, 0.28430608, 0.0018754705, -1.8191323, 3.1189327, -0.42655057, 0.011683561, 1.7386117, 5.64365, 0.049016908, 1.7895391, 0, 0.07160841, -1.7379599, 0.047604114, -0.42671055, 1.1578779, 1.5012671, -0.29243374, 1.1265047, 5.3361454, 0.36319172, 1.8645175, 0, 0.07598246, -1.1057224, 0.21538508, 1.5294838, -7.6369333, 0.8475976, 0.1030221, -1.238839, 5.256245, -0.18153946, 1.4935865, 0, 0.060183153, 1.2297883, 0.14947583, 0.85383564, -9.729279, 1.562934, -0.003539782, -0.07371948, 1.2714231, 0.0035437173, 1.5646715, 0, 0.06258702, 0.07371929, -0.00016696178, 1.562938, -6.35172, 0.90777767, -0.1966467, 0.7953897, 1.6344308, 0.25889534, 1.1951351, 0, 0.04891421, -0.77735955, 0.16839497, 0.9288327, -6.4116955, 0.6033083, -0.041835282, 1.5013885, 2.3858998, 0.11197061, 1.6147326, 0, 0.064744405, -1.4977919, 0.10386158, 0.6047571, -5.6447744, 0.22758678, 0.024024006, 1.5066254, 1.4242225, -0.15997446, 1.5154872, 0, 0.060956288, -1.4983008, -0.15816028, 0.22885124, -7.2244496, -1.4792943, 0.32801116, -1.1141547, 1.8633621, 0.40714058, 1.8361591, 0, 0.07523025, 1.0877355, -0.24118893, -1.5152236, -7.84874, 1.5436271, -0.25122657, -1.0495272, 1.5730885, 0.3025532, 1.8589966, 0, 0.075338244, 1.0358975, -0.16859315, 1.5639372, -8.111725, 0.06496461, 0.01044453, -1.4470803, -0.06701374, -0.22993852, 1.4302094, 0, 0.057943016, 1.4287331, 0.22970119, 0.06579885, 10.577585, 1.2189038, -0.05806535, -0.50488573, -0.5243153, 0.06283905, 1.3191129, 0, 0.05282435, 0.5043138, -0.024024177, 1.220286, 10.790326, -0.6257942, 0.099400714, 1.3198919, 1.4764185, 0.22967863, 1.445981, 0, 0.05856434, -1.3035501, 0.20705499, -0.63363945, 10.654535, -0.75165904, -0.026874539, -0.8106855, 2.4710903, -0.039513234, 1.105153, 0, 0.044234365, 0.8101678, 0.028966444, -0.7521393, 10.657905, 0.55233675, -0.1130427, -1.7483975, 0.84487444, 0.3683401, 1.7997427, 0, 0.07348195, 1.7128917, -0.35056493, 0.56378585, 10.48657, -1.2197466, 0.26649916, 0.20553328, 3.2331123, 0.2700861, 1.2361639, 0, 0.050613, -0.20079648, 0.043871477, -1.2485205, 10.522424, -0.0053015654, -0.00095102366, -1.3929754, 5.346337, -0.2459554, 1.3711001, 0, 0.05571943, 1.3710899, 0.24595357, -0.00538619, 10.4971285)
 
-[node name="Brick1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=723609695]
+[node name="Brick1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1591852569]
 material_override = SubResource("ShaderMaterial_fafkv")
 cast_shadow = 0
 gi_mode = 0
@@ -1874,7 +1915,7 @@ script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_galhl")
 xforms = PackedFloat32Array(-0.12488702, -0.020584838, -1.1563221, -5.6504407, -0.18917972, 1.1477423, 0, 0.046529155, 1.1409276, 0.18805644, -0.12657213, -4.178447, -0.11599715, -0.0043359534, -1.3771372, -5.6038527, -0.05162363, 1.3810561, 0, 0.055280823, 1.376176, 0.05144122, -0.11607817, -2.4595988, 1.486282, -0.3730186, 0.030632602, -5.1462975, 0.37309313, 1.486579, 0, 0.061307296, -0.029711165, 0.007456739, 1.5323763, 9.693486, 1.6079271, 0.07650513, -0.42491332, -5.673278, -0.07912555, 1.6630012, 0, 0.06659529, 0.42443317, 0.02019452, 1.609746, 4.2758827, -0.5282499, -0.09551351, 1.7048343, -5.5150084, -0.31801686, 1.7588338, 0, 0.071494125, -1.6776317, -0.30333462, -0.53681546, -7.712511, -0.6095257, 0.15421471, 1.1771935, -5.258093, 0.32734302, 1.2938064, 0, 0.05338297, -1.1412333, 0.2887408, -0.62873185, -7.4767284, -1.0720973, -0.21617489, -0.4018067, 5.2874184, -0.23030251, 1.1421618, 0, 0.046605974, 0.3938794, 0.079420805, -1.0936747, 3.6207042, 1.0667365, -0.270811, -0.59076345, 5.671325, 0.30735913, 1.2107011, 0, 0.049964257, 0.5725997, -0.14536515, 1.100575, 3.7742271, 1.440036, 0.25660104, 1.1667453, 5.2956085, -0.32823408, 1.8420383, 0, 0.074842155, -1.1486518, -0.20467907, 1.4627194, 2.387084, 0.85291815, 0.07101716, -1.604645, 5.894056, -0.15090337, 1.812354, 0, 0.07274502, 1.5991114, 0.13314801, 0.85586965, -7.6397986, 1.5240186, 0.38838714, -1.0230799, 5.3244505, -0.46333238, 1.8181014, 0, 0.07504846, 0.99139297, 0.25265062, 1.5727292, -6.1460457, 0.021921376, 0.004761283, -1.5743345, 5.5817213, -0.3341855, 1.5386204, 0, 0.06297977, 1.5384642, 0.33415157, 0.02243249, -0.7178359, -0.8336757, 0.25327098, 1.4410683, 5.2514296, 0.48950732, 1.6112795, 0, 0.0673598, -1.3788425, 0.41889286, -0.8712987, -1.64451, 0.16121319, -0.04416615, -1.2990487, -1.1992764, 0.34607083, 1.2632113, 0, 0.05239035, 1.2528819, -0.343241, 0.16715364, 6.3375735, -0.37798196, -0.027587831, -1.5084866, -4.3069987, -0.113220595, 1.5512397, 0, 0.062214643, 1.5044848, 0.10980808, -0.37898737, 6.762065, 1.3632135, -0.012656058, -0.15992483, -4.0705886, 0.012742844, 1.3725615, 0, 0.054904822, 0.15991795, -0.0014846764, 1.3632723, 6.850027, 1.0723771, -0.1591976, 0.46791258, 1.4076698, 0.17339246, 1.1679956, 0, 0.04723183, -0.46284026, 0.06871003, 1.0841293, -6.424085, 0.55578476, -0.11021168, -1.3477036, -4.044888, 0.28436977, 1.4340439, 0, 0.05847869, 1.3219626, -0.26214415, 0.5666069, 10.231444, 1.5960859, 0.10593035, 0.8478179, -3.9675627, -0.11988961, 1.8064145, 0, 0.072415546, -0.84595674, -0.05614516, 1.5995973, 10.362129, -1.1648251, 0.24628721, 0.40670863, 3.8441682, 0.260261, 1.2309147, 0, 0.050325133, -0.39791146, 0.08413323, -1.1905775, 10.179031, 1.1877394, 0.09579655, 1.0180042, -5.798214, -0.12599565, 1.5621649, 0, 0.06268951, -1.0147091, -0.08184087, 1.1915963, -10.688496, 0.05781411, 0.009754239, -1.2579558, -3.7870798, -0.2095083, 1.2417716, 0, 0.050372854, 1.240425, 0.20928112, 0.058631193, -10.392178)
 
-[node name="Brick3" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1247688400]
+[node name="Brick3" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1646677842]
 material_override = SubResource("ShaderMaterial_fafkv")
 cast_shadow = 0
 gi_mode = 0
@@ -1882,7 +1923,7 @@ script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_j1umy")
 xforms = PackedFloat32Array(-0.19868739, -0.048186745, -1.6712513, -5.7623944, -0.3968385, 1.6362758, 0, 0.0673484, 1.624168, 0.39390206, -0.20444717, -2.6683874, -1.1603954, -0.28451735, 0.10187529, -5.560002, -0.2855498, 1.1646062, 0, 0.047964092, -0.098944515, -0.024260206, -1.1947668, 6.2290382, 0.28950313, -0.08043573, 1.8228663, -5.834458, 0.49456626, 1.7800359, 0, 0.07389856, -1.7563359, 0.4879814, 0.30046958, 9.832437, 0.27645123, 0.015745873, 1.5382445, -5.260207, -0.08887815, 1.5604389, 0, 0.06251872, -1.5357553, -0.08747224, 0.2768993, 9.404374, 1.5158832, 0.2007683, -0.87115943, -5.1554465, -0.2310644, 1.7446312, 0, 0.07039464, 0.8636179, 0.114380255, 1.5291206, 9.232345, 1.5676944, -0.042693254, -0.5253787, -5.4352636, 0.045025248, 1.6533252, 0, 0.06615753, 0.52518404, -0.014302413, 1.5682757, -8.524037, 1.4568557, 0.24357441, 0.120032415, -5.7894964, -0.24437733, 1.461658, 0, 0.059277847, -0.11838914, -0.0197937, 1.4770771, -7.1204233, -1.1681157, 0.085467674, 0.708353, -5.291446, 0.09988282, 1.3651325, 0, 0.054751262, -0.7064645, 0.051689982, -1.1712383, -8.852604, 1.1465809, 0.34968087, 1.3553632, -5.4932575, -0.5278249, 1.7307036, 0, 0.07237606, -1.2964131, -0.39537627, 1.1987178, -9.215784, -0.8024717, -0.0196058, 1.533876, 5.523328, -0.04228413, 1.730703, 0, 0.06924877, -1.5334184, -0.03746412, -0.8027111, 0.0917176, 1.4627881, -0.075957544, 0.98918027, 5.2375546, 0.09165581, 1.7651049, 0, 0.07069932, -0.9878494, 0.051295616, 1.4647589, -10.611559, -0.28882006, 0.061322503, 1.8550651, 5.8381033, 0.39013004, 1.8374555, 0, 0.07513662, -1.8146145, 0.38528043, -0.2952583, -10.150394, -0.5775938, -0.1510442, 1.1594095, 5.846424, -0.32993338, 1.2616668, 0, 0.05216373, -1.12169, -0.2933286, -0.5970167, -9.365932, 1.3620628, 0.0058882013, 0.616623, 5.316698, -0.0064634774, 1.4951361, 0, 0.059806004, -0.61661726, -0.002665638, 1.3620756, -1.7479527, -0.40455216, -0.05509702, 1.7750504, 5.113147, -0.24579234, 1.8047404, 0, 0.072856046, -1.7588136, -0.23953746, -0.4082868, -1.5426444, -1.5631356, 0.351043, -0.16885918, -1.7243998, 0.3529875, 1.5717943, 0, 0.064437725, 0.1647556, -0.03700018, -1.6020688, 5.7620506, 0.5653879, 0.05591081, -1.6969053, -3.8701005, -0.17610252, 1.7808046, 0, 0.07157963, 1.6886685, 0.16699125, 0.56814563, 7.791919, 0.6550488, -0.07081826, -1.2777776, -1.3628693, 0.15452528, 1.429315, 0, 0.05750575, 1.2703749, -0.13734205, 0.6588658, 6.381507, 0.44071838, 0.12969546, -1.3854865, 1.5623827, -0.41208053, 1.4002914, 0, 0.058386665, 1.3291289, 0.39113867, 0.4594057, -6.489638, 1.607977, 0.026601516, -0.5475247, 1.635424, -0.028100975, 1.6986147, 0, 0.067953885, 0.5474498, 0.009056718, 1.6081971, -6.489313, 0.66925013, -0.10825, 1.6189371, 1.2588365, 0.28025088, 1.7326369, 0, 0.070206225, -1.5981661, 0.2585005, 0.67794824, -7.349351, 0.157162, 0.024461765, -1.7703384, 1.3659747, -0.27336597, 1.7563221, 0, 0.07109876, 1.7492763, 0.2722693, 0.1590543, -6.5274396, -1.1481106, 0.11770036, 0.95200413, -4.16745, 0.15257566, 1.4883024, 0, 0.059844106, -0.9470407, 0.09708736, -1.154128, 10.753831, -1.3162885, -0.23614308, 0.03323664, 5.778457, -0.236216, 1.316695, 0, 0.053508636, -0.032714363, -0.0058689793, -1.3373029, 10.238308, 0.025222076, -0.0029736324, -1.758241, -5.658182, 0.20588875, 1.7463295, 0, 0.07033698, 1.7461474, -0.20586728, 0.025396762, -10.395565, -1.2674273, -0.36149642, -0.9787085, -6.1705537, -0.4502676, 1.5786644, 0, 0.06566487, 0.94117427, 0.2684423, -1.3179727, -10.755463, -1.6353233, 0.32029897, 0.08738363, -4.0827217, 0.32073906, 1.6375701, 0, 0.0667474, -0.085754246, 0.016796067, -1.6663953, -10.879633)
 
-[node name="Rock1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=967499981]
+[node name="Rock1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=255842156]
 material_override = SubResource("ShaderMaterial_fafkv")
 cast_shadow = 0
 gi_mode = 0
@@ -1890,7 +1931,7 @@ script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_d0ppd")
 xforms = PackedFloat32Array(0.23085739, -0.02422773, 0.73763806, -5.803415, 0, 0.61723346, 0.03178509, -0.061881192, -0.7382616, -0.0075761094, 0.23066242, 6.699627, -0.44992024, 0.020892559, -0.34690636, -5.584751, 0, 0.4476893, 0.043263327, -0.045499723, 0.3479144, 0.027018096, -0.44861665, -1.0354959, -0.34815803, -0.020719852, 0.33971757, -5.591962, 0, 0.46683863, 0.030850558, -0.03895328, -0.3404015, 0.021191983, -0.34745848, -8.851842, 0.4136763, 0.043465953, 0.4508587, 5.8508034, 0, 0.43868664, -0.08161692, -0.04918846, -0.45488414, 0.03952838, 0.41001552, -0.98464024, 0.17284758, -0.06372854, -0.5339842, -3.6396563, 0, 0.49486607, -0.0758419, -0.045271147, 0.53884554, 0.020442452, 0.1712882, 7.10041, 0.65158015, -0.0007186797, 0.10724242, -1.6527852, 0, 0.50925386, 0.005737814, -0.052827783, -0.107246466, -0.004366367, 0.6515556, 5.968433, -0.5395187, 0.023328882, 0.23208486, -4.3986893, 0, 0.3684123, -0.09216736, -0.047077693, -0.23498487, -0.053562455, -0.53286034, 10.828007)
 
-[node name="Brick2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1379577331]
+[node name="Brick2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=74385358]
 material_override = SubResource("ShaderMaterial_fafkv")
 cast_shadow = 0
 gi_mode = 0
@@ -1898,7 +1939,7 @@ script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_gjkbr")
 xforms = PackedFloat32Array(0.4224181, 0.11644767, 1.5868976, -5.136246, -0.4375095, 1.5870812, 0, 0.06585124, -1.5298332, -0.42172801, 0.43817472, 7.4802117, 1.3690463, 0.09353898, 1.1673176, -5.8793497, -0.12280477, 1.7973834, 0, 0.07206295, -1.1646025, -0.079570524, 1.372238, 9.677413, 0.6080212, -0.114688575, -1.2332327, -5.6501856, 0.25574645, 1.3558393, 0, 0.055189945, 1.2118623, -0.22858867, 0.6187433, -0.7865108, -0.8013334, 0.21291108, -1.3874251, -5.2885203, 0.4150435, 1.5620991, 0, 0.06465187, 1.3409021, -0.3562723, -0.8291359, -2.119616, 0.41235414, -0.0042326045, 1.5315678, -5.6846504, 0.016279778, 1.5860292, 0, 0.06344451, -1.531487, 0.015719932, 0.41237587, -1.989239, -1.2355747, 0.22047633, 0.50506604, -5.836595, 0.23765843, 1.3318653, 0, 0.05411612, -0.49721223, 0.0887227, -1.2550915, -2.0189269, 1.0969968, 0.12501714, 1.165046, -5.5818515, -0.18174636, 1.5947826, 0, 0.064204216, -1.1575534, -0.13191836, 1.1040974, -3.5527377, -1.4693459, 0.35539493, -0.9511566, -5.3479958, 0.41988984, 1.7359937, 0, 0.07144208, 0.9244983, -0.22361109, -1.5117152, -3.177212, -1.3295071, 0.27537063, -0.66945523, -5.3656044, 0.30702516, 1.4823372, 0, 0.06055197, 0.6555416, -0.13577731, -1.3577254, -3.7618895, -0.2916493, -0.008033227, -1.6904154, -5.7425075, -0.047231536, 1.7147586, 0, 0.06861636, 1.6897745, 0.04654337, -0.29175994, 10.711932, 1.0436941, -0.019105216, -0.8059975, -5.4732723, 0.024137512, 1.3186022, 0, 0.052752923, 0.80586255, -0.014751618, 1.043869, 9.53553, 1.024521, -0.21094175, 0.89679956, -5.3280563, 0.27785537, 1.3495132, 0, 0.05511282, -0.8783748, 0.18085125, 1.0460114, 2.6061473, -1.1693734, 0.058103077, -0.63572204, -5.2031136, 0.06611558, 1.330632, 0, 0.05329094, 0.6349387, -0.031548426, -1.1708161, 4.5010805, 1.4992137, -0.3887103, -0.33766553, 5.8682733, 0.39784124, 1.5344307, 0, 0.06340669, 0.32685786, -0.084746435, 1.5487857, 2.48233, 0.99795103, 0.18413274, 0.587469, 5.1819053, -0.21276131, 1.1531104, 0, 0.04690298, -0.5777173, -0.10659508, 1.0147961, -10.970579, 0.23989467, -0.0022144164, -1.4385574, 5.379913, 0.01346183, 1.4583622, 0, 0.058336973, 1.4384961, -0.013278449, 0.2399049, -8.516198, 0.6437118, -0.063667946, -0.9869945, -1.4849669, 0.116151534, 1.1743447, 0, 0.047202993, 0.9822019, -0.09714717, 0.64685273, 5.5926886, 0.56682146, -0.029400013, 1.1521662, -1.5304234, 0.06652918, 1.2826581, 0, 0.051375292, -1.1506195, 0.059680574, 0.5675834, 5.927163, -0.7464807, 0.06915638, -0.82072985, 2.0668013, 0.1025414, 1.1068418, 0, 0.044463262, 0.8172303, -0.075710855, -0.7496773, -5.6198025, -0.45303234, -0.05503952, -1.2904985, -3.8019114, -0.16508532, 1.3588233, 0, 0.054752592, 1.2810787, 0.15564002, -0.4563635, 10.398888, -0.3475596, 0.023477519, 1.336178, 1.429949, 0.09306317, 1.3777009, 0, 0.05523362, -1.33314, 0.09005309, -0.34835166, 10.86489, -1.1612003, 0.10678159, 0.088892065, 4.958426, 0.10709139, 1.1645694, 0, 0.04677932, -0.08851858, 0.008139986, -1.1660998, 10.497076, -0.9287207, -0.036611024, 0.91507804, -5.4352045, -0.05137728, 1.3032999, 0, 0.05217249, -0.91436785, -0.03604522, -0.9294421, -10.371825)
 
-[node name="Rock4" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1498009252]
+[node name="Rock4" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2090795013]
 material_override = SubResource("ShaderMaterial_fafkv")
 cast_shadow = 0
 gi_mode = 0
@@ -1906,7 +1947,7 @@ script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_jx0e4")
 xforms = PackedFloat32Array(-0.22747266, -0.053766903, 0.43866804, -5.8097167, 0, 0.40138218, 0.074212186, -0.039882574, -0.44361073, 0.027570345, -0.22493818, 9.937974, -0.1459897, -0.02136722, -0.47878748, -5.583004, 0, 0.3132521, -0.035679564, -0.04013702, 0.4800028, -0.006498699, -0.14562006, 2.910007, -0.6949498, -0.0017801576, 0.07659613, -1.6369874, 0, 0.42946854, 0.026415462, -0.055933136, -0.07665086, 0.016139677, -0.6944536, 6.7982044, -0.25896338, -0.009614101, 0.21782988, -1.630939, 0, 0.33676496, 0.014990495, -0.0270827, -0.21804374, 0.011418352, -0.2587094, 6.6156955, 0.6562452, 0.006753491, 0.1652265, -1.5290623, 0, 0.42631233, -0.04373581, -0.05414482, -0.16557257, 0.026767395, 0.65487355, 5.8055267, -0.5585052, 0.013301194, -0.15065284, 2.106425, 0, 0.35093904, 0.08258848, -0.04630997, 0.15220991, 0.04880619, -0.5527918, -6.2354407, 0.26033837, 0.0018453693, -0.5114149, 1.6394447, 0, 0.529388, 0.0022446788, -0.04590949, 0.51141876, -0.00093938765, 0.2603364, -6.7427535, 0.082883246, -0.017170431, -0.35519177, 1.6112901, 0, 0.2395278, -0.0268407, -0.029253567, 0.3561525, 0.003995876, 0.08265966, -6.9093647, 0.6680378, 0.12157374, -0.5737348, -0.8385435, 0, 0.7579662, 0.20987119, -0.071319416, 0.5903261, -0.13757794, 0.64926237, 10.803203, -0.63900024, 0.033754297, -0.2000398, 3.0824368, 0, 0.4582146, 0.15688784, -0.053704325, 0.20573723, 0.104837626, -0.6213046, 10.560364)
 
-[node name="Rock5" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1310384711]
+[node name="Rock5" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=198634752]
 material_override = SubResource("ShaderMaterial_fafkv")
 cast_shadow = 0
 gi_mode = 0
@@ -1914,7 +1955,7 @@ script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_wiy8n")
 xforms = PackedFloat32Array(0.024956776, 0.117403254, -0.6617244, -5.839574, 0, 0.59479004, 0.13079397, -0.053997673, 0.6745094, -0.004343908, 0.024483733, -3.717208, 0.4247487, 0.015430749, 0.11192324, -5.716532, 0, 0.4221244, -0.06184841, -0.035162825, -0.11304802, 0.057977054, 0.42052263, 10.057321, -0.32061252, 0.05188236, 0.33016753, -5.7036586, 0, 0.37237358, -0.087829374, -0.03716715, -0.33623043, -0.04947243, -0.31483126, 4.643935, 0.43306187, -0.032571208, -0.39361584, -5.5965915, 0, 0.43050563, -0.06538089, -0.046950057, 0.39608142, 0.035612244, 0.4303661, -7.5227046, -0.37804627, 0.03914087, -0.39010638, -5.767561, 0, 0.32446197, 0.09005738, -0.043769583, 0.39550105, 0.03741345, -0.3728897, -8.861121, -0.254404, -0.050182782, -0.3080076, 5.774258, 0, 0.25897014, -0.098038085, -0.032539602, 0.3173643, -0.040227275, -0.24690354, 0.09760779, -0.36627853, -0.07412028, 0.5469498, 5.8030024, 0, 0.4403764, 0.13173403, -0.053393107, -0.5579258, 0.048659995, -0.35907277, -7.393075, -0.3544678, 0.0036194334, 0.3723182, 5.863671, 0, 0.31988466, -0.008030223, -0.04112826, -0.37236363, -0.0034454833, -0.3544246, -8.844513, -0.1593318, -0.043144472, 0.37404308, 1.5743684, 0, 0.27427885, 0.06921176, -0.032923386, -0.37944758, 0.018116564, -0.15706241, -7.2142506, -0.5176637, -0.024051566, 0.22005668, 1.6054058, 0, 0.40768242, 0.083256505, -0.0450764, -0.22249901, 0.055958103, -0.5119814, 10.695827, 0.1825987, -0.018640349, 0.86782193, -4.905682, 0, 0.7654011, 0.02206978, -0.070966974, -0.8680906, -0.0039209076, 0.18254218, -10.648646, -0.13607733, 0.08212303, 0.42345613, -5.0896215, 0, 0.35600415, -0.10721348, -0.03651236, -0.43564665, -0.025651718, -0.13226953, -10.703407)
 
-[node name="Grime" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1232963633]
+[node name="Grime" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=580731311]
 material_override = SubResource("StandardMaterial3D_igsyw")
 cast_shadow = 0
 gi_mode = 0
@@ -1922,18 +1963,23 @@ script = ExtResource("14_u435m")
 mesh = SubResource("QuadMesh_haal4")
 xforms = PackedFloat32Array(-30, 0, -8.742278e-08, 0, 0, 1.5, 0, 0, 2.6226833e-06, 0, -1, 10.97, 13, 0, 0, -8.5, 0, 1.5, 0, 0, 0, 0, 1, -10.97, 13, 0, 0, 8.5, 0, 1.5, 0, 0, 0, 0, 1, -10.97, -9.616506e-07, 0, 1, -14.97, 0, 1.5, 0, 0, -22, 0, -4.371139e-08, 0, -9.616506e-07, 0, -1, 14.97, 0, 1.5, 0, 0, 22, 0, -4.371139e-08, 0)
 
-[node name="Stake" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=600756286]
+[node name="Stake" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=425898053]
 material_override = SubResource("ShaderMaterial_khg53")
 gi_mode = 0
 script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_dcggi")
 xforms = PackedFloat32Array(-0.13245548, -0.08881223, -0.0033195904, -14.828947, -0.007494809, 1.5697851, -0.00014781409, 5.94, 0.0033226395, 0.00047324292, -0.13266735, -11.21, 0.15076868, -0.052018497, -0.021857223, -14.486842, 0.005713409, 1.5594913, 0.00402675, 5.94, 0.021700053, -0.049181953, 0.15080045, -11.21, -0.0747277, -0.03793215, -0.13808393, -14.144737, -0.005207903, 1.37709, -0.0020965426, 5.94, 0.13805343, 0.031416595, -0.07482331, -11.21, 0.15097809, -0.040616218, -0.05677475, -13.802631, 0.004381171, 1.3562773, -0.0020728223, 5.94, 0.05681118, 0.0033457545, 0.15104112, -11.21, 0.13006735, -0.03422028, 0.017084464, -13.460526, 0.0052413363, 1.0800562, -0.0081294505, 5.94, -0.016781136, 0.07210465, 0.12987927, -11.21, 0.018576555, -0.05290754, 0.15915358, -13.118422, 0.004605693, 1.5975488, 0.0048017125, 5.94, -0.15917535, 0.04005004, 0.018712949, -11.21, 0.1445785, -0.009177885, 0.061714903, -12.776316, -0.0009665926, 1.348829, 0.0049862713, 5.94, -0.061716594, -0.042625375, 0.14449646, -11.21, 0.006174288, -0.03543075, 0.147376, -12.434211, -0.0018251438, 1.0829905, 0.0049055177, 5.94, -0.14744368, -0.014889571, 0.006110731, -11.21, 0.1498905, -0.012918617, 0.017183796, -12.092105, 0.00074449944, 1.2975502, 0.006669492, 5.94, -0.017233124, -0.056307405, 0.14974956, -11.21, -0.087420516, 0.028306976, 0.11806594, -11.75, 0.007273218, 1.3747215, 0.0016295124, 5.94, -0.11788043, 0.063827716, -0.087457545, -11.21, 0.09043581, 0.05724199, -0.107259035, -11.407895, -0.0025697139, 1.0353621, 0.007973875, 5.94, 0.10750827, -0.02340416, 0.09041674, -11.21, -0.15256727, 0.005738738, 0.049144305, -11.065789, -0.00071489107, 1.5606377, -0.004140441, 5.94, -0.049142636, -0.04051939, -0.15251221, -11.21, -0.034916688, -0.061682608, 0.14408483, -10.723684, 0.0029322286, 1.5219616, 0.0068874173, 5.94, -0.14418012, 0.045890454, -0.03475354, -11.21, 0.13675657, -0.00039217816, -0.010724899, -10.381578, 0.00040741233, 1.5741805, 0.0047584586, 5.94, 0.010717212, -0.054837722, 0.13667375, -11.21, -0.13041556, 0.05847289, -0.0334763, -10.039474, 0.005560747, 1.2373301, 0.0039203623, 5.94, 0.03361866, 0.022169081, -0.13051178, -11.21, -0.007703235, 0.07377632, -0.1426542, -9.697369, 0.007217723, 1.5262887, 0.006509948, 5.94, 0.14263837, -0.073248275, -0.008033504, -11.21, 0.05031251, 0.083052546, 0.1361957, -9.355263, -0.00840818, 1.5158691, -0.0053596226, 5.94, -0.13616806, -0.062915765, 0.05065367, -11.21, -0.08038302, -0.09182742, 0.114398755, -9.013158, -0.0017214225, 1.5019516, 0.009229754, 5.94, -0.11470451, 0.04181067, -0.08030726, -11.21, 0.06528254, -0.014707545, 0.11568617, -8.671053, -0.00026377785, 1.4530139, 0.0016926315, 5.94, -0.11569367, -0.01161186, 0.06527444, -11.21, 0.12642345, -0.029496055, -0.105838865, -8.328947, 0.002820383, 1.1653895, -0.003131891, 5.94, 0.105883546, 0.0041757934, 0.12645352, -11.21, -0.1562108, 0.025650404, -0.019625526, -7.986842, 0.0017663281, 1.2946188, 0.010852385, 5.94, 0.01979212, 0.086910784, -0.15586445, -11.21, 0.046227045, 0.053862054, 0.12763509, -7.644737, -0.0036858937, 1.3436701, -0.004451337, 5.94, -0.12769783, -0.019285694, 0.046332814, -11.21, -0.043765306, 0.041144945, -0.15169702, -7.3026314, -0.006896371, 1.040922, 0.008463974, 5.94, 0.15166822, 0.059203602, -0.043388758, -11.21, 0.0080673965, -0.021862669, 0.15119804, -6.9605265, 0.0098481625, 1.4910045, 0.0016886663, 5.94, -0.15089323, 0.096142665, 0.0081939045, -11.21, 0.000299271, -0.059401207, 0.15717284, -6.618421, 0.0055964338, 1.4246219, 0.0065346076, 5.94, -0.15720966, 0.050601374, 0.0005318234, -11.21, -0.0489738, -0.020449944, 0.13501425, -6.2763157, 0.0025707176, 1.2932993, 0.0033467654, 5.94, -0.13500887, 0.032043964, -0.048912026, -11.21, 0.10410451, 0.038500283, -0.12771964, -5.934211, -0.010036114, 1.0465572, -0.00037881965, 5.94, 0.12746859, 0.050956197, 0.10427973, -11.21, 0.07347969, 0.055571422, 0.14088981, -5.592105, -0.0037719947, 1.2589602, -0.0059432085, 5.94, -0.14101385, -0.0047188303, 0.07357403, -11.21, -0.14714573, 0.047703322, 0.04265778, -5.25, 0.0043749376, 1.2384228, -0.0060841013, 5.94, -0.042840876, -0.037378278, -0.14713818, -11.21, 0.0011985576, -0.07679465, -0.13980155, -4.907895, -0.0036106373, 1.2984976, -0.008293874, 5.94, 0.13999912, 0.034146257, 0.0009829635, -11.21, -0.14554879, -0.050770063, 0.013762256, -4.565789, -0.0054884204, 1.2310425, 0.0059195915, 5.94, -0.013985058, 0.045265663, -0.14555313, -11.21, -0.13653734, 0.05351868, -0.0044533163, -4.2236843, 0.0064200806, 1.1624385, -0.0040908772, 5.94, 0.0042583584, -0.03655176, -0.13662075, -11.21, -0.08255757, 0.0008562194, 0.10224028, -3.881579, -0.004057443, 1.4268458, -0.0033775198, 5.94, -0.10215977, -0.05736145, -0.08248849, -11.21, 0.16445446, -0.020628795, -0.011203425, -3.5394735, 0.0038360215, 1.0606741, 0.009299073, 5.94, 0.011002033, -0.061467804, 0.16422254, -11.21, 0.08030821, 0.0022230921, -0.122741975, -3.1973686, 0.0056113745, 1.187906, 0.0039987518, 5.94, 0.122613944, -0.055820063, 0.08020906, -11.21, -0.1537085, 0.03321827, 0.03423408, -2.8552632, 0.0046131965, 1.5127298, 0.0048272093, 5.94, -0.034097403, 0.054918822, -0.15367153, -11.21, -0.08662583, -0.09183479, 0.11528163, -2.5131578, -0.01105202, 1.3443424, 0.003992531, 5.94, -0.11517183, -0.059931602, -0.08709155, -11.21, -0.080288306, -0.011633524, -0.14862859, -2.1710525, -0.0043701427, 1.1488159, 0.00041754634, 5.94, 0.14857419, 0.027504468, -0.080305435, -11.21, 0.15494412, 0.043239027, 0.02387072, 2.1710525, -0.0067536593, 1.282795, 0.009279645, 5.94, -0.023494788, -0.08358993, 0.15475585, -11.21, -0.008718514, 0.033279095, -0.16564077, 2.5131578, -0.006544203, 1.3538377, 0.0044206083, 5.94, 0.16556157, 0.05526604, -0.00854795, -11.21, 0.0297038, -0.055134196, -0.15564495, 2.8552632, 0.010124606, 1.086921, -0.006225397, 5.94, 0.15552251, -0.060228914, 0.030132465, -11.21, -0.07897096, 0.0035724414, 0.14176282, 3.1973686, 0.0047221575, 1.0091702, 0.001973622, 5.94, -0.14168532, 0.031642947, -0.07894838, -11.21, -0.05058423, -0.07751104, 0.14001834, 3.5394735, 0.0028188806, 1.5260723, 0.009046398, 5.94, -0.14019373, 0.05865207, -0.05033905, -11.21, -0.113008335, 0.026745385, 0.0971825, 3.881579, 0.008661466, 1.0200865, 0.004099181, 5.94, -0.09687433, 0.06000551, -0.113001324, -11.21, -0.100379854, 0.07720651, -0.0988544, 4.2236843, 0.009583845, 1.3947896, 0.0013638455, 5.94, 0.09869679, -0.056916438, -0.10067259, -11.21, 0.10620741, -0.04692981, -0.121591, 4.565789, 0.006004384, 1.2762961, -0.0026350631, 5.94, 0.12158761, -0.022034142, 0.10634048, -11.21, 0.048870943, 0.004271983, -0.1412145, 4.907895, 0.00606901, 1.0700846, 0.0027303721, 5.94, 0.1410853, -0.04751119, 0.048798256, -11.21, -0.07792144, -0.0403204, 0.12674451, 5.25, 0.0062088505, 1.2685295, 0.00934245, 5.94, -0.12668023, 0.086974375, -0.077503085, -11.21, -0.13017575, -0.08605083, 0.08516845, 5.592105, -0.0035158338, 1.4096652, 0.011924526, 5.94, -0.08562264, 0.07294312, -0.12997486, -11.21, 0.03188792, -0.03356596, 0.13955042, 5.934211, 0.0016989569, 1.2044177, 0.0037038466, 5.94, -0.13959707, 0.006990872, 0.031922333, -11.21, 0.056027982, -0.058332816, -0.14392573, 6.2763157, 0.00038304745, 1.1711599, -0.008103544, 5.94, 0.14413059, 0.01956323, 0.05596988, -11.21, 0.073813275, 0.05052754, 0.14618914, 6.618421, 0.0041232267, 1.4250559, -0.008572904, 5.94, -0.14624606, 0.06567994, 0.07354285, -11.21, -0.116868615, -0.0439355, -0.120586775, 6.9605265, -0.007328244, 1.3399419, -0.0005590587, 5.94, 0.120489664, 0.038880844, -0.1169968, -11.21, -0.14916775, 0.008319207, 0.034018952, 7.3026314, 0.0012875457, 1.2712651, 0.0011431361, 5.94, -0.034009315, 0.011639592, -0.14916672, -11.21, -0.15088756, 0.040278405, -0.0027581898, 7.644737, 0.0048961546, 1.2064943, 0.0072034188, 5.94, 0.0029936805, 0.056895338, -0.15079951, -11.21, -0.10179311, 0.0706734, -0.1269813, 7.986842, 0.00981175, 1.3353066, 0.0031607104, 5.94, 0.12689398, -0.04655564, -0.102107555, -11.21, -0.14123373, 0.015200543, -0.09056268, 8.328947, 0.0005555866, 1.5091565, 0.002263899, 5.94, 0.09057672, 0.0144447945, -0.14122568, -11.21, 0.12080921, -0.03250787, -0.106008776, 8.671053, 0.007458362, 1.2398922, 0.0021211475, 5.94, 0.105829865, -0.050272338, 0.12086395, -11.21, -0.1534237, -0.006440163, -0.041816905, 9.013158, 0.0016522807, 1.2073202, -0.0092766145, 5.94, 0.04179283, -0.07137362, -0.15314534, -11.21, 0.0033897231, 0.06702451, 0.13920808, 9.355263, -0.0070286426, 0.9990105, -0.009151774, 5.94, -0.13934332, -0.04876081, 0.0038480598, -11.21, 0.061587032, -0.012541371, 0.15165126, 9.697369, -0.0013107224, 1.2310542, 0.0023317516, 5.94, -0.15165477, -0.015732815, 0.061565455, -11.21, -0.12709929, -0.030758502, 0.05801134, 10.039474, -0.003587565, 1.3449855, -0.00016627088, 5.94, -0.05798838, -0.015793493, -0.12713932, -11.21, -0.14504042, -0.03689649, -0.002668982, 10.381578, -0.0033917194, 1.546056, -0.003728992, 5.94, 0.0027563092, -0.039071962, -0.14503378, -11.21, -0.060727417, 0.0043677776, 0.14075866, 10.723684, -0.0050558755, 1.4804093, -0.002673163, 5.94, -0.14066856, -0.055094115, -0.060670238, -11.21, -0.04370641, -0.014852724, -0.12993187, 11.065789, 0.0027353654, 1.2799064, -0.0025974845, 5.94, 0.12991281, -0.03194582, -0.043658137, -11.21, -0.050753426, 0.007496994, -0.13871822, 11.407895, -0.007395005, 1.4176149, 0.0035349126, 5.94, 0.13852316, 0.07842564, -0.050636183, -11.21, 0.078453794, 0.08789179, -0.12843695, 11.75, -0.010183113, 1.3433886, 0.00530036, 5.94, 0.12841012, 0.0528341, 0.0788905, -11.21, 0.0980919, 0.0016806662, -0.12275921, 12.092105, -0.008477257, 1.1731697, -0.0064870096, 5.94, 0.122466356, 0.07986194, 0.09787742, -11.21, -0.12499655, 0.06368155, 0.08895277, 12.434211, 0.013240561, 1.0509428, 0.00263795, 5.94, -0.0884497, 0.06732751, -0.1253126, -11.21, 0.039283898, -0.06813287, -0.14407994, 12.776316, 0.01006694, 1.1584398, -0.0063327956, 5.94, 0.14399518, -0.062400836, 0.039749768, -11.21, -0.15503585, -0.034508362, 0.061724763, 13.118422, -0.002169801, 1.2441691, 0.007047877, 5.94, -0.0618598, 0.042845823, -0.15494464, -11.21, 0.06134129, 0.06548974, 0.11561083, 13.460526, -0.0033184544, 1.0340599, -0.0076222634, 5.94, -0.11586005, 0.0050556175, 0.061427653, -11.21, -0.03554951, 0.09857746, 0.16568723, 13.802631, 0.012753365, 1.4744182, -0.008805903, 5.94, -0.16558222, 0.092397675, -0.036250297, -11.21, 0.062498543, 0.016370438, 0.12859078, 14.144737, -0.0065298732, 1.3605018, 0.0012647652, 5.94, -0.12843636, -0.06120366, 0.06250937, -11.21, 0.13364649, -0.028206712, -0.033098575, 14.486842, 0.0038664762, 1.3974241, 0.004066028, 5.94, 0.032989085, -0.049512725, 0.13361348, -11.21, -0.044090286, 0.05518457, 0.15725148, 14.828947, 0.0067569613, 1.4832271, -0.0044094003, 5.94, -0.15722358, 0.04826887, -0.044287615, -11.21, 0.11575608, -0.02197772, -0.064180925, -15.829787, 0.0047521084, 1.1233413, 0.003238593, 5.94, 0.06405704, -0.043620266, 0.115739696, 11.21, -0.0056147953, -0.015960434, 0.1653491, -15.489362, -0.0032729455, 1.143126, 0.0021992796, 5.94, -0.16533282, -0.022087414, -0.005658884, 11.21, 0.07850826, 0.0276943, 0.1470665, -15.148936, -0.0004955292, 1.1739198, -0.004193295, 5.94, -0.14711824, 0.010824761, 0.07849477, 11.21, 0.081480145, -0.004883196, -0.13064344, -14.808511, -0.0050864085, 1.2106737, -0.0039029666, 5.94, 0.13054585, 0.050218865, 0.08138897, 11.21, -0.13806055, 0.008943422, -0.08401312, -14.468085, 0.0046414398, 1.144566, -0.0052025067, 5.94, 0.083894305, -0.04860521, -0.13796829, 11.21, -0.11077085, 0.058456138, 0.081620194, -14.12766, 0.0068359184, 1.1155896, -0.0028748657, 5.94, -0.08165231, 0.014094436, -0.11096797, 11.21, -0.09771989, -0.06800044, 0.09909073, -13.787234, -0.012103705, 1.2456594, -0.0013161963, 5.94, -0.09864036, -0.085483246, -0.09800455, 11.21, -0.14165711, -0.09819128, -0.074613035, -13.446809, -0.008666614, 1.573602, -0.0049834647, 5.94, 0.07477836, -0.00363328, -0.14192149, 11.21, -0.08988354, -0.015375453, -0.111933365, -13.106383, -0.007234947, 1.159168, 0.003374771, 5.94, 0.11171548, 0.06269962, -0.089840285, 11.21, -0.09946651, -0.0035030495, -0.11541497, -12.765958, 0.0016393291, 1.4176819, -0.0019096711, 5.94, 0.11540394, -0.023157643, -0.09944888, 11.21, -0.13157578, 0.04770514, -0.07501916, -12.425532, 0.005881431, 1.1886822, 0.0019559772, 5.94, 0.07503485, -0.009519735, -0.13170159, 11.21, -0.11689822, 0.017696125, -0.091173835, -12.085107, 0.005145872, 1.0873653, -0.0026797361, 5.94, 0.09106043, -0.038730297, -0.11689236, 11.21, 0.14288405, 0.08387096, -0.005647139, -11.74468, -0.009085835, 1.349814, -0.0052486584, 5.94, 0.005306723, 0.052832138, 0.14306337, 11.21, -0.11215578, -0.05450368, -0.07440718, -11.404255, -0.009563779, 1.3119158, 0.0043452824, 5.94, 0.07400063, 0.0869448, -0.11221038, 11.21, 0.12401665, -0.06969286, -0.08447578, -11.063829, 0.010247312, 1.088716, -0.0020057657, 5.94, 0.08439992, -0.02977889, 0.12437163, 11.21, -0.14269933, -0.034136463, 0.03410504, -10.723404, -0.0068835593, 1.0393568, -0.008158846, 5.94, -0.03374749, -0.06765611, -0.14254704, 11.21, -0.04004463, 0.0060727443, -0.13062614, -10.382978, -0.0019625018, 1.1467661, 0.001358157, 5.94, 0.1306134, 0.019092306, -0.04002813, 11.21, -0.14761904, 0.06485859, 0.07749124, -10.042553, 0.007247294, 1.5797344, -0.0009177228, 5.94, -0.07745459, 0.024200441, -0.14777476, 11.21, 0.075029664, 0.052871883, -0.12002043, -9.702127, 0.00075897435, 1.2144392, 0.0077335564, 5.94, 0.12017594, -0.04067942, 0.07488374, 11.21, -0.12273772, 0.035865366, -0.10989402, -9.361702, 0.0047859587, 1.4225289, 0.00088008546, 5.94, 0.10986829, -0.021900138, -0.122804806, 11.21, 0.10981023, 0.011286979, -0.07944813, -9.021276, 0.0021848208, 1.4524227, 0.0048140236, 5.94, 0.07942507, -0.055558152, 0.10970971, 11.21, -0.106634885, -0.01719816, -0.12237647, -8.680851, -0.006681094, 1.3415042, 0.0030668075, 5.94, 0.122211635, 0.058331534, -0.10661104, 11.21, 0.10470401, 0.07736031, -0.10482912, -8.3404255, -0.00794016, 1.4440833, 0.0032818785, 5.94, 0.10482874, 0.032112546, 0.10495296, 11.21, -0.03482239, 0.047960706, 0.16135179, -8, 0.008965934, 1.3627156, -0.003994599, 5.94, -0.16120695, 0.06543087, -0.035075847, 11.21, -0.07816657, -0.098175906, -0.14205873, -7.6595745, -0.009281972, 1.5665065, -0.006480289, 5.94, 0.14211859, 0.04831314, -0.07855689, 11.21, 0.14344892, 0.059684884, 0.047272757, -7.319149, -0.009743723, 1.1403265, 0.004366792, 5.94, -0.046926823, -0.054324888, 0.1435997, 11.21, -0.1274504, 0.022372514, -0.051958535, -6.9787235, 0.0043370673, 1.2757121, -0.0042551765, 5.94, 0.051833346, -0.051732425, -0.12740216, 11.21, 0.006049263, -0.022740792, -0.13457838, -6.638298, -0.00011728943, 1.1100998, -0.0027677193, 5.94, 0.13460661, 0.0019892633, 0.006045582, 11.21, 0.12481751, -0.00078544475, -0.09941594, -6.2978725, 0.0033025136, 1.5377282, 0.0040156473, 5.94, 0.09936111, -0.050123554, 0.12475293, 11.21, 0.08365473, 0.067579955, -0.11665221, -5.9574466, 0.003295204, 1.5818923, 0.009883441, 5.94, 0.11676625, -0.093058065, 0.08329411, 11.21, -0.10553954, -0.01799971, 0.08442867, -5.617021, 0.004664603, 1.5895889, 0.00826911, 5.94, -0.084313534, 0.110474356, -0.105226174, 11.21, 0.116455585, 0.07012961, -0.08181062, -5.2765956, -0.010345715, 1.4739504, -0.0029879417, 5.94, 0.08143487, 0.08696625, 0.116613336, 11.21, 0.07401283, -0.050238118, 0.12961176, -4.93617, 0.0011041417, 1.3849638, 0.0056031826, 5.94, -0.12972008, -0.01687533, 0.07399873, 11.21, 0.104383074, -0.023004578, -0.09789786, -4.5957446, 0.0007676313, 1.1072102, -0.0035271018, 5.94, 0.097939976, 0.0158399, 0.104365826, 11.21, 0.14617863, -0.07429432, 0.024934022, -4.255319, 0.008642956, 1.5288243, -0.007981574, 5.94, -0.024468964, 0.09617563, 0.14613765, 11.21, 0.1361549, -0.057790726, -0.09796771, -3.9148936, 0.012036222, 1.2971648, 0.0039806664, 5.94, 0.09751122, -0.07942136, 0.13630095, 11.21, -0.0843083, -0.04703539, 0.110887274, -3.5744681, -0.001650635, 1.0580688, 0.0065211286, 5.94, -0.111047715, 0.019982297, -0.084283434, 11.21, -0.14555837, -0.043547057, 0.05046697, -3.2340426, -0.0045459038, 1.2026484, 0.0039139725, 5.94, -0.050570365, 0.017233705, -0.14561261, 11.21, 0.14470465, 0.04352724, 0.03937415, -2.893617, -0.002900644, 1.1288583, -0.011263858, 5.94, -0.039688736, 0.0761974, 0.14438093, 11.21, 0.026626237, -0.021409865, 0.13440776, -2.5531914, 0.002116936, 1.3271003, 0.00183375, 5.94, -0.13440926, 0.016660474, 0.02665482, 11.21, -0.08329202, 0.09461992, 0.11147426, -2.212766, 0.0017330669, 1.5624568, -0.009215392, 5.94, -0.111778624, -0.046281148, -0.08320812, 11.21, -0.14261004, 0.060671214, 0.08332421, -1.8723404, 0.0013675129, 1.5177791, -0.010711881, 5.94, -0.08357349, -0.078694105, -0.14235994, 11.21, -0.085754976, -0.068855174, -0.12795871, -1.531915, 0.0029030214, 1.4335624, -0.010825214, 5.94, 0.1281389, -0.078558, -0.08538913, 11.21, 0.008191587, 0.04929718, 0.16442665, -1.1914893, 0.01028731, 1.5189142, -0.0058402955, 5.94, -0.16419113, 0.09762623, 0.007837418, 11.21, -0.15612319, 0.034550775, -0.002020275, -0.85106385, 0.0050113974, 1.0740285, 0.0009024259, 5.94, 0.0020482163, 0.0057581384, -0.15620136, 11.21, -0.059920125, -0.03191091, -0.12828971, -0.5106383, 0.0041369526, 1.0107859, -0.006855084, 5.94, 0.12830071, -0.047495287, -0.059693947, 11.21, 0.12136765, -0.090748, -0.107361645, -0.17021276, 0.002137542, 1.3752713, -0.013673521, 5.94, 0.10787002, 0.07485092, 0.12106662, 11.21, 0.13776584, 0.021928098, -0.022821218, 0.17021276, -0.0011522232, 1.4608492, 0.0058499845, 5.94, 0.022888143, -0.058445916, 0.13765751, 11.21, -0.021315485, -0.06731128, 0.13633116, 0.5106383, -0.0032030297, 1.3691163, 0.0063639292, 5.94, -0.13646221, -0.021621723, -0.021444386, 11.21, 0.020186733, -0.072639406, 0.13792753, 0.85106385, 0.009809217, 1.3710564, 0.0059984475, 5.94, -0.13777557, 0.086972155, 0.02063607, 11.21, -0.016866926, -0.00802731, 0.13597241, 1.1914893, -0.0027552587, 1.2258643, 0.00056196435, 5.94, -0.13594745, -0.023848753, -0.016881414, 11.21, 0.015576619, 0.014901606, -0.15440767, 1.531915, 0.008362839, 1.067257, 0.0030147806, 5.94, 0.1541962, -0.05938807, 0.015434472, 11.21, 0.13486826, -0.061746523, 0.03155973, 1.8723404, 0.0049810833, 1.30714, 0.0073754573, 5.94, -0.03184234, -0.05705212, 0.13482499, 11.21, -0.15150198, 0.050718684, -0.00085540104, 2.212766, 0.006046208, 1.2768584, -0.007905986, 5.94, 0.0005401961, -0.0669565, -0.15141489, 11.21, 0.11715334, -0.089774735, -0.10632669, 2.5531914, 0.0039554755, 1.5269153, -0.009472143, 5.94, 0.10665916, 0.0419817, 0.117139414, 11.21, 0.13725649, -0.066846624, -0.052282747, 2.893617, 0.008891021, 1.0594914, -0.0026915283, 5.94, 0.05234797, -0.0046769106, 0.13754264, 11.21, -0.005195074, 0.09618075, -0.13732071, 3.2340426, -0.0029861126, 1.5267751, 0.0087709855, 5.94, 0.13756074, 0.036774945, -0.0049956115, 11.21, 0.02035117, 0.016843958, 0.13677436, 3.5744681, -0.0051061944, 1.3198903, -0.0010220985, 5.94, -0.13669038, -0.046797894, 0.020401852, 11.21, 0.13933656, -0.025986066, 0.033009082, 3.9148936, 0.0021537775, 1.5914681, 0.0010511279, 5.94, -0.03302162, -0.0058489228, 0.13935222, 11.21, 0.035444513, -0.032652516, -0.15913942, 4.255319, -0.009760395, 1.2402672, -0.00655157, 5.94, 0.15889756, 0.08346793, 0.035096034, 11.21, -0.036310732, 0.008021011, -0.1424869, 4.5957446, -0.008055586, 1.1700113, 0.003089572, 5.94, 0.14226256, 0.0682989, -0.036193047, 11.21, 0.11382985, 0.029192857, 0.113281354, 4.93617, -0.0027948073, 1.2153584, -0.0026600994, 5.94, -0.11331256, -0.0006501813, 0.11386413, 11.21, 0.1147106, -0.02296604, 0.11003818, 5.2765956, -0.0014185784, 1.1433854, 0.006085684, 5.94, -0.110075295, -0.038668353, 0.11459348, 11.21, -0.15528761, 0.069931, -0.06814348, 5.617021, 0.0047208876, 1.2554862, 0.012671652, 5.94, 0.06863073, 0.07186879, -0.15505677, 11.21, 0.15875436, -0.06547379, -0.022907648, 5.9574466, 0.007880521, 1.5844767, 0.008363749, 5.94, 0.02250416, -0.092971824, 0.1586719, 11.21, -0.04608087, -0.053227626, -0.13494402, 6.2978725, -0.0020545698, 1.3187387, -0.005380207, 5.94, 0.13505107, 0.0019005055, -0.046126194, 11.21, 0.009618212, -0.015338635, 0.1319169, 6.638298, -0.004353406, 1.4957099, 0.001675874, 5.94, -0.13185202, -0.0505033, 0.009567612, 11.21, 0.09815367, 0.07778579, -0.090155885, 6.9787235, -0.008257979, 1.3116653, 0.0026846172, 5.94, 0.09012386, 0.035470545, 0.09843454, 11.21, 0.05755047, 0.066229, 0.133908, 7.319149, 0.00025553504, 1.4909393, -0.007153752, 5.94, -0.13406412, 0.03127233, 0.057469826, 11.21, 0.15180728, -0.07924088, -0.00111056, 7.6595745, 0.00905565, 1.3203297, -0.0058270786, 5.94, 0.0014566127, 0.050047666, 0.15196837, 11.21, 0.10924036, -0.067179844, -0.117677376, 8, 0.008490778, 1.4510345, -0.0022525461, 5.94, 0.11760565, -0.042359024, 0.109469615, 11.21, -0.034794796, 0.03435291, 0.1619723, 8.3404255, -0.003152619, 1.4144363, -0.0047901548, 5.94, -0.16199157, -0.034906022, -0.034697436, 11.21, -0.0718348, 0.052665956, 0.11266466, 8.680851, 0.003677918, 1.4426835, -0.003439361, 5.94, -0.11271019, 0.013510966, -0.07191801, 11.21, -0.097739495, -0.007987136, -0.104165114, 9.021276, -0.0033618156, 1.1702476, 0.0018184483, 5.94, 0.104115404, 0.030288482, -0.09772744, 11.21, -0.034916516, 0.0067763897, -0.15093456, 9.361702, 0.009571421, 1.2510517, -0.0013562407, 5.94, 0.1506331, -0.07792268, -0.03490022, 11.21, -0.123885326, 0.09183146, 0.06670301, 9.702127, 0.0077752266, 1.4464012, -0.0044024475, 5.94, -0.06684786, -0.0019517732, -0.12412894, 11.21, -0.10914058, 0.04626693, 0.07571715, 10.042553, 0.005842223, 1.3251559, 0.00029072777, 5.94, -0.07563364, 0.035596017, -0.10923862, 11.21, 0.13644202, -0.0633901, -0.043079525, 10.382978, 0.009287549, 1.1024884, 0.002122664, 5.94, 0.04286246, -0.037103344, 0.13667305, 11.21, -0.11797236, -0.0500568, -0.09541657, 10.723404, 0.0023963125, 1.5831487, -0.010560334, 5.94, 0.09550654, -0.101553656, -0.11759626, 11.21, 0.098143905, 0.07706612, -0.13837029, 11.063829, -0.011991996, 1.5678983, 0.0016896443, 5.94, 0.13810095, 0.08138003, 0.098482035, 11.21, 0.14731024, 0.053651873, 0.07933844, 11.404255, -0.00251378, 1.0918412, -0.012610757, 5.94, -0.0797222, 0.064709984, 0.14699878, 11.21, -0.14821966, -0.029508173, -0.0028710808, 11.74468, -0.0038503993, 1.1111295, -0.0043405155, 5.94, 0.0029840649, -0.03196955, -0.14820835, 11.21, 0.113960765, -0.01457187, 0.07825594, 12.085107, -0.0014640348, 1.322005, 0.0048206034, 5.94, -0.078257054, -0.045952182, 0.11386895, 11.21, -0.023971528, 0.04252179, -0.16521792, 12.425532, -0.01028975, 1.1600488, 0.007648325, 5.94, 0.16501017, 0.07851591, -0.023524769, 11.21, -0.036714476, 0.065906264, -0.12549241, 12.765958, 0.0067334916, 1.3204416, 0.0048194076, 5.94, 0.1254812, -0.05157321, -0.036976375, 11.21, 0.09455362, 0.03288801, -0.13314803, 13.106383, 0.0056873974, 1.4402792, 0.008596612, 5.94, 0.13307858, -0.084920675, 0.09423558, 11.21, -0.078656055, 0.059050396, 0.14525817, 13.446809, -0.006026823, 1.2590084, -0.01203486, 5.94, -0.14533882, -0.08416535, -0.078113355, 11.21, -0.05105593, 0.0027622818, 0.13523847, 13.787234, 7.266179e-06, 1.4507428, -0.0002914573, 5.94, -0.13523875, -0.0009648825, -0.051055834, 11.21, 0.1533664, -0.022935938, 0.054193255, 14.12766, 0.0020665491, 1.1498789, 0.0038866308, 5.94, -0.05425091, -0.021037826, 0.15335144, 11.21, 0.13591468, -0.09064503, -0.055457715, 14.468085, 0.0059247124, 1.5045301, -0.008851094, 5.94, 0.055843927, 0.06099289, 0.13591374, 11.21, 0.059592478, 0.052561507, 0.12717235, 14.808511, -0.0034366047, 1.0620317, -0.006065494, 5.94, -0.12731577, -0.004064795, 0.059689067, 11.21, -0.04608243, 0.05658317, 0.14229412, 15.148936, 0.0114788255, 1.2237453, -0.0035205774, 5.94, -0.14199816, 0.08056209, -0.046463072, 11.21, -0.019389344, -0.09861528, -0.16265674, 15.489362, -0.012375105, 1.489305, -0.009397675, 5.94, 0.16254592, 0.10162187, -0.020118035, 11.21, -0.15647183, -0.07194084, -0.02077198, 15.829787, -0.009829633, 1.2732611, 0.0064342474, 5.94, 0.020352012, 0.061859895, -0.15659307, 11.21, 0.032660507, -0.0023183988, -0.16194904, -15.21, -0.0037472316, 1.1531373, -0.0010943656, 5.94, 0.16190602, 0.02715645, 0.03264386, -11.828571, 0.16938342, 0.09148973, 0.0014346138, -15.21, -0.011847326, 1.3122622, 0.0065029603, 5.94, -0.0009781205, -0.05106896, 0.16966943, -11.485714, 0.016476179, -0.032690268, -0.14482588, -15.21, 0.0070143593, 1.0177231, -0.0039047243, 5.94, 0.1447315, -0.04560213, 0.016676161, -11.142858, 0.14993136, 0.017496597, -0.03213591, -15.21, -0.0008835792, 1.5540357, 0.00410995, 5.94, 0.03217009, -0.038861405, 0.14988494, -10.8, 0.14532198, -0.030769857, -0.0331039, -15.21, 0.0023850221, 1.0120013, -0.009857589, 5.94, 0.03332627, 0.061749805, 0.1450578, -10.457143, 0.07161047, 0.028749257, 0.12698032, -15.21, -0.0047890577, 1.182583, -0.0013656066, 5.94, -0.12693943, -0.028397087, 0.07168506, -10.114285, 0.13616519, -0.053126466, 0.022270106, -15.21, 0.008117787, 1.0154268, -0.005002083, 5.94, -0.021955924, 0.04595763, 0.13626423, -9.771428, 0.15322396, -0.019426262, -0.010913877, -15.21, 0.0021457444, 1.3937743, -9.9202625e-06, 5.94, 0.010912951, -0.0012933349, 0.15323892, -9.428572, 0.07917718, 0.09274316, 0.10843565, -15.21, -0.010998101, 1.3360282, -0.003480239, 5.94, -0.10827732, -0.0678871, 0.07964646, -9.085714, 0.028539717, -0.011769311, -0.15258527, -15.21, 0.01026258, 1.2610205, 0.0004519263, 5.94, 0.15224662, -0.08279613, 0.028572736, -8.742857, -0.14151806, -0.038512155, -0.04075314, -15.21, -0.0052640317, 1.469327, 0.0043511945, 5.94, 0.0405954, 0.056272857, -0.14150372, -8.4, 0.1096622, 0.06760941, 0.11978927, -15.21, -0.009592738, 1.4796729, -0.0012640215, 5.94, -0.11963458, -0.05667189, 0.10990535, -8.057143, -0.12285227, 0.010618147, -0.08205991, -15.21, 0.0040892507, 1.2352595, -0.0038388069, 5.94, 0.08196778, -0.045710914, -0.122798845, -7.714286, 0.1403175, -0.07000596, 0.06440589, -15.21, 0.004462721, 1.1502811, 0.012713576, 5.94, -0.064931855, -0.072224595, 0.14005466, -7.3714285, 0.13592495, 0.0121602435, -0.046113797, -15.21, -0.0023559895, 1.4717957, -0.0032558911, 5.94, 0.046068832, 0.039390072, 0.13589112, -7.0285716, -0.11913288, 0.051061496, -0.07627322, -15.21, 0.009102755, 1.2665111, -0.0036745411, 5.94, 0.07594185, -0.071707994, -0.11921226, -6.6857142, 0.15707573, -0.06234956, 0.011738239, -15.21, 0.0066610496, 1.4776988, 4.701076e-05, 5.94, -0.011729737, 0.0042133443, 0.15721627, -6.3428574, 0.13133913, -0.054749437, -0.09213297, -15.21, 0.0028023508, 1.0613238, -0.010389747, 5.94, 0.092460796, 0.04560357, 0.13118836, -6, -0.028009042, -0.06605624, -0.12992029, -15.21, -0.009924469, 1.4908239, -0.0038576582, 5.94, 0.12967385, 0.099830925, -0.028357511, -5.6571426, -0.13596618, -0.10173081, 0.07435772, -15.21, -0.010107524, 1.5881069, 0.002199924, 5.94, -0.07433317, -0.029863903, -0.13631022, -5.3142858, 0.08701126, -0.058315508, -0.13582616, -15.21, 0.00085325935, 1.1354475, -0.009285115, 5.94, 0.13607572, 0.030169047, 0.086909905, -4.9714284, 0.15979394, 0.008954731, -0.00959958, -15.21, -0.0018180327, 1.1584026, -0.0097040925, 5.94, 0.009506434, 0.07101528, 0.15950379, -4.6285715, -0.14612615, 0.048284847, 0.005133911, -15.21, 0.0049125515, 1.4681922, 0.0029344012, 5.94, -0.0050335512, 0.03116902, -0.14617577, -4.285714, -0.028537592, 0.03968286, 0.1637569, -15.21, -0.009347326, 1.214102, -0.00712218, 5.94, -0.1635798, -0.07629952, -0.02816151, -3.942857, 0.07269732, -0.0467473, -0.10989411, -15.21, -0.0033007155, 1.1293077, -0.00870177, 5.94, 0.10997942, 0.06479328, 0.072379775, -3.6, 0.10416087, 0.072563164, 0.122144885, -15.21, -0.008306729, 1.3571018, -0.0041910317, 5.94, -0.12216386, -0.030408626, 0.10442966, -3.2571428, -0.143514, 0.023642138, 0.0067680073, -15.21, 0.002323562, 1.4136226, -0.0017318074, 5.94, -0.006795589, -0.0159424, -0.14352366, -2.9142857, 0.14554016, -0.033246305, -0.0030744586, -15.21, 0.0037635006, 1.2629167, -0.0032089297, 5.94, 0.0031571114, 0.027140195, 0.14555521, -2.5714285, 0.1374295, -0.07970504, 0.03842484, -15.21, 0.00904124, 1.3399786, -0.0008300517, 5.94, -0.038297985, 0.030321322, 0.13768874, -2.2285714, -0.07948977, 0.059484202, 0.11718247, -15.21, -0.00017176618, 1.1899848, -0.008658889, 5.94, -0.11739566, -0.04201846, -0.079332754, -1.8857143, -0.11342464, 0.08730578, -0.06365378, -15.21, 0.004127921, 1.2569089, 0.011041814, 5.94, 0.0641569, 0.07347933, -0.11324562, -1.5428572, 0.13587505, 0.067137845, -0.01931863, -15.21, -0.008277169, 1.1346633, -0.0005358722, 5.94, 0.019251792, 0.01399571, 0.1361164, -1.2, 0.15666018, -0.058078293, -0.018614125, -15.21, 0.008358502, 1.1294981, 0.0016123027, 5.94, 0.018504295, -0.018501451, 0.15686172, -0.85714287, 0.080747426, -0.0022815177, -0.1096477, -15.21, 0.0050671403, 1.3829762, 0.0034531527, 5.94, 0.109530784, -0.062297624, 0.08067388, -0.51428574, -0.12223242, 0.033121716, -0.08086166, -15.21, 0.00530624, 1.5383061, -0.0023079268, 5.94, 0.080748975, -0.050948936, -0.12225132, -0.17142858, 0.10807517, -0.0049778926, 0.09894694, -15.21, -0.005848468, 1.0181582, 0.0074445093, 5.94, -0.098776534, -0.06573071, 0.10782085, 0.17142858, 0.060149666, 0.040828776, -0.11725016, -15.21, -0.0030880016, 1.5033633, 0.0024375631, 5.94, 0.11726411, 0.01864638, 0.0602067, 0.51428574, 0.14706026, 0.0464273, 0.045902003, -15.21, -0.005163713, 1.393209, -0.0006862304, 5.94, -0.04589864, -0.00798544, 0.14714822, 0.85714287, -0.04757338, -0.024044255, 0.14571376, -15.21, -0.0052578566, 1.1851681, 0.0015518438, 5.94, -0.14565206, -0.03492967, -0.047649562, 1.2, 0.14131293, -0.08382336, 0.08383802, -15.21, 0.0050804107, 1.2846304, 0.012398853, 5.94, -0.08436633, -0.06304501, 0.14117467, 1.5428572, 0.14798585, -0.054316342, -0.009469445, -15.21, 0.0055312873, 1.5804787, 0.0068219067, 5.94, 0.009218805, -0.07636911, 0.14791614, 1.8857143, 0.09793767, 0.012198135, 0.10729314, -15.21, 0.005719887, 1.203373, -0.007207128, 5.94, -0.10715064, 0.075387456, 0.097683184, 2.2285714, 0.09744583, 0.07786605, -0.13492541, -15.21, -0.009127415, 1.3435887, 0.0052981623, 5.94, 0.13496122, 0.034645293, 0.09777828, 2.5714285, -0.14740138, 0.05202939, -0.036567338, -15.21, 0.0062473654, 1.2430097, 0.001218109, 5.94, 0.036586206, -0.002632998, -0.14753336, 2.9142857, 0.023583693, -0.0671882, -0.13930717, -15.21, 0.0032413513, 1.149335, -0.007826831, 5.94, 0.13951412, -0.015345062, 0.023730554, 3.2571428, -0.045717955, 0.06076326, -0.135437, -15.21, 0.0053308825, 1.193131, 0.0058801603, 5.94, 0.13552761, -0.026433501, -0.04591868, 3.6, 0.015078685, -0.102694795, 0.13475649, -15.21, 0.008010787, 1.538756, 0.00818521, 5.94, -0.13482141, 0.079943866, 0.01555777, 3.942857, -0.11859629, -0.063302495, -0.08375817, -15.21, -0.0026948892, 1.3851976, -0.007673837, 5.94, 0.08397706, -0.04494664, -0.11853341, 4.285714, -0.11623381, -0.050662436, 0.10154445, -15.21, -0.0032787044, 1.0270777, 0.0078119687, 5.94, -0.101776496, 0.024771966, -0.116220474, 4.6285715, 0.15565139, -0.09405324, 0.008655294, -15.21, 0.0113860825, 1.3447211, -0.0091419965, 5.94, -0.007980808, 0.08415008, 0.15576328, 4.9714284, 0.12583826, -0.037430383, 0.09934354, -15.21, 0.0015214538, 1.1351516, 0.006598581, 5.94, -0.09947237, -0.029989166, 0.1257762, 5.3142858, 0.082659006, -0.07156679, -0.12428746, -15.21, 0.012258104, 1.3262323, -0.0014828162, 5.94, 0.123942465, -0.083437525, 0.08303575, 5.6571426, 0.094416104, 0.0026277716, -0.101070836, -15.21, -0.006579181, 1.1806427, -0.0057264045, 5.94, 0.10085694, 0.074556686, 0.09424278, 6, -0.014618052, -0.00020073573, 0.13759585, -15.21, 0.0048494483, 1.1699749, 0.00053904526, 5.94, -0.13751036, 0.041281745, -0.014608129, 6.3428574, 0.12928772, -0.078137666, 0.02571169, -15.21, 0.0069027115, 1.4222406, 0.0024177104, 5.94, -0.025804825, -0.01104147, 0.1294678, 6.6857142, -0.111866355, 0.05916276, -0.07679848, -15.21, 0.0032721704, 1.0117991, 0.009227152, 5.94, 0.07713715, 0.04287874, -0.111766644, 7.0285716, -0.07515198, -0.078128055, -0.11689593, -15.21, -0.009280168, 1.3687774, -0.0034466505, 5.94, 0.11679614, 0.058486573, -0.07549005, 7.3714285, 0.019060554, 0.006692656, -0.13676766, -15.21, -0.008384228, 1.3043981, -0.00045572742, 5.94, 0.13651225, 0.079178266, 0.019068222, 7.714286, 0.009299629, -0.07836123, -0.1359158, -15.21, 0.0069788937, 1.473092, -0.0067698965, 5.94, 0.13592939, -0.07027047, 0.009646281, 8.057143, 0.14764632, -0.10604796, 0.013295928, -15.21, 0.010708466, 1.5333214, -0.0047671907, 5.94, -0.012925815, 0.058946542, 0.14792456, 8.4, -0.076886214, 0.036556557, 0.13145135, -15.21, -0.0058310716, 1.3111509, -0.008311431, 5.94, -0.13139032, -0.07958052, -0.07655306, 8.742857, 0.12829967, -0.074079566, 0.07297965, -15.21, 0.0015380967, 1.4685857, 0.012286996, 5.94, -0.07334064, -0.0987932, 0.12792584, 9.085714, 0.13672115, -0.04688188, -0.013841052, -15.21, 0.0064978334, 1.0105196, 0.0008950997, 5.94, 0.013783829, -0.0113498, 0.13686676, 9.428572, 0.12735762, -0.029804386, 0.07413744, -15.21, 0.0027128095, 1.1362301, 0.0030227893, 5.94, -0.07418856, -0.009616578, 0.1273804, 9.771428, -0.075587146, -0.03406853, -0.15099452, -15.21, -0.0024792561, 1.3090763, -0.0036731944, 5.94, 0.15103813, 0.0044385646, -0.075625636, 10.114285, 0.12983929, 0.07938955, -0.07059647, -15.21, -0.005923896, 1.4654946, 0.005861438, 5.94, 0.07080151, -0.0229719, 0.12995371, 10.457143, -0.096034706, -0.06001083, -0.0946566, -15.21, -0.009939267, 1.0688883, -0.00067559886, 5.94, 0.094436556, 0.051472053, -0.09632959, 10.8, -0.03643481, 0.053173564, 0.13941965, -15.21, 0.005703645, 1.316624, -0.004519101, 5.94, -0.13942432, 0.039965674, -0.036618456, 11.142858, 0.036452733, 0.040603854, 0.15496293, -15.21, 0.00319386, 1.5800146, -0.0049509876, 5.94, -0.15498397, 0.042110592, 0.036345754, 11.485714, -0.13449706, -0.036772534, 0.027292844, -15.21, -0.003431633, 1.5992101, -0.0010453595, 5.94, -0.027259493, -0.01988684, -0.13453001, 11.828571, -0.1509736, 0.05715166, 0.059303194, 15.21, 0.009116134, 1.4447556, 0.0057076253, 5.94, -0.058947593, 0.07705477, -0.15100168, -11.828571, -0.031103441, -0.047294836, 0.12689827, 15.21, 0.0057454533, 1.3600149, 0.0060727606, 5.94, -0.1268493, 0.073196575, -0.030840391, -11.485714, -0.1124755, -0.006545577, 0.09306287, 15.21, 0.0033528868, 1.5709563, 0.005004838, 5.94, -0.093004435, 0.064550206, -0.11236574, -11.142858, 0.060256753, 0.02765666, 0.13054888, 15.21, -0.009422275, 1.4152207, 0.0012665999, 5.94, -0.13023861, -0.08959018, 0.060308672, -10.8, -0.12930325, 0.02084945, 0.036688566, 15.21, 0.0022138702, 1.1384557, -0.0012150728, 5.94, -0.036704343, -0.004781671, -0.12932096, -10.457143, -0.10288606, -0.043906882, -0.109303564, 15.21, 0.001320379, 1.2776109, -0.008313523, 5.94, 0.10941702, -0.056703575, -0.10267904, -10.114285, 0.088647425, 0.10441367, -0.12573162, 15.21, -0.009629025, 1.5954871, 0.005518169, 5.94, 0.1257656, 0.04855844, 0.089045964, -9.771428, -0.14037558, -0.044119477, 0.07990565, 15.21, -0.0097459, 1.1805688, -0.0049579716, 5.94, -0.079537734, -0.06679102, -0.1404174, -9.428572, 0.1023965, 0.07207475, 0.103665516, 15.21, -0.009618317, 1.5460815, -2.622678e-05, 5.94, -0.10344113, -0.07241317, 0.102621056, -9.085714, 0.15832043, 0.034120373, 0.012400676, 15.21, -0.0049295323, 1.2620268, 0.008108785, 5.94, -0.012159694, -0.06737415, 0.15817076, -8.742857, -0.11995169, 0.072424084, -0.099245265, 15.21, 0.008902796, 1.2952776, 0.0028885528, 5.94, 0.09922754, -0.028663429, -0.120232284, -8.4, -0.027247341, -0.096391566, -0.14523727, 15.21, -0.006231324, 1.49905, -0.008489512, 5.94, 0.14541401, 0.046176106, -0.027578017, -8.057143, 0.0833515, 0.021679867, 0.11533001, 15.21, -0.0077966927, 1.0099057, 0.001876078, 5.94, -0.1151066, -0.052706577, 0.08338621, -7.714286, -0.11741587, 0.014197611, -0.0902434, 15.21, 0.0076656616, 1.127015, -0.0069268546, 5.94, 0.089936495, -0.0775246, -0.117226146, -7.3714285, -0.012380739, -0.028016647, 0.16571021, 15.21, -0.011051611, 1.1892612, 0.00308335, 5.94, -0.1653874, -0.07737218, -0.012610941, -7.0285716, -0.10901962, -0.049670573, -0.11540658, 15.21, -0.008065684, 1.445063, 0.00012310197, 5.94, 0.115253456, 0.054144613, -0.109155856, -6.6857142, -0.12426809, 0.020419354, 0.044738673, 15.21, 0.004317309, 1.2722812, 0.0057510464, 5.94, -0.044580165, 0.06629306, -0.124153, -6.3428574, -0.12863606, 0.05087997, -0.025350552, 15.21, 0.004472141, 1.3762561, 0.002372719, 5.94, 0.025419326, 0.015350035, -0.12870547, -6, -0.033152394, 0.031755865, -0.15910314, 15.21, 0.0049538044, 1.5974938, 0.00226543, 5.94, 0.15905878, -0.0431343, -0.03323219, -5.6571426, 0.13073727, -0.021431992, 0.07047618, 15.21, -0.0024839167, 1.3638995, 0.009505916, 5.94, -0.07047089, -0.08783446, 0.13041201, -5.3142858, -0.15446259, 0.04875079, 0.04105006, 15.21, 0.005357035, 1.0392271, -0.0089725265, 5.94, -0.041382417, -0.04743556, -0.15438354, -4.9714284, 0.13703252, 0.009930582, -0.0839191, 15.21, -0.0052985973, 1.3966253, -0.0064702188, 5.94, 0.08375943, 0.07210342, 0.13688445, -4.6285715, -0.13295361, -0.064192, -0.095448695, 15.21, -0.0073156287, 1.4401779, -0.002316115, 5.94, 0.09544705, 0.020967118, -0.13313341, -4.285714, 0.14175609, -0.06550057, -0.025801172, 15.21, 0.00995862, 1.0245233, 0.0033352564, 5.94, 0.025520153, -0.03596113, 0.14201555, -3.942857, -0.13141927, -0.0020301144, -0.10509276, 15.21, 0.0040087905, 1.4366628, -0.0053931465, 5.94, 0.105016544, -0.05738216, -0.1313088, -3.6, 0.08870965, -0.08094523, 0.10231367, 15.21, 0.0008886423, 1.5113802, 0.008814873, 5.94, -0.10256618, -0.05691493, 0.08856763, -3.2571428, 0.095143914, 0.06728152, -0.0931166, 15.21, -0.0018680162, 1.3633802, 0.0074754045, 5.94, 0.09332916, -0.04130125, 0.09507683, -2.9142857, 0.1148106, 0.008274115, 0.076939255, 15.21, -0.00533344, 1.0263683, 0.005963886, 5.94, -0.07676224, -0.058936764, 0.114660986, -2.5714285, 0.06826649, 0.04651969, 0.14522003, 15.21, 0.0020088498, 1.2036173, -0.0077904095, 5.94, -0.14533839, 0.03848689, 0.06810322, -2.2285714, -0.12570667, 0.059271533, -0.04667033, 15.21, 0.0047859163, 1.5567715, 0.001777329, 5.94, 0.046704162, 5.350845e-06, -0.12579775, -1.8857143, 0.11014518, -0.030919254, 0.08072013, 15.21, 0.00029201756, 1.1527437, 0.0057912166, 5.94, -0.08080256, -0.037981287, 0.11005373, -1.5428572, -0.08250337, 0.053057767, -0.11980158, 15.21, 0.0012519697, 1.1021365, 0.007636025, 5.94, 0.119999416, 0.024980146, -0.082447015, -1.2, 0.047459256, -0.0037900964, -0.14854711, 15.21, -0.0006780149, 1.1021005, -0.00077959476, 5.94, 0.14854652, 0.006241248, 0.04745588, -0.85714287, 0.11687894, -0.013438555, 0.0945789, 15.21, -0.003299162, 1.2803403, 0.006580039, 5.94, -0.09453447, -0.061297573, 0.11670422, -0.51428574, -0.0084437, -5.7219877e-05, -0.13515486, 15.21, 0.0036653148, 1.4502838, -0.00023433715, 5.94, 0.13510515, -0.03934883, -0.00844045, -0.17142858, -0.092298314, 0.045465816, -0.13215755, 15.21, 0.0054155034, 1.3728359, 0.0027273996, 5.94, 0.13215438, -0.024503002, -0.09241229, 0.17142858, -0.057241146, -0.008871604, 0.14952677, 15.21, 0.0063370722, 1.1947403, 0.003696359, 5.94, -0.14939716, 0.05407718, -0.057134025, 0.51428574, 0.035510033, -0.072256126, 0.13180216, 15.21, -0.001511619, 1.0383316, 0.010236028, 5.94, -0.13213505, -0.031296607, 0.035303466, 0.85714287, -0.057728633, -0.090739734, -0.11663094, 15.21, -0.0094569065, 1.3176576, -0.0052965214, 5.94, 0.11659107, 0.061948854, -0.058177985, 1.2, -0.020167561, 0.0198271, 0.15271819, 15.21, 0.008248261, 1.0238814, -0.0019116986, 5.94, -0.15252437, 0.052748136, -0.020296568, 1.5428572, -0.1003896, 0.03016661, -0.1365004, 15.21, 0.011552913, 1.1550385, -0.003026849, 5.94, 0.1360823, -0.07580445, -0.100441076, 1.8857143, 0.021231199, 0.021565663, -0.16291237, 15.21, 0.001715392, 1.082834, 0.0035226461, 5.94, 0.16293618, -0.014210163, 0.021191008, 2.2285714, -0.11633903, -0.012643357, 0.095830515, 15.21, 0.0028317038, 1.0296837, 0.006342884, 5.94, -0.09580651, 0.04578682, -0.1161807, 2.5714285, -0.016112627, 0.05169901, -0.13906953, 15.21, -0.0014203025, 1.2231102, 0.006120364, 5.94, 0.13918811, 0.018465612, -0.016036449, 2.9142857, 0.13387105, 0.011865679, 0.02169135, 15.21, -0.0011510141, 1.2739229, -0.00079373666, 5.94, -0.02169759, 0.005630466, 0.13387465, 3.2571428, -0.036448408, 0.06117555, 0.13014877, 15.21, -0.006338684, 1.0212575, -0.0101469625, 5.94, -0.13024512, -0.066821545, -0.035927616, 3.6, 0.15421766, 0.06207489, 0.041587353, 15.21, -0.007459352, 1.2726785, -0.0022605455, 5.94, -0.041648053, 0.0019133518, 0.15439777, 3.942857, -0.11087974, 0.038062774, 0.091872275, 15.21, 0.008900629, 1.3971798, 0.004618926, 5.94, -0.09152387, 0.08976226, -0.110852644, 4.285714, -0.116049886, 0.0018717563, -0.10591669, 15.21, -0.004568086, 1.2018642, 0.005367369, 5.94, 0.105818406, 0.05393614, -0.11592595, 4.6285715, -0.056691315, -0.047779806, 0.15582158, 15.21, 0.0047208434, 1.061631, 0.009641496, 5.94, -0.15592834, 0.04951309, -0.056360595, 4.9714284, -0.13289286, -0.059944063, -0.0213612, 15.21, -0.004604501, 1.577853, -0.0035613398, 5.94, 0.021476412, -0.032636378, -0.13294347, 5.3142858, -0.13643807, -0.06260873, 0.057894297, 15.21, -0.005726062, 1.4528989, 0.0028561137, 5.94, -0.05796338, 0.0038442109, -0.1365576, 5.6571426, -0.11338514, 0.01533124, 0.12530686, 15.21, -0.0071031745, 1.3457289, -0.009012148, 5.94, -0.12512012, -0.090291485, -0.113042735, 6, 0.13031632, 0.008787536, -0.012807759, 15.21, -0.0004544302, 1.280319, 0.0045540505, 5.94, 0.012831172, -0.0439043, 0.13023981, 6.3428574, 0.13408951, -0.013883922, 0.025346639, 15.21, 0.002666424, 1.1117142, -0.0049444917, 5.94, -0.025263457, 0.04364458, 0.13400914, 6.6857142, 0.026377916, 0.03462935, -0.15630467, 15.21, -0.008613219, 1.174992, 0.0032723385, 5.94, 0.1561369, 0.058967564, 0.026586773, 7.0285716, 0.11776822, 0.057437733, 0.11347801, 15.21, 0.0013212311, 1.2766421, -0.011939742, 5.94, -0.11370784, 0.07432275, 0.11739146, 7.3714285, -0.1435122, 0.065229304, -0.050935857, 15.21, 0.009817713, 1.0762746, -8.1761966e-05, 5.94, 0.050825328, -0.023715628, -0.1438085, 7.714286, -0.009797607, -0.08548916, -0.13110122, 15.21, -0.0029560719, 1.4906868, -0.007337065, 5.94, 0.13128449, 0.027185144, -0.009949135, 8.057143, -0.14122276, -0.0029993062, 0.04601333, 15.21, -0.0023324068, 1.0921559, -0.0058442294, 5.94, -0.045955982, -0.04621338, -0.14110237, 8.4, 0.034905214, -0.045122135, 0.15526111, 15.21, 0.0013061123, 1.3945123, 0.0049840435, 5.94, -0.15534098, 0.0015861344, 0.03492917, 8.742857, 0.096236855, -0.08275457, 0.12670656, 15.21, 0.009201789, 1.2674395, 0.0060496465, 5.94, -0.12679806, 0.029169766, 0.09660643, 9.085714, -0.05727945, -0.0406528, -0.15031788, 15.21, -0.005479641, 1.386648, -0.0029555436, 5.94, 0.15029193, 0.035063513, -0.057397097, 9.428572, 0.13516156, 0.0034696748, 0.03961982, 15.21, 0.0008478043, 1.3103342, -0.0042168945, 5.94, -0.0396125, 0.03988321, 0.1350963, 9.771428, -0.16089283, 0.019270908, 0.00084502256, 15.21, 0.0026024873, 1.209224, 0.008745094, 5.94, -0.0007045203, 0.06591588, -0.16067539, 10.114285, -0.109137826, 0.01842629, -0.12533967, 15.21, 0.00073493295, 1.2674208, 0.0025637492, 5.94, 0.1253608, 0.00861143, -0.10913446, 10.457143, 0.115408994, -0.052534193, 0.109860905, 15.21, 0.0021619275, 1.0573578, 0.009198802, 5.94, -0.110124245, -0.03429751, 0.1153136, 10.8, 0.16562049, 0.020923164, 0.030081281, 15.21, -0.0021357946, 1.5127263, -0.0012689698, 5.94, -0.030095555, 0.007789608, 0.165632, 11.142858, 0.12516004, 0.020195162, -0.07294551, 15.21, -0.0014804973, 1.106116, 0.0027117839, 5.94, 0.072978415, -0.012195736, 0.12515861, 11.485714, -0.15065408, 0.080265775, -0.040427666, 15.21, 0.011028907, 1.4452392, -0.007822749, 5.94, 0.039843123, -0.096554786, -0.15069893, 11.828571, -0.12772195, 0.07341822, 0.042588297, -2.21, 0.008282057, 1.1392443, -0.0025914263, 5.94, -0.04266676, 0.0013633055, -0.1279901, -16.321428, 0.14807683, -0.0049391487, -0.036349162, -2.21, 0.0024004623, 1.0819623, 0.0068657757, 5.94, 0.036276475, -0.051433787, 0.14791921, -15.964286, -0.041811213, -0.046573907, 0.12753606, -2.21, 0.0013386378, 1.3213483, 0.005414882, 5.94, -0.1276167, 0.029119374, -0.041727986, -15.607142, 0.021531286, -0.005887881, -0.1553022, -2.21, -0.0018228673, 1.1395925, -0.0010704136, 5.94, 0.15529361, 0.014193111, 0.02151991, -15.25, 0.1316708, 0.071811475, -0.07171071, -2.21, -0.0021794518, 1.4399151, 0.011574205, 5.94, 0.072065115, -0.08766029, 0.1313733, -14.892858, 0.13201798, -0.07184095, 0.003991547, -2.21, 0.0070133596, 1.3403064, 0.002238002, 5.94, -0.0041051316, -0.020522572, 0.1321887, -14.535714, 0.1500735, 0.057684302, 0.0108531155, -2.21, -0.007841741, 1.1491166, 0.0038050003, 5.94, -0.010644249, -0.033275235, 0.1502151, -14.178572, -0.1485751, 0.034386065, -0.007692121, -2.21, 0.003778595, 1.4181443, -0.0032514823, 5.94, 0.007609009, -0.03281374, -0.1485833, -13.821428, -0.15472597, 0.063502505, 0.037026815, -2.21, 0.007012176, 1.1074282, -0.00980008, 5.94, -0.037481148, -0.054961056, -0.15468387, -13.464286, 0.11851132, -0.087074675, 0.06682838, -2.21, 0.0053238217, 1.4529784, 0.0071469788, 5.94, -0.06711276, -0.03850141, 0.11857608, -13.107142, -0.054373715, 0.04068098, -0.1408711, -2.21, -0.008019495, 1.2361562, 0.008396267, 5.94, 0.14073, 0.086160205, -0.053949773, -12.75, 0.083639555, 0.04140162, -0.1415049, -2.21, 0.0059452564, 1.2247328, 0.009944071, 5.94, 0.14148869, -0.07593655, 0.08323129, -12.392858, 0.10962251, 0.028568272, -0.10393688, -2.21, 8.353937e-05, 1.5968652, 0.004014497, 5.94, 0.103971966, -0.031403918, 0.1095823, -12.035714, 0.13106549, -0.0033112299, 0.004891966, -2.21, 0.0003883196, 1.2029507, -0.00072496216, 5.94, -0.0048898743, 0.0067775464, 0.13106398, -11.678572, 0.0807846, -0.08305939, -0.110184774, 2.21, 0.0046146787, 1.4555387, -0.0062841363, 5.94, 0.11036383, -6.273605e-05, 0.08091629, -16.321428, -0.052704565, -0.049454655, -0.14909266, 2.21, -0.00093764847, 1.5126531, -0.005151947, 5.94, 0.14917932, -0.007964568, -0.052706327, -15.964286, -0.14209916, -0.03793486, 0.027721463, 2.21, -0.0062772664, 1.1115229, -0.0064413594, 5.94, -0.027448567, -0.057810456, -0.14203882, -15.607142, -0.06189411, 0.057645522, -0.14896104, 2.21, 0.002865445, 1.0199273, 0.008681905, 5.94, 0.14921226, 0.004325199, -0.061956625, -15.25, 0.14867657, -0.09523656, 0.057292853, 2.21, 0.01062226, 1.5231876, 0.00012543912, 5.94, -0.05717369, 0.03533532, 0.14900972, -14.892858, -0.054640293, 0.009146462, 0.13769817, 2.21, 0.007503404, 1.0655985, 0.0016129882, 5.94, -0.13749947, 0.054515492, -0.054631237, -14.535714, 0.13523908, -0.0018407891, -0.09529303, 2.21, -0.0017851879, 1.057918, -0.0030330708, 5.94, 0.09527674, 0.02243495, 0.13520537, -14.178572, -0.033065412, -0.0587194, 0.12740056, 2.21, 0.0041940324, 1.4431592, 0.006610943, 5.94, -0.12744386, 0.062727526, -0.03283662, -13.821428, 0.08273445, 0.07400286, -0.11835106, 2.21, -0.0020661897, 1.1296813, 0.0100880405, 5.94, 0.118710205, -0.031913422, 0.082659714, -13.464286, -0.066811405, -0.01819287, 0.14002146, 2.21, -0.004829135, 1.1521778, 0.0004081084, 5.94, -0.13995959, -0.0310699, -0.06685502, -13.107142, 0.017604081, 0.04321414, -0.15126474, 2.21, -0.004256371, 1.1015269, 0.0055159703, 5.94, 0.15132277, 0.025956182, 0.017752483, -12.75, -0.15511037, -0.056153316, 0.00012228328, 2.21, -0.006965336, 1.2458771, 0.0081563275, 5.94, -0.00048872933, 0.06549318, -0.15505302, -12.392858, -0.14755818, 0.02138305, -0.041060768, 2.21, 0.0021895538, 1.5639335, -5.7011035e-05, 5.94, 0.041055795, -0.006553813, -0.14757304, -12.035714, 0.091529444, 0.081931, 0.09744388, 2.21, -0.008663025, 1.5753801, -0.0013865015, 5.94, -0.09730635, -0.0631866, 0.09178225, -11.678572, -0.16509043, 0.023420924, 0.030549755, -2.8235295, 0.0028131953, 1.3921157, -0.00032093143, 5.94, -0.030550811, 0.0016275387, -0.16511428, -16.71, -0.10251216, 0.043868206, -0.12436278, -2.4705882, -0.0030235553, 1.5708585, 0.008312062, 5.94, 0.12440728, 0.07432525, -0.10227349, -16.71, 0.13304381, -0.066319175, 0.079953566, -2.1176472, 0.008659967, 1.5571795, -0.0015944891, 5.94, -0.07975725, 0.05844945, 0.13319817, -16.71, -0.013253046, -0.09561232, -0.16730449, -1.7647059, -0.009354653, 1.4187397, -0.010575872, 5.94, 0.16742426, 0.071702056, -0.013834481, -16.71, -0.042755544, 0.0659438, 0.14933714, -1.4117647, 0.010970408, 1.1365453, -0.0062038624, 5.94, -0.14920521, 0.06466866, -0.043249488, -16.71, -0.08242637, 0.011296955, -0.11397018, -1.0588236, -2.6147523e-05, 1.1658652, 0.0017008024, 5.94, 0.113978334, 0.008437143, -0.082420096, -16.71, -0.070418, 0.08082189, -0.1362744, -0.7058824, 0.009765672, 1.2190652, 0.0063849194, 5.94, 0.13630342, -0.04558707, -0.070860475, -16.71, 0.13351631, -0.03155185, -0.093695864, -0.3529412, 0.0060708006, 1.0747378, 0.00031896483, 5.94, 0.09362147, -0.024693403, 0.13360173, -16.71, 0.111476764, 0.040683314, -0.07559973, 0, -0.004885772, 1.2599509, 0.00054220844, 5.94, 0.07556692, 0.021445738, 0.11156023, -16.71, 0.117840275, -0.03649683, 0.07108199, 0.3529412, 0.007590795, 1.2578157, -0.004879844, 5.94, -0.07078785, 0.07412325, 0.11780665, -16.71, -0.07327342, -0.08514476, 0.1385494, 0.7058824, -0.0029636694, 1.4094229, 0.009142378, 5.94, -0.1388409, 0.014849979, -0.07331474, -16.71, 0.16170707, 0.03198694, 0.0059580375, 1.0588236, -0.0046313005, 1.1013952, -0.0019230392, 5.94, -0.006011, 0.0119151855, 0.1617639, -16.71, 0.0360557, -0.05775687, -0.12995495, 1.4117647, -0.002531409, 1.0791407, -0.008184284, 5.94, 0.1301304, 0.036995284, 0.03584788, -16.71, -0.08065465, 0.06545968, 0.13661969, 1.7647059, 0.0055149114, 1.2828758, -0.0061439592, 5.94, -0.13674812, 0.013128644, -0.080826685, -16.71, -0.05702992, -0.061948624, -0.1582423, 2.1176472, -0.0003635413, 1.2070601, -0.009042716, 5.94, 0.15847713, -0.01952401, -0.056966163, -16.71, 0.014485916, 0.00062486256, 0.1293192, 2.4705882, 0.008343573, 1.5747279, -0.0009863619, 5.94, -0.12904976, 0.10188245, 0.014452388, -16.71, -0.13160858, 0.035211608, 0.0066386857, 2.8235295, 0.004609097, 1.1114616, 0.008902924, 5.94, -0.0063382327, 0.077101134, -0.13137314, -16.71)
 
-[node name="Log" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1906466877]
+[node name="Log" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1779522243]
 material_override = SubResource("ShaderMaterial_khg53")
 gi_mode = 0
 script = ExtResource("14_u435m")
 mesh = SubResource("ArrayMesh_1d0oa")
 xforms = PackedFloat32Array(13, 0, 0, -8.5, 0, 0.1, 0, 6.59, 0, 0, 0.1, -11.21, 13, 0, 0, 8.5, 0, 0.1, 0, 6.59, 0, 0, 0.1, -11.21, 32, 0, 0, 0, 0, 0.1, 0, 6.59, 0, 0, 0.1, 11.21, -1.0490733e-06, 0, 0.1, -15.21, 0, 0.1, 0, 6.59, -24, 0, -4.371139e-09, 0, -1.0490733e-06, 0, 0.1, 15.21, 0, 0.1, 0, 6.59, -24, 0, -4.371139e-09, 0, -2.1855695e-07, 0, 0.1, -2.21, 0, 0.1, 0, 6.59, -5, 0, -4.371139e-09, -14, -2.1855695e-07, 0, 0.1, 2.21, 0, 0.1, 0, 6.59, -5, 0, -4.371139e-09, -14, 6, 0, 0, 0, 0, 0.1, 0, 6.59, 0, 0, 0.1, -16.71, 5.4, 0, 0, 0, 0, 0.22, 0, 6.05, 0, 0, 0.22, -11.25)
 
-[node name="Backdrop" type="Node3D" parent="Dress" unique_id=1974668473 instance=ExtResource("32_32yyi")]
+[node name="GroundSkirt" type="MeshInstance3D" parent="Dress" unique_id=710159312]
+material_override = SubResource("ShaderMaterial_a30k7")
+cast_shadow = 0
+mesh = SubResource("ArrayMesh_04e1c")
+
+[node name="Backdrop" type="Node3D" parent="Dress" unique_id=430941581 instance=ExtResource("32_32yyi")]

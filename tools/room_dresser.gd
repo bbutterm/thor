@@ -307,6 +307,7 @@ func dress_room(root_: Node3D, opts_: Dictionary) -> void:
 		_bones()
 	_flush()
 	if opts.get("backdrop", true) and ResourceLoader.exists(BACKDROP_SCENE):
+		_ground_skirt()
 		var bd := (load(BACKDROP_SCENE) as PackedScene).instantiate()
 		bd.name = "Backdrop"
 		dress.add_child(bd)
@@ -1062,6 +1063,55 @@ func _bones() -> void:
 
 # ---------------- Даль за стенами ----------------
 
+## Земля дали — кольцо от этого радиуса (м); ближе — рамка зала _ground_skirt (до SKIRT_HALF)
+const GROUND_INNER := 29.5
+const SKIRT_HALF := 30.0
+
+## Плоское кольцо (лицом вверх): внутренний край на высоте y0, внешний — y1 (берег уходит под воду).
+static func _ring_mesh(r0: float, r1: float, seg: int, y0: float, y1: float) -> ArrayMesh:
+	var st := _new_st()
+	var c := Color.WHITE
+	for i in seg:
+		var a0 := TAU * i / seg
+		var a1 := TAU * (i + 1) / seg
+		var p0 := Vector3(cos(a0) * r0, y0, sin(a0) * r0)
+		var p1 := Vector3(cos(a1) * r0, y0, sin(a1) * r0)
+		var q0 := Vector3(cos(a0) * r1, y1, sin(a0) * r1)
+		var q1 := Vector3(cos(a1) * r1, y1, sin(a1) * r1)
+		_tri(st, p0, q0, q1, Vector3.UP, c, c, c)
+		_tri(st, p0, q1, p1, Vector3.UP, c, c, c)
+	return st.commit()
+
+## Земля вокруг зала до кольца дали: квадратная рамка от внешних стен (с коридором) до ±SKIRT_HALF, на 5 см
+## ниже пола — стены не «висят», под самим залом ничего лишнего не рисуется.
+func _ground_skirt() -> void:
+	# Края — под задней стороной модулей стен (0.3 м за гранью зала), без щелей
+	var x0 := w * 0.5 + 0.3
+	var zs := dep * 0.5 + 0.3
+	var zw := -dep * 0.5 - 0.3
+	var zn := -dep * 0.5 - 5.8
+	var cx := gap * 0.5 + 0.3
+	var o := SKIRT_HALF
+	var y := -0.05
+	var st := _new_st()
+	var c := Color.WHITE
+	# Полосы: юг, север (за коридором), запад, восток и по бокам коридора
+	var quads := [[Vector3(-o, y, zs), Vector3(o, y, zs), Vector3(o, y, o), Vector3(-o, y, o)],
+		[Vector3(-o, y, -o), Vector3(o, y, -o), Vector3(o, y, zn), Vector3(-o, y, zn)],
+		[Vector3(-o, y, zn), Vector3(-x0, y, zn), Vector3(-x0, y, zs), Vector3(-o, y, zs)],
+		[Vector3(x0, y, zn), Vector3(o, y, zn), Vector3(o, y, zs), Vector3(x0, y, zs)],
+		[Vector3(-x0, y, zn), Vector3(-cx, y, zn), Vector3(-cx, y, zw), Vector3(-x0, y, zw)],
+		[Vector3(cx, y, zn), Vector3(x0, y, zn), Vector3(x0, y, zw), Vector3(cx, y, zw)]]
+	for q in quads:
+		_tri(st, q[0], q[1], q[2], Vector3.UP, c, c, c)
+		_tri(st, q[0], q[2], q[3], Vector3.UP, c, c, c)
+	var mi := MeshInstance3D.new()
+	mi.name = "GroundSkirt"
+	mi.mesh = st.commit()
+	mi.material_override = _mat("surface_ground")
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dress.add_child(mi)
+
 ## Сцена дали (rooms/backdrop_midgard.tscn): земля, вода фьорда, кольцо скал, сосны, драккары. Без коллизии,
 ## вне игровой зоны (от 30 м), тени не бросает. Одна на все залы мира — экземпляр в каждом открытом зале.
 static func build_backdrop() -> Node3D:
@@ -1069,27 +1119,18 @@ static func build_backdrop() -> Node3D:
 	var root_ := Node3D.new()
 	root_.name = "Backdrop"
 	d.dress = root_
-	# Земля вокруг зала (ниже пола на 0.3 м — не спорит с ним) и вода фьорда дальше
+	# Земля и вода — кольца, не диски: под залом ничего не рисуется (иначе большой меш с центром в зале
+	# сортируется первым и закрашивает весь экран под полом — лишний проход на программном рендере).
+	# Землю у самых стен даёт рамка зала (RoomDresser._ground_skirt), кольцо — от GROUND_INNER.
 	var ground := MeshInstance3D.new()
 	ground.name = "Ground"
-	var gm := CylinderMesh.new()
-	gm.top_radius = 75.0
-	gm.bottom_radius = 78.0
-	gm.height = 1.0
-	gm.radial_segments = 40
-	gm.rings = 1
-	ground.mesh = gm
-	# Верх на 5 см ниже пола зала: стены не «висят» над землёй, пол не спорит с ней по глубине
-	ground.position = Vector3(0, -0.55, 0)
+	ground.mesh = _ring_mesh(GROUND_INNER, 78.0, 40, -0.07, -1.5)
 	ground.material_override = load(MAT_DIR + "surface_ground.tres")
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root_.add_child(ground)
 	var water := MeshInstance3D.new()
 	water.name = "Water"
-	var wm := PlaneMesh.new()
-	wm.size = Vector2(900, 900)
-	water.mesh = wm
-	water.position = Vector3(0, -1.1, 0)
+	water.mesh = _ring_mesh(70.0, 450.0, 40, -1.1, -1.1)
 	water.material_override = load(MAT_DIR + "water.tres")
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root_.add_child(water)
