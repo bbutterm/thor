@@ -222,6 +222,34 @@ func _test_dialogue() -> void:
 	await pad_press(JOY_BUTTON_A)
 	await frames()
 	check(box._waiting_choice and get_viewport().gui_get_focus_owner() == box._choices_box.get_child(0), "ответы получают начальный фокус")
+	box._log_text.clear()
+	for i in 35:
+		box._log_append({"name": "Один"}, Color.WHITE, "Реплика журнала %d." % i)
+	await pad_press(JOY_BUTTON_BACK)
+	await frames(10)
+	var bar := box._log_text.get_v_scroll_bar()
+	bar.value = 0.0
+	await pad_press(JOY_BUTTON_A)
+	check(box._waiting_choice and box._log_panel.visible, "A в открытом журнале не выбирает ответ под ним")
+	var one := InputEventKey.new()
+	one.physical_keycode = KEY_1
+	one.pressed = true
+	Input.parse_input_event(one)
+	await frames()
+	one.pressed = false
+	Input.parse_input_event(one)
+	check(box._waiting_choice and box._log_panel.visible, "клавиша 1 также не выбирает ответ под журналом")
+	var axis := InputEventJoypadMotion.new()
+	axis.device = 0
+	axis.axis = JOY_AXIS_RIGHT_Y
+	axis.axis_value = 1.0
+	Input.parse_input_event(axis)
+	await frames(30)
+	axis.axis_value = 0.0
+	Input.parse_input_event(axis)
+	check(bar.value > 0.0, "правый стик прокручивает журнал")
+	await pad_press(JOY_BUTTON_B)
+	check(not box._log_panel.visible and box._waiting_choice, "B закрывает журнал, не меняя ответ")
 	await pad_press(JOY_BUTTON_DPAD_DOWN)
 	check(get_viewport().gui_get_focus_owner() == box._choices_box.get_child(1), "D-pad выбирает второй ответ")
 	await pad_press(JOY_BUTTON_A)
