@@ -109,6 +109,13 @@ static func axe(layer: int = 1) -> Node3D:
 
 ## Мьёльнир: короткая рукоять в обмотке, восьмигранный боёк с бандажами и рунной полосой.
 static func hammer(layer: int = 1) -> Node3D:
+	if ResourceLoader.exists(PW + str(PAINTED["p_hammer"][0])):
+		var p := painted("p_hammer", layer)
+		p.name = "Mjolnir"
+		return p
+	return hammer_procedural(layer)
+
+static func hammer_procedural(layer: int = 1) -> Node3D:
 	var r := Node3D.new()
 	r.name = "Mjolnir"
 	# Рукоять: обмотка кожей с кольцами
@@ -257,9 +264,79 @@ static func model(kind: String, layer: int = 1) -> Node3D:
 				m.set_surface_override_material(sidx, mm)
 	return r
 
+const PW := "res://assets/painted/rpg_items/"
+## Рисованные модели «RPG Items» (прислал владелец; Warcraft 3 .mdx → .glb, tools/mdx2glb.py; лицензия не подтверждена — см. CREDITS.md).
+## В файле предмет лежит вдоль +X (голова/лезвие на +X), плоскость лезвия — XY, толщина — Z.
+## [файл, длина в игре (м), доля длины от нижнего конца до точки хвата]. Щит: [файл, диаметр (м), 0, "shield"].
+const PAINTED := {
+	"p_axe": ["axe.glb", 0.8, 0.14], "p_axe2": ["axe2.glb", 0.9, 0.14],
+	"p_sword": ["sword.glb", 0.95, 0.07], "p_sword2": ["sword2.glb", 0.95, 0.07],
+	"p_hammer": ["hammer.glb", 0.6, 0.2], "p_hammer2": ["hammer2.glb", 0.8, 0.15],
+	"p_staff": ["staff.glb", 1.3, 0.4], "p_staff2": ["staff2.glb", 1.6, 0.42],
+	"p_shield": ["shield.glb", 0.66, 0.0, "shield"], "p_shield2": ["shield2.glb", 0.66, 0.0, "shield"],
+}
+## Старые ключи врагов → рисованные варианты «2» (тёмные), чтобы толпа отличалась от оружия Тора.
+const ALIASES := {"q_axe": "p_axe2", "q_sword": "p_sword2", "q_shield": "p_shield2", "staff": "p_staff2"}
+
+static var _painted_mats: Dictionary = {}
+## Общий материал на файл (правило фризов): рисованная текстура, без металла — в мире рук нет отражений.
+static func _painted_mat(key: String, src: Material) -> Material:
+	if _painted_mats.has(key):
+		return _painted_mats[key]
+	var m := StandardMaterial3D.new()
+	var b := src as BaseMaterial3D
+	if b:
+		m.albedo_texture = b.albedo_texture
+	m.metallic = 0.0
+	m.roughness = 0.75
+	m.specular = 0.35
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	_painted_mats[key] = m
+	return m
+
+## Рисованная модель по соглашению пивота: хват в (0,0,0), рукоять вдоль +Y, лезвие/боёк в плоскости YZ.
+static func painted(kind: String, layer: int = 1) -> Node3D:
+	var r := Node3D.new()
+	r.name = kind
+	var d: Array = PAINTED[kind]
+	var path: String = PW + str(d[0])
+	if not ResourceLoader.exists(path):
+		return r
+	var inst := (load(path) as PackedScene).instantiate() as Node3D
+	r.add_child(inst)
+	var ab := AABB()
+	var first := true
+	for mi in inst.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		m.layers = layer
+		if layer == 2:
+			m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		for sidx in m.mesh.get_surface_count():
+			m.set_surface_override_material(sidx, _painted_mat(str(d[0]), m.mesh.surface_get_material(sidx)))
+		var a := m.transform * m.get_aabb()
+		ab = a if first else ab.merge(a)
+		first = false
+	if first:
+		return r
+	if d.size() > 3 and str(d[3]) == "shield":
+		var s: float = float(d[1]) / maxf(ab.size.x, ab.size.y)
+		inst.scale = Vector3.ONE * s
+		inst.position = -ab.get_center() * s
+		return r
+	# X (длина) → +Y, Y (ширина лезвия) → -Z, Z (толщина) → -X
+	var b := Basis(Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(-1, 0, 0))
+	var s2: float = float(d[1]) / ab.size.x
+	var grip := Vector3(ab.position.x + float(d[2]) * ab.size.x, ab.get_center().y, ab.get_center().z)
+	inst.transform = Transform3D(b.scaled(Vector3.ONE * s2), -(b * grip) * s2)
+	return r
+
 const CROWD_WEAPONS := ["q_axe", "club", "q_sword", "q_spear", "pitchfork", "torch", "q_scythe", "q_pickaxe", "hammer", "q_dagger"]
 
 static func build(kind: String, layer: int = 1) -> Node3D:
+	if ALIASES.has(kind) and ResourceLoader.exists(PW + str(PAINTED[ALIASES[kind]][0])):
+		kind = ALIASES[kind]
+	if PAINTED.has(kind):
+		return painted(kind, layer)
 	var n: Node3D
 	match kind:
 		"axe": n = axe(layer)

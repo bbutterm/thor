@@ -92,7 +92,7 @@ func _build() -> void:
 			gi.set_instance_shader_parameter("glow", 1.0)
 	# Оружие (на слое мира — как у врагов)
 	var wi := 0
-	for kind in WeaponMeshes.MODEL_WEAPONS.keys() + ["axe", "hammer", "club", "staff", "sword", "spear", "pitchfork", "torch", "shield"]:
+	for kind in WeaponMeshes.MODEL_WEAPONS.keys() + WeaponMeshes.PAINTED.keys() + ["axe", "hammer", "club", "staff", "sword", "spear", "pitchfork", "torch", "shield"]:
 		var wpn := WeaponMeshes.build(kind)
 		add_child(wpn)
 		wpn.position = right * (wi * 0.15 - 1.3) + Vector3(0, 1.2, 0)
