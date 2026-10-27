@@ -92,6 +92,7 @@ func _build_barrel() -> void:
 	_barrel_on_back()
 	for mi in model.find_children("*", "MeshInstance3D", true, false):
 		_flash_meshes.append(mi as GeometryInstance3D)
+	Outline.add(model)
 
 func _barrel_on_back() -> void:
 	if _barrel_pivot == null:

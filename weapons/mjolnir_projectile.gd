@@ -94,6 +94,8 @@ func _build_visual() -> void:
 	hm.position = Vector3(0, -0.4, 0)
 	hm.scale = Vector3.ONE * 1.15
 	_mesh_root.add_child(hm)
+	if Outline.cfg().mjolnir_projectile:
+		Outline.add(hm)
 	_light = OmniLight3D.new()
 	_light.light_color = Color(1.0, 0.85, 0.45) if damage_mult > 1.0 else Color(0.5, 0.8, 1.0)
 	_light.light_energy = 1.5

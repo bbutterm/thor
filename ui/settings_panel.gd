@@ -301,6 +301,15 @@ func _build_video(page: Control) -> void:
 		func(v: float) -> String: return "%d°" % roundi(v))
 	_slider(page, tr("Тряска камеры"), "video", "shake", 0.0, 1.0, 0.05, _pct)
 	_check(page, tr("Покачивание и наклон камеры"), "video", "head_bob")
+	# Комиксовая обводка врагов и предметов (scripts/outline.gd) — применяется сразу, без перезапуска
+	_header(page, tr("ОБВОДКА"))
+	var holder: Array = [null]
+	_check(page, tr("Обводка врагов и предметов"), "video", "outline", func() -> void:
+		if holder[0]:
+			(holder[0] as HSlider).editable = Outline.enabled())
+	var width := _slider(page, tr("Толщина обводки"), "video", "outline_width", Outline.WIDTH_MIN, Outline.WIDTH_MAX, 0.05, _pct)
+	width.editable = Outline.enabled()
+	holder[0] = width
 
 func _build_interface(page: Control) -> void:
 	_header(page, tr("ЯЗЫК"))

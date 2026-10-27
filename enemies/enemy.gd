@@ -1054,7 +1054,8 @@ func _set_overlay(flash: float, glow: float) -> void:
 		if not is_instance_valid(g):
 			continue
 		if on != _overlay_on:
-			g.material_overlay = FLASH_MATERIAL if on else null
+			# Погасла — обратно комиксовая обводка (scripts/outline.gd; при вспышке она — next_pass FLASH_MATERIAL)
+			g.material_overlay = FLASH_MATERIAL if on else Outline.overlay()
 		if on:
 			g.set_instance_shader_parameter("flash", flash)
 			g.set_instance_shader_parameter("glow", glow)
@@ -1068,6 +1069,8 @@ func _collect_meshes(root: Node) -> void:
 		# с оверлеем занимает 16 ячеек буфера instance-переменных (в GL — 256 узлов на сцену, FX.INSTANCE_SLOTS_GL)
 		if mi is MeshInstance3D and not mi.name.begins_with("Eye"):
 			_flash_meshes.append(mi as GeometryInstance3D)
+	# Комиксовая обводка (GDD 20) — тот же слот оверлея, те же меши
+	Outline.add_meshes(_flash_meshes)
 
 ## Оружие в правую руку (процедурное, в текстурах Quaternius).
 func _attach_weapon(kind_name: String) -> void:
