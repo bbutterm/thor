@@ -107,6 +107,13 @@ func _build() -> void:
 	_tip_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_tip_label.custom_minimum_size = Vector2(470, 0)
 	box.add_child(_tip_label)
+	# Прогрев растра «страницы комикса»: шейдер компилируется здесь, под загрузкой, а не в момент смерти
+	var warm := ColorRect.new()
+	warm.material = ComicPage.material()
+	warm.color = Color(1, 1, 1, 0.01)
+	warm.size = Vector2(2, 2)
+	warm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(warm)
 	var load_l := UIStyle.label(tr("Загрузка…"), 16, Color(UIStyle.GOLD, 0.8), 4)
 	load_l.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	load_l.offset_left = -260

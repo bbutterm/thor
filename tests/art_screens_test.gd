@@ -84,8 +84,7 @@ func _run() -> void:
 		await _test_loading()
 	ScreenArt.pauses_in_tests = true
 	await _test_sven()
-	if not only_pages:
-		await _test_jarl()
+	await _test_jarl()
 	await _test_death()
 	if not only_pages:
 		await _test_switches()
@@ -358,6 +357,7 @@ func _test_jarl() -> void:
 	await wait(0.05)
 	check(BossCard.last_id == "jarl" and ComicInsert.current is BossCard, "заставка Ярла")
 	await wait(0.4)
+	await shot("09_boss_card_jarl")
 	# Пропуск кликом
 	var ev := InputEventMouseButton.new()
 	ev.button_index = MOUSE_BUTTON_LEFT
