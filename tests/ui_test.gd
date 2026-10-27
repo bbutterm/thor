@@ -91,12 +91,19 @@ func _test_skin() -> void:
 		"у Пращи и Ветра есть иконки для карточки и HUD")
 	for id in ["air_catch", "charge", "hammer_dive", "hammer_step", "loyal_dog", "swap"]:
 		check(UISkin.trait_icon(id) != null, "иконка приёма %s загружена" % id)
+	for id in ["earth_dive", "fire_tornado", "ice_ricochet", "lightning_magnet", "wind_pull"]:
+		check(UISkin.trait_icon(id) != null, "иконка связки %s загружена" % id)
 	var sling := load("res://weapons/mjolnir_traits/sling.tres") as MjolnirTrait
 	var traits_hud := MjolnirTraitsHud.new()
 	var hud_icon := traits_hud._icon(sling, 1)
 	check(hud_icon is HudIcon and (hud_icon as HudIcon).base == UISkin.trait_icon("sling"),
 		"Праща показана картинкой на HUD")
 	hud_icon.free()
+	var combo := load("res://weapons/mjolnir_traits/combos/fire_tornado.tres") as MjolnirTrait
+	var combo_icon := traits_hud._icon(combo, 0)
+	check(combo_icon is HudIcon and (combo_icon as HudIcon).base == UISkin.trait_icon("fire_tornado")
+		and (combo_icon as HudIcon).badge == "★", "связка показана картинкой со звездой на HUD")
+	combo_icon.free()
 	traits_hud.free()
 	var sling_card := SkinCard.make("card_trait", 300.0, sling.color)
 	sling_card.set_icon(UISkin.trait_icon("sling"), "", sling.color)
