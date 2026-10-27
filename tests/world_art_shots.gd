@@ -55,7 +55,7 @@ func look(game: Game, from: Vector3, to: Vector3) -> void:
 func _run() -> void:
 	# Деревня: небо, плакаты на домах, знамёна, туман у земли
 	var game := await open("res://rooms/room_09.tscn")
-	await look(game, Vector3(0, 0, 4), Vector3(0, 2.0, -3))
+	await look(game, Vector3(-8, 0, 1.2), Vector3(-11, 1.75, -2.3))
 	await shot("village_posters")
 	await look(game, Vector3(-3, 0, 9), Vector3(0, 0.2, 3))
 	await shot("village_jump_rune")
@@ -79,7 +79,7 @@ func _run() -> void:
 	await shot("longhouse_hearth")
 	await look(game, Vector3(4, 0, 2), Vector3(-11, 4.4, -8))
 	await shot("longhouse_wall")
-	await look(game, Vector3(0, 0, -10), Vector3(0, 3.5, 22))
+	await look(game, Vector3(0, 0, 13), Vector3(0, 3.6, 22))
 	await shot("longhouse_tapestry")
 	# Ларёк: вывеска, гобелен и плакат Одина за ним
 	Run.start_run("berserker")

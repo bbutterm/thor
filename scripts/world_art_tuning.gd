@@ -33,9 +33,9 @@ class_name WorldArtTuning
 @export var ember_color: Color = Color(1.0, 0.62, 0.25, 0.9)
 
 @export_group("Очаг длинного дома (ember + vfx_fire)")
-@export var hearth_embers: int = 26
+@export var hearth_embers: int = 18
 @export var hearth_ember_life: float = 2.4
-@export var hearth_ember_size: Vector2 = Vector2(0.07, 0.15)
+@export var hearth_ember_size: Vector2 = Vector2(0.05, 0.1)
 @export var hearth_ember_speed: Vector2 = Vector2(1.2, 2.6)
 ## Языки пламени очага (полоса vfx_fire, петля): сколько, высота, м (мин, макс)
 @export var hearth_flames: int = 7
