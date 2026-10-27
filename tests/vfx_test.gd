@@ -76,7 +76,7 @@ func _run() -> void:
 
 	print("-- Материалы и прогрев")
 	var keys := FX.sprite_keys()
-	check(keys.size() == 3 + 12 + 4 + 3 + 3 + 5 + 5, "ключей текстур: %d" % keys.size())
+	check(keys.size() == 3 + 12 + 4 + 3 + 3 + 5 + 5 + FX.EXTRA_SPRITES.size(), "ключей текстур: %d (с декалями мира)" % keys.size())
 	check(FX.sprite_materials().size() == keys.size(), "ShaderWarmup создал материал на каждую текстуру (%d)" % FX.sprite_materials().size())
 	var no_tex := 0
 	for k in keys:

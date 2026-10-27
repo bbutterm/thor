@@ -352,6 +352,12 @@ const STRIPS := {"hit_flash": 6, "smoke": 8, "fire": 8}
 const VARIANTS := {"sparks": 12, "lightning": 4, "ichor_splash": 3, "ichor_splat": 3, "ice_shard": 5}
 ## Одиночные текстуры
 const SINGLES := ["shockwave", "ice_patch", "crack_decal_small", "crack_decal_medium", "crack_decal_large"]
+## Текстуры графики мира (assets/decals/, docs/world_art) на том же шейдере: затухающие декали из пулов
+## (подпалина огня/взрыва — FX.scorch, лужа браги Свена — BrewPuddle). Статичные декали — WorldArt (без instance uniform).
+const EXTRA_SPRITES := {
+	"scorch": "res://assets/decals/scorch.webp",
+	"puddle_mead": "res://assets/decals/puddle_mead.webp",
+}
 
 ## Сколько материалов эффектов создано за игру (тест: после прогрева в бою не растёт)
 static var materials_created: int = 0
@@ -376,6 +382,7 @@ static func sprite_keys() -> PackedStringArray:
 		for i in int(VARIANTS[v]):
 			out.append(variant_key(v, i))
 	out.append_array(PackedStringArray(SINGLES))
+	out.append_array(PackedStringArray(EXTRA_SPRITES.keys()))
 	return out
 
 static func variant_key(set_name: String, i: int) -> String:
@@ -390,7 +397,7 @@ static func sprite_material(key: String) -> ShaderMaterial:
 		return _sprite_mats[key]
 	var m := ShaderMaterial.new()
 	m.shader = SPRITE_SHADER
-	var path := VFX_DIR + "vfx_" + key + ".webp"
+	var path: String = EXTRA_SPRITES.get(key, VFX_DIR + "vfx_" + key + ".webp")
 	if ResourceLoader.exists(path):
 		m.set_shader_parameter("tex", load(path))
 	m.set_shader_parameter("grid", Vector2(float(STRIPS.get(key, 1)), 1.0))
@@ -495,6 +502,13 @@ static func _sprite(kind: String, parent: Node, key: String, pos: Vector3, size:
 	mi.position = pos
 	mi.scale = Vector3.ONE * maxf(size, 0.001)
 	return mi
+
+## Общий материал текстурного эффекта key узлу не из пула (лужа браги и т. п.): оттенок, кадр 0, без billboard.
+static func sprite_apply(gi: GeometryInstance3D, key: String, color: Color = Color.WHITE, energy: float = 1.0) -> void:
+	gi.material_override = sprite_material(key)
+	_track_fade(gi)
+	sprite_color(gi, color, energy)
+	set_sprite(gi, 0.0, 0)
 
 ## Оттенок и яркость текстурного эффекта (instance uniform color: rgb — оттенок, a — яркость).
 ## Альфа цвета → прозрачность узла (у этого шейдера альфа экземпляра занята яркостью).
@@ -769,6 +783,25 @@ static func crack(parent: Node, pos: Vector3, height: float) -> void:
 	var tw := _tween(mi)
 	tw.tween_interval(maxf(c.crack_life - c.crack_fade, 0.0))
 	tw.tween_property(mi, "transparency", 1.0, maxf(c.crack_fade, 0.01))
+	tw.tween_callback(mi.hide)
+
+## Подпалина на полу (assets/decals/scorch): след огня (fire_zone.gd) и взрыва (blast.gd). Лежит, пока горит огонь
+## (burn), и ещё cfg().scorch_life, потом исчезает. Пул cfg().scorch_limit — сверх него исчезает самая старая.
+static func scorch(parent: Node, pos: Vector3, radius: float, burn: float = 0.0) -> void:
+	Perf.mark("fx_scorch")
+	if parent == null or not parent.is_inside_tree():
+		return
+	var c := cfg()
+	if c.scorch_limit <= 0:
+		return
+	var size := clampf(radius * c.scorch_per_radius, c.scorch_size.x, c.scorch_size.y)
+	var mi := _floor_sprite("scorch", parent, "scorch", pos, size, Color.WHITE, c.scorch_limit)
+	if mi == null:
+		return
+	mi.transparency = c.scorch_transparency
+	var tw := _tween(mi)
+	tw.tween_interval(maxf(burn + c.scorch_life - c.scorch_fade, 0.0))
+	tw.tween_property(mi, "transparency", 1.0, maxf(c.scorch_fade, 0.01))
 	tw.tween_callback(mi.hide)
 
 ## Удар-приземление (player.gd → _do_slam_impact): волна по радиусу удара и трещина по высоте падения.

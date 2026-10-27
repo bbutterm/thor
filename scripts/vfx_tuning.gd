@@ -122,3 +122,16 @@ class_name VfxTuning
 @export_group("Декали на полу")
 ## Высота над полом (против мерцания с полом), м
 @export var decal_lift: float = 0.025
+
+@export_group("Подпалина (assets/decals/scorch — огонь, взрыв)")
+## Размер подпалины относительно радиуса огня/взрыва (диаметр = радиус × столько), м
+@export var scorch_per_radius: float = 1.7
+## Пределы размера, м
+@export var scorch_size: Vector2 = Vector2(1.4, 6.0)
+## Сколько лежит, с (после конца огня), и за сколько исчезает
+@export var scorch_life: float = 8.0
+@export var scorch_fade: float = 2.5
+## Прозрачность (0 — непрозрачная)
+@export_range(0.0, 1.0) var scorch_transparency: float = 0.12
+## Пул подпалин: сверх лимита исчезает самая старая
+@export var scorch_limit: int = 10

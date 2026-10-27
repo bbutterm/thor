@@ -68,6 +68,11 @@ static func paths() -> PackedStringArray:
 		for f in ResourceLoader.list_directory(d):
 			if f.get_extension() in EXTS:
 				out.append(d + f)
+	# Графика мира: декор, декали, частицы и небо текущего мира (scripts/world_art.gd) — только используемые
+	# (листы-заготовки и другие миры в памяти не держим)
+	for p in WorldArt.preload_paths(Run.map):
+		if not p in out:
+			out.append(p)
 	return out
 
 ## Запускает фоновую загрузку. Можно вызывать много раз — повторно не грузит.

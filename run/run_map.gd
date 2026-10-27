@@ -26,6 +26,29 @@ class_name RunMap
 ## Сцена зала-ларька (блок К); нет файла — ларёк не предлагается
 @export var shop_scene: String = "res://rooms/shop_room.tscn"
 
+@export_group("Небо и атмосфера")
+## Панорама неба мира (equirect 2:1, assets/sky/<мир>.webp); пусто — небо сцены игры (процедурное).
+## Путь, а не текстура: 4096×2048 грузится в фоне (AssetCache), а не при старте игры вместе с картой
+@export_file("*.webp", "*.png", "*.jpg") var sky: String = ""
+## Яркость панорамы и поворот вокруг вертикали, град (солнце панорамы — в сторону выхода)
+@export var sky_energy: float = 1.0
+@export var sky_rotation_deg: float = 0.0
+## Экспозиция кадра (тонмаппинг): яркое небо-закат подсвечивает зал — подгоняем к прежней яркости
+@export var exposure: float = 1.0
+## Рассеянный свет: яркость и доля неба в нём (остальное — ambient_color)
+@export var ambient_energy: float = 0.7
+@export_range(0.0, 1.0) var ambient_sky_contribution: float = 1.0
+@export var ambient_color: Color = Color(0.5, 0.45, 0.42)
+## Дымка: цвет, плотность и насколько она закрывает небо (0 — небо чистое)
+@export var fog_color: Color = Color(0.55, 0.45, 0.42)
+@export var fog_density: float = 0.008
+@export_range(0.0, 1.0) var fog_sky_affect: float = 1.0
+## Атмосферные частицы залов (числа — data/world_art.tres): низкий туман у земли, пылинки, искры факелов и очага
+@export var ground_fog: bool = false
+@export var ground_fog_color: Color = Color(0.95, 0.84, 0.78, 0.3)
+@export var dust_motes: bool = false
+@export var torch_embers: bool = false
+
 @export_group("Награды")
 ## Элитный бой: шанс элиты у каждого врага и предел элиты в зале (обычный зал — 0.1 / 1)
 @export_range(0.0, 1.0) var elite_room_chance: float = 0.45

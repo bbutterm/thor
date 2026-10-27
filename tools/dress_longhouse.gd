@@ -1,7 +1,7 @@
 extends Node
 ## Разовое убранство длинного дома Ярла (ручная сцена rooms/boss_arena.tscn): стропила и конёк из брёвен MegaKit,
 ## люстры, очаг посередине, столы у южной стены. Только декор без коллизии — геймплей арены не меняется.
-## Повторный запуск заменяет узел Decor целиком. Запуск: godot --headless --path . res://tools/dress_longhouse.tscn
+## Повторный запуск заменяет узел Decor целиком (кроме Decor/WallArt — графики на стенах, tools/dress_longhouse_art.tscn). Запуск: godot --headless --path . res://tools/dress_longhouse.tscn
 
 const SCENE := "res://rooms/boss_arena.tscn"
 const QV := "res://assets/quaternius/village/"
@@ -25,12 +25,18 @@ func _own(n: Node, owner: Node) -> void:
 func _ready() -> void:
 	var root := (load(SCENE) as PackedScene).instantiate() as Node3D
 	var old := root.get_node_or_null("Decor")
+	# Графика на стенах (tools/dress_longhouse_art.tscn) — сохраняем при пересборке убранства
+	var wall_art := old.get_node_or_null("WallArt") if old else null
+	if wall_art:
+		old.remove_child(wall_art)
 	if old:
 		root.remove_child(old)
 		old.free()
 	var decor := Node3D.new()
 	decor.name = "Decor"
 	root.add_child(decor)
+	if wall_art:
+		decor.add_child(wall_art)
 	# Стропила поперёк зала (бревно Roof_Log 10.7 м вдоль Z, свой сдвиг по Y ≈ 3.85) — каждые 4 м, верх ~6.6 м
 	for i in 11:
 		var z := -20.0 + i * 4.0

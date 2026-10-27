@@ -1,7 +1,8 @@
 extends Area3D
 class_name JumpPad
 ## Прыжковая руна (GDD 7.2): светящийся круг на полу подбрасывает Тора на height метров.
-## Ставит генератор (ключ "jump_pads" у зала); вид собирается при запуске из общих мешей/материалов FX.
+## Ставит генератор (ключ "jump_pads" у зала); вид собирается при запуске: рунный круг assets/decals/rune_circle_jump
+## (WorldArt.floor_circle — общий материал без instance uniform) и «дышащее» кольцо (общий материал FX).
 
 ## Высота подброса (м), GDD: 8–12
 @export var height: float = 9.0
@@ -29,18 +30,12 @@ func _ready() -> void:
 	cs.shape = sh
 	cs.position.y = 0.3
 	add_child(cs)
-	_glow = MeshInstance3D.new()
-	_glow.mesh = FX.shared_mesh("disc")
-	_glow.scale = Vector3(radius, 0.05, radius)
-	_glow.position.y = 0.03
-	FX.fx_apply(_glow, "alpha", Color(color, 0.55), 1.6)
-	_glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(_glow)
+	_glow = WorldArt.floor_circle(self, "rune_circle_jump", radius * WorldArt.cfg().jump_circle_scale)
 	_ring = MeshInstance3D.new()
 	_ring.mesh = FX.shared_mesh("ring")
 	_ring.scale = Vector3(radius, 0.4, radius)
 	_ring.position.y = 0.06
-	FX.fx_apply(_ring, "glow", color, 2.5)
+	FX.fx_apply(_ring, "glow", color, 1.3)  # ярче не надо: видно и рунный круг
 	_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_ring)
 	body_entered.connect(_on_body)
@@ -48,10 +43,13 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_cd = maxf(0.0, _cd - delta)
 	_t += delta
-	# Кольцо «дышит» — видно издалека
+	# Кольцо и рунный круг «дышат» — видно издалека
 	if _ring:
 		var k := 1.0 + 0.08 * sin(_t * 4.0)
 		_ring.scale = Vector3(radius * k, 0.4, radius * k)
+	if _glow:
+		var d := radius * WorldArt.cfg().jump_circle_scale * (1.0 + WorldArt.cfg().jump_circle_breath * sin(_t * 4.0 + 1.2))
+		_glow.scale = Vector3(d, 1.0, d)
 	if _cd <= 0.0:
 		for b in get_overlapping_bodies():
 			_on_body(b)

@@ -41,6 +41,9 @@ func _run() -> void:
 		for en in game.room.alive_enemies():
 			en.set_physics_process(false)
 		game.hud.visible = false
+		# Без интерфейса поверх зала (выбор руны в ларьке, пузыри реплик, обучение)
+		for cl in get_tree().root.find_children("*", "CanvasLayer", true, false):
+			(cl as CanvasLayer).visible = false
 		await wait(0.3)
 		await shot("%s_a_vhod" % r)
 		# Обзор: высоко над южной стеной, взгляд на центр зала
