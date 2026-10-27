@@ -195,6 +195,26 @@ func _test_finale_gating() -> void:
 	Save.bump_event("finale_credits_complete")
 	check(Dialogue.pick_scene("meet").is_empty(), "событие титров само по себе не обходит финал A")
 	Save.reset()
+	Save.mark_seen("loki_reveal")
+	Save.bump_event("odin_finale_unlocked")
+	check(Dialogue.pick_scene("meet").get("id", "") == "finale_a", "финал доступен и после признания Локи между забегами")
+	# Если до финала не встретились сцены с разгадкой, они не возвращают уже
+	# раскрытый обман в состояние загадки при следующих смертях.
+	for pair in [["ravens_gossip", ["loki_intro"]], ["loki_reveal", ["loki_intro", "ravens_gossip"]],
+			["dwarves_secret", ["dwarves_intro"]]]:
+		Save.reset()
+		Save.data.stats.deaths = 14
+		for prerequisite in pair[1]:
+			Save.mark_seen(prerequisite)
+		var matches := Dialogue.scenes.filter(func(sc: Dictionary) -> bool: return sc.get("id", "") == pair[0])
+		check(matches.size() == 1, "сцена %s существует" % pair[0])
+		if matches.size() != 1:
+			continue
+		var sc: Dictionary = matches[0]
+		check(Dialogue.check(sc._conds, Dialogue.context("death")), "%s доступна до финала" % pair[0])
+		Save.mark_seen("finale_a")
+		check(not Dialogue.check(sc._conds, Dialogue.context("death")), "%s не возникает после разгадки финала" % pair[0])
+	Save.reset()
 
 ## Симуляция 30 смертей: какие сцены открываются и когда (для отчёта)
 func _test_story_order() -> void:
