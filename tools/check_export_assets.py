@@ -82,10 +82,20 @@ def main():
                 issues.append(f"{section}: {source} ссылается на исключённый {path}")
         for sp, emotion in sorted(portrait_pairs):
             sp = ALIASES.get(sp, sp)
-            for extension in ("png", "webp"):
-                path = f"sprites/portraits/{sp}_{emotion}.{extension}"
-                if (ROOT / path).exists() and is_excluded(path, patterns):
-                    issues.append(f"{section}: портрет {sp}/{emotion} исключён: {path}")
+            # Как Portrait.texture_path: сначала нужная эмоция, затем neutral;
+            # внутри каждой эмоции PNG имеет приоритет перед WebP. Исключать
+            # neutral при отсутствии конкретной эмоции тоже нельзя.
+            chosen = None
+            for candidate in (emotion, "neutral"):
+                for extension in ("png", "webp"):
+                    path = f"sprites/portraits/{sp}_{candidate}.{extension}"
+                    if (ROOT / path).exists():
+                        chosen = path
+                        break
+                if chosen is not None:
+                    break
+            if chosen is not None and is_excluded(chosen, patterns):
+                issues.append(f"{section}: портрет {sp}/{emotion} исключён: {chosen}")
         # Имена моделей в GDScript часто присоединяются к константной папке.
         for pattern in patterns:
             if not pattern.startswith(MODEL_PREFIXES):
