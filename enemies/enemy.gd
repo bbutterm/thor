@@ -785,7 +785,7 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 		if damage <= 0.0:
 			return
 	health -= damage
-	_last_hit_time = Time.get_ticks_msec() / 1000.0
+	_last_hit_time = Run.combat_clock
 	ComicFX.on_enemy_hit(self, damage, source)
 	_hurt_flash = 1.0
 	var big := source == "melee_finisher" or source == "melee_heavy" or source == "slam"
@@ -875,7 +875,7 @@ func _check_fall() -> void:
 		if not _airborne:
 			_airborne = true
 			_fall_peak_y = global_position.y
-			_fall_forced = state != State.SPAWNING and Time.get_ticks_msec() / 1000.0 - _last_hit_time <= fall_hit_window
+			_fall_forced = state != State.SPAWNING and Run.combat_clock - _last_hit_time <= fall_hit_window
 		_fall_peak_y = maxf(_fall_peak_y, global_position.y)
 		return
 	if not _airborne:
@@ -927,7 +927,7 @@ func _check_wall_splat(pre_horiz: Vector3) -> void:
 			continue
 		if pre_horiz.normalized().dot(-n) < 0.3:
 			continue
-		_last_splat_time = Time.get_ticks_msec() / 1000.0
+		_last_splat_time = Run.combat_clock
 		knockback_velocity = n * 2.0
 		FX.burst(get_parent(), col.get_position(), 0.8, Color(1, 1, 1, 0.6), 0.2)
 		if player:
@@ -955,7 +955,7 @@ func _die(source: String) -> void:
 		died.emit(self)
 		queue_free()
 		return
-	var now := Time.get_ticks_msec() / 1000.0
+	var now := Run.combat_clock
 	# Мини-босс — тоже Kind.BOSS (поведение босса), но Славу за него даёт MinibossDef
 	# Слава по GDD 15.2: по слою врага (EnemyDef), элита — 15
 	var glory_base := Run.glory_elite_kill if has_meta("elite") else glory_value

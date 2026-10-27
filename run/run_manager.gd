@@ -104,6 +104,9 @@ var forced_offers: Array = []
 var mjolnir_traits: Array[MjolnirTrait] = []
 var mjolnir_trait_levels: Dictionary = {}
 var _recent_kill_times: Array[float] = []
+## Непрерывное реальное время кадров. Работает при паузе и хит-стопе, как прежние системные часы,
+## но также остаётся корректным при ускоренном headless с --fixed-fps.
+var combat_clock: float = 0.0
 ## Во сколько раз считается каждая руна (Старый жрец: «все руны ×2»), см. BodyDef.stat("rune_power")
 var rune_power: int = 1
 
@@ -132,7 +135,9 @@ func _ready() -> void:
 	GameSettings.apply_startup.call_deferred()
 
 func _process(delta: float) -> void:
-	# delta здесь уже умножен на Engine.time_scale — возвращаем реальное время для hit-stop
+	# Отсчёт окон использует ту же реальную длительность кадра, что и hit-stop.
+	# real_delta учитывает масштаб в начале кадра даже при его смене в физике.
+	combat_clock += FX.real_delta(delta)
 	FX.tick(delta / maxf(Engine.time_scale, 0.0001))
 
 func _load_dir(path: String) -> Array:
@@ -183,6 +188,7 @@ func start_run(forced_body_id: String = "") -> void:
 	won = false
 	style_glory_mult = 1.0
 	_recent_kill_times.clear()
+	combat_clock = 0.0
 	mjolnir_traits.clear()
 	mjolnir_trait_levels.clear()
 	mjolnir_traits_changed.emit(mjolnir_traits)
@@ -232,7 +238,7 @@ func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: Stri
 	amount = int(round(amount * style_glory_mult))
 	if is_boss:
 		amount += glory_boss_kill
-	var now := Time.get_ticks_msec() / 1000.0
+	var now := combat_clock
 	_recent_kill_times = _recent_kill_times.filter(func(t: float) -> bool: return now - t <= multikill_window)
 	if not _recent_kill_times.is_empty():
 		amount += glory_multikill_bonus * _recent_kill_times.size()
