@@ -92,7 +92,9 @@ godot --headless --path . --fixed-fps 60 res://tests/destructible_test.tscn # б
 `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json xvfb-run -a godot --path . --fixed-fps 60 --rendering-method forward_plus --resolution 320x180 res://tests/hitch_test.tscn -- 50` (и то же с `gl_compatibility`). Прогон ~10 мин; кадры без событий — шум программного рендера, не считаются.
 Скриншоты (нужен xvfb): `xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/screenshots.tscn -- <папка>`.
 
-Экспорт: `godot --headless --path . --export-release "Windows Desktop" export/windows/ThorDostoynayaSmert.exe` (нужны export templates 4.6.3). Проверка сборки: `<exe> --headless -- --selftest`.
+Сборка Windows для плейтеста: `python3 tools/package_playtest.py` (Godot 4.6.3 и export templates 4.6.3). Скрипт проверяет исключения ресурсов, импортирует проект, экспортирует один `.exe`, создаёт ZIP из одного файла, проверяет CRC и предел 95 000 000 байт. Если доступна системная libdeflate — использует стандартный DEFLATE с более плотным сжатием; иначе zlib. Логи ограничены 50 МБ, лежат в `export/windows/`.
+
+При добавлении залов/диалогов перед экспортом: `python3 tools/check_export_assets.py` (сцены, прямые вызовы UI, текущие реплики и алиасы портретов); самотесты упаковки: `python3 tools/test_export_assets.py` и `python3 tools/test_package_playtest.py`. Исключения из `export_presets.cfg` предназначены для демо Мидгарда: если ресурс станет нужен, убери соответствующий фильтр. Проверка готовой сборки: `<exe> --headless -- --selftest`; успех — `SELFTEST OK` и хотя бы один враг.
 
 ## Диалоги и сохранения (ночь 26.10, блоки А–В)
 - `scripts/dialogue_manager.gd` (автозагрузка `Dialogue`) — сцены-новеллы и пулы коротких реплик из `data/dialogues/*.json` (по файлу на персонажа, формат — `STORY.md` → «Формат данных»). Выбор: самая приоритетная непросмотренная сцена события с выполненными условиями, иначе пул. Точки входа: `on_run_start`, `on_boss_intro`, `on_boss_defeat`, `after_run`, `run_trigger(событие, пул)`, `bark(реплика)`.
