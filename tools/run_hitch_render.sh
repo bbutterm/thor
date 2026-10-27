@@ -124,12 +124,14 @@ printf 'method=%s\ndisplay=%s\nproject=%s\ntimeout=%s\nthreshold_ms=%s\nasset_lo
     "$method" "$DISPLAY" "$root" "$limit" "$threshold" "$asset_load" "$(date -u +%FT%TZ)" | tee "$out/metadata.txt"
 # Flush progress as it is produced, so an interrupted long run still has a useful log.
 line_buffer=()
+limited_output=(head -c 50000000)
 if command -v stdbuf >/dev/null 2>&1; then
     line_buffer=(stdbuf -oL -eL)
+    limited_output=(stdbuf -i0 -o0 -e0 head -c 50000000)
 fi
 timeout --signal=TERM --kill-after=30s "$limit" "${line_buffer[@]}" godot --path "$root" --fixed-fps 60 --audio-driver Dummy \
     --rendering-method "$method" --resolution 320x180 res://tests/hitch_test.tscn -- "${test_args[@]}" \
-    2>&1 | head -c 50000000 > "$out/godot.log"
+    2>&1 | "${limited_output[@]}" > "$out/godot.log"
 rc=$?
 if (( rc == 0 )) && ! grep -Fq "медиане, $method)" "$out/godot.log"; then
     echo 'Тест не подтвердил запрошенный метод рендеринга.' >&2
