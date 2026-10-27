@@ -266,6 +266,11 @@ func reset_state() -> void:
 	_last_pop = -100.0
 	for w in _pool:
 		_release(w)
+	# reset_state может быть вызван между кадрами, пока слово связки ещё в пуле.
+	if _layer:
+		_layer.layer = 6
+	if _vignette:
+		_vignette.visible = false
 	for k in stats.keys():
 		stats[k] = 0
 	history.clear()
@@ -475,15 +480,20 @@ func _process(delta: float) -> void:
 	_flush()
 	var vig := 0.0
 	var preview := false
+	var combo_word := false
 	for w in _pool:
-		if w.active and w.preview:
-			preview = true
 		if w.active:
 			_animate(w, real, game)
+			if w.active and w.preview:
+				preview = true
+			if w.active and w.event == "combo" and not w.preview:
+				combo_word = true
 			if w.active and w.big:
 				vig = maxf(vig, w.modulate.a * clampf(w.anim_scale, 0.0, 1.0))
-	# Образец из настроек — поверх меню паузы/настроек, иначе его не видно
-	_layer.layer = 25 if preview else 6
+	# Образец — поверх меню. Слово связки и его виньетка — под HUD: одновременно
+	# звучит Один, и большое FUSION! иначе закрывает его реплику. После слова
+	# возвращаем обычный слой для всех других боевых эффектов.
+	_layer.layer = 25 if preview else (4 if combo_word else 6)
 	_vignette.visible = vig > 0.01 and vignette_alpha > 0.0
 	_vignette.color = Color(0, 0, 0, vig * vignette_alpha)
 	if _glyph_warm_frames > 0:

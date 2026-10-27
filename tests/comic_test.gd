@@ -152,6 +152,43 @@ func _run() -> void:
 	await wait(2.0)
 	check(CF.active_count() == 0 and not CF._vignette.visible, "крупное слово не залипает")
 
+	print("-- Слово связки и реплика Одина")
+	await fresh()
+	game.hud.show_odin_line("Огненный смерч! Только не деревянный.")
+	CF.pop("combo", p.get_aim_origin() + p.get_aim_forward() * 3.0, true)
+	await frames(6)
+	check(events() == ["combo"] and CF.active_count() == 1 and game.hud._odin_panel.modulate.a > 0.0,
+		"слово связки и реплика видны одновременно")
+	check(CF._layer.layer < game.hud.layer, "слово и виньетка связки не закрывают реплику Одина")
+	# Общий слой остаётся под HUD, пока живо хотя бы одно слово связки.
+	CF.pop("slam", p.get_aim_origin() + p.get_aim_forward() * 3.0, true)
+	await frames(3)
+	check(CF.active_count() == 2 and CF._layer.layer < game.hud.layer, "новое слово не возвращает слой над репликой связки")
+	CF.pop("boss_kill", Vector3.ZERO, true)
+	await frames(3)
+	CF.pop("rank_4", Vector3.ZERO, true) # полный пул вытесняет самое старое слово — связку
+	await frames(3)
+	check(CF.active_count() == CF.max_on_screen and CF._layer.layer > game.hud.layer,
+		"вытеснение связки возвращает обычный слой остальным словам")
+	await fresh()
+	CF.pop("combo", Vector3.ZERO, true)
+	await frames(3)
+	await wait(1.5)
+	check(CF.active_count() == 0 and CF._layer.layer > game.hud.layer, "после окончания связки обычный слой восстановлен")
+	CF.pop("combo", Vector3.ZERO, true)
+	await frames(3)
+	CF._last_pop = -100.0 # образец настраивается во время активного слова, минуя боевой кулдаун
+	CF.preview()
+	await frames(3)
+	check(CF._layer.layer == 25, "одновременный образец в настройках остаётся поверх меню")
+	CF.reset_state()
+	check(CF.active_count() == 0 and CF._layer.layer > game.hud.layer and not CF._vignette.visible,
+		"сброс отменяет слова и сразу восстанавливает обычный слой и виньетку")
+	CF.pop("slam", p.get_aim_origin() + p.get_aim_forward() * 3.0, true)
+	await frames(3)
+	check(events() == ["slam"] and CF._layer.layer > game.hud.layer, "другое крупное слово остаётся над HUD")
+	await wait(1.5)
+
 	print("-- Мульти-килл и добивание")
 	await fresh()
 	for i in 3:
