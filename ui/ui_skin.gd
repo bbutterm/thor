@@ -232,7 +232,7 @@ const WEAPON_ICON := {
 }
 ## Иконка трейта Мьёльнира по MjolnirTrait.id
 ## Стихии и приёмы (блок Б4) — картинки бывших трейтов: молния — цепная, земля — «Тяжесть».
-## Приёмы и связки без картинок показывают руну-глиф в круге (запасной вид в HUD и на карточках).
+## Приёмы получают иконки по id; связки без картинок показывают запасной глиф в HUD и на карточках.
 const TRAIT_ICON := {
 	"fire_trail": "trait_fire", "ice_trail": "trait_ice", "pull_to_hammer": "trait_pull", "sky_thunder": "trait_sky_lightning",
 	"heaviness": "trait_heavy", "two_hammers": "trait_double",
