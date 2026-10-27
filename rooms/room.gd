@@ -17,6 +17,8 @@ signal boss_spawned(boss: Enemy)
 signal wave_started(index: int)
 
 @export var room_title: String = "Зал"
+## Зал под крышей (длинный дом Ярла): без неба и солнца, свой полумрак — RunMap.indoor_*, WorldArt.apply_room
+@export var indoor: bool = false
 @export var wave_delay: float = 0.9
 ## Пауза между пачками врагов одной волны (с)
 @export var spawn_interval: float = 0.12

@@ -30,7 +30,8 @@ class_name RunMap
 ## Панорама неба мира (equirect 2:1, assets/sky/<мир>.webp); пусто — небо сцены игры (процедурное).
 ## Путь, а не текстура: 4096×2048 грузится в фоне (AssetCache), а не при старте игры вместе с картой
 @export_file("*.webp", "*.png", "*.jpg") var sky: String = ""
-## Яркость панорамы и поворот вокруг вертикали, град (солнце панорамы — в сторону выхода)
+## Яркость панорамы и поворот вокруг вертикали, град. Середина панорамы — +Z (за спиной у входа в зал);
+## солнце сцены ставится туда, где диск (sky_sun_uv), — поворотом выбирается сторона света (Мидгард: юго-запад)
 @export var sky_energy: float = 1.0
 @export var sky_rotation_deg: float = 0.0
 ## Экспозиция кадра (тонмаппинг): яркое небо-закат подсвечивает зал — подгоняем к прежней яркости
@@ -48,6 +49,49 @@ class_name RunMap
 @export var ground_fog_color: Color = Color(0.95, 0.84, 0.78, 0.3)
 @export var dust_motes: bool = false
 @export var torch_embers: bool = false
+
+@export_group("Свет и цвет (блок Б0)")
+## Солнце по панораме: где на ней диск (u, v — доли ширины и высоты, замерено по яркости файла);
+## направление солнца (DirectionalLight Sun) берётся отсюда с учётом sky_rotation_deg — тени совпадают с небом
+@export var sky_sun_uv: Vector2 = Vector2(-1.0, -1.0)
+## Высота солнца для теней, град (на закатной панораме диск у горизонта: тени во весь зал нечитаемы)
+@export_range(5.0, 85.0) var sun_elevation_deg: float = 40.0
+@export var sun_color: Color = Color(1.0, 0.86, 0.7)
+@export var sun_energy: float = 1.15
+## Тонмаппинг ACES: белая точка; цветокоррекция кадра (яркость, контраст, насыщенность)
+@export var tonemap_white: float = 6.0
+@export var adjust_brightness: float = 1.0
+@export var adjust_contrast: float = 1.0
+@export var adjust_saturation: float = 1.0
+## Цветокоррекция по палитре мира (GDD 16): тени, середина, света — 1D-кривая по каналам (GradientTexture1D)
+@export var grade_shadows: Color = Color(0.0, 0.0, 0.0)
+@export var grade_midtones: Color = Color(0.5, 0.5, 0.5)
+@export var grade_highlights: Color = Color(1.0, 1.0, 1.0)
+## SSAO / SSIL (только Forward+; в GL Compatibility — запечённое затемнение залов, блок Б0)
+@export var ssao_intensity: float = 1.6
+@export var ssao_radius: float = 1.2
+@export var ssil_enabled: bool = true
+@export var ssil_intensity: float = 0.8
+## Свечение (Glow): сила и порог bloom
+@export var glow_intensity: float = 0.6
+@export var glow_bloom: float = 0.08
+## Объёмный туман (только Forward+): плотность (0 — выкл.), цвет-альбедо, свечение, длина, м
+@export var volumetric_fog_density: float = 0.0
+@export var volumetric_fog_albedo: Color = Color(0.9, 0.75, 0.65)
+@export var volumetric_fog_emission: Color = Color(0.0, 0.0, 0.0)
+@export var volumetric_fog_length: float = 48.0
+## Тени от факелов (только Forward+): сколько факелов зала бросают тени (у выхода — первыми)
+@export var torch_shadows: int = 2
+
+@export_group("Закрытый зал (длинный дом)")
+## Room.indoor: под крышей — без солнца и неба, тёплый полумрак факелов и очага
+@export var indoor_background: Color = Color(0.05, 0.035, 0.03)
+@export var indoor_ambient_color: Color = Color(0.42, 0.3, 0.22)
+@export var indoor_ambient_energy: float = 0.55
+@export var indoor_fog_color: Color = Color(0.2, 0.12, 0.08)
+@export var indoor_fog_density: float = 0.018
+@export var indoor_exposure: float = 1.0
+@export var indoor_volumetric_fog_density: float = 0.0
 
 @export_group("Награды")
 ## Элитный бой: шанс элиты у каждого врага и предел элиты в зале (обычный зал — 0.1 / 1)

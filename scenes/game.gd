@@ -79,6 +79,8 @@ func _load_room() -> void:
 	level.add_child(room)
 	# Атмосфера зала по миру: искры над факелами и очагом, пылинки, низкий туман (scripts/world_art.gd)
 	WorldArt.dress_room(room, Run.map)
+	# Под крышей (Room.indoor) — свой свет без неба и солнца; тени факелов (scripts/world_art.gd, блок Б0)
+	WorldArt.apply_room(self, room, Run.map)
 	var t := room.get_spawn_transform()
 	player.global_position = t.origin
 	player.velocity = Vector3.ZERO
