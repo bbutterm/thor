@@ -45,6 +45,11 @@ const FILES := [
 	# Заставки боссов забега (ui/boss_card.gd); остальные карточки — на будущее, не держим
 	"res://sprites/boss_cards/fat_sven.webp",
 	"res://sprites/boss_cards/jarl_bjorn.webp",
+	# Разрушаемые пропсы (props/destructible.gd)
+	"res://props/barrel.tscn",
+	"res://props/crate.tscn",
+	"res://props/barrel_explosive.tscn",
+	"res://props/destruct_tuning.tres",
 ]
 const EXTS := ["gltf", "glb", "fbx", "wav", "ogg", "tscn", "tres", "webp"]
 

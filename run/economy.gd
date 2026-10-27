@@ -15,6 +15,20 @@ class_name Economy
 ## Мини-босс (в GDD не указано — 0)
 @export var miniboss_silver: int = 0
 
+@export_group("Ящик и сюрпризы (разрушаемое, props/destructible.gd)")
+## Разбитый ящик: шанс серебра (и сколько), шанс патронов (без ренжа в слоте — горсть серебра),
+## шанс лечения (шар, летит к Тору); остальное — пусто
+@export var crate_silver_chance: float = 0.45
+@export var crate_silver_min: int = 2
+@export var crate_silver_max: int = 5
+@export var crate_ammo_chance: float = 0.2
+@export var crate_heal_chance: float = 0.15
+@export var crate_heal_amount: float = 12.0
+## «Сюрприз»: обычная бочка в боевом зале при загрузке становится взрывной (шанс на бочку, предел на зал;
+## хотя бы 2 обычные бочки остаются)
+@export var explosive_barrel_chance: float = 0.15
+@export var explosive_barrel_max: int = 2
+
 @export_group("Монеты")
 ## Сколько монет-моделей на одну выдачу максимум (номинал делится)
 @export var max_coins_per_drop: int = 5

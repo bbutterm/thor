@@ -602,6 +602,10 @@ func _ram_tick() -> void:
 				camera_fx.add_trauma(0.18)
 				FX.hitstop(0.03)
 				Audio.play("sounds/sfx/axe_hit_1.wav, sounds/sfx/axe_hit_2.wav")
+		elif c is Destructible:
+			# Бочки и ящики на пути тарана разлетаются
+			_dash_hit[c.get_instance_id()] = true
+			(c as Destructible).take_hit(PropDebris.cfg().dash_damage, knock.normalized() * ram_prop_impulse, "dash")
 		elif c is RigidBody3D:
 			var rb := c as RigidBody3D
 			rb.apply_central_impulse(knock.normalized() * ram_prop_impulse * rb.mass)
@@ -701,6 +705,7 @@ func _do_slam_impact(height: float) -> void:
 	var center := global_position
 	_last_slam_hits = 0
 	var space := get_world_3d().direct_space_state
+	_slam_break_floor(space, height)
 	var q := PhysicsShapeQueryParameters3D.new()
 	var s := SphereShape3D.new()
 	s.radius = radius
@@ -719,7 +724,10 @@ func _do_slam_impact(height: float) -> void:
 		dir = dir.normalized() if dist > 0.01 else Vector3.FORWARD
 		var falloff := clampf(1.0 - dist / radius, 0.35, 1.0)
 		var push := dir * knock * falloff + Vector3.UP * knock * 0.55 * falloff
-		if c.has_method("take_hit"):
+		if c is Destructible:
+			# Бочки и ящики в радиусе — без спада урона к краю (DestructTuning.slam_full_damage)
+			(c as Destructible).take_hit(damage if PropDebris.cfg().slam_full_damage else damage * falloff, push, "slam")
+		elif c.has_method("take_hit"):
 			deal_damage(c, damage * falloff, push, "slam")
 			if c is Enemy:
 				_last_slam_hits += 1
@@ -749,6 +757,14 @@ func _do_slam_impact(height: float) -> void:
 	if height >= big_slam_height:
 		Odin.say("big_slam")
 		Dialogue.thor_bark("slam", 0.6)
+
+## Удар-приземление по деревянному мосту/настилу (Balcony со slam_breakable) — настил ломается (GDD 16).
+func _slam_break_floor(space: PhysicsDirectSpaceState3D, height: float) -> void:
+	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 0.3, 0), global_position + Vector3(0, -0.6, 0), 1, [get_rid()])
+	var hit := space.intersect_ray(q)
+	var deck := hit.get("collider") as Balcony if not hit.is_empty() else null
+	if deck:
+		deck.on_slam(height)
 
 # --- Прыжки по GDD 7.2: отскок, прыжок по головам, залезание на уступ ---
 
@@ -906,6 +922,11 @@ func _push_rigid_bodies(pre_velocity: Vector3) -> void:
 		var dir := -col.get_normal()
 		dir.y = maxf(dir.y, 0.15)
 		var dashing := _dash_time_left > 0.0
+		if dashing and body is Destructible and not _dash_hit.has(body.get_instance_id()):
+			# Рывок в бочку/ящик — ломает (один раз за рывок)
+			_dash_hit[body.get_instance_id()] = true
+			(body as Destructible).take_hit(PropDebris.cfg().dash_damage, _dash_dir * 8.0 + Vector3.UP * 2.0, "dash")
+			continue
 		var force := push_force * (speed * (2.2 if dashing else 0.35))
 		body.apply_central_impulse(dir.normalized() * force)
 
@@ -1123,6 +1144,11 @@ func outgoing_damage_mult(target: Object, source: String) -> float:
 func deal_damage(target: Object, amount: float, knock: Vector3, source: String) -> float:
 	if target == null or not is_instance_valid(target) or not target.has_method("take_hit"):
 		return 0.0
+	# Разрушаемый пропс (бочка, ящик): урон как есть — без множителей тела/Ярости/рун, критов, on_hit,
+	# «Зова грома» (удары по бочкам не кормят серии и руны «за удар»)
+	if target is Destructible:
+		(target as Destructible).take_hit(amount, knock, source)
+		return amount
 	var dmg := amount * outgoing_damage_mult(target, source) * _rune_damage_mult(target, source)
 	var crit := _roll_crit(source)
 	if crit:

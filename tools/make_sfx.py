@@ -481,4 +481,32 @@ freq = np.concatenate([np.full(int(SR * 0.25), 330.0), np.full(int(SR * 0.25), 3
 saw = 2 * ((np.cumsum(freq) / SR) % 1.0) - 1
 save("trial_fail", lp(saw, 1400) * (0.6 + 0.4 * np.sin(2 * np.pi * 6 * tt)) * env(n, 0.01, 0.8), 0.5)
 
+# --- Разрушаемое: ящики и бочки (props/destructible.gd) ---
+# Ящик разбит: сухой треск досок — серия щелчков разной высоты + низкий «бух» и дребезг щепок
+n = int(SR * 0.55)
+planks = bp(rng.standard_normal(n), 500, 3200) * env(n, 0.001, 5.0) * 0.6
+for pos, lo, hi in [(0.0, 900, 5000), (0.035, 600, 3500), (0.07, 1200, 6500), (0.12, 700, 4000), (0.19, 1500, 7000), (0.27, 900, 5000)]:
+    p0 = int(SR * pos)
+    m = int(SR * 0.05)
+    planks[p0:p0 + m] += bp(rng.standard_normal(m), lo, hi) * np.exp(-np.linspace(0, 7, m)) * (1.0 - pos)
+rattle = np.zeros(n)
+for i in range(10):
+    p0 = int(SR * (0.2 + i * 0.03 + rng.uniform(0, 0.015)))
+    m = int(SR * 0.012)
+    if p0 + m < n:
+        rattle[p0:p0 + m] += bp(rng.standard_normal(m), 2000, 8000) * np.exp(-np.linspace(0, 5, m)) * 0.35 * (1 - i / 10)
+save("crate_break", mix(planks, rattle, thump(0.28, 130, 55) * 0.9), 0.75)
+# Удар по пропсу без разрушения: глухое деревянное «тук»
+n = int(SR * 0.16)
+knock = bp(rng.standard_normal(n), 300, 1800) * env(n, 0.001, 6.0)
+save("prop_hit", mix(knock, thump(0.12, 220, 120) * 0.7), 0.5)
+# Фитиль взрывной бочки: шипение с треском искр
+n = int(SR * 0.6)
+hiss = hp(rng.standard_normal(n), 3000) * np.clip(np.linspace(0.3, 1.0, n), 0, 1) * 0.5
+for i in range(14):
+    p0 = int(SR * rng.uniform(0.0, 0.55))
+    m = int(SR * 0.006)
+    hiss[p0:p0 + m] += rng.standard_normal(m) * 0.9
+save("barrel_fuse", hiss * env(n, 0.02, 0.4), 0.45)
+
 print("Готово:", OUT)

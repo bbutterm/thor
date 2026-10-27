@@ -65,10 +65,8 @@ func explode(pos: Vector3) -> void:
 			var kd := Vector3(d.x, 0, d.z).normalized() if Vector2(d.x, d.z).length() > 0.05 else Vector3.FORWARD
 			var falloff := clampf(1.0 - d.length() / (radius + 0.4) * 0.5, 0.5, 1.0)
 			player.deal_damage(en, damage * falloff, kd * 10.0 + Vector3.UP * 4.0, "ranged")
-	for c in get_tree().get_nodes_in_group("props"):
-		var rb := c as RigidBody3D
-		if rb and rb.global_position.distance_to(pos) < radius * 1.3:
-			rb.apply_central_impulse(((rb.global_position - pos).normalized() * 7.0 + Vector3.UP * 4.0) * rb.mass)
+	# Бочки и ящики: урон и толчок, props/destructible.gd (не через player.deal_damage — не враги)
+	Destructible.hit_area(self, pos, radius * 1.3, damage, 7.0, 4.0, "explosion")
 	# Рокет-джамп: урона себе нет, только толчок
 	var pc := player.global_position + Vector3(0, 0.9, 0)
 	var pd := pc - pos

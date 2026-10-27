@@ -548,6 +548,8 @@ func _slam_land() -> void:
 		if d.length() <= slam_leap_radius and player.is_on_floor():
 			_hit_player(slam_leap_damage, d.normalized() * 10.0 + Vector3.UP * 6.0)
 	_break_balcony_near(global_position, 3.0)
+	# Ударная волна ломает бочки и ящики (props/destructible.gd)
+	Destructible.hit_area(self, global_position, slam_leap_radius, slam_leap_damage, 6.0, 4.0, "enemy_slam", 1.0)
 	set_act(0)
 
 # --- Урон ---

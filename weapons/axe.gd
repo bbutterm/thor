@@ -311,6 +311,11 @@ func _do_hitbox() -> void:
 			_hit_ids[id] = true
 			c.reflect(forward * reflect_speed_mult)
 			new_hits += 1
+		elif c is Destructible:
+			# Бочка/ящик: урон по пропсу (не враг — не тратит max_targets, без множителей и on_hit)
+			_hit_ids[id] = true
+			(c as Destructible).take_hit(_stage_damage(), knock, _source())
+			new_hits += 1
 		elif c.has_method("take_hit"):
 			if max_t > 0 and _enemies_hit >= max_t:
 				continue

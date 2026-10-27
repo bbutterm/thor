@@ -46,10 +46,8 @@ static func detonate(parent: Node, pos: Vector3, radius_: float, damage_: float,
 		if dd.length() <= radius_ + 0.4:
 			var kd := Vector3(dd.x, 0, dd.z).normalized() if Vector2(dd.x, dd.z).length() > 0.05 else Vector3.FORWARD
 			en.call("take_hit", damage_, kd * 10.0 + Vector3.UP * 4.0, "explosion")
-	for c in tree.get_nodes_in_group("props"):
-		var rb := c as RigidBody3D
-		if rb and rb.global_position.distance_to(pos) < radius_ * 1.3:
-			rb.apply_central_impulse(((rb.global_position - pos).normalized() * 7.0 + Vector3.UP * 4.0) * rb.mass)
+	# Бочки и ящики: урон и толчок (взрывные бочки рядом — цепная реакция), props/destructible.gd
+	Destructible.hit_area(parent, pos, radius_ * 1.3, damage_, 7.0, 4.0, "explosion")
 
 ## Взрыв с телеграфом через delay секунд (диск на земле наливается красным).
 static func delayed(parent: Node, pos: Vector3, radius_: float, damage_: float, delay_: float, source: Node = null, color_: Color = Color(1.0, 0.45, 0.15)) -> Blast:

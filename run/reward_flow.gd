@@ -53,6 +53,9 @@ func is_screen_open() -> bool:
 ## Новый зал (до start): элитный бой — больше элиты; сброс дверей.
 func on_room_loaded(room: Room) -> void:
 	doors.clear()
+	# «Сюрприз» (разрушаемое): часть бочек боевого зала — взрывные
+	if not (Run.doors_enabled and Run.is_peaceful_room()):
+		Destructible.roll_surprises(room)
 	_granted = false
 	rune_mode = "rune"
 	var id := Run.current_reward()
