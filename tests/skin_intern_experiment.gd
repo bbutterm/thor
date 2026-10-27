@@ -82,14 +82,30 @@ func _actual_models() -> void:
 		check(_same_effective_matrices(model.skeleton, records), "%s: матрицы деформации совпадают" % spec[0])
 		if model.play("Zombie_Walk_Fwd_Loop", 0.0, 1.0):
 			for position in [0.1, 0.35, 0.7]:
+				Exp.restore(records)
 				model.anim.seek(position, true)
-				check(_same_effective_matrices(model.skeleton, records), "%s: матрицы анимации t=%.2f совпадают" % [spec[0], position])
+				var before := _effective_matrices(model.skeleton, records)
+				Exp.intern(records)
+				model.anim.seek(position, true)
+				var after := _effective_matrices(model.skeleton, records)
+				check(not before.is_empty() and before == after and _same_effective_matrices(model.skeleton, records), "%s: матрицы до и после, t=%.2f" % [spec[0], position])
 		else:
 			check(false, "%s: доступна анимация ходьбы" % spec[0])
 		Exp.restore(records)
 		check(records.all(func(rec: Dictionary) -> bool: return (rec.mesh as MeshInstance3D).skin == rec.skin), "%s: оригинальные Skin восстановлены" % spec[0])
 		model.queue_free()
 		await get_tree().process_frame
+
+func _effective_matrices(skeleton: Skeleton3D, records: Array[Dictionary]) -> Array[Transform3D]:
+	var output: Array[Transform3D] = []
+	for rec in records:
+		var skin: Skin = (rec.mesh as MeshInstance3D).skin
+		for i in skin.get_bind_count():
+			var bone := skeleton.find_bone(skin.get_bind_name(i)) if skin.get_bind_name(i) != &"" else skin.get_bind_bone(i)
+			if bone < 0 or bone >= skeleton.get_bone_count():
+				return []
+			output.append(skeleton.get_bone_global_pose(bone) * skin.get_bind_pose(i))
+	return output
 
 func _same_effective_matrices(skeleton: Skeleton3D, records: Array[Dictionary]) -> bool:
 	for rec in records:
