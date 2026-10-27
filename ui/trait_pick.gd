@@ -98,8 +98,10 @@ func _status(t: MjolnirTrait) -> Array:
 	var lv := Run.mjolnir_trait_level(t.id)
 	if lv > 0:
 		return [tr("УРОВЕНЬ %d") % (lv + 1), UIStyle.GOLD]
-	if not Run.combos_completed_by(t).is_empty():
-		return [tr("НОВЫЙ — И СВЯЗКА!"), COMBO]
+	var combos := Run.combos_completed_by(t)
+	if not combos.is_empty():
+		# Особая карточка: вместо «НОВЫЙ» — какая связка сложится (одна строка, карточка не переполняется)
+		return [tr("+ СВЯЗКА: «%s»") % tr(combos[0].title), COMBO]
 	var old := Run.mjolnir_trait_conflict(t)
 	if old:
 		return [tr("ЗАМЕНИТ: %s") % tr(old.title), REPLACE]
@@ -118,8 +120,6 @@ func _make_card(t: MjolnirTrait, index: int) -> Button:
 	b.add_text(tr(t.title), 19, t.color.lightened(0.45), 5)
 	b.add_text(kind_line(t, lv + 1), 13, Color(t.color, 0.85), 3)
 	b.add_text(tr(t.level_description(lv + 1)), 13, UIStyle.TEXT, 3)
-	for c in combos:
-		b.add_text(tr("+ СВЯЗКА: «%s»") % tr(c.title), 14, COMBO, 4)
 	var st := _status(t)
 	var s := b.add_text(st[0], 15, st[1], 4)
 	_status_labels.append(s)

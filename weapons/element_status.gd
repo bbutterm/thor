@@ -4,6 +4,9 @@ class_name ElementStatus
 ## Узел-ребёнок врага (имя "ElementStatus"), создаётся при первом эффекте: ElementStatus.of(enemy, true).
 ## Числа приходят от обработчика стихии (weapons/mjolnir_traits/<стихия>.tres), здесь только таймеры.
 ## Урон горения — через player.deal_damage (источник "fire"); вид — общие пулы FX (без своих материалов).
+## Боссы (Kind.BOSS: Свен, Ярл) не замедляются и не замерзают по-настоящему: скорость им не трогаем (фазы
+## босса сами меняют move_speed), «заморозка» — только отметка на BOSS_FREEZE_MULT времени (для раскола).
+const BOSS_FREEZE_MULT := 0.5
 
 const NODE_NAME := "ElementStatus"
 
@@ -108,10 +111,13 @@ func freeze(time: float) -> void:
 		return
 	chill_stacks = 0
 	chill_left = 0.0
-	frozen_left = maxf(frozen_left, time)
-	enemy.knockback_velocity = Vector3.ZERO
-	enemy.apply_stun(time, true)
-	_apply_speed()
+	if _is_boss():
+		frozen_left = maxf(frozen_left, time * BOSS_FREEZE_MULT)
+	else:
+		frozen_left = maxf(frozen_left, time)
+		enemy.knockback_velocity = Vector3.ZERO
+		enemy.apply_stun(time, true)
+		_apply_speed()
 	FX.ice_hit(enemy.get_parent(), enemy.global_position, time)
 	ComicFX.pop("freeze", _chest())
 	Audio.sfx("ice_freeze", "sounds/sfx/hammer_bounce.wav")
@@ -207,8 +213,11 @@ static func _fx_budget() -> bool:
 	_fx_count += 1
 	return _fx_count <= BURN_FX_PER_FRAME
 
+func _is_boss() -> bool:
+	return enemy != null and enemy.kind == Enemy.Kind.BOSS
+
 func _apply_speed() -> void:
-	if enemy == null or not is_instance_valid(enemy):
+	if enemy == null or not is_instance_valid(enemy) or _is_boss():
 		return
 	if _base_speed < 0.0:
 		_base_speed = enemy.move_speed

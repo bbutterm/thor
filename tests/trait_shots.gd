@@ -39,7 +39,7 @@ func shot(name: String) -> void:
 func _t(id: StringName) -> MjolnirTrait:
 	return Run.mjolnir_trait_def(id)
 
-func _set(list: Array) -> void:
+func _set_traits(list: Array) -> void:
 	Run.mjolnir_traits.clear()
 	Run.mjolnir_trait_levels.clear()
 	Run.mjolnir_traits_changed.emit(Run.mjolnir_traits)
@@ -109,7 +109,7 @@ func _run() -> void:
 	await wait(0.5)
 
 	# Выбор после мини-босса: связка — особая карточка, приём, повышение стихии
-	_set([&"fire"])
+	_set_traits([&"fire"])
 	var tp := game.trait_pick
 	var c1: Array[MjolnirTrait] = [_t(&"storm"), _t(&"sling"), _t(&"fire")]
 	tp.open(c1)
@@ -118,7 +118,7 @@ func _run() -> void:
 	tp.visible = false
 	get_tree().paused = false
 	# Наковальня Эйтри: только стихии
-	_set([])
+	_set_traits([])
 	var c2: Array[MjolnirTrait] = [_t(&"ice"), _t(&"lightning"), _t(&"wind")]
 	tp.open(c2, tr("НАКОВАЛЬНЯ ЭЙТРИ — СТИХИЯ МОЛОТА"))
 	await wait(0.5)
@@ -128,14 +128,14 @@ func _run() -> void:
 	await wait(0.2)
 
 	# Связка сложилась: плашка «СВЯЗКА!», слово и реплика Одина
-	_set([&"fire"])
+	_set_traits([&"fire"])
 	Run.add_mjolnir_trait(_t(&"storm"))
 	await wait(0.45)
 	await shot("03_combo_announce")
 	await wait(3.2)
 
 	# HUD: молния II + заряд, полоска заряда, рука отведена назад
-	_set([&"lightning", &"lightning", &"charge"])
+	_set_traits([&"lightning", &"lightning", &"charge"])
 	_home()
 	await wait(0.3)
 	hand.hold_override = true
@@ -149,7 +149,7 @@ func _run() -> void:
 	await wait(1.0)
 
 	# Огонь ур. 2: след огня и горящие враги
-	_set([&"fire", &"fire"])
+	_set_traits([&"fire", &"fire"])
 	_home(-0.1)
 	_dummy(0.4, 5)
 	_dummy(-0.6, 8)
@@ -164,7 +164,7 @@ func _run() -> void:
 	_clear()
 
 	# Молния ур. 3: Громоотвод — молот в полу среди толпы
-	_set([&"lightning", &"lightning", &"lightning"])
+	_set_traits([&"lightning", &"lightning", &"lightning"])
 	_home(-atan2(1.6, 9.0))
 	_dummy(1.8, 9.5)
 	_dummy(-1.8, 9.0)
@@ -183,7 +183,7 @@ func _run() -> void:
 	_clear()
 
 	# Лёд: заморозка и раскол ударом-приземлением
-	_set([&"ice"])
+	_set_traits([&"ice"])
 	_home(-0.35)
 	var el := hand.element_handler()
 	var a := _dummy(1.2, 2.6)
@@ -203,7 +203,7 @@ func _run() -> void:
 	_clear()
 
 	# Земля: прибитые и вторая волна
-	_set([&"earth"])
+	_set_traits([&"earth"])
 	_home(-0.35)
 	el = hand.element_handler()
 	for e in [_dummy(1.2, 2.5), _dummy(-1.2, 3.0), _dummy(0.0, 5.5)]:
@@ -216,7 +216,7 @@ func _run() -> void:
 	_clear()
 
 	# Ветер: вихрь удара-приземления сносит толпу
-	_set([&"wind"])
+	_set_traits([&"wind"])
 	_home(-0.25)
 	for e in [_dummy(1.5, 2.5, true), _dummy(-1.5, 2.8, true), _dummy(0.3, 3.6, true)]:
 		e.health = e.max_health
@@ -228,7 +228,7 @@ func _run() -> void:
 	_clear()
 
 	# Связка «Огненный смерч»: Огонь + Буря
-	_set([&"fire", &"storm"])
+	_set_traits([&"fire", &"storm"])
 	await wait(3.5)
 	_home(-0.15)
 	_dummy(1.6, 6.5)
@@ -244,7 +244,7 @@ func _run() -> void:
 	_clear()
 
 	# Праща: молот крутится вокруг Тора
-	_set([&"sling"])
+	_set_traits([&"sling"])
 	_home(-0.2)
 	_dummy(2.0, 1.2)
 	_dummy(-1.8, 1.6)
@@ -261,7 +261,7 @@ func _run() -> void:
 	_clear()
 
 	# Журнал паузы: стихия по уровням, приём, связка
-	_set([&"lightning", &"lightning", &"lightning", &"magnet"])
+	_set_traits([&"lightning", &"lightning", &"lightning", &"magnet"])
 	await wait(3.5)
 	game.pause_menu.toggle()
 	await wait(0.4)
