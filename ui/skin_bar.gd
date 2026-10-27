@@ -1,6 +1,6 @@
 extends Control
 class_name SkinBar
-## Полоса HUD на графике комплекта: рамка (hud_hp_frame, hud_rage_frame, hud_slam_meter_frame) и
+## Полоса HUD на графике комплекта: рамка (hud_hp_frame, hud_rage_frame — шкала стиля, hud_slam_meter_frame) и
 ## заливка на холсте того же размера. По README: сначала заливка, обрезанная по fill_rect
 ## (меняется только ширина/высота области — сама текстура не тянется), сверху рамка.
 ## Масштаб равномерный — по высоте контрола (custom_minimum_size), ширина — по пропорциям картинки.

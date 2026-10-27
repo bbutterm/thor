@@ -5,7 +5,7 @@ signal glory_changed(total: int)
 signal runes_changed(runes: Array)
 signal kill_streak(count: int)
 signal mjolnir_traits_changed(traits: Array)
-## Убийство засчитано (после Славы). Слушают пассивки тела (Player) и Ярость.
+## Убийство засчитано (после Славы). Слушают пассивки тела (Player) и шкала стиля (StyleMeter).
 signal kill_registered(source: String)
 ## Серебро — валюта забега (блок К, GDD 15.2), сгорает после смерти
 signal silver_changed(total: int)
@@ -65,6 +65,8 @@ var kills: int = 0
 var streak: int = 0
 var best_streak: int = 0
 var won: bool = false
+## Множитель Славы за убийство от ранга шкалы стиля «ДОСТОЙНО!» (ставит StyleMeter, блок Б3)
+var style_glory_mult: float = 1.0
 
 var all_bodies: Array[BodyDef] = []
 var all_runes: Array[RuneDef] = []
@@ -169,6 +171,7 @@ func start_run(forced_body_id: String = "") -> void:
 	streak = 0
 	best_streak = 0
 	won = false
+	style_glory_mult = 1.0
 	_recent_kill_times.clear()
 	mjolnir_traits.clear()
 	mjolnir_trait_levels.clear()
@@ -215,6 +218,8 @@ func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: Stri
 		amount = int(round(amount * glory_melee_kill_mult))
 	elif source == "ranged":
 		amount = int(round(amount * glory_ranged_kill_mult))
+	# Ранг шкалы стиля (Скуф ×1 … ДОСТОЙНЕЙШИЙ! ×1.6, player/style_tuning.tres) — на сам враг, без бонуса босса
+	amount = int(round(amount * style_glory_mult))
 	if is_boss:
 		amount += glory_boss_kill
 	var now := Time.get_ticks_msec() / 1000.0

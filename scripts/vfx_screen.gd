@@ -2,7 +2,7 @@ extends CanvasLayer
 class_name VfxScreen
 ## Экранные эффекты VFX-комплекта (sprites/vfx/*, 1920×1080, растягиваются на экран):
 ## - линии скорости vfx_speed_lines — рывок, высокая скорость, супер-прыжок, падение и удар-приземление;
-## - виньетка Ярости vfx_rage_vignette — берсерк (player/rage.gd), слабое мерцание у почти полной шкалы;
+## - виньетка берсерка vfx_rage_vignette — высший ранг шкалы стиля (player/style_meter.gd), слабое мерцание у почти полной шкалы;
 ## - золотое кольцо идеального хвата vfx_perfect_catch у руки (FX.perfect_catch из mjolnir_hand.gd).
 ## Слой под HUD (затемнение между залами его закрывает). Каждый кадр читает состояние игрока — хуков в player.gd нет.
 ## Рисуется стандартным 2D-материалом (TextureRect/Sprite2D, цвет — modulate): новых шейдеров и материалов нет.
@@ -31,7 +31,7 @@ static var instance: VfxScreen
 ## Цвет линий в берсерке
 @export var speed_rage_color: Color = Color(1.0, 0.6, 0.35)
 
-@export_group("Виньетка Ярости")
+@export_group("Виньетка берсерка")
 ## Прозрачность виньетки в берсерке (0..1)
 @export var rage_alpha: float = 0.85
 ## Пульсация ± и её частота, Гц
@@ -66,10 +66,10 @@ var _rage_flash: float = 0.0
 var _flicker_t: float = 0.0
 var _t: float = 0.0
 var _warm_frames: int = 0
-var _rage: Rage
+var _rage: StyleMeter
 
 ## Создать слой для игры (один на сцену). Процедурные дубли в HUD (линии скорости шейдером,
-## градиентная виньетка RageHUD) прячем — рисованные текстуры их заменяют.
+## градиентная виньетка StyleHUD) прячем — рисованные текстуры их заменяют.
 static func attach(game: Node, p: Player) -> VfxScreen:
 	var s := VfxScreen.new()
 	s.name = "VfxScreen"
@@ -80,7 +80,7 @@ static func attach(game: Node, p: Player) -> VfxScreen:
 		var sr: Variant = hud.get("_speed_rect")
 		if sr is CanvasItem:
 			(sr as CanvasItem).visible = false
-		var rh := hud.get_node_or_null("RageHUD")
+		var rh := hud.get_node_or_null("StyleHUD")
 		var vig: Variant = rh.get("_vignette") if rh else null
 		if vig is CanvasItem:
 			(vig as CanvasItem).visible = false
@@ -99,8 +99,8 @@ func _ready() -> void:
 		sp.visible = false
 		add_child(sp)
 		_catch.append(sp)
-	if player and player.rage:
-		_rage = player.rage
+	if player and player.style:
+		_rage = player.style
 		_rage.berserk_started.connect(func() -> void: _rage_flash = rage_start_flash)
 
 func _exit_tree() -> void:
@@ -177,7 +177,7 @@ func speed_target() -> float:
 	s = maxf(s, clampf((vy - speed_vertical.x) / maxf(speed_vertical.y - speed_vertical.x, 0.1), 0.0, 1.0))
 	return 0.0 if s < speed_from else s
 
-## Нужная прозрачность виньетки Ярости.
+## Нужная прозрачность виньетки берсерка.
 func rage_target() -> float:
 	if _rage == null or not is_instance_valid(_rage):
 		return 0.0
@@ -211,7 +211,7 @@ func _process(delta: float) -> void:
 		var col := speed_rage_color if berserk else speed_color
 		speed_rect.modulate = Color(col, _speed_shown * speed_alpha)
 		_scale_about_center(speed_rect, vp, 1.0 + speed_pulse_scale * (1.0 - _speed_shown) + speed_pulse_scale * 0.5 * sin(_t * 40.0))
-	# Виньетка Ярости
+	# Виньетка берсерка
 	_rage_flash = maxf(0.0, _rage_flash - real * rage_flash_decay)
 	_rage_shown = lerpf(_rage_shown, rage_target(), clampf(real * rage_follow, 0.0, 1.0))
 	var a := clampf(maxf(_rage_shown, _rage_flash), 0.0, 1.0)

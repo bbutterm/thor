@@ -1,6 +1,6 @@
 extends Node
 ## Блок С: скин UI (манифест, стили, тема, карточки), HUD в бою (полосы реагируют на урон, щит, рывок,
-## Ярость, Мьёльнир, индикаторы за экраном, шкала высоты), настройки (сохранение/чтение, применение
+## шкала стиля, Мьёльнир, индикаторы за экраном, шкала высоты), настройки (сохранение/чтение, применение
 ## к игроку), переназначение клавиш (сохраняется и применяется), экран настроек и журнал паузы.
 ## godot --headless --path . --fixed-fps 60 res://tests/ui_test.tscn
 
@@ -206,12 +206,12 @@ func _test_hud() -> void:
 	p.dash_charges = 0
 	p.dash_charges_changed.emit(0, p.dash_charges_max, 0.5)
 	check(hud._dash_pips.size() == p.dash_charges_max and is_equal_approx(hud._dash_pips[0].fill, 0.5), "заряды рывка: камни, перезарядка видна (%d)" % hud._dash_pips.size())
-	var rage_hud := hud.get_node_or_null("RageHUD") as RageHUD
-	for i in 10:
-		p.rage.add_kill()
+	var style_hud := hud.get_node_or_null("StyleHUD") as StyleHUD
+	p.style.set_points(40.0)
 	await wait(0.05)
-	check(rage_hud != null and rage_hud._bar is SkinBar and is_equal_approx(rage_hud._bar.value, 0.4), "Ярость: 10 убийств — шкала 40 %")
-	p.rage.reset()
+	check(style_hud != null and style_hud._bar is SkinBar and absf(style_hud._bar.value - 0.4) < 0.01 and style_hud._rank_label.text == "Неплохо",
+		"шкала стиля: 40 очков — 40 %%, «%s»" % (style_hud._rank_label.text if style_hud else ""))
+	p.style.reset()
 	check(hud._hammer_state == "hand", "Мьёльнир в руке")
 	p.mjolnir.throw_hammer()
 	await wait(0.05)

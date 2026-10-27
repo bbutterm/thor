@@ -1,6 +1,6 @@
 extends Node
 ## Кадры интерфейса на скине комплекта (блок С): меню, настройки, выбор тела, «План тренировок»,
-## HUD в бою, Ярость, выбор рун/трейтов/награды, ларёк, пауза, диалог, экран конца.
+## HUD в бою, шкала стиля, выбор рун/трейтов/награды, ларёк, пауза, диалог, экран конца.
 ## xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/ui_shots.tscn -- <папка>
 ## (то же с --resolution 1920x1080 — проверка масштаба). Второй аргумент — язык: `-- <папка> en`.
 
@@ -82,19 +82,18 @@ func _run() -> void:
 	p.health_changed.emit(p.health, p.max_health)
 	p.dash_charges = 1
 	p.dash_charges_changed.emit(1, p.dash_charges_max, 0.45)
-	for i in 9:
-		p.rage.add_kill()
+	p.style.set_points(40.0)
 	await wait(0.3)
 	await shot("05_hud")
 	p.mjolnir.throw_hammer()
 	p.rotation_target.y += PI * 0.9
 	await wait(0.15)
 	await shot("06_hud_thrown_offscreen")
-	p.rage.start_berserk()
+	p.style.start_berserk()
 	game.hud.show_boss(game.room.alive_enemies()[0])
 	await wait(0.5)
 	await shot("07_berserk_boss")
-	p.rage.reset()
+	p.style.reset()
 	# Выбор руны и трейта
 	game.rune_pick.open(Run.random_rune_choices(3))
 	await wait(0.3)

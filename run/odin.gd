@@ -9,8 +9,9 @@ signal line_spoken(text: String)
 ## Реплика Одина в бою не чаще раза в N секунд (GDD 17)
 @export var combat_cooldown: float = 12.0
 ## События, которые не ждут лимита (начало забега, босс, итог)
-## «berserk» — Один орёт при берсерке (GDD 8), не ждёт лимита (но и не сбрасывает его)
-const EXEMPT := ["run_start", "boss_start", "miniboss_start", "miniboss_death", "victory", "death", "berserk"]
+## «rank_top» («ДОСТОЙНЕЙШИЙ!») и «berserk» — высший ранг шкалы стиля (GDD 8), не ждут лимита (но и не
+## сбрасывают его); «rank_worthy» («Достойно!») — обычная боевая реплика с лимитом
+const EXEMPT := ["run_start", "boss_start", "miniboss_start", "miniboss_death", "victory", "death", "berserk", "rank_top"]
 
 var _last_combat_time: float = -1000.0
 

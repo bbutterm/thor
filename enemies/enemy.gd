@@ -617,7 +617,9 @@ func hit_breaks_armor(source: String) -> bool:
 
 func _on_blocked(knockback: Vector3) -> void:
 	Perf.mark("shield_block")
-	knockback_velocity += Vector3(knockback.x, 0, knockback.z) * 0.25 * (1.0 - knock_resist)
+	var push := Vector3(knockback.x, 0, knockback.z) * 0.25 * (1.0 - knock_resist)
+	knockback_velocity += push
+	velocity += push  # как в take_hit: база не должна съедать толчок
 	var pos := global_position + Vector3(0, 1.2 * model_scale, 0) + global_transform.basis.z * 0.6
 	FX.sparks(get_parent(), pos, Color(0.85, 0.92, 1.0), 12, 6.0)
 	Audio.play("sounds/sfx/hammer_bounce.wav")
@@ -788,6 +790,10 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 		Color(1, 0.55, 0.2) if big else (Color(0.6, 0.85, 1.0) if source in ["hammer", "lightning"] else Color(1, 0.92, 0.4)), big)
 	var k := knockback * (1.0 - knock_resist)
 	knockback_velocity += k
+	# Скорость = база + отбрасывание (_apply_movement вычитает knockback_velocity из velocity, чтобы найти базу):
+	# толчок кладём и в velocity — иначе база «съедала» его и враг ехал к Тору, а не от него (до блока Б3)
+	velocity.x += k.x
+	velocity.z += k.z
 	# Реакция на удар (не сбиваем анимацию атаки и оглушения)
 	if _humanoid and health > 0.0 and state in [State.CHASE, State.RECOVER] and k.length() > 1.0:
 		_humanoid.play(anim_hit, 0.03, 1.3)
@@ -921,6 +927,7 @@ func _check_wall_splat(pre_horiz: Vector3) -> void:
 		if player:
 			player.camera_fx.add_trauma(0.2)
 		Audio.play("sounds/sfx/wall_splat.wav")
+		StyleMeter.event(&"wall_splat")
 		if kind != Kind.BOSS:
 			_stun_left = wall_splat_stun
 			_set_state(State.STUNNED)

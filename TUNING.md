@@ -223,9 +223,9 @@ HP / скорость / урон / Слава — из `enemies/defs/*.tres` (`E
 | Линии скорости | `speed_vertical` | 13 → 28 м/с | Вертикальная скорость (супер-прыжок, падение): с первой появляются, на второй полные |
 | Линии скорости | `speed_follow` / `speed_flicker_hz` / `speed_pulse_scale` | 12 / 12 Гц / 0.04 | Сглаживание, «бег» (зеркалирование текстуры), дыхание масштабом |
 | Линии скорости | `speed_color` / `speed_rage_color` | белый / оранжевый | Цвет; в берсерке |
-| Ярость | `rage_alpha` / `rage_pulse` / `rage_pulse_hz` | 0.85 / 0.15 / 1.6 Гц | Виньетка в берсерке и её пульсация |
-| Ярость | `rage_breathe_scale` / `rage_start_flash` / `rage_flash_decay` | 0.03 / 1.0 / 1.5 | Дыхание масштабом, вспышка при включении и её спад |
-| Ярость | `rage_tease_from` / `rage_tease_alpha` / `rage_follow` | 0.8 / 0.22 / 8 | Шкала почти полная — слабое мерцание; сглаживание |
+| Виньетка берсерка | `rage_alpha` / `rage_pulse` / `rage_pulse_hz` | 0.85 / 0.15 / 1.6 Гц | Виньетка в берсерке и её пульсация |
+| Виньетка берсерка | `rage_breathe_scale` / `rage_start_flash` / `rage_flash_decay` | 0.03 / 1.0 / 1.5 | Дыхание масштабом, вспышка при включении и её спад |
+| Виньетка берсерка | `rage_tease_from` / `rage_tease_alpha` / `rage_follow` | 0.8 / 0.22 / 8 | Шкала почти полная — слабое мерцание; сглаживание |
 | Идеальный хват | `catch_size_px` / `catch_grow` / `catch_time` / `catch_limit` | 170 px / ×2.2 / 0.32 с / 2 | Золотое кольцо у руки: размер, рост, длительность, пул |
 
 Комиксовые слова на рисованных «взрывах» `sprites/vfx/comic_burst_01..06` — поля `kit_*` в `scripts/comic_fx.gd` (раздел выше).
@@ -236,7 +236,7 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 ## Забег — автозагрузка `run/run_manager.gd`
 
-`rooms_per_run` 7 (запасной вариант без карты мира; с картой — `RunMap.rooms`), `miniboss_rooms` [3] (берётся из карты). **Слава по GDD 15.2** (блок Г): база — Слава врага из `enemies/defs/*.tres` (корм 1, боец 3, особый 5), элита `glory_elite_kill` 15, босс `glory_boss_kill` 150, мини-босс — 50 (в `MinibossDef`); враг без описания — `glory_per_kill` 3. Множители: добивание мили ×1.5 (`glory_melee_kill_mult`), ренжем ×0.5 (`glory_ranged_kill_mult`), тело (`BodyDef.glory_mult`: Трэлл ×2, Солдат ×0.7). Бонусы: серия 10 убийств `glory_streak_bonus` +10, мультикилл `glory_multikill_bonus` +1 за каждого, шмяк об стену `glory_wall_splat_bonus` +1, зал зачищен `glory_room_clear` +5, финишер `glory_combo_finisher_bonus` 0. Вердикт — `verdict()` (80 «Сойдёт», 200 «Вальхалла»).
+`rooms_per_run` 7 (запасной вариант без карты мира; с картой — `RunMap.rooms`), `miniboss_rooms` [3] (берётся из карты). **Слава по GDD 15.2** (блок Г): база — Слава врага из `enemies/defs/*.tres` (корм 1, боец 3, особый 5), элита `glory_elite_kill` 15, босс `glory_boss_kill` 150, мини-босс — 50 (в `MinibossDef`); враг без описания — `glory_per_kill` 3. Множители: добивание мили ×1.5 (`glory_melee_kill_mult`), ренжем ×0.5 (`glory_ranged_kill_mult`), ранг шкалы стиля ×1…×1.6 (`Run.style_glory_mult`, раздел «Шкала стиля»), тело (`BodyDef.glory_mult`: Трэлл ×2, Солдат ×0.7). Бонусы: серия 10 убийств `glory_streak_bonus` +10, мультикилл `glory_multikill_bonus` +1 за каждого, шмяк об стену `glory_wall_splat_bonus` +1, зал зачищен `glory_room_clear` +5, финишер `glory_combo_finisher_bonus` 0. Вердикт — `verdict()` (80 «Сойдёт», 200 «Вальхалла»).
 
 ## Тела и руны — ресурсы `run/bodies/*.tres`, `run/runes/*.tres`
 
@@ -331,7 +331,7 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 ## Музыка — автозагрузка `scripts/music.gd` (`Music`), треки `sounds/music/<трек>/<слой>.ogg`
 
 `bpm` 120, `beats_per_bar` 4 (переходы слоёв — на доле, треков — на такте), `volume_db` −6, `layer_fade` 0.6 с, `track_fade` 1.2 с, `muffle_cutoff_hz` 650 (пауза, диалог, смерть), `stinger_min_power` 0.6 (удар-приземление с такой силой — стингер), `stinger_duck_db` −18 / `stinger_duck_time` 0.18 с (провал музыки под стингер; во время hit-stop длится дольше).
-Слои: `base` (фон: бас и пэды) → `drums` (бой: есть живые враги) → `full` (Ярость: у игрока `is_berserk()`). Треки: `menu`, `plan` («План тренировок»), `midgard`, `miniboss`, `boss`, `shop` (включается `Music.play_track("shop")`).
+Слои: `base` (фон: бас и пэды) → `drums` (бой: есть живые враги) → `full` (шкала стиля: ранг «Достойно» и выше в бою или берсерк — `Player.music_intensity`). Треки: `menu`, `plan` («План тренировок»), `midgard`, `miniboss`, `boss`, `shop` (включается `Music.play_track("shop")`).
 Заглушки синтезирует `python3 tools/make_sfx.py music` (нужен ffmpeg). Настоящие треки — положить файлы с теми же именами (.ogg или .wav), все слои трека одной длины.
 **Треки владельца (блок Б6)** — `sounds/owner/music/<трек>/` (`midgard`, `jarl`, `shop`; `jotunheim`, `helheim` — на будущее, не в экспорте), важнее синтеза. Слои — одна петля 30 с через НЧ-фильтр: `base` 1000 Гц (−2.5 дБ), `drums` 3800 Гц (−1 дБ), `full` — оригинал ≈ −14 LUFS (`tools/import_owner_audio.py`, `LAYERS`, `MUSIC_LUFS`). Они **сменяют** друг друга (перекрёстно за `layer_fade`, линейно по амплитуде), а не складываются. Темп — `data/owner_audio.json` → `music.<трек>.bpm` (Мидгард 120, Ярл 125, ларёк 100).
 
@@ -378,19 +378,45 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 Экран выбора тела (`ui/body_select.gd`): `columns` 3, `card_size` 230×100. Реакция Одина на смерть тела — `body_death_chance` 0.35 (`scripts/dialogue_manager.gd`).
 
-## Ярость (блок П, GDD 8) — узел **Player/Rage** (`player/rage.gd`, создаётся кодом)
+## Шкала стиля «ДОСТОЙНО!» (блок Б3, GDD 8) — `player/style_tuning.tres` (`StyleTuning`), узел **Player/StyleMeter**
+
+**Очки за приём** (`points`, при первом применении). Убийства — по источнику урона:
+
+| Приём | Очки | | Приём | Очки |
+|---|---|---|---|---|
+| мили-убийство `kill_melee` | 4 | | сбил с края / с высоты `kill_fall` | 14 |
+| финишер комбо `kill_finisher` | 6 | | убийство шмяком о стену `kill_wall` | 12 |
+| сильный удар `kill_heavy` | 7 | | отражённым снарядом `kill_reflect` | 12 |
+| ренжем `kill_ranged` | 2 | | рывком/тараном `kill_dash` | 7 |
+| ударом-приземлением `kill_slam` | 9 | | взрывом (бочка, Раздутый) `kill_explosion` | 10 |
+| прыжком по голове `kill_stomp` | 12 | | огнём `kill_fire` / прочее `kill_other` | 5 / 3 |
+| Мьёльниром и его молниями `kill_hammer` | 9 | | мульти-килл 3 за 0.8 с / 5 — `multikill` / `multikill_big` | 10 / 15 |
+| отскок от удара-приземления `slam_bounce` | 5 | | прыжок по головам `stomp` | 5 |
+| идеальный хват `perfect_catch` | 8 | | шмяк о стену `wall_splat` | 6 |
+| отражение снаряда `reflect` | 8 | | | |
 
 | Параметр | По умолчанию | Что делает |
 |---|---|---|
-| `kill_window` | 3 с | Окно между убийствами серии; дольше — шкала сбрасывается |
-| `kills_to_full` | 25 | Убийств в серии до полной шкалы |
-| `berserk_time` | 8 с | Длительность берсерка |
+| `rank_points` | 0 / 15 / 35 / 60 / 100 | Начало рангов Скуф / Сойдёт / Неплохо / Достойно / ДОСТОЙНЕЙШИЙ! (100 — полная шкала, берсерк) |
+| `rank_glory_mult` | 1 / 1.1 / 1.25 / 1.4 / 1.6 | Множитель Славы за убийство на ранге (`Run.register_kill`, без бонуса босса) |
+| `rank_drain` | 0 / 0.6 / 1.2 / 2 / 0 очков/с | Постоянная утечка на ранге (берсерк не течёт) |
+| `repeat_falloff` / `repeat_min_mult` | 0.6 / 0.15 | Повтор того же приёма: ×0.6 за каждое недавнее применение, не меньше ×0.15 |
+| `repeat_memory_decay` / `repeat_memory_max` | 0.35/с / 4 | Память о приёме тает; потолок — приём «отдыхает» не дольше ~11 с |
+| `idle_delay` / `idle_drain` | 2.5 с / 5 очков/с | Без новых очков — шкала пустеет (сверх утечки ранга) |
+| `damage_knock_min` / `damage_knock_per_hp` | 12 / 0.8 | Урон по Тору: минус max(12, урон × 0.8) очков; в берсерке — нет |
+| `multikill_count` / `multikill_big_count` / `multikill_window` | 3 / 5 / 0.8 с | Мульти-килл |
+| `berserk_time` | 8 с | Берсерк на высшем ранге |
 | `damage_mult` / `speed_mult` | 1.5 / 1.5 | Урон Тора (всё, что идёт через `deal_damage`) и скорость бега в берсерке |
 | `hitstop_on_start` | 0.12 с | Хит-стоп при включении |
+| `after_berserk_rank` | 2 | После берсерка — середина ранга «Неплохо» (47.5) |
+| `music_full_rank` | 3 | С «Достойно» в бою — полный трек (`Music`, слой full), ниже — барабаны |
+| `voice_rank` / `voice_cooldown` / `voice_retry_time` | 3 / 30 с / 2.5 с | «Достойно!» Одина (`odin.rank_worthy`, с лимитом 12 с; занят — пробует ещё 2.5 с), та же реплика ранга — не чаще 30 с; «ДОСТОЙНЕЙШИЙ!» (`odin.rank_top`) — без лимита, чаще 30 с — пул `berserk` |
+| `rank_pop_cooldown` / `rank_pop_delay` | 4 с / 0.45 с | Слово комикса ранга (`rank_1..rank_4`): не чаще раза в 4 с на ранг, через 0.45 с после приёма (высший — сразу крупно) |
 
-В берсерке удары по Тору не отбрасывают («неуязвимость к стану» — стана у Тора нет), шкала заново не копится. HUD (`ui/rage_hud.gd`): `bar_width` 340, `vignette_alpha` 0.75; картинки комплекта `hud_rage_frame` + `hud_rage_fill`, `vfx_rage_vignette` (через `UISkin`).
+Руна «Песнь берсерка» — набор ×1.3 / ×1.55 / ×1.8. Тело может менять набор: `modify_stat("style_gain_mult")`. Только мили-убийства раз в 0.5 с держат шкалу около «Неплохо» — выше нужно разнообразие.
+HUD (`ui/style_hud.gd`): `bar_width` 340, `caption_height` 58, `burst_size` 210×92, `punch_scale` 0.5 / `punch_decay` 3 (удар подписи при повышении), `vignette_alpha` 0.75; картинки комплекта `hud_rage_frame` + `hud_rage_fill`, `comic_burst_01..06`, `vfx_rage_vignette` (через `UISkin`).
 
-Бой-реплики Одина (GDD 17), лимит — `combat_cooldown` 12 с (`run/odin.gd`, «berserk» — без лимита): «ДВИГАЙСЯ!» `idle_time` 4 с, мульти-килл `multikill_count` 3 за `multikill_window` 0.8 с, «Скуф…» `big_damage_fraction` 0.35 HP за `big_damage_window` 3 с, «Позорище» — добил ренжем (`run/run_tracker.gd`; мульти-килл важнее), «Вот! ВОТ!» — удар-приземление с `big_slam_height` 9 м (узел Player). Тексты — пулы `idle`, `multikill`, `big_damage`, `ranged_kill`, `big_slam`, `berserk`, `rage_over` в `data/dialogues/odin.json`.
+Бой-реплики Одина (GDD 17), лимит — `combat_cooldown` 12 с (`run/odin.gd`, «berserk» и «rank_top» — без лимита): «ДВИГАЙСЯ!» `idle_time` 4 с, мульти-килл `multikill_count` 3 за `multikill_window` 0.8 с, «Скуф…» `big_damage_fraction` 0.35 HP за `big_damage_window` 3 с, «Позорище» — добил ренжем (`run/run_tracker.gd`; мульти-килл важнее), «Вот! ВОТ!» — удар-приземление с `big_slam_height` 9 м (узел Player). Тексты — пулы `idle`, `multikill`, `big_damage`, `ranged_kill`, `big_slam`, `rank_worthy`, `rank_top`, `berserk`, `rage_over` в `data/dialogues/odin.json`.
 
 ## Руны по уровням (блок Т) — `run/runes/*.tres`
 
@@ -439,7 +465,7 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 **HUD** — `ui/hud.gd` (узел HUD сцены игры): `hp_bar_height` 84 (полоса HP, ширина по рамке 768×192 — ×4), `hammer_icon_size` 58 (иконка Мьёльнира), `dash_icon_size` 38 (камень рывка), `slam_meter_min_height` 2.5 м (с какой высоты над полом видна шкала удара-приземления; полная шкала — `Player.big_slam_height` 9 м), `crosshair_base_size` 30 px (точка ×1.4; множитель — настройка), `rune_icon_size` 36.
 - Полосы `ui/skin_bar.gd`: след урона `trail_speed` 0.6 полосы/с после `trail_delay` 0.35 с. Полоса босса `ui/boss_bar.gd`: `trail_speed` 0.35.
-- Ярость `ui/rage_hud.gd`: `bar_width` 340 (было 380 у плоской полосы; высота — четверть ширины).
+- Шкала стиля `ui/style_hud.gd`: `bar_width` 340 (высота — четверть ширины), подпись ранга `caption_height` 58 (раздел «Шкала стиля»).
 - Оружие `ui/weapon_hud.gd`: `slot_size` 96, `active_slot_size` 112.
 - Индикаторы врагов за экраном `ui/offscreen_indicators.gd`: `max_distance` 30 м, `max_count` 8, `near_size` 40 / `far_size` 24 px, `edge_margin` 46 px.
 - Карточки выбора: `RunePick.card_width` 300, `TraitPick.card_width` 300 (высота — по пропорциям card_rune/card_trait 390×522), выбор наград — 260.
