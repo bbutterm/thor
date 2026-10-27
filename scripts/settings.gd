@@ -1,7 +1,7 @@
 extends RefCounted
 class_name GameSettings
 ## Настройки игрока (GDD 22) с сохранением в user://settings.cfg (ConfigFile).
-## Секции: [audio] громкости шин, [controls] чувствительность/инверсия, [video] экран и камера,
+## Секции: [audio] громкости шин, [controls] чувствительность/инверсия, [video] экран, камера и комиксовая обводка (outline, outline_width — scripts/outline.gd),
 ## [hud] прицел и индикаторы, [text] размер текста, скорость печати и язык (ru/en, scripts/i18n.gd), [access] доступность,
 ## [comic] комиксовые слова (enabled, scale), стоп-кадр «страница комикса» (page) и заставка босса (boss_card), [input] переназначенные клавиши (действие → список событий).
 ## Чужие секции файла при сохранении не трогаем. Тесты (res://tests/*) и --selftest пишут в
@@ -36,7 +36,8 @@ const COLORBLIND := ["off", "protanopia", "deuteranopia", "tritanopia"]
 const DEFAULTS := {
 	"audio": {"master": 1.0, "music": 0.8, "sfx": 1.0, "voice": 1.0},
 	"controls": {"mouse_sensitivity": 1.0, "gamepad_sensitivity": 1.0, "invert_y": false},
-	"video": {"fullscreen": false, "vsync": true, "max_fps": 0, "fov": 85.0, "shake": 1.0, "head_bob": true, "ui_scale": 1.0},
+	"video": {"fullscreen": false, "vsync": true, "max_fps": 0, "fov": 85.0, "shake": 1.0, "head_bob": true, "ui_scale": 1.0,
+		"outline": true, "outline_width": 1.0},
 	"hud": {"crosshair": "dot", "crosshair_size": 1.0, "crosshair_alpha": 0.85, "crosshair_color": "white", "offscreen": true, "slam_meter": true},
 	"text": {"text_scale": 1.0, "typing_speed": 1.0, "language": "ru"},
 	"access": {"colorblind": "off", "aim_assist": false, "slam_slowmo": false, "catch_assist": true},
@@ -128,6 +129,8 @@ static func _sanitize(section: String, key: String, v: Variant) -> Variant:
 					return clampf(f, 0.0, 4.0)
 				"crosshair_size":
 					return clampf(f, 0.4, 2.5)
+				"outline_width":
+					return clampf(f, Outline.WIDTH_MIN, Outline.WIDTH_MAX)
 			return clampf(f, 0.0, 1.0)
 		TYPE_STRING:
 			if key == "language":
@@ -220,6 +223,7 @@ static func apply_startup() -> void:
 	apply_video()
 	apply_input()
 	apply_colorblind()
+	Outline.apply_settings()
 
 static func _apply_one(section: String, key: String) -> void:
 	match section:
@@ -228,6 +232,8 @@ static func _apply_one(section: String, key: String) -> void:
 		"video":
 			if key in ["fullscreen", "vsync", "max_fps", "ui_scale"]:
 				apply_video()
+			elif key in ["outline", "outline_width"]:
+				Outline.apply_settings()
 		"access":
 			if key == "colorblind":
 				apply_colorblind()

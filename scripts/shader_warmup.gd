@@ -33,6 +33,9 @@ var game_node: Node
 
 func _build() -> void:
 	Perf.mark("shader_warmup")
+	# Комиксовая обводка (scripts/outline.gd): образцы обводятся и при выключенной настройке — включение
+	# в паузе потом без компиляции; на всех форматах вершин (у оверлея, как у вспышки, — свои пайплайны)
+	Outline.begin_warmup()
 	var game: Node = self
 	var right := global_transform.basis.x
 	var center := global_position
@@ -90,11 +93,13 @@ func _build() -> void:
 			gi.material_overlay = Enemy.FLASH_MATERIAL
 			gi.set_instance_shader_parameter("flash", 1.0)
 			gi.set_instance_shader_parameter("glow", 1.0)
+		Outline.add(h)
 	# Оружие (на слое мира — как у врагов)
 	var wi := 0
 	for kind in WeaponMeshes.MODEL_WEAPONS.keys() + WeaponMeshes.PAINTED.keys() + ["axe", "hammer", "club", "staff", "sword", "spear", "pitchfork", "torch", "shield"]:
 		var wpn := WeaponMeshes.build(kind)
 		add_child(wpn)
+		Outline.add(wpn)
 		wpn.position = right * (wi * 0.15 - 1.3) + Vector3(0, 1.2, 0)
 		wi += 1
 	# Оружие этапа 1: ренж, подбор, сундук, трассеры, гильзы, вспышка; и то же во вьюмодели рук
@@ -181,6 +186,7 @@ func _build() -> void:
 			(e as BossEnemy).warmup_strip()
 	var hammer := WeaponMeshes.hammer()
 	add_child(hammer)
+	Outline.add(hammer)
 	hammer.position = right * 0.6 + Vector3(0, 1.0, 0)
 	# Свет без теней (как у огня, снарядов, молота) на весь зал: в GL Compatibility под каждый материал,
 	# которого впервые касается такой свет, компилируется свой вариант шейдера
@@ -197,6 +203,7 @@ func _build() -> void:
 	for e in _enemies:
 		if e.kind == Enemy.Kind.BOSS:
 			e._show_slam_telegraph()
+	Outline.warming = false
 
 ## Label3D растеризует букву (FreeType) и перезаливает текстуру кеша шрифта при первом показе этой буквы
 ## в этом размере с этой обводкой. Цифры урона прогревались двумя числами, подписи дверей — одной дверью:
@@ -288,3 +295,7 @@ func _process(_delta: float) -> void:
 		if is_instance_valid(e) and e._telegraph and is_instance_valid(e._telegraph):
 			e._telegraph.queue_free()
 	queue_free()
+
+## Образцы ушли (и при смене сцены до конца прогрева) — next_pass вспышки снова по настройке
+func _exit_tree() -> void:
+	Outline.end_warmup()

@@ -41,6 +41,7 @@ func _ready() -> void:
 	_model = WeaponMeshes.build("club")
 	_model.scale = Vector3.ONE * 2.2
 	add_child(_model)
+	Outline.add(_model)
 	_hover_pos = _target
 
 func _hand_pos() -> Vector3:

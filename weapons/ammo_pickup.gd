@@ -18,6 +18,7 @@ func _ready() -> void:
 	band.scale = Vector3(0.38, 0.05, 0.26)
 	band.position.y = 0.17
 	add_child(band)
+	Outline.add_meshes([box, band])
 	# Голубая метка «патроны» (как кольцо у ренжа)
 	var ring := MeshInstance3D.new()
 	ring.mesh = FX.shared_mesh("ring")
