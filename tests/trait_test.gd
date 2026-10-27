@@ -76,6 +76,7 @@ func _run() -> void:
 	_test_rules()
 	_test_doors()
 	await _test_pick_ui()
+	await _test_card_layout()
 	await _test_anvil_flow()
 	await _test_base()
 	await _test_environment()
@@ -341,6 +342,22 @@ func _test_pick_ui() -> void:
 	check(not tp.visible and Run.mjolnir_trait_level(&"storm") == 1, "Буря взята")
 	var ann := game.get_node_or_null("ComboAnnounce") as ComboAnnounce
 	check(ann != null and ann.visible and ann.combo and ann.combo.id == &"fire_tornado", "объявление связки на экране")
+	if ann:
+		var bubble := Dialogue.bubble()
+		var text_scale := GameSettings.text_scale()
+		GameSettings.set_value("text", "text_scale", 1.6, false)
+		bubble.show_line("hugin", "neutral", "Кар! Прыгни дважды и жми удар-приземление. С высокой площадки можно и без второго прыжка.")
+		await frames(4)
+		game.hud._position_odin_notice()
+		var odin := _visual_rect(game.hud._odin_panel)
+		var raven := bubble.visual_rect()
+		var banner := ann.visual_rect()
+		check(not banner.intersects(odin) and not banner.intersects(raven) and not raven.intersects(odin), "плашка, подсказка ворона и реплика Одина не перекрывают друг друга")
+		GameSettings.set_value("text", "text_scale", text_scale, false)
+		ann.visible = false
+		await frames(3)
+		game.hud._position_odin_notice()
+		check(is_zero_approx(bubble._combo_shift) and is_equal_approx(game.hud._odin_panel.offset_left, -340.0), "после плашки подсказки возвращаются на обычные места")
 	var hud_icons: int = game.hud._mjolnir_traits._icons.get_child_count()
 	check(hud_icons == 3, "HUD: стихия, приём и связка (%d иконки)" % hud_icons)
 	if game.rune_pick.visible:
@@ -359,6 +376,12 @@ func _test_pick_ui() -> void:
 	tp._open_time = -10.0
 	tp.choose(0)
 	check(tp.visible and got.is_empty(), "замена приёма требует подтверждения")
+	await frames(3)
+	var status := tp._status_labels[0]
+	var body := status.get_parent() as Control
+	var text_height := SkinCard.TEXT_BOX.size.y * tp.card_width / SkinCard.VISIBLE.size.x
+	check(body.size.y <= text_height + 1.0 and status.position.y + status.size.y <= text_height + 1.0,
+		"подтверждение замены помещается в текстовое окно")
 	tp.choose(0)
 	check(not tp.visible and got.size() == 1, "второе нажатие — выбрано")
 	tp.picked.disconnect(cb)
@@ -366,6 +389,44 @@ func _test_pick_ui() -> void:
 	check(not get_tree().paused, "пауза снята")
 	await frames(5)
 	_set_traits([])
+
+## Длинные описания, переводы и статус остаются внутри текстового окна карточки.
+func _test_card_layout() -> void:
+	print("-- Длинные описания карточек")
+	var tp := game.trait_pick
+	tp.visible = true
+	var compact := SkinCard.make("card_trait", 200.0, Color.WHITE)
+	var heading := compact.add_text("Ураганный рывок", 19, Color.WHITE, 5)
+	var word_width := heading.label_settings.font.get_string_size("Ураганный", HORIZONTAL_ALIGNMENT_LEFT, -1,
+		heading.label_settings.font_size).x
+	check(word_width + heading.label_settings.outline_size * 2 <= compact.text_width(), "длинное слово заголовка целиком помещается на узкой карточке")
+	compact.free()
+	for lang in ["ru", "en"]:
+		GameSettings.set_value("text", "language", lang, false)
+		var overflow: Array[String] = []
+		for t in Run.all_mjolnir_traits:
+			var card := tp._make_card(t, 0) as SkinCard
+			tp._root.add_child(card)
+			await frames(3)
+			var limit := SkinCard.TEXT_BOX.size.y * tp.card_width / SkinCard.VISIBLE.size.x
+			var bottom := 0.0
+			for child in card.body.get_children():
+				var label := child as Label
+				bottom = maxf(bottom, label.position.y + label.size.y)
+			if card.body.size.y > limit + 1.0 or bottom > limit + 1.0:
+				overflow.append(str(t.id))
+			card.queue_free()
+		check(overflow.is_empty(), "%s: описания и статусы внутри рамки (%s)" % [lang, ", ".join(overflow)])
+	GameSettings.set_value("text", "language", "ru", false)
+	tp.visible = false
+	tp._status_labels.clear()
+
+func _visual_rect(control: Control) -> Rect2:
+	var rect := Rect2(Vector2.ZERO, control.size)
+	var style := control.get_theme_stylebox("panel") as SkinStyleBox
+	if style:
+		rect = style._draw_rect_of(rect)
+	return control.get_global_transform_with_canvas() * rect
 
 func _texts(n: Node) -> Array[String]:
 	var out: Array[String] = []

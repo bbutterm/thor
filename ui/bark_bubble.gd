@@ -12,6 +12,7 @@ var _portrait: Portrait
 var _name: Label
 var _text: Label
 var _tween: Tween
+var _combo_shift: float = 0.0
 
 func _ready() -> void:
 	layer = 6
@@ -49,6 +50,35 @@ func _ready() -> void:
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_text.custom_minimum_size = Vector2(320, 0)
 	vb.add_child(_text)
+
+func _process(_delta: float) -> void:
+	# При крупном тексте пузырь может вырасти вверх до объявления связки.
+	# Временно сдвигаем его вниз, затем возвращаем прежнее положение.
+	var next_shift := 0.0
+	var scene := get_tree().current_scene
+	var announce := scene.get_node_or_null("ComboAnnounce") as ComboAnnounce if scene else null
+	if announce and announce.is_showing():
+		var original := visual_rect()
+		original.position.y -= _combo_shift
+		var banner := announce.visual_rect()
+		if original.position.x < banner.end.x and original.end.x > banner.position.x:
+			if original.position.y < banner.end.y + 12.0 and original.end.y > banner.position.y:
+				next_shift = banner.end.y + 12.0 - original.position.y
+	var change := next_shift - _combo_shift
+	if not is_zero_approx(change):
+		_panel.offset_top += change
+		_panel.offset_bottom += change
+		_combo_shift = next_shift
+
+## Полные границы, включая выступающую рамку картинки.
+func visual_rect() -> Rect2:
+	if not is_instance_valid(_panel):
+		return Rect2()
+	var rect := Rect2(Vector2.ZERO, _panel.size)
+	var style := _panel.get_theme_stylebox("panel") as SkinStyleBox
+	if style:
+		rect = style._draw_rect_of(rect)
+	return _panel.get_global_transform_with_canvas() * rect
 
 func show_line(speaker: String, emotion: String, text: String) -> void:
 	var def: Dictionary = Dialogue.speakers.get(speaker, {})
