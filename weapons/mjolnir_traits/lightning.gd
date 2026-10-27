@@ -20,6 +20,8 @@ extends MjolnirElementHandler
 @export var discharge_radius: float = 18.0
 @export var discharge_damage: float = 15.0
 @export var discharge_stun: float = 0.4
+## Не больше стольких молний разряда за раз (ближайшие) — толпа и лимит эффектов
+@export var discharge_max: int = 8
 
 @export_group("2. След: земля под током")
 @export var trail_tick: float = 0.5
@@ -149,6 +151,9 @@ func slam_combo(_power: float, center: Vector3) -> void:
 		return
 	mark("discharge")
 	var parent := player().get_parent()
+	shocked.sort_custom(func(x: Enemy, y: Enemy) -> bool: return x.global_position.distance_squared_to(center) < y.global_position.distance_squared_to(center))
+	if shocked.size() > discharge_max:
+		shocked.resize(discharge_max)
 	for e in shocked:
 		if not is_instance_valid(e) or e.is_dead:
 			continue

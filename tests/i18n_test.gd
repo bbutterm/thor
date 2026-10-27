@@ -183,10 +183,10 @@ func _test_data() -> void:
 	var rune := Run.rune_def("max_health")
 	check(rune != null and tr(rune.title) == "Idunn's Apple", "руна: «%s»" % (tr(rune.title) if rune else "—"))
 	n = 0
-	for p in _files("res://weapons/mjolnir_traits/", "tres"):
+	for p in _files("res://weapons/mjolnir_traits/", "tres") + _files("res://weapons/mjolnir_traits/combos/", "tres"):
 		var t := load(p) as MjolnirTrait
 		if t:
-			for s in [t.title, t.description, t.description_lvl2, t.group]:
+			for s in [t.title, t.description, t.description_lvl2, t.description_lvl3, t.description_lvl4, t.group]:
 				_need(s, "трейт " + str(t.id), miss)
 			n += 1
 	check(n >= 10, "трейтов проверено: %d" % n)

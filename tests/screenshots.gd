@@ -152,7 +152,7 @@ func _run() -> void:
 	for en in game.room.alive_enemies():
 		en.set_physics_process(false)
 	for t in Run.all_mjolnir_traits:
-		if t.id in [&"fire_trail", &"chain_lightning", &"chain_lightning"]:
+		if t.id in [&"lightning", &"lightning", &"magnet"]:
 			Run.add_mjolnir_trait(t)
 	p.rotation_target.x = -0.35
 	await wait(0.2)

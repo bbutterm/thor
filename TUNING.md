@@ -52,30 +52,50 @@
 
 ## Мьёльнир — узел **Mjolnir** (`weapons/mjolnir_hand.gd`)
 
-База по GDD 10: `throw_speed` 32, `base_damage` 33 (1.5 У), `max_range` 25 м (дальше — возврат), `auto_return_after` 1.5 с (полёт без попадания в стену), `sticks_to_world` вкл. (втыкается в стену/пол), `stuck_auto_return` 0.8 с (сколько воткнутый молот ждёт ПКМ; трейты «на воткнутый» продлевают до 3–5 с; 0 — ждёт всегда), `return_speed` 36, `return_turn_accel` 140 (дуга возврата), `max_wall_bounces` 0 (было 2: теперь отскоки даёт Рикошет), `chain_targets` 0 (базовой молнии нет — это трейт), `chain_damage_ratio` 0.5, `chain_radius` 7, `hit_hitstop` 0.04.
+База по GDD 10: `throw_speed` 32, `base_damage` 33 (1.5 У), `max_range` 25 м (дальше — возврат), `auto_return_after` 1.5 с (полёт без попадания в стену), `sticks_to_world` вкл. (втыкается в стену/пол), `stuck_auto_return` 0.8 с (сколько воткнутый молот ждёт ПКМ; трейты «на воткнутый» продлевают до 3–5 с; 0 — ждёт всегда), `return_speed` 36, `return_turn_accel` 140 (дуга возврата), `max_wall_bounces` 0 (было 2: теперь отскоки даёт Рикошет), `chain_targets` 0 (базовой молнии нет — это стихия «Молния»), `chain_damage_ratio` 0.5, `chain_radius` 7, `hit_hitstop` 0.04.
 Без молота: `dash_recharge_bonus` 0.2 (рывок перезаряжается на 20 % быстрее). Идеальный хват: `perfect_window` 0.15 с (ПКМ до или после поимки), `perfect_damage_mult` 2.
 
-## Трейты Мьёльнира — `weapons/mjolnir_traits/*.tres`
+## Трейты Мьёльнира (блок Б4: стихии × приёмы) — `weapons/mjolnir_traits/*.tres`, связки — `combos/*.tres`
 
-Открой `.tres` → поле **handler** → там числа трейта (ур. 1 / ур. 2). Название, описание, руна, цвет, группа — в самом `.tres`. Новый трейт: скопируй `.tres` и скрипт-обработчик (наследник `MjolnirTraitHandler`), поменяй — в игре появится сам.
+Открой `.tres` → поле **handler** → числа трейта. Вид (`kind`: element / technique / combo), название, описания уровней (`description`, `_lvl2`…`_lvl4`), руна, цвет, группа несовместимости `group`, список `conflicts`, `max_level`, открытия по уровням `level_pool_ids` — в самом `.tres`. Новая стихия — наследник `MjolnirElementHandler` (`weapons/mjolnir_element.gd`), приём или связка — `MjolnirTraitHandler`.
 
-| Трейт | Группа | Главные числа |
+**Правила** — `weapons/mjolnir_rules.tres` (`MjolnirRules`): `max_elements` 1, `element_swap` выкл. (стихия одна на забег), `max_techniques` 2, `offer_count` 3, `mix_kinds` вкл. (у мини-босса в наборе и стихия, и приём), `anvil_enabled` вкл. (дверь «Наковальня Эйтри»), `combo_card_time` 3.2 с (плашка «СВЯЗКА!»). Наковальня в мире — `run/maps/midgard.tres`: `anvil_per_world` 1, `anvil_earliest_room` 2, `anvil_latest_room` 3.
+
+**Стихии** (общие поля `MjolnirElementHandler`): след — `trail_spacing` 1.8 м, `trail_radius` 1.1, `trail_duration` 3 с, `trail_max_height` 4 м, `trail_max_zones` 10; аура — `aura_interval` 1 с, `aura_radius` 4 м, `aura_damage` 8, `aura_stuck_hold` 5 с; с неба — `sky_max_distance` 40, `sky_radius` 3, `sky_damage` 33 (1.5 У); связка — `slam_reach` 2 м (насколько дальше радиуса удара-приземления), окружение — `world_radius` 1.6.
+
+| Стихия | Свои числа |
+|---|---|
+| Огонь | поджог `burn_dps` 6.6 (0.3 У/с) × `burn_time` 3 с, перекидывается в `spread_radius` 2.5 м раз в `spread_interval` 1 с, не дальше `spread_max_gen` 2; вспышка `flare_radius` 3, `flare_damage` 22, `flare_knockback` 8; след `trail_dps` 6.6, с ур. 3 `trail_radius_lvl3` 1.6 / `trail_duration_lvl3` 5 с, свет у каждого `trail_light_every` 3-го; столб — `sky_fire_time` 3 с, `sky_fire_dps` 13.2 |
+| Лёд | замерзает на `freeze_hits` 3-м попадании, промерзание `chill_time` 3 с, `slow_per_stack` 0.25, не медленнее `slow_min_mult` 0.4, заморозка `freeze_time` 2 с; раскол ×`shatter_mult` 2 урона удара, осколки `shard_radius` 3 / `shard_damage` 11; след — стан `trail_fall_stun` 0.5 (с ур. 3 `_lvl3` 1 с), `trail_slide_push` 6 (`weapons/ice_zone.gd`) |
+| Молния | цепь `chain_targets` 3 (с ур. 3 `_lvl3` 5), `chain_damage` 11, `chain_radius` 7, под током `shock_time` 5 с; разряд `discharge_radius` 18, `discharge_damage` 15, `discharge_stun` 0.4, не больше `discharge_max` 8 молний (ближайшие); след — `trail_tick` 0.5 с × `trail_damage` 4; Громоотвод `aura_damage` 15, на ур. 4 `aura_interval_lvl4` 0.6; Гром небесный `sky_stun` 1 с; брага — `brew_shock_time` 4 с, `brew_shock_damage` 6 |
+| Земля | прибить `pin_time` 1.5 с, с ур. 2 — всех в `splash_radius` 2 м; вторая волна — рядом с прибитым (`pinned_reach` 3 м), `wave_delay` 0.12, `radius_mult`/`damage_mult` 1 (как удар-приземление); на ур. 4 третья волна `third_wave_delay` 0.35 / `third_wave_radius_mult` 1.4; разлом `trail_pin` 0.6; Землетрясение — `quake_trigger_distance` 5 м, дрожь `aura_pin` 0.5; глыба `sky_pin` 1.5 |
+| Ветер | отброс `knockback` 16 + `lift` 5 (боссов ×`boss_factor` 0.3); вихрь удара-приземления — радиус ×`gust_radius_mult` 1.6, `gust_knockback` 18, `gust_lift` 6, `gust_damage` 5; порывы следа `trail_push` 9 / `trail_lift` 3; аура `aura_push` 11; смерч `sky_lift` 11 |
+
+Состояния на враге — `weapons/element_status.gd` (`ElementStatus`), пятна следа молнии/земли/ветра — `weapons/element_zone.gd` (общий диск, общий материал).
+
+**Приёмы** (ур. 1 / ур. 2):
+
+| Приём | Группа / не вместе с | Главные числа |
 |---|---|---|
-| Огненный след | след | `spacing` 1.8 м, `radius` 1.1 / 1.6, `duration` 3 / 5 с, `dps` 6.6 (0.3 У/с), `max_zones` 10, свет у каждого `light_every` 3-го |
-| Ледяной след | след | `spacing` 1.8 м, `radius` 1.3, `duration` 4 с, падение — стан `fall_stun` 0.5 / 1 с, толчок `slide_push` 6, `max_zones` 12 (`weapons/ice_zone.gd`) |
-| Тяжесть | попадание | стан `pin_time` 1.5 с; ур. 2 — всем в `splash_radius` 2 м |
-| Два молота | бросок | копии веером через `spread_deg` 12°, каждый молот ×`damage_mult` 0.6; копии без трейтов, не втыкаются |
-| Притяжение к молоту | возврат | `speed` 30, `max_time` 1.2 с, `damage` 22 (1 У), `hit_radius` 1.6, `knockback` 11, `exit_up` 10, `mantle_height` 2.2 м (залезть на уступ над молотом), `stuck_hold` 3 с; ур. 2 — `arrive_slam_*` |
-| Магнит | возврат | `radius` 6 / 9 м, `pull_speed` 7, `hold_distance` 1.6, `boss_factor` 0.25, `blast_damage` 11, `blast_knockback` 15, `stuck_hold` 3 с |
-| Бумеранг | возврат | `speed_mult` 1.25, `loop_time` 0.5 с, `turn_rate` 3.6 рад/с; ур. 2 — две петли |
-| Цепная молния | попадание | `targets` 3 / 5, `damage` 11 (0.5 У), `radius` 7 м |
-| Рикошет | воткнулся | `ricochets` 3 / 5, `seek_radius` 14 м |
-| Громоотвод | воткнулся | `interval` 1 / 0.6 с, `radius` 4 м, `damage` 15, `stuck_hold` 5 с |
-| Буря | бросок | `hold_delay` 0.18 с, `duration` 3 / 5 с, `radius` 3, `tick` 0.3 с, `tick_damage` 11; ур. 2 — `pull_speed_lvl2` 5, `pull_radius_lvl2` 7 |
-| Землетрясение | — | `trigger_distance` 5 м, `wave_delay` 0.12 с, `radius_mult`/`damage_mult` 1 (от удара-приземления игрока); ур. 2 — третья волна `third_wave_*` |
-| Гром небесный | — | `max_distance` 40, `radius` 3, `damage` 33; ур. 2 — `stun_time_lvl2` 1 с |
+| Притяжение к молоту | к молоту | `speed` 30, `max_time` 1.2 с, `damage` 22 (1 У), `hit_radius` 1.6, `knockback` 11, `exit_up` 10, `mantle_height` 2.2 м, `stuck_hold` 3 с; ур. 2 — `arrive_slam_*` |
+| Магнит | — | `radius` 6 / 9 м, `pull_speed` 7, `hold_distance` 1.6, `boss_factor` 0.25, `blast_damage` 11, `blast_knockback` 15, `stuck_hold` 3 с |
+| Бумеранг | Магнит, Ступенька, Пёс, Пике | `speed_mult` 1.25, `loop_time` 0.5 с, `turn_rate` 3.6 рад/с; ур. 2 — две петли |
+| Рикошет | — | `ricochets` 3 / 5, `seek_radius` 14 м |
+| Буря | удержание ПКМ | `hold_delay` 0.18 с, `duration` 3 / 5 с, `radius` 3, `tick` 0.3 с, `tick_damage` 11; ур. 2 — `pull_speed_lvl2` 5, `pull_radius_lvl2` 7 |
+| Два молота | — | копии веером через `spread_deg` 12°, каждый ×`damage_mult` 0.6 |
+| Молот-ступенька | — | прыжок ×`jump_mult` 1.5 / 1.85, ждёт `stuck_hold` 6 / 10 с, площадка `platform_size` 1 × 0.2 × 0.9 м, стена — `max_wall_normal_y` 0.5 |
+| Обмен | к молоту | неуязвимость `arrive_invuln` 0.35 с; ур. 2 — волна `burst_radius` 3, `burst_damage` 11, `burst_knockback` 9 |
+| Пике молотом | — | взгляд ниже `min_down_angle` 30°, бросок ×`throw_speed_mult` 1.6, Тор летит `follow_speed` 40, бонус высоты `height_bonus` 4 / 7 м, `max_follow_time` 1.5 с |
+| Праща | удержание ПКМ | крутится после `spin_delay` 0.2 с, `orbit_radius` 1.9, `spin_speed` 9 рад/с, `tick` 0.25 с × `spin_damage` 11, `spin_knockback` 8, до `max_spin` 4 / 6 с; бросок ×`launch_speed_mult` 1.4, ×`launch_damage_mult` 1.3 / 1.6, пробивает щиты |
+| Заряд | удержание ПКМ | короче `min_hold` 0.12 с — обычный бросок; полный за `charge_time` 0.8 / 0.55 с: урон до ×`max_damage_mult` 2.2 / 2.6, скорость ×`max_speed_mult` 1.4, дальность ×`max_range_mult` 1.8, пробитие с `pierce_at` 0.95; ур. 2 — оглушение `stun_lvl2` 0.8 с |
+| Перехват в воздухе | — | `restore_dash` 1 заряд (ур. 2 — все), ур. 2 — подброс `hop_lvl2` 5 м/с |
+| Верный пёс | — | раз в `interval` 1 / 0.6 с бьёт ближайшего в `radius` 8 м на `damage` 15 (0.7 У), `knockback` 6, ждёт `stuck_hold` 6 / 9 с |
 
-Правила (GDD 10): трейт той же группы заменяет старый (на экране выбора — второе нажатие), повтор — уровень 2, на уровне 2 больше не выпадает, в одном предложении нет двух трейтов одной группы.
+**Связки** (`combos/*.tres`): Огненный смерч — `radius_mult` 1.35, тянет в `pull_radius` 7 со `pull_speed` 6, поджог раз в `ignite_tick` 0.3 с, огонь под смерчем раз в `fire_every` 0.7 с (`fire_radius` 2, `fire_time` 2, `fire_dps` 6.6, `max_fires` 3); Ледяной рикошет — корка `crust_radius` 1.6, `crust_time` 4, `crust_fall_stun` 0.8, промерзание в `chill_radius` 2.5, `max_crusts` 6; Грозовой магнит — разряд раз в `interval` 0.6 с на `damage` 8, на возврате цепь `recall_chain` 2 × `recall_chain_damage` 11; Ураганный рывок — путь `path_radius` 2.6 / `path_push` 14, прилёт `arrive_radius` 5.5, `arrive_push` 18, `arrive_lift` 6, `arrive_damage` 5; Кратер — радиус удара ×`radius_mult` 1.5, `pin_time` 1.5, `damage` 11 (корм погибает).
+
+**Шкала стиля** (`player/style_tuning.tres` → `points`): `air_catch` 6, `element_slam` 6, `hammer_dive` 6, `hammer_step` 6, `hammer_swap` 5, `shatter` 8.
+
+Правила выбора: несовместимый приём заменяет старый (на экране — второе нажатие), повтор — уровень выше, на максимуме не выпадает, в одном наборе нет несовместимых. Связка складывается сама; карточка, которая её сложит, — с легендарной рамкой и строкой «+ СВЯЗКА».
 
 ## Мини-босс — `enemies/minibosses/fat_sven.tres` (`MinibossDef`)
 
@@ -429,7 +449,7 @@ HUD (`ui/style_hud.gd`): `bar_width` 340, `caption_height` 58, `burst_size` 210�
 
 **Мир** — `run/maps/midgard.tres` (`run/run_map.gd`, `RunMap`):
 - `rooms` 7 (залов до босса), `miniboss_room` 4 (мини-босс — последней волной 4-го зала, за него трейт), `first_room_reward` combat.
-- Двери: `doors_min` 2 / `doors_max` 3, `shop_per_world` 1 (ларёк гарантирован: дверь ларька в каждом наборе, пока не зайдёшь), `shop_earliest_room` 3, `no_peaceful_twice` (отдых и ларёк не подряд), `shop_scene`.
+- Двери: `doors_min` 2 / `doors_max` 3, `shop_per_world` 1 (ларёк гарантирован: дверь ларька в каждом наборе, пока не зайдёшь), `shop_earliest_room` 3, `no_peaceful_twice` (отдых и ларёк не подряд), `shop_scene`; наковальня Эйтри (стихия Мьёльнира, блок Б4) — `anvil_per_world` 1, в наборах к залам `anvil_earliest_room` 2 … `anvil_latest_room` 3 (награда `run/rewards/anvil.tres`, вес 0).
 - Награды: элитный бой `elite_room_chance` 0.45 / `elite_room_max` 3 (обычный зал 0.1 / 1), `elite_reward_silver` 30, `elite_reward_glory` 20; отдых `rest_heal_fraction` 0.4; `rune_max_level` 3; Фрейя `freya_rune_level` 2; Локи `loki_hp_cost` 0.5, «кости» `loki_dice_win_chance` 0.5 / `loki_dice_hp_loss` 0.3.
 
 **Награды** — `run/rewards/*.tres` (`run/reward_def.gd`, `RewardDef`): `weight` — частота в % (GDD 15.1: бой 45, элита 15, сундук 10, испытание 10, отдых 8, Фрейя 7, Локи 5; ларёк, мини-босс и босс — 0, по особым правилам), `combat` (false — тихий зал без врагов), `enabled` (false — механики ещё нет, не предлагается), `glyph`/`color` (заглушка иконки), `icon_name` → `sprites/ui/icons/door_<icon_name>.png`.

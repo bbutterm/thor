@@ -29,6 +29,11 @@ var shocked_left: float = 0.0
 # --- Земля ---
 var pinned_left: float = 0.0
 
+## Искры горения на всех врагах — не больше стольких за кадр физики (лимит узлов с instance uniform в GL Compatibility)
+const BURN_FX_PER_FRAME := 2
+static var _fx_frame: int = -1
+static var _fx_count: int = 0
+
 var _burn_tick: float = 0.0
 var _spread_t: float = 0.0
 var _fx_t: float = 0.0
@@ -156,8 +161,8 @@ func _burn(delta: float) -> void:
 	burn_left -= delta
 	_burn_tick += delta
 	_fx_t -= delta
-	if _fx_t <= 0.0:
-		_fx_t = 0.35
+	if _fx_t <= 0.0 and _fx_budget():
+		_fx_t = 0.45
 		FX.sparks(enemy.get_parent(), _chest() + Vector3(randf_range(-0.2, 0.2), 0, randf_range(-0.2, 0.2)), Color(1.0, 0.5, 0.12), 5, 2.5, -3.0, 0.06, 0.5)
 	if _burn_tick >= 0.5:
 		var p := _player()
@@ -193,6 +198,14 @@ func _burn(delta: float) -> void:
 			FX.lightning(enemy.get_parent(), _chest(), best.global_position + Vector3(0, 1.0, 0), 0.15, Color(1.0, 0.55, 0.15))
 	if burn_left <= 0.0:
 		burn_gen = 0
+
+static func _fx_budget() -> bool:
+	var f := Engine.get_physics_frames()
+	if f != _fx_frame:
+		_fx_frame = f
+		_fx_count = 0
+	_fx_count += 1
+	return _fx_count <= BURN_FX_PER_FRAME
 
 func _apply_speed() -> void:
 	if enemy == null or not is_instance_valid(enemy):
