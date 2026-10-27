@@ -484,8 +484,15 @@ func _show_choices(chs: Array) -> void:
 		b.add_theme_color_override("font_hover_color", accent.lightened(0.3))
 		b.pressed.connect(choose.bind(i))
 		_choices_box.add_child(b)
-	if _choices_box.get_child_count() > 0:
-		(_choices_box.get_child(0) as Button).grab_focus.call_deferred()
+	_focus_first_choice.call_deferred()
+
+## Выбор могли закрыть в том же кадре, пока ждёт отложенный вызов.
+func _focus_first_choice() -> void:
+	if not is_inside_tree() or not visible or not _waiting_choice or _log_panel.visible or _choices_box.get_child_count() == 0:
+		return
+	var first := _choices_box.get_child(0) as Button
+	if is_instance_valid(first) and first.is_inside_tree():
+		first.grab_focus()
 
 func _clear_choices() -> void:
 	for c in _choices_box.get_children():
@@ -544,6 +551,10 @@ func _close() -> void:
 func toggle_log() -> void:
 	_log_panel.visible = not _log_panel.visible
 	_log_scroll_axis = 0.0
+	if is_inside_tree() and not _log_panel.visible and _waiting_choice:
+		var focused := get_viewport().gui_get_focus_owner()
+		if focused == null or not _choices_box.is_ancestor_of(focused):
+			_focus_first_choice.call_deferred()
 
 func _log_append(def: Dictionary, col: Color, text: String) -> void:
 	var name := str(def.get("name", "?"))

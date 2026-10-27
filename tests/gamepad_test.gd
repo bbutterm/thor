@@ -52,6 +52,7 @@ func _run() -> void:
 	await _test_settings_capture()
 	await _test_card_choices()
 	await _test_dialogue()
+	await _test_dialogue_deferred_focus()
 	await _test_body_and_training()
 	await _test_main_menu_and_shop()
 	GameSettings.reset_all()
@@ -260,6 +261,43 @@ func _test_dialogue() -> void:
 	check(not box._log_panel.visible, "B закрывает журнал")
 	await pad_press(JOY_BUTTON_Y)
 	check(not box.visible, "Y пропускает диалог")
+	box.queue_free()
+	await frames()
+
+## Отложенный фокус не должен обращаться к ответу, удалённому в тот же кадр.
+func _test_dialogue_deferred_focus() -> void:
+	print("-- Фокус удалённого ответа")
+	var box := DialogueBox.new()
+	get_tree().root.add_child(box)
+	await frames()
+	var lines := [{"id": "focus_choice", "speaker": "odin", "text": "Выбор.", "choices": [
+		{"id": "first", "label": "Первый", "text": "Ответ", "lines": []},
+		{"id": "second", "label": "Второй", "text": "Ответ 2", "lines": []},
+	]}]
+	box.open(lines, "focus_test", "none")
+	box._finish_typing()
+	var first := box._choices_box.get_child(0) as Button
+	check(first.is_inside_tree(), "ответ добавлен до выбора")
+	box.choose(0)
+	check(not first.is_inside_tree(), "ответ удалён в том же кадре, до отложенного фокуса")
+	await frames()
+	check(not box._waiting_choice and box._text.text == "Ответ", "выбор в том же кадре не ломает продолжение диалога")
+	box.skip()
+	box.open(lines, "focus_test", "none")
+	box._finish_typing()
+	box.skip()
+	await frames()
+	check(not box.visible and not box._waiting_choice, "пропуск в том же кадре безопасно закрывает выбор")
+	box.open(lines, "focus_test", "none")
+	box._finish_typing()
+	box.toggle_log()
+	await frames()
+	check(box._waiting_choice and box._log_panel.visible and not (box._choices_box.get_child(0) as Button).has_focus(),
+		"открытый журнал не получает отложенный фокус ответа")
+	box.toggle_log()
+	await frames()
+	check((box._choices_box.get_child(0) as Button).has_focus(), "закрытие журнала возвращает фокус к ответам")
+	box.skip()
 	box.queue_free()
 	await frames()
 
