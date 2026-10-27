@@ -463,11 +463,18 @@ func expand(lines: Array) -> Array:
 		out.append(line)
 	return out
 
-## Показывает реплики новеллой и ждёт конца. backdrop: "run" (полупрозрачно поверх боя) или "couch" (между забегами).
-func play_lines(lines: Array, scene_id: String = "", backdrop: String = "run") -> void:
+## Показывает реплики новеллой и ждёт конца. backdrop: "run" (фон мира забега), "couch" (между забегами),
+## "shop" или картинка из sprites/backgrounds/ (ScreenArt). image — сюжетный кадр с первой реплики.
+func play_lines(lines: Array, scene_id: String = "", backdrop: String = "run", image: String = "") -> void:
 	var expanded := expand(lines)
 	if expanded.is_empty():
 		return
+	# Сюжетные кадры сцены — в фоне заранее: первый дождёмся, остальные догрузятся, пока печатается текст
+	var pics: Array = [ScreenArt.story_path(image)]
+	for l in expanded:
+		if l is Dictionary and l.has("image"):
+			pics.append(ScreenArt.story_path(str(l.image)))
+	ScreenArt.prefetch(pics)
 	var was_paused := get_tree().paused
 	var mouse := Input.mouse_mode
 	_playing = true
@@ -475,17 +482,18 @@ func play_lines(lines: Array, scene_id: String = "", backdrop: String = "run") -
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	scene_started.emit(scene_id)
 	var b := box()
-	b.open(expanded, scene_id, backdrop)
+	b.open(expanded, scene_id, backdrop, image)
 	await b.finished
 	_playing = false
 	get_tree().paused = was_paused
 	Input.mouse_mode = mouse
 	scene_finished.emit(scene_id)
 
+## Поля сцены: "backdrop" — свой фон (важнее переданного), "image" — сюжетный кадр с первой реплики.
 func play_scene(sc: Dictionary, backdrop: String = "run") -> void:
 	var id := str(sc.get("id", ""))
 	Save.mark_seen(id)
-	await play_lines(sc.get("lines", []), id, backdrop)
+	await play_lines(sc.get("lines", []), id, str(sc.get("backdrop", backdrop)), str(sc.get("image", "")))
 	Save.save_game()
 
 ## Событие: сцена (если есть) или реплика пула. bubble_fallback — реплику пула показать пузырём без паузы.
@@ -627,6 +635,10 @@ func validate() -> Array[String]:
 			errs.append("%s: неизвестное событие «%s»" % [sid, sc.get("trigger", "")])
 		if (sc.get("lines", []) as Array).is_empty():
 			errs.append("%s: пустая сцена" % sid)
+		if sc.has("image") and ScreenArt.story_path(str(sc.image)) == "" and str(sc.image) != "none":
+			errs.append("%s: нет сюжетного кадра «%s» (sprites/story/)" % [sid, sc.image])
+		if sc.has("backdrop") and ScreenArt.backdrop_path(str(sc.backdrop)) == "" and str(sc.backdrop) != "none":
+			errs.append("%s: нет фона «%s» (sprites/backgrounds/)" % [sid, sc.backdrop])
 		_validate_lines(sc.get("lines", []), sid, errs, ids)
 	for p in pools:
 		for it in pools[p]:
@@ -656,6 +668,8 @@ func _validate_lines(lines: Array, where: String, errs: Array[String], ids: Dict
 			errs.append("%s: эмоция «%s»" % [lid, l.get("emotion", "")])
 		if str(l.get("text", "")).strip_edges() == "":
 			errs.append("%s: пустой текст" % lid)
+		if l.has("image") and str(l.image) != "none" and ScreenArt.story_path(str(l.image)) == "":
+			errs.append("%s: нет сюжетного кадра «%s» (sprites/story/)" % [lid, l.image])
 		var chs: Array = l.get("choices", [])
 		if not chs.is_empty():
 			if chs.size() != 2:

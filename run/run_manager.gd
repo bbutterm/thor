@@ -99,6 +99,7 @@ var rune_power: int = 1
 
 func _exit_tree() -> void:
 	AssetCache.shutdown()
+	ScreenArt.shutdown()
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS

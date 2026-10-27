@@ -3,7 +3,7 @@ class_name GameSettings
 ## Настройки игрока (GDD 22) с сохранением в user://settings.cfg (ConfigFile).
 ## Секции: [audio] громкости шин, [controls] чувствительность/инверсия, [video] экран и камера,
 ## [hud] прицел и индикаторы, [text] размер текста, скорость печати и язык (ru/en, scripts/i18n.gd), [access] доступность,
-## [comic] комиксовые слова (enabled, scale), [input] переназначенные клавиши (действие → список событий).
+## [comic] комиксовые слова (enabled, scale), стоп-кадр «страница комикса» (page) и заставка босса (boss_card), [input] переназначенные клавиши (действие → список событий).
 ## Чужие секции файла при сохранении не трогаем. Тесты (res://tests/*) и --selftest пишут в
 ## user://test_settings.cfg — настоящий файл игрока не портится.
 ## Применение: apply_startup() — из Run._ready (звук, окно, клавиши, фильтр цвета);
@@ -40,7 +40,7 @@ const DEFAULTS := {
 	"hud": {"crosshair": "dot", "crosshair_size": 1.0, "crosshair_alpha": 0.85, "crosshair_color": "white", "offscreen": true, "slam_meter": true},
 	"text": {"text_scale": 1.0, "typing_speed": 1.0, "language": "ru"},
 	"access": {"colorblind": "off", "aim_assist": false, "slam_slowmo": false},
-	"comic": {"enabled": true, "scale": 1.0},
+	"comic": {"enabled": true, "scale": 1.0, "page": true, "boss_card": true},
 }
 
 ## Действия, которые можно переназначить (пауза — нет: Esc всегда выводит из меню).

@@ -337,6 +337,9 @@ func _comic_rows(page: Control) -> void:
 		_pct, func() -> void: ComicFX.preview())
 	size_slider.editable = GameSettings.comic_enabled
 	holder[0] = size_slider
+	# Комиксовые вставки (ui/comic_page.gd, ui/boss_card.gd) — на паузе, ~2 с, клик пропускает
+	_check(page, tr("Стоп-кадр комикса (смерть Тора и босса)"), "comic", "page")
+	_check(page, tr("Заставка босса"), "comic", "boss_card")
 
 func _build_access(page: Control) -> void:
 	_header(page, tr("ЦВЕТ"))

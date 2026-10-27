@@ -12,6 +12,8 @@ func _ready() -> void:
 	UISkin.apply(self)
 	_build()
 	GameSettings.events.changed.connect(_on_setting_changed)
+	# Экраны выбора тела и «Плана тренировок» — картинки заранее в фоне (ui/screen_art.gd)
+	ScreenArt.prefetch_between_runs()
 	if "--selftest" in OS.get_cmdline_user_args():
 		_selftest.call_deferred()
 
@@ -166,6 +168,8 @@ func _on_start() -> void:
 
 func _start_with(body_id: String) -> void:
 	Run.start_run(body_id)
+	# Картинка и совет Одина, пока грузится забег (ui/loading_screen.gd; скрывает Game после первого зала)
+	await LoadingScreen.show_now(get_tree())
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 ## Проверка собранной игры: ./Thor.exe -- --selftest  (печатает, что ресурсы на месте, и выходит)

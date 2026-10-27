@@ -10,6 +10,10 @@ signal closed(start_run: bool)
 @export var card_height: float = 92.0
 ## Сколько секунд пульсирует счётчик Славы после покупки
 @export var glory_pulse_time: float = 0.25
+## Сторона картинки открытия на карточке (UnlockDef.icon — иллюстрации sprites/unlocks/*.webp)
+@export var art_size: float = 76.0
+## Яркость фона-картинки (диван Тора, sprites/backgrounds/couch_room.webp)
+@export var backdrop_alpha: float = 0.22
 
 const SECTIONS := [
 	["perk", "ТОР ПРИХОДИТ В ФОРМУ", "ᚢ", Color(1.0, 0.62, 0.3)],
@@ -46,6 +50,17 @@ func _build() -> void:
 	bg.color = Color(0.045, 0.04, 0.06, 1.0)
 	UIStyle.full_rect(bg)
 	_root.add_child(bg)
+	# Тренировки — у дивана: комната Тора за спиной, тускло
+	var art := ScreenArt.backdrop("couch")
+	if art:
+		var bga := TextureRect.new()
+		bga.texture = art
+		bga.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		bga.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		bga.modulate = Color(1, 1, 1, backdrop_alpha)
+		bga.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		UIStyle.full_rect(bga)
+		_root.add_child(bga)
 	var glyph := UIStyle.label("ᛟ", 460, Color(UIStyle.GOLD, 0.035), 0)
 	glyph.position = Vector2(-60, 120)
 	_root.add_child(glyph)
@@ -224,11 +239,29 @@ func _make_card(u: UnlockDef, glyph: String, col: Color) -> PanelContainer:
 	icon_box.add_theme_stylebox_override("panel", isb)
 	hb.add_child(icon_box)
 	if u.icon:
+		# Иллюстрация открытия: квадрат со скруглением (обрезка по панели), рамка в цвете раздела поверх;
+		# ещё не в игре («скоро») и не по карману — тусклее
+		icon_box.custom_minimum_size = Vector2(art_size, art_size)
+		isb.set_corner_radius_all(10)
+		icon_box.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
 		var trect := TextureRect.new()
 		trect.texture = u.icon
 		trect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		trect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		trect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		trect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if reason == "soon":
+			trect.modulate = Color(0.45, 0.45, 0.48)
+		elif reason in ["requires", "no_glory"]:
+			trect.modulate = Color(0.8, 0.78, 0.76)
 		icon_box.add_child(trect)
+		var ring := Panel.new()
+		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var rsb := isb.duplicate() as StyleBoxFlat
+		rsb.draw_center = false
+		if owned:
+			rsb.border_color = Color(0.55, 0.9, 0.5)
+		ring.add_theme_stylebox_override("panel", rsb)
+		icon_box.add_child(ring)
 	else:
 		var gl := UIStyle.label(u.glyph if u.glyph != "" else glyph, 28, col if reason != "soon" else Color(col, 0.35), 3)
 		gl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -3,6 +3,9 @@ class_name DialogueBox
 ## Окно диалога-новеллы: портреты слева (Тор) и справа (собеседник), плашка с именем, текст по букве,
 ## выбор ответа Тора, «Пропустить» и журнал прочитанного. Строится кодом. Создаёт и показывает Dialogue.
 ## Управление: клик / Пробел / Enter — допечатать или дальше; 1 / 2 — выбор; Tab или кнопка — журнал.
+## Фон (backdrop) — картинка sprites/backgrounds/*.webp (ScreenArt.backdrop_path: couch → диван,
+## shop → ларёк, run → мир забега…); сюжетный кадр sprites/story/<id>.webp — поле "image" у реплики
+## (или у сцены — с первой реплики): на весь экран за окном текста, портреты прячутся; "none" — убрать.
 
 signal finished
 signal choice_made(scene_id: String, choice_id: String)
@@ -21,10 +24,22 @@ signal line_shown(line: Dictionary)
 @export var inactive_dim: float = 0.45
 ## Защита от случайного двойного клика сразу после открытия (с)
 @export var open_guard: float = 0.25
+## Смена сюжетного кадра — наплыв, с
+@export var story_fade_time: float = 0.35
+## Яркость картинки-фона (чуть темнее — портреты и текст читаются)
+@export var backdrop_brightness: float = 0.82
 
 var _root: Control
 var _backdrop: ColorRect
 var _couch: Control
+## Картинка-фон (ScreenArt.backdrop) и сюжетный кадр (с прошлым кадром под ним — для наплыва)
+var _bg: TextureRect
+var _story: TextureRect
+var _story_prev: TextureRect
+## Текущий сюжетный кадр ("" — нет)
+var story_id: String = ""
+## Текущий фон (путь картинки, "" — без картинки)
+var backdrop_path: String = ""
 var _left: Portrait
 var _right: Portrait
 var _panel: PanelContainer
@@ -67,8 +82,14 @@ func _build() -> void:
 	_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
 	_backdrop.gui_input.connect(_on_click_input)
 	_root.add_child(_backdrop)
+	_bg = _full_texture_rect()
+	_root.add_child(_bg)
 	_couch = _make_couch_backdrop()
 	_root.add_child(_couch)
+	_story_prev = _full_texture_rect()
+	_root.add_child(_story_prev)
+	_story = _full_texture_rect()
+	_root.add_child(_story)
 
 	# Портреты по пояс (1024×1536, привязка — низ по центру): нижний край уходит под плашку текста
 	_left = Portrait.new()
@@ -254,8 +275,48 @@ func _make_couch_backdrop() -> Control:
 	var cap := UIStyle.label(tr("Асгард · диван Тора"), 18, Color(UIStyle.TEXT_DIM, 0.8), 4)
 	cap.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	cap.position = Vector2(28, 24)
+	cap.set_meta("caption", true)
 	c.add_child(cap)
 	return c
+
+func _full_texture_rect() -> TextureRect:
+	var t := TextureRect.new()
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	UIStyle.full_rect(t)
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	t.visible = false
+	return t
+
+## Сюжетный кадр на весь экран ("" / "none" — убрать). Смена — наплыв поверх прошлого кадра.
+func set_story(id: String, instant: bool = false) -> void:
+	var tex := ScreenArt.story(id)
+	var new_id := id if tex else ""
+	if new_id == story_id:
+		return
+	story_id = new_id
+	_story_prev.texture = _story.texture if _story.visible else null
+	_story_prev.visible = _story_prev.texture != null
+	_story.texture = tex
+	_story.visible = tex != null
+	if tex:
+		_left.visible = false
+		_right.visible = false
+	if instant or story_fade_time <= 0.0:
+		_story.modulate.a = 1.0
+		_story_prev.visible = false
+		return
+	if tex == null:
+		# Кадр убрали — прошлый тает, под ним фон
+		_story_prev.modulate.a = 1.0
+		var tw0 := _story_prev.create_tween()
+		tw0.tween_property(_story_prev, "modulate:a", 0.0, story_fade_time)
+		tw0.tween_callback(func() -> void: _story_prev.visible = false)
+		return
+	_story.modulate.a = 0.0
+	var tw := _story.create_tween()
+	tw.tween_property(_story, "modulate:a", 1.0, story_fade_time)
+	tw.tween_callback(func() -> void: _story_prev.visible = false)
 
 func _small_button(t: String) -> Button:
 	var b := UIStyle.button(t, 17)
@@ -265,8 +326,9 @@ func _small_button(t: String) -> Button:
 
 # --- Показ ---
 
-## lines — уже раскрытые реплики (Dialogue.expand). backdrop: "run" или "couch".
-func open(lines: Array, scene_id: String = "", backdrop: String = "run") -> void:
+## lines — уже раскрытые реплики (Dialogue.expand). backdrop: "run" (мир забега), "couch" (диван), "shop",
+## имя файла из sprites/backgrounds/ или "none". image — сюжетный кадр с первой реплики ("" — нет).
+func open(lines: Array, scene_id: String = "", backdrop: String = "run", image: String = "") -> void:
 	_lines = lines.duplicate(true)
 	_scene_id = scene_id
 	_index = -1
@@ -276,8 +338,20 @@ func open(lines: Array, scene_id: String = "", backdrop: String = "run") -> void
 	_left.visible = false
 	_right.visible = false
 	_log_panel.visible = false
+	backdrop_path = ScreenArt.backdrop_path(backdrop)
+	var bg_tex := ScreenArt.tex(backdrop_path)
+	_bg.texture = bg_tex
+	_bg.visible = bg_tex != null
+	_bg.modulate = Color(backdrop_brightness, backdrop_brightness, backdrop_brightness)
+	# Фон «диван»: картинка couch_room, без неё — процедурный диван (подпись «Асгард · диван Тора» — всегда)
 	_couch.visible = backdrop == "couch"
-	_backdrop.color = Color(0.02, 0.02, 0.03, 1.0 if backdrop == "couch" else 0.55)
+	for ch in _couch.get_children():
+		(ch as CanvasItem).visible = bg_tex == null or ch.has_meta("caption")
+	_backdrop.color = Color(0.02, 0.02, 0.03, 1.0 if backdrop == "couch" or bg_tex else 0.55)
+	story_id = ""
+	_story.visible = false
+	_story_prev.visible = false
+	set_story(image, true)
 	visible = true
 	_age = 0.0
 	_root.modulate.a = 0.0
@@ -307,7 +381,10 @@ func _show_line(line: Dictionary) -> void:
 	var col := Color.from_string(str(def.get("color", "#888888")), Color.GRAY)
 	var p := _left if side == "left" else _right
 	var other := _right if side == "left" else _left
-	p.visible = true
+	if line.has("image"):
+		set_story(str(line.get("image", "")))
+	# Сюжетный кадр сам показывает героев — портреты прячем
+	p.visible = story_id == ""
 	p.set_speaker(sp, emo, def, portrait_bounce)
 	if side == "left":
 		_left_sp = sp

@@ -25,6 +25,9 @@ const DIRS := [
 	"res://sprites/ui/buttons/",
 	"res://sprites/ui/hud/",
 	"res://sprites/ui/icons/",
+	# Экраны в забеге (ui/screen_art.gd): загрузки между залами и «страница комикса» при смерти
+	"res://sprites/loading/",
+	"res://sprites/death/",
 ]
 const FILES := [
 	"res://assets/quaternius/characters/gaits.glb",
@@ -39,6 +42,9 @@ const FILES := [
 	"res://enemies/merc.tscn",
 	"res://enemies/sven.tscn",
 	"res://enemies/jarl.tscn",
+	# Заставки боссов забега (ui/boss_card.gd); остальные карточки — на будущее, не держим
+	"res://sprites/boss_cards/fat_sven.webp",
+	"res://sprites/boss_cards/jarl_bjorn.webp",
 ]
 const EXTS := ["gltf", "glb", "fbx", "wav", "ogg", "tscn", "tres", "webp"]
 
