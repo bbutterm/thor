@@ -36,6 +36,8 @@ var kind: String = "death"
 var key: String = ""
 var caption: String = ""
 var boss_title: String = ""
+## Кто убил Тора (подпись RunTracker.SOURCE_NAMES) — на плашке стоп-кадра
+var killer: String = ""
 ## Стоп-кадр (null — не сняли: headless или пустой кадр)
 var shot: Texture2D
 
@@ -64,6 +66,9 @@ static func show_death(parent: Node, result: Dictionary) -> ComicPage:
 	p.kind = "death"
 	p.key = ScreenArt.death_key(result)
 	p.caption = Dialogue.pool_text("odin.page_" + p.key)
+	var by := str(result.get("killed_by", ""))
+	if by != "":
+		p.killer = I18n.t(str(RunTracker.SOURCE_NAMES.get(by, by)))
 	parent.add_child(p)
 	return p
 
@@ -138,11 +143,12 @@ func _build() -> void:
 		var art := ScreenArt.death_art(key)
 		var w := vp.x * 0.47
 		if shot:
-			_add_panel(shot, true, Vector2(w, w * 0.75), Vector2(0.305, 0.47), tilt_main, Vector2(-0.25, -0.1))
+			_add_panel(shot, true, Vector2(w, w * 0.75), Vector2(0.68, 0.44), tilt_second, Vector2(0.25, -0.1))
 		if art:
 			var w2 := w if shot else vp.x * 0.6
-			var at := Vector2(0.69, 0.55) if shot else Vector2(0.5, 0.5)
-			_add_panel(art, false, Vector2(w2, w2 * 0.75), at, tilt_second, Vector2(0.25, 0.12))
+			# Стоп-кадр — справа сверху, рисунок причины — слева снизу поверх (плашки обоих видны)
+			var at := Vector2(0.33, 0.58) if shot else Vector2(0.5, 0.5)
+			_add_panel(art, false, Vector2(w2, w2 * 0.75), at, tilt_main, Vector2(-0.25, 0.12))
 		_header = _plate(tr("ВЫПУСК №%d") % maxi(1, Save.deaths()), tr("Тор снова на диване"))
 	else:
 		var content := shot if shot else ScreenArt.tex(ScreenArt.boss_card_path(str(_boss_card())))
@@ -156,6 +162,9 @@ func _build() -> void:
 	# Подпись Одина — на плашке последнего (верхнего) кадра
 	if not _panels.is_empty() and caption != "":
 		_add_caption(_panels.back())
+	# На плашке стоп-кадра (под картинкой причины) — кто победил Тора
+	if kind == "death" and _panels.size() > 1 and killer != "":
+		_plaque_text(_panels[0], tr("Тор против: %s") % killer)
 	_flash = ColorRect.new()
 	_flash.color = Color(1, 1, 1, 1)
 	UIStyle.full_rect(_flash)
@@ -227,26 +236,32 @@ func _place(c: Control, r: Rect2, size: Vector2, shift: Vector2 = Vector2.ZERO) 
 	c.position = r.position * size + shift
 	c.size = r.size * size
 
-## Подпись Одина на плашке рамки + маленький Один рядом.
-func _add_caption(panel: Control) -> void:
+## Текст на плашке рамки (справа внизу): кегль подбирается под длину.
+func _plaque_text(panel: Control, text: String) -> Control:
 	var size := panel.size
-	_caption_box = Control.new()
-	_caption_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_caption_box.position = PLAQUE.position * size
-	_caption_box.size = PLAQUE.size * size
-	_caption_box.pivot_offset = _caption_box.size * 0.5
-	panel.add_child(_caption_box)
-	var lbl := UIStyle.label(caption, 18, INK, 0)
+	var box := Control.new()
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.position = PLAQUE.position * size
+	box.size = PLAQUE.size * size
+	box.pivot_offset = box.size * 0.5
+	panel.add_child(box)
+	var lbl := UIStyle.label(text, 18, INK, 0)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	var inner := _caption_box.size - Vector2(12, 6)
-	lbl.label_settings.font_size = fit_font_size(caption, inner, 20, 11)
+	var inner := box.size - Vector2(12, 6)
+	lbl.label_settings.font_size = fit_font_size(text, inner, 20, 11)
 	lbl.label_settings.line_spacing = -2
 	lbl.position = Vector2(6, 3)
 	lbl.size = inner
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_caption_box.add_child(lbl)
+	box.add_child(lbl)
+	return box
+
+## Подпись Одина на плашке рамки + маленький Один рядом.
+func _add_caption(panel: Control) -> void:
+	var size := panel.size
+	_caption_box = _plaque_text(panel, caption)
 	var odin := Portrait.new()
 	odin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var ph := size.y * 0.3

@@ -3,12 +3,13 @@ extends Node
 ## новеллы, загрузочные экраны, заставка босса и «страница комикса» (смерть Тора и босса) — и что поток
 ## забега после них прежний (Свен → трейт, Ярл → победа, смерть → итог → диван).
 ## godot --headless --path . --fixed-fps 60 res://tests/art_screens_test.tscn
-## Кадры (xvfb): xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/art_screens_test.tscn -- <папка>
+## Кадры (xvfb): xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/art_screens_test.tscn -- <папка> [pages] [en]
 
 var _fails: Array[String] = []
 var _passes: int = 0
 var game: Game
 var shots_dir: String = ""
+var only_pages: bool = false
 ## Держать Тора живым в wait()
 var _immortal: bool = true
 
@@ -24,6 +25,11 @@ func _ready() -> void:
 	if args.size() > 0 and DisplayServer.get_name() != "headless":
 		shots_dir = args[0]
 		DirAccess.make_dir_recursive_absolute(shots_dir)
+	# Второй аргумент «pages» — только вставки в бою (быстрее под xvfb)
+	only_pages = args.size() > 1 and args[1] == "pages"
+	# «en» — кадры на английском
+	if "en" in args:
+		GameSettings.set_value("text", "language", "en", false)
 	_run.call_deferred()
 
 func check(cond: bool, what: String) -> void:
@@ -70,16 +76,19 @@ func _start(order: Array, index: int = 0) -> void:
 
 func _run() -> void:
 	print("=== ART SCREENS TEST ===")
-	_test_data()
-	await _test_body_select()
-	await _test_training_plan()
-	await _test_dialogue()
-	await _test_loading()
+	if not only_pages:
+		_test_data()
+		await _test_body_select()
+		await _test_training_plan()
+		await _test_dialogue()
+		await _test_loading()
 	ScreenArt.pauses_in_tests = true
 	await _test_sven()
-	await _test_jarl()
+	if not only_pages:
+		await _test_jarl()
 	await _test_death()
-	await _test_switches()
+	if not only_pages:
+		await _test_switches()
 	ScreenArt.pauses_in_tests = false
 	_finish()
 
