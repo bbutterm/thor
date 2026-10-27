@@ -212,6 +212,9 @@ func _test_finale_gating() -> void:
 			continue
 		var sc: Dictionary = matches[0]
 		check(Dialogue.check(sc._conds, Dialogue.context("death")), "%s доступна до финала" % pair[0])
+		if pair[0] == "dwarves_secret":
+			Save.mark_seen("loki_reveal")
+			check(Dialogue.check(sc._conds, Dialogue.context("death")), "Брокк может предложить доказательство после признания Локи")
 		Save.mark_seen("finale_a")
 		check(not Dialogue.check(sc._conds, Dialogue.context("death")), "%s не возникает после разгадки финала" % pair[0])
 	Save.reset()
