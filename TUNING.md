@@ -71,7 +71,7 @@
 | Земля | прибить `pin_time` 1.5 с, с ур. 2 — всех в `splash_radius` 2 м; вторая волна — рядом с прибитым (`pinned_reach` 3 м), `wave_delay` 0.12, `radius_mult`/`damage_mult` 1 (как удар-приземление); на ур. 4 третья волна `third_wave_delay` 0.35 / `third_wave_radius_mult` 1.4; разлом `trail_pin` 0.6; Землетрясение — `quake_trigger_distance` 5 м, дрожь `aura_pin` 0.5; глыба `sky_pin` 1.5 |
 | Ветер | отброс `knockback` 16 + `lift` 5 (боссов ×`boss_factor` 0.3); вихрь удара-приземления — радиус ×`gust_radius_mult` 1.6, `gust_knockback` 18, `gust_lift` 6, `gust_damage` 5; порывы следа `trail_push` 9 / `trail_lift` 3; аура `aura_push` 11; смерч `sky_lift` 11 |
 
-Состояния на враге — `weapons/element_status.gd` (`ElementStatus`), пятна следа молнии/земли/ветра — `weapons/element_zone.gd` (общий диск, общий материал).
+Состояния на враге — `weapons/element_status.gd` (`ElementStatus`; боссов не замедляет и не останавливает: «заморозка» босса — только отметка для раскола на `BOSS_FREEZE_MULT` 0.5 времени; искр горения не больше `BURN_FX_PER_FRAME` 2 за кадр), пятна следа молнии/земли/ветра — `weapons/element_zone.gd` (общий диск, общий материал).
 
 **Приёмы** (ур. 1 / ур. 2):
 
