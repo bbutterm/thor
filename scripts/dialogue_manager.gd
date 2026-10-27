@@ -5,7 +5,9 @@ extends Node
 ## Сцена (scene): id, trigger, priority, conditions[], lines[]; сюжетные сцены не повторяются (Save.seen),
 ##   "repeat": true — может повторяться.
 ## Пул (pools): короткие реплики, повторяются. Ключ пула — "<id файла>.<имя>", например "odin.death_fall".
-## Реплика: id, speaker, emotion, text, необязательно choices[2] (ответ Тора: огрызнуться / согласиться).
+## Реплика: id, speaker, emotion, text, необязательно choices[2] (ответ Тора: огрызнуться / согласиться),
+##   "voice": клип озвучки sounds/voice/<id>.ogg (или массив дублей — случайный; что в клипе — data/owner_audio.json),
+##   "sfx": звук владельца при показе (например "coach_whistle"). Голос — русский на любом языке.
 ##   {"pool": "odin.run_start"} внутри сцены — подставить случайную реплику из пула; "$reaction" — реакцию на смерть.
 ## Выбор диалога: самая приоритетная непросмотренная сцена события с выполненными условиями,
 ## иначе — случайная реплика из пула.
@@ -518,7 +520,7 @@ func bark(line: Dictionary) -> void:
 	if text == "":
 		return
 	var sp := str(line.get("speaker", "odin"))
-	_on_line_shown(line)
+	_on_line_shown(line, Audio.VOICE_BARK)
 	if sp == "odin":
 		Odin.line_spoken.emit(text)
 	else:
@@ -549,7 +551,16 @@ func _on_choice_made(scene_id: String, choice_id: String) -> void:
 	var key := "choice_" + choice_id
 	Save.data.events[key] = int(Save.data.events.get(key, 0)) + 1
 
-func _on_line_shown(line: Dictionary) -> void:
+## Озвучка реплики при показе: голос на шине Voice и звук реплики. priority: Audio.VOICE_SCENE — окно новеллы
+## (следующая реплика перебивает голос), Audio.VOICE_BARK — пузырь/Odin.say (пока звучит другой голос — без озвучки).
+func speak_line(line: Dictionary, priority: int = Audio.VOICE_SCENE) -> void:
+	if line.has("sfx"):
+		Audio.sfx(str(line.sfx))
+	if line.has("voice"):
+		Audio.voice(line.voice, priority)
+
+func _on_line_shown(line: Dictionary, voice_priority: int = Audio.VOICE_SCENE) -> void:
+	speak_line(line, voice_priority)
 	history.append({"speaker": str(line.get("speaker", "")), "text": str(line.get("text", ""))})
 	if history.size() > history_limit:
 		history = history.slice(history.size() - history_limit)

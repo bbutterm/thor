@@ -46,6 +46,8 @@ var _last_kills: int = 0
 var _damage_log: Array = []
 var _finished: bool = false
 var _pending_ranged_kill: bool = false
+## Зал (Run.room_index), в котором Тора последний раз ранили, — для «Достойно!» за зал без урона
+var hurt_room: int = -1
 
 ## Подключает трекер к сцене игры. Возвращает созданный узел.
 static func attach(game: Node, p: Player) -> RunTracker:
@@ -142,6 +144,7 @@ func _on_kill_registered(source: String) -> void:
 
 func _on_hurt(amount: float) -> void:
 	last_hit_by = pending_source if pending_source != "" else "unknown"
+	hurt_room = Run.room_index
 	pending_source = ""
 	var now := run_time
 	_damage_log.append([now, amount])
@@ -153,6 +156,10 @@ func _on_hurt(amount: float) -> void:
 		_damage_log.clear()
 		Odin.say("big_damage")
 		Dialogue.thor_bark("whine", 0.35)
+
+## Зал зачищен без единого попадания по Тору.
+func room_clean() -> bool:
+	return hurt_room != Run.room_index
 
 ## Итог забега для сохранения и выбора реакции.
 func result(won: bool) -> Dictionary:

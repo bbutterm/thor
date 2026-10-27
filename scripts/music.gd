@@ -4,9 +4,13 @@ extends Node
 ## Слои играют синхронно (AudioStreamSynchronized), громкость слоёв меняется на ближайшей доле,
 ## трек — на ближайшем такте. Пауза, диалог и смерть — фильтр низких частот на шине Music.
 ## Удар-приземление с высоты — стингер и провал музыки на время hit-stop.
-## Положить настоящие треки: те же имена файлов — код не меняется.
+## Треки владельца (ElevenLabs, блок Б6) — sounds/owner/music/<трек>/ (те же слои; синтез tools/make_sfx.py туда
+## не пишет) — важнее синтеза с тем же именем. Их слои — одна петля, отфильтрованная по-разному
+## (tools/import_owner_audio.py), поэтому они не складываются, а сменяют друг друга (_exclusive);
+## темп трека — data/owner_audio.json "music" (Audio.owner_music).
 
 const MUSIC_DIR := "res://sounds/music/"
+const OWNER_MUSIC_DIR := "res://sounds/owner/music/"
 const LAYERS := ["base", "drums", "full"]
 const BUS := "Music"
 
@@ -42,6 +46,10 @@ var _stinger: AudioStreamPlayer
 var _lpf: AudioEffectLowPassFilter
 var _bus_idx: int = -1
 var _tracks: Dictionary = {}  # трек → {layer: AudioStream}
+## Треки, у которых слои — версии одной петли: играет один слой (перекрёстно), а не сумма
+var _exclusive: Dictionary = {}
+## Темп трека (нет — bpm)
+var _track_bpm: Dictionary = {}
 var _pending_track: String = ""
 var _pending_intensity: int = -1
 var _layer_db: PackedFloat32Array = PackedFloat32Array([0.0, -80.0, -80.0])
@@ -88,9 +96,9 @@ func _make_player() -> AudioStreamPlayer:
 	add_child(p)
 	return p
 
-func _load_layer(track: String, layer: String) -> AudioStream:
+func _load_layer(track: String, layer: String, dir: String = MUSIC_DIR) -> AudioStream:
 	for ext in ["ogg", "wav"]:
-		var path: String = MUSIC_DIR + track + "/" + layer + "." + ext
+		var path: String = dir + track + "/" + layer + "." + ext
 		if ResourceLoader.exists(path):
 			var s := load(path) as AudioStream
 			if s is AudioStreamOggVorbis:
@@ -103,17 +111,32 @@ func _load_layer(track: String, layer: String) -> AudioStream:
 	return null
 
 func _scan() -> void:
-	for d in ResourceLoader.list_directory(MUSIC_DIR):
-		var track := d.trim_suffix("/")
-		if track == "stingers" or not d.ends_with("/"):
-			continue
-		var layers := {}
-		for l in LAYERS:
-			var s := _load_layer(track, l)
-			if s:
-				layers[l] = s
-		if not layers.is_empty():
-			_tracks[track] = layers
+	_tracks.clear()
+	_exclusive.clear()
+	_track_bpm.clear()
+	# Сначала синтез, потом владелец — его трек заменяет синтез целиком
+	for dir in [MUSIC_DIR, OWNER_MUSIC_DIR]:
+		for d in ResourceLoader.list_directory(dir):
+			var track := d.trim_suffix("/")
+			if track == "stingers" or not d.ends_with("/"):
+				continue
+			var layers := {}
+			for l in LAYERS:
+				var s := _load_layer(track, l, dir)
+				if s:
+					layers[l] = s
+			if not layers.is_empty():
+				_tracks[track] = layers
+				if dir == OWNER_MUSIC_DIR:
+					_exclusive[track] = true
+	var info: Dictionary = Audio.owner_music if "owner_music" in Audio else {}
+	for t in info:
+		if info[t] is Dictionary and float(info[t].get("bpm", 0.0)) > 0.0:
+			_track_bpm[t] = float(info[t].bpm)
+
+## Трек владельца (слои сменяют друг друга)
+func is_owner_track(track: String) -> bool:
+	return _exclusive.has(track)
 
 func has_track(track: String) -> bool:
 	return _tracks.has(track)
@@ -186,12 +209,19 @@ func _switch_to(track: String) -> void:
 	Perf.mark("music_track")
 
 func _target_db(layer: int, level: int) -> float:
+	# Трек владельца: звучит один слой — уровня интенсивности (нет файла — ближайший ниже)
+	if _exclusive.has(current_track):
+		var layers: Dictionary = _tracks.get(current_track, {})
+		var top := level
+		while top > 0 and not layers.has(LAYERS[top]):
+			top -= 1
+		return 0.0 if layer == top else -80.0
 	# Слой без файла в треке — тишина; иначе base всегда, drums с боя, full с Ярости
 	return 0.0 if layer <= level else -80.0
 
 ## Секунда внутри петли и длина доли/такта — для переходов «в такт».
 func _beat_len() -> float:
-	return 60.0 / bpm
+	return 60.0 / float(_track_bpm.get(current_track, bpm))
 
 func _crossed(prev_pos: float, pos: float, unit: float) -> bool:
 	return floor(pos / unit) != floor(prev_pos / unit)
@@ -222,17 +252,24 @@ func _process(delta: float) -> void:
 		for i in LAYERS.size():
 			_layer_target[i] = _target_db(i, intensity)
 	_prev_pos = pos
-	# Плавная громкость слоёв (линейно в дБ за layer_fade)
+	# Плавная громкость слоёв: линейно по амплитуде за layer_fade (при перекрёстной смене слоёв
+	# трека владельца сумма остаётся ровной — слои одной петли в фазе)
 	var sync := _player.stream as AudioStreamSynchronized
 	if sync:
-		var step := 80.0 * FX.real_delta(delta) / maxf(layer_fade, 0.01)
+		var step := FX.real_delta(delta) / maxf(layer_fade, 0.01)
 		for i in LAYERS.size():
 			if not is_equal_approx(_layer_db[i], _layer_target[i]):
-				_layer_db[i] = move_toward(_layer_db[i], _layer_target[i], step)
+				var a := move_toward(_amp(_layer_db[i]), _amp(_layer_target[i]), step)
+				_layer_db[i] = maxf(-80.0, linear_to_db(a)) if a > 0.0001 else -80.0
+				if absf(_layer_db[i] - _layer_target[i]) < 0.05:
+					_layer_db[i] = _layer_target[i]
 				sync.set_sync_stream_volume(i, _layer_db[i])
 	# Провал под стингер
 	_duck_left = maxf(0.0, _duck_left - delta)
 	AudioServer.set_bus_volume_db(_bus_idx, volume_db + user_volume_db + (stinger_duck_db if _duck_left > 0.0 else 0.0))
+
+static func _amp(db: float) -> float:
+	return 0.0 if db <= -79.9 else db_to_linear(db)
 
 ## Выбор трека и слоя по тому, что сейчас на экране (GDD 21: адаптивность).
 func _auto_state() -> void:

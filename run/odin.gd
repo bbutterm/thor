@@ -37,11 +37,17 @@ func say(event: String) -> String:
 	var exempt := _exempt(event)
 	if not exempt and _now() - _last_combat_time < combat_cooldown:
 		return ""
-	var text := Dialogue.pool_text(_pool(event))
+	var lines := Dialogue.pool_lines(_pool(event))
+	if lines.is_empty():
+		return ""
+	var line: Dictionary = lines[0]
+	var text := Dialogue.format_text(str(line.get("text", "")))
 	if text == "":
 		return ""
 	if not exempt:
 		_last_combat_time = _now()
+	# Озвучка (поле "voice" реплики) — на шине Voice, один голос за раз
+	Dialogue.speak_line(line, Audio.VOICE_BARK)
 	line_spoken.emit(text)
 	return text
 

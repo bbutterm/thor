@@ -24,7 +24,7 @@ static func detonate(parent: Node, pos: Vector3, radius_: float, damage_: float,
 	FX.ring(parent, ground, radius_, Color(color_, 0.9), 0.35)
 	FX.sparks(parent, pos, color_.lightened(0.3), 22, 9.0)
 	FX.blast_smoke(parent, pos, radius_)
-	Audio.play("sounds/sfx/boss_slam.wav")
+	Audio.sfx("bloater_explode", "sounds/sfx/boss_slam.wav")
 	ComicFX.pop("slam", pos)
 	var tree := parent.get_tree()
 	var player := tree.get_first_node_in_group("player") as Player

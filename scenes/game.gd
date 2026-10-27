@@ -122,7 +122,7 @@ func _on_room_cleared() -> void:
 			Odin.say("victory")
 			_show_end(true))
 		return
-	Odin.say("room_clear")
+	Odin.say("room_clear_clean" if tracker.room_clean() else "room_clear")
 	get_tree().create_timer(0.7, false).timeout.connect(func() -> void:
 		if player.is_dead:
 			return

@@ -409,7 +409,7 @@ func _begin_windup(slam: bool) -> void:
 	_doing_slam = slam
 	_set_state(State.WINDUP)
 	if kind != Kind.THROWER and kind != Kind.MERC and (slam or randf() < (0.15 if kind == Kind.FODDER else 0.5)):
-		Audio.play("sounds/sfx/enemy_growl.wav")
+		Audio.sfx("zombie_groan" if FX.is_undead(self) else "", "sounds/sfx/enemy_growl.wav")
 	if kind == Kind.SHAMAN:
 		_ritual_telegraph()
 	elif kind == Kind.MERC:
@@ -952,7 +952,7 @@ func _die(source: String) -> void:
 	if player and is_instance_valid(player) and not player.is_dead:
 		player.heal(player.kill_heal(source))
 	Loot.on_enemy_died(self, source)
-	Audio.play("sounds/enemy_destroy.ogg")
+	Audio.sfx("zombie_death" if FX.is_undead(self) and kind != Kind.BLOATED else "", "sounds/enemy_destroy.ogg")
 	if kind != Kind.BLOATED:
 		_spawn_debris()
 	died.emit(self)

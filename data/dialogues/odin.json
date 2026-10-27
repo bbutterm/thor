@@ -25,7 +25,8 @@
 					"emotion": "angry",
 					"text": "ПОДЪЁМ! Сколько можно лежать?",
 					"id": "odin_intro_01",
-					"image": "intro_2"
+					"image": "intro_2",
+					"voice": "odin_podyom"
 				},
 				{
 					"speaker": "thor",
@@ -605,7 +606,9 @@
 				"speaker": "odin",
 				"emotion": "happy",
 				"text": "Свисток! Бегом, бегом, бегом!",
-				"id": "odin.run_start.07"
+				"id": "odin.run_start.07",
+				"voice": "odin_begom",
+				"sfx": "coach_whistle"
 			},
 			{
 				"speaker": "odin",
@@ -654,6 +657,13 @@
 				"emotion": "angry",
 				"text": "Пятьдесят приседаний ты сегодня не сделал. Сделаешь их на драуграх.",
 				"id": "odin.run_start.15"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "angry",
+				"text": "ПОДЪЁМ!",
+				"id": "odin.run_start.16",
+				"voice": "odin_podyom"
 			}
 		],
 		"run_start_berserker": [
@@ -1079,7 +1089,8 @@
 				"speaker": "odin",
 				"emotion": "angry",
 				"text": "ДВИГАЙСЯ!",
-				"id": "odin.idle.01"
+				"id": "odin.idle.01",
+				"voice": "odin_dvigaysya"
 			},
 			{
 				"speaker": "odin",
@@ -1097,7 +1108,11 @@
 				"speaker": "odin",
 				"emotion": "angry",
 				"text": "Это не диван! ШЕВЕЛИСЬ!",
-				"id": "odin.idle.04"
+				"id": "odin.idle.04",
+				"voice": [
+					"odin_eto_ne_divan_a",
+					"odin_eto_ne_divan_b"
+				]
 			}
 		],
 		"multikill": [
@@ -1105,7 +1120,8 @@
 				"speaker": "odin",
 				"emotion": "neutral",
 				"text": "Хоть что-то.",
-				"id": "odin.multikill.01"
+				"id": "odin.multikill.01",
+				"voice": "odin_hot_chto_to"
 			},
 			{
 				"speaker": "odin",
@@ -1125,7 +1141,8 @@
 				"speaker": "odin",
 				"emotion": "angry",
 				"text": "Скуф…",
-				"id": "odin.big_damage.01"
+				"id": "odin.big_damage.01",
+				"voice": "odin_skuf"
 			},
 			{
 				"speaker": "odin",
@@ -1145,7 +1162,8 @@
 				"speaker": "odin",
 				"emotion": "angry",
 				"text": "Позорище.",
-				"id": "odin.ranged_kill.01"
+				"id": "odin.ranged_kill.01",
+				"voice": "odin_pozorishche"
 			},
 			{
 				"speaker": "odin",
@@ -1165,7 +1183,8 @@
 				"speaker": "odin",
 				"emotion": "happy",
 				"text": "Вот! ВОТ!",
-				"id": "odin.big_slam.01"
+				"id": "odin.big_slam.01",
+				"voice": "odin_vot_vot"
 			},
 			{
 				"speaker": "odin",
@@ -1204,6 +1223,13 @@
 				"emotion": "neutral",
 				"text": "Хм. Может, ты ещё не совсем диван.",
 				"id": "odin.streak10.04"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "smug",
+				"text": "Почти горжусь. Почти.",
+				"id": "odin.streak10.05",
+				"voice": "odin_pochti_gorzhus"
 			}
 		],
 		"room_clear": [
@@ -1230,6 +1256,15 @@
 				"emotion": "neutral",
 				"text": "Отдышался? Нет? Неважно. Вперёд.",
 				"id": "odin.room_clear.04"
+			}
+		],
+		"room_clear_clean": [
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "Достойно!",
+				"id": "odin.room_clear_clean.01",
+				"voice": "odin_dostoyno"
 			}
 		],
 		"rune_pick": [
@@ -1711,7 +1746,8 @@
 				"speaker": "odin",
 				"emotion": "happy",
 				"text": "ДА! ВОТ ЭТО! РВИ ИХ!",
-				"id": "odin.berserk.01"
+				"id": "odin.berserk.01",
+				"voice": "odin_da_vot_eto_rvi_ih"
 			},
 			{
 				"speaker": "odin",
@@ -1724,6 +1760,13 @@
 				"emotion": "angry",
 				"text": "БЕЙ! БЕЙ! НЕ ДУМАЙ — БЕЙ!",
 				"id": "odin.berserk.03"
+			},
+			{
+				"speaker": "odin",
+				"emotion": "happy",
+				"text": "ДОСТОЙНЕЙШИЙ!",
+				"id": "odin.berserk.04",
+				"voice": "odin_dostoyneyshiy"
 			}
 		],
 		"rage_over": [
@@ -1839,7 +1882,8 @@
 				"speaker": "odin",
 				"emotion": "smug",
 				"text": "Норматив. Как в армии богов. Свисток пошёл!",
-				"id": "odin.trial_intro.02"
+				"id": "odin.trial_intro.02",
+				"sfx": "coach_whistle"
 			},
 			{
 				"speaker": "odin",
