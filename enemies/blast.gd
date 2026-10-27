@@ -22,6 +22,7 @@ static func detonate(parent: Node, pos: Vector3, radius_: float, damage_: float,
 	FX.burst(parent, pos, radius_ * 0.75, Color(color_, 0.55), 0.3)
 	var ground := Loot.floor_point(parent as Node3D, pos) if parent is Node3D else pos
 	FX.ring(parent, ground, radius_, Color(color_, 0.9), 0.35)
+	FX.scorch(parent, ground, radius_ * 0.8)  # подпалина на полу (assets/decals/scorch)
 	FX.sparks(parent, pos, color_.lightened(0.3), 22, 9.0)
 	FX.blast_smoke(parent, pos, radius_)
 	Audio.sfx("bloater_explode", "sounds/sfx/boss_slam.wav")
