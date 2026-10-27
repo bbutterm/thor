@@ -22,7 +22,7 @@
 | Приземление | `slam_base_radius` + `slam_radius_per_meter` | 3.5 + 0.25/м | Радиус волны растёт с высотой |
 | Приземление | `slam_base_damage` + `slam_damage_per_meter` | 20 + 3/м | Урон волны |
 | Приземление | `slam_base_knockback` + `slam_knockback_per_meter` | 10 + 0.8/м | Отбрасывание |
-| Удар-приземление | `slam_min_height` / `slam_hint_cooldown` | 3 м / 8 с | С обычного прыжка недоступен; после воздушного прыжка, специальных подбросов или с высоты — доступен |
+| Удар-приземление | `slam_min_height` / `slam_hint_cooldown` | 3 м / 8 с | С обычного прыжка недоступен; после воздушного прыжка, специальных подбросов или с высоты над миром/предметом — доступен |
 | Супер-прыжок | `super_jump_window` | 0.25 | Окно после приземления |
 | Супер-прыжок | `super_jump_height_mult` | 2.5 | Во сколько раз выше обычного |
 | Отскок (GDD 7.2) | `slam_bounce_ratio` / `slam_bounce_min_height` | 0.6 / 1.2 м | Удар-приземление задел врага → подбрасывает на долю высоты падения (не ниже минимума), двойной прыжок восстанавливается |
@@ -86,7 +86,7 @@
 | Два молота | — | копии веером через `spread_deg` 12°, каждый ×`damage_mult` 0.6 |
 | Молот-ступенька | — | прыжок ×`jump_mult` 1.5 / 1.85, ждёт `stuck_hold` 6 / 10 с, площадка `platform_size` 1 × 0.2 × 0.9 м, стена — `max_wall_normal_y` 0.5 |
 | Обмен | к молоту | неуязвимость `arrive_invuln` 0.35 с; ур. 2 — волна `burst_radius` 3, `burst_damage` 11, `burst_knockback` 9 |
-| Пике молотом | — | взгляд ниже `min_down_angle` 30°, бросок ×`throw_speed_mult` 1.6, Тор летит `follow_speed` 40, бонус высоты `height_bonus` 4 / 7 м, `max_follow_time` 1.5 с |
+| Пике молотом | — | взгляд ниже `min_down_angle` 30°, бросок ×`throw_speed_mult` 1.6, Тор летит `follow_speed` 40, бонус высоты `height_bonus` 4 / 7 м, `max_follow_time` 1.5 с. Разрешение на удар проверяется при броске и действует до посадки или завершения залезания |
 | Праща | удержание ПКМ | крутится после `spin_delay` 0.2 с, `orbit_radius` 1.9, `spin_speed` 9 рад/с, `tick` 0.25 с × `spin_damage` 11, `spin_knockback` 8, до `max_spin` 4 / 6 с; бросок ×`launch_speed_mult` 1.4, ×`launch_damage_mult` 1.3 / 1.6, пробивает щиты |
 | Заряд | удержание ПКМ | короче `min_hold` 0.12 с — обычный бросок; полный за `charge_time` 0.8 / 0.55 с: урон до ×`max_damage_mult` 2.2 / 2.6, скорость ×`max_speed_mult` 1.4, дальность ×`max_range_mult` 1.8, пробитие с `pierce_at` 0.95; ур. 2 — оглушение `stun_lvl2` 0.8 с |
 | Перехват в воздухе | — | `restore_dash` / `restore_dash_lvl2` 1 / 2 дополнительных руны, ур. 2 — подброс `hop_lvl2` 5 м/с |
