@@ -674,6 +674,17 @@ func build_player() -> void:
 	ve.ambient_light_color = Color(0.85, 0.78, 0.7)
 	ve.ambient_light_energy = 0.9
 	ve.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	# Небо только для отражений (фон прозрачный): металлу Мьёльнира и топора есть что отражать — блики вместо серой матовости
+	var vsky := Sky.new()
+	var vsm := ProceduralSkyMaterial.new()
+	vsm.sky_top_color = Color(0.16, 0.18, 0.3)
+	vsm.sky_horizon_color = Color(1.0, 0.62, 0.38)
+	vsm.ground_horizon_color = Color(0.42, 0.3, 0.24)
+	vsm.ground_bottom_color = Color(0.06, 0.05, 0.06)
+	vsky.sky_material = vsm
+	vsky.radiance_size = Sky.RADIANCE_SIZE_64
+	ve.sky = vsky
+	ve.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	vm_env.environment = ve
 	sv.add_child(vm_env)
 	var vm_sun := DirectionalLight3D.new()

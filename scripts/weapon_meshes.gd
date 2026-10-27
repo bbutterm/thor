@@ -137,9 +137,10 @@ static func mjolnir_material() -> StandardMaterial3D:
 	m.roughness = 1.0
 	m.metallic_texture = load(MJOLNIR_DIR + "mjolnir_metallic.png")
 	m.metallic_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
-	# Отражать нечего (у рук свой мир без неба) — полный металл выходит чёрным, поэтому металл приглушён
-	m.metallic = 0.55
-	m.metallic_specular = 0.6
+	# Тёмный металл с бликами: у рук своё небо для отражений (ViewmodelEnvironment), в мире — небо мира
+	m.albedo_color = Color(0.72, 0.72, 0.76)
+	m.metallic = 0.9
+	m.metallic_specular = 0.7
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	_mjolnir_mat = m
 	return m
