@@ -177,8 +177,8 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Что делает трейт на уровне lv: у стихии — все взятые способы доставки по строке, у приёма — текст уровня
 func _trait_text(t: MjolnirTrait, lv: int) -> String:
 	if not t.is_element():
-		return tr(t.level_description(lv))
+		return GameSettings.throw_hint(tr(t.level_description(lv)))
 	var lines: Array[String] = []
 	for i in range(1, lv + 1):
-		lines.append(tr(t.level_description(i)))
+		lines.append(GameSettings.throw_hint(tr(t.level_description(i))))
 	return "\n".join(lines)

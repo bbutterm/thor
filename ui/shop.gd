@@ -20,6 +20,7 @@ var _sub: ChoicePick
 var _sub_item: ShopItemDef
 var _open_time: float = 0.0
 var _buttons: Dictionary = {}
+var _leave_btn: Button
 
 func _ready() -> void:
 	layer = 9
@@ -84,10 +85,10 @@ func _ready() -> void:
 	_rows = VBoxContainer.new()
 	_rows.add_theme_constant_override("separation", 6)
 	right.add_child(_rows)
-	var leave := UIStyle.button(tr("Уйти  [E / Esc]"), 20)
-	leave.custom_minimum_size = Vector2(260, 46)
-	leave.pressed.connect(close)
-	right.add_child(leave)
+	_leave_btn = UIStyle.button(tr("Уйти  [E / Esc / B]"), 20)
+	_leave_btn.custom_minimum_size = Vector2(260, 46)
+	_leave_btn.pressed.connect(close)
+	right.add_child(_leave_btn)
 
 func is_open() -> bool:
 	return visible or _sub.visible
@@ -154,6 +155,8 @@ func refresh() -> void:
 			first = b
 	if first:
 		first.grab_focus.call_deferred()
+	else:
+		_leave_btn.grab_focus.call_deferred()
 
 func _make_row(it: ShopItemDef) -> Button:
 	var reason := Shop.unavailable_reason(game, it)
@@ -254,7 +257,8 @@ func _on_sub_picked(id: String) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible or _sub.visible:
 		return
-	if event.is_action_pressed("pause") or event.is_action_pressed("interact"):
+	# У взаимодействия по умолчанию D-pad ↑; им двигаемся по меню, а не выходим из ларька.
+	if event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.is_action_pressed("interact")):
 		if Time.get_ticks_msec() / 1000.0 - _open_time > 0.25:
 			close()
 		get_viewport().set_input_as_handled()

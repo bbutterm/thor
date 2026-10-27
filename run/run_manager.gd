@@ -140,6 +140,9 @@ func _process(delta: float) -> void:
 	combat_clock += FX.real_delta(delta)
 	FX.tick(delta / maxf(Engine.time_scale, 0.0001))
 
+func _input(event: InputEvent) -> void:
+	GameSettings.note_input(event)
+
 func _load_dir(path: String) -> Array:
 	var out: Array = []
 	var dir := DirAccess.open(path)

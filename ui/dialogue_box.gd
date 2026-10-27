@@ -2,7 +2,8 @@ extends CanvasLayer
 class_name DialogueBox
 ## Окно диалога-новеллы: портреты слева (Тор) и справа (собеседник), плашка с именем, текст по букве,
 ## выбор ответа Тора, «Пропустить» и журнал прочитанного. Строится кодом. Создаёт и показывает Dialogue.
-## Управление: клик / Пробел / Enter — допечатать или дальше; 1 / 2 — выбор; Tab или кнопка — журнал.
+## Управление: клик / Пробел / Enter / A — допечатать или дальше; 1 / 2 или стрелки + A — выбор;
+## Tab / View — журнал, Y — пропустить сцену на геймпаде.
 ## Фон (backdrop) — картинка sprites/backgrounds/*.webp (ScreenArt.backdrop_path: couch → диван,
 ## shop → ларёк, run → мир забега…); сюжетный кадр sprites/story/<id>.webp — поле "image" у реплики
 ## (или у сцены — с первой реплики): на весь экран за окном текста, портреты прячутся; "none" — убрать.
@@ -168,17 +169,17 @@ func _build() -> void:
 
 	var top := HBoxContainer.new()
 	top.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	top.offset_left = -420
+	top.offset_left = -520
 	top.offset_right = -24
 	top.offset_top = 20
 	top.offset_bottom = 64
 	top.alignment = BoxContainer.ALIGNMENT_END
 	top.add_theme_constant_override("separation", 10)
 	_root.add_child(top)
-	_log_btn = _small_button(tr("Журнал [Tab]"))
+	_log_btn = _small_button(tr("Журнал [Tab / View]"))
 	_log_btn.pressed.connect(toggle_log)
 	top.add_child(_log_btn)
-	_skip_btn = _small_button(tr("Пропустить ▸▸"))
+	_skip_btn = _small_button(tr("Пропустить [Y] ▸▸"))
 	_skip_btn.pressed.connect(skip)
 	top.add_child(_skip_btn)
 
@@ -476,6 +477,8 @@ func _show_choices(chs: Array) -> void:
 		b.add_theme_color_override("font_hover_color", accent.lightened(0.3))
 		b.pressed.connect(choose.bind(i))
 		_choices_box.add_child(b)
+	if _choices_box.get_child_count() > 0:
+		(_choices_box.get_child(0) as Button).grab_focus.call_deferred()
 
 func _clear_choices() -> void:
 	for c in _choices_box.get_children():
@@ -546,6 +549,25 @@ func _on_click_input(event: InputEvent) -> void:
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
+	if event is InputEventJoypadButton and event.pressed:
+		if event.button_index == JOY_BUTTON_BACK:
+			toggle_log()
+			get_viewport().set_input_as_handled()
+			return
+		if _log_panel.visible and event.is_action_pressed("ui_cancel"):
+			toggle_log()
+			get_viewport().set_input_as_handled()
+			return
+		if event.button_index == JOY_BUTTON_Y and _age >= open_guard:
+			skip()
+			get_viewport().set_input_as_handled()
+			return
+		if not _waiting_choice and event.is_action_pressed("ui_accept"):
+			advance()
+			get_viewport().set_input_as_handled()
+			return
+		# Выборы обрабатываются обычным фокусом Control, чтобы работали стики и D-pad.
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var k := event as InputEventKey
 		if k.physical_keycode == KEY_TAB:
@@ -556,6 +578,8 @@ func _input(event: InputEvent) -> void:
 			choose(0)
 		elif _waiting_choice and (event.is_action("pick_2") or k.physical_keycode == KEY_KP_2):
 			choose(1)
+		elif _waiting_choice and (event.is_action("ui_accept") or event.is_action("ui_up") or event.is_action("ui_down")):
+			return
 		elif k.physical_keycode in [KEY_SPACE, KEY_ENTER, KEY_KP_ENTER] or event.is_action("jump"):
 			advance()
 		get_viewport().set_input_as_handled()
