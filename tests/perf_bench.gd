@@ -5,6 +5,7 @@ extends Node
 ## Headless (CPU):  godot --headless --path . --fixed-fps 60 res://tests/perf_bench.tscn
 ## С рендером:      xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 320x180 res://tests/perf_bench.tscn
 ## Аргумент после «--» — секунд замера на сцену (по умолчанию 8).
+## «-- 8 outline»: вместо обычных сцен — толпа 44 врагов с комиксовой обводкой и без (scripts/outline.gd).
 ## Пишет: среднее/медиану/95-й перцентиль кадра (мс, по часам; в headless это вся CPU-часть кадра),
 ## число узлов и draw calls.
 
@@ -12,6 +13,8 @@ var game: Game
 var seconds: float = 8.0
 ## «-- 8 ablate»: в толпе ещё и замеры с выключенными частями (где тратится CPU)
 var ablate: bool = false
+## «-- 8 outline»: цена обводки на толпе 44
+var outline: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -26,6 +29,7 @@ func _ready() -> void:
 	if args.size() > 0 and args[0].is_valid_float():
 		seconds = args[0].to_float()
 	ablate = "ablate" in args
+	outline = "outline" in args
 	_run.call_deferred()
 
 func wait(sec: float) -> void:
@@ -49,8 +53,11 @@ func _start(order: Array, index: int) -> void:
 func _run() -> void:
 	var mode := "headless" if DisplayServer.get_name() == "headless" else RenderingServer.get_current_rendering_method()
 	print("=== PERF BENCH (%s, %.0f с на сцену) ===" % [mode, seconds])
-	await _bench_crowd()
-	await _bench_jarl()
+	if outline:
+		await _bench_outline()
+	else:
+		await _bench_crowd()
+		await _bench_jarl()
 	print("=== ИТОГ PERF BENCH ===")
 	get_tree().paused = false
 	FX.reset_time()
@@ -119,6 +126,80 @@ func _bench_crowd() -> void:
 	_iu_breakdown()
 	if ablate:
 		await _ablations()
+
+## Толпа 44 (11 воинов + 33 корма, 2 элиты): с обводкой, без, снова с (порядок — против дрейфа прогрева)
+func _bench_outline() -> void:
+	GameSettings.set_value("video", "outline", true, false)
+	await _start([Run.ROOM_SCENES[0]], 0)
+	await wait(1.0)
+	game.room._spawn_queue.clear()
+	for e in game.room.alive_enemies().duplicate():
+		if is_instance_valid(e) and not e.is_dead:
+			e.take_hit(9999, Vector3.ZERO, "test")
+	await wait(1.5)
+	var c := game.player.global_position
+	for i in 44:
+		var a := TAU * i / 44.0
+		var r := 5.0 + (i % 4) * 1.5
+		var e := game.room.spawn_extra("grunt" if i % 4 == 0 else "fodder", c + Vector3(cos(a) * r, 0.05, sin(a) * r))
+		if e:
+			if i < 2:
+				Loot.make_elite(e)
+			e.max_health = 1e6
+			e.health = 1e6
+		await get_tree().physics_frame
+	await wait(2.5)
+	print("  обведено узлов: %d" % Outline.active_count())
+	await _measure("Толпа 44, обводка ВКЛ")
+	GameSettings.set_value("video", "outline", false, false)
+	await wait(0.5)
+	await _measure("Толпа 44, обводка ВЫКЛ")
+	GameSettings.set_value("video", "outline", true, false)
+	await wait(0.5)
+	await _measure("Толпа 44, обводка ВКЛ (повтор)")
+	# Для сравнения — вариант (b): экранный контур по глубине (полноэкранный проход, 5 выборок глубины).
+	# Только замер: в игру не вошёл — обводит всё подряд (и стены), в GL Compatibility нет буфера нормалей.
+	GameSettings.set_value("video", "outline", false, false)
+	var quad := MeshInstance3D.new()
+	var qm := QuadMesh.new()
+	qm.size = Vector2(2, 2)
+	quad.mesh = qm
+	quad.extra_cull_margin = 16384.0
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var sh := Shader.new()
+	sh.code = SCREEN_EDGE_SHADER
+	var sm := ShaderMaterial.new()
+	sm.shader = sh
+	quad.material_override = sm
+	get_viewport().get_camera_3d().add_child(quad)
+	await wait(0.5)
+	await _measure("Толпа 44, экранный контур по глубине (b), без обводки")
+	quad.queue_free()
+	GameSettings.set_value("video", "outline", true, false)
+
+const SCREEN_EDGE_SHADER := """shader_type spatial;
+render_mode unshaded, depth_draw_never, depth_test_disabled, cull_disabled, shadows_disabled, fog_disabled;
+uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
+float lin(vec2 uv, mat4 inv) {
+	float d = texture(depth_tex, uv).r;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	d = d * 2.0 - 1.0;
+#endif
+	vec4 v = inv * vec4(uv * 2.0 - 1.0, d, 1.0);
+	return -v.z / v.w;
+}
+void vertex() {
+	POSITION = vec4(VERTEX.xy, 1.0, 1.0);
+}
+void fragment() {
+	vec2 px = 1.5 / VIEWPORT_SIZE;
+	float c = lin(SCREEN_UV, INV_PROJECTION_MATRIX);
+	float e = abs(lin(SCREEN_UV + vec2(px.x, 0.0), INV_PROJECTION_MATRIX) - c) + abs(lin(SCREEN_UV - vec2(px.x, 0.0), INV_PROJECTION_MATRIX) - c)
+		+ abs(lin(SCREEN_UV + vec2(0.0, px.y), INV_PROJECTION_MATRIX) - c) + abs(lin(SCREEN_UV - vec2(0.0, px.y), INV_PROJECTION_MATRIX) - c);
+	ALBEDO = vec3(0.0);
+	ALPHA = clamp(e / (c * 0.08) - 0.5, 0.0, 1.0);
+}
+"""
 
 ## Выключаем по одной части и мерим снова — разница = её цена.
 func _ablations() -> void:
