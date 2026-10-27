@@ -25,8 +25,25 @@ func _ready() -> void:
 		if Portrait.face_of(sp).is_empty():
 			fails += 1
 			print("  [FAIL] нет точки лица для крупного плана: ", sp)
-	if Portrait.texture_path("brokk", "happy") != "":
-		fails += 1
-		print("  [FAIL] у Брокка арта нет — ожидалась заглушка")
+	# Портреты гномов сделаны для ларька; отсутствующие эмоции используют neutral.
+	for pair in [["brokk", ["neutral", "happy", "angry", "shocked", "smug"]],
+			["eitri", ["neutral", "happy", "embarrassed"]]]:
+		var sp: String = pair[0]
+		for emo in pair[1]:
+			var path := Portrait.texture_path(sp, emo)
+			var variant := load(path) as Texture2D if path != "" else null
+			var img: Image = variant.get_image() if variant else null
+			if not path.ends_with("%s_%s.webp" % [sp, emo]) or variant == null or variant.get_height() > 768 or img == null or img.get_pixel(0, 0).a > 0.01:
+				fails += 1
+				print("  [FAIL] портрет гнома не загрузился, велик или не прозрачен: ", sp, " ", emo)
+			else:
+				ok += 1
+		var fallback := Portrait.texture_path(sp, "not_an_emotion")
+		var tex := load(Portrait.texture_path(sp, "neutral")) as Texture2D
+		if not fallback.ends_with("%s_neutral.webp" % sp) or tex == null or tex.get_height() > 768 or Portrait.face_of(sp).is_empty():
+			fails += 1
+			print("  [FAIL] запасной портрет, импорт или точка лица гнома: ", sp)
+		else:
+			ok += 1
 	print("=== ИТОГ PORTRAITS: %d OK, %d FAIL ===" % [ok, fails])
 	get_tree().quit(0 if fails == 0 else 1)
