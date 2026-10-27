@@ -10,7 +10,7 @@
 - Всего 172 игровых файла. Контактные листы и анимационные превью не входят в это число.
 
 ## Дополнения после исходного комплекта
-- `icons/trait_sling.webp`, `trait_wind.webp`, `trait_air_catch.webp`, `trait_charge.webp`, `trait_hammer_dive.webp`, `trait_hammer_step.webp`, `trait_loyal_dog.webp`, `trait_swap.webp` — дополнительные иконки приёмов и стихии «Ветер», созданные с помощью генерации изображений по визуальному стилю комплекта. Это отдельные дополнения, а не файлы из исходного архива.
+- `icons/trait_sling.webp`, `trait_wind.webp`, `trait_air_catch.webp`, `trait_charge.webp`, `trait_hammer_dive.webp`, `trait_hammer_step.webp`, `trait_loyal_dog.webp`, `trait_swap.webp` — дополнительные иконки приёмов и стихии «Ветер», созданные с помощью генерации изображений по визуальному стилю комплекта. Иконки связок — `trait_earth_dive.webp`, `trait_fire_tornado.webp`, `trait_ice_ricochet.webp`, `trait_lightning_magnet.webp`, `trait_wind_pull.webp` — изготовлены тем же способом. Это отдельные дополнения, а не файлы из исходного архива.
 
 ## Подключение
 Папка sprites/ сохраняет имена и иерархию из задания. В этом компактном архиве используются WebP вместо PNG. Загружайте пути из manifest.json либо замените расширение в своём загрузчике. PNG-оригиналы сохранены отдельно; конверсия из данного WebP обратно в PNG не восстанавливает оригинальные цветовые данные.
