@@ -89,6 +89,8 @@ func _test_skin() -> void:
 		and UISkin.path("trait_sling") == "res://sprites/ui/icons/trait_sling.webp"
 		and UISkin.path("trait_wind") == "res://sprites/ui/icons/trait_wind.webp",
 		"у Пращи и Ветра есть иконки для карточки и HUD")
+	for id in ["air_catch", "charge", "hammer_dive", "hammer_step", "loyal_dog", "swap"]:
+		check(UISkin.trait_icon(id) != null, "иконка приёма %s загружена" % id)
 	var sling := load("res://weapons/mjolnir_traits/sling.tres") as MjolnirTrait
 	var traits_hud := MjolnirTraitsHud.new()
 	var hud_icon := traits_hud._icon(sling, 1)
