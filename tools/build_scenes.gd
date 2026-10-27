@@ -28,6 +28,7 @@ func _ready() -> void:
 	build_props()
 	build_enemies()
 	build_player()
+	build_dress()
 	build_rooms()
 	build_ui_scenes()
 	build_game()
@@ -810,6 +811,8 @@ func room_defs() -> Array:
 		],
 		"pillars": _ring_points(Vector3(0, 0, -2), 9.0, 8),
 		"jump_pads": [[Vector3(-3.5, 0, 6.5), 9.0], [Vector3(3.5, 0, 6.5), 9.0]],
+		# Башня — круглая (каменный барабан и деревянная площадка по коллизии 4 × 4)
+		"dress": {"styles": {0: "tower"}},
 		"enemies": [["grunt", Vector3(-6, 0, -8), 0], ["grunt", Vector3(6, 0, -8), 0], ["grunt", Vector3(-8, 0, 0), 0], ["grunt", Vector3(8, 0, 0), 0], ["fodder", Vector3(0, 0, -10), 0, 6, 1.5],
 			["thrower", Vector3(0, 5.1, -2), 1], ["thrower", Vector3(-10, 0, -10), 1], ["grunt", Vector3(10, 0, -10), 1], ["grunt", Vector3(0, 0, -11), 1],
 			["bloated", Vector3(-10, 0, -6), 1], ["fodder", Vector3(7, 0, -6), 1, 5, 1.5],
@@ -957,6 +960,53 @@ func _ring_props(c: Vector3, radius: float, n: int, kind: String) -> Array:
 
 func _stack_props(base: Vector3) -> Array:
 	return [["crate", base], ["crate", base + Vector3(0.95, 0, 0)], ["crate", base + Vector3(0.45, 0.92, 0)], ["crate", base + Vector3(0, 0, 0.95)]]
+
+## Блок Б0 «Одеть залы»: общие меши и материалы одевания (rooms/meshes, rooms/materials) и даль за стенами.
+func build_dress() -> void:
+	print("Одевание залов: меши, материалы, даль…")
+	RoomDresser.build_assets()
+	_save(RoomDresser.build_backdrop(), RoomDresser.BACKDROP_SCENE)
+
+## Стиль одевания блока зала (RoomDresser): дом, мост/настил, только коллизия, дерево, камень;
+## ключ "dress": {"styles": {индекс: стиль}} зала перекрывает (например, "tower" — круглая башня).
+func _block_style(d: Dictionary, i: int) -> String:
+	var over: Dictionary = (d.get("dress", {}) as Dictionary).get("styles", {})
+	if over.has(i):
+		return over[i]
+	for h in d.get("houses", []):
+		if h[0] == i:
+			return "house"
+	var b: Array = d.blocks[i]
+	if _is_wood_deck(b):
+		return "deck"
+	if b[2] == "none":
+		return "none"
+	return "wood" if b[2] == "wood" else "stone"
+
+## Бочка и ящик в свободных углах зала (не больше двух): углы не пустые, а пропсы — разрушаемые.
+func _corner_props(d: Dictionary) -> Array:
+	var out: Array = []
+	var hw: float = d.w * 0.5 - 1.1
+	var hd: float = d.d * 0.5 - 1.1
+	var kinds := ["barrel", "crate"]
+	for c in [Vector3(-hw, 0, -hd), Vector3(hw, 0, hd), Vector3(hw, 0, -hd), Vector3(-hw, 0, hd)]:
+		if out.size() >= 2:
+			break
+		var ok := true
+		for b in d.blocks:
+			var bc: Vector3 = b[0]
+			var bs: Vector3 = b[1]
+			if absf(c.x - bc.x) < bs.x * 0.5 + 1.2 and absf(c.z - bc.z) < bs.z * 0.5 + 1.2:
+				ok = false
+		for pr in d.props:
+			if (pr[1] as Vector3).distance_to(c) < 2.0:
+				ok = false
+		for jp in d.get("jump_pads", []):
+			if (jp[0] as Vector3).distance_to(c) < 2.5:
+				ok = false
+		if ok:
+			out.append([kinds[out.size() % 2], c])
+	return out
 
 func build_rooms() -> void:
 	print("Залы…")
@@ -1151,8 +1201,9 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	props.name = "Props"
 	root.add_child(props)
 	var prop_scenes := {}
-	for i in d.props.size():
-		var pr: Array = d.props[i]
+	var all_props: Array = d.props + (_corner_props(d) if (d.get("dress", {}) as Dictionary).get("corner_props", true) else [])
+	for i in all_props.size():
+		var pr: Array = all_props[i]
 		# "barrel", "crate", "barrel_explosive" → props/<вид>.tscn
 		if not prop_scenes.has(pr[0]):
 			prop_scenes[pr[0]] = load("res://props/%s.tscn" % pr[0]) as PackedScene
@@ -1230,6 +1281,15 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		stall.position = d.stall
 		root.add_child(stall)
 
+	# Одевание (блок Б0): коллизия та же, вид — модели, MultiMesh и общий шейдер поверхностей
+	var opts: Dictionary = (d.get("dress", {}) as Dictionary).duplicate()
+	var styles := {}
+	for i in d.blocks.size():
+		styles["Block%d" % i] = _block_style(d, i)
+	opts["styles"] = styles
+	if d.get("floor_tex", "") == "dirt_straw":
+		opts["floor"] = "dirt"
+	RoomDresser.new(hash(d.file)).dress_room(root, opts)
 	_save(root, "res://rooms/%s.tscn" % d.file)
 
 ## Графика стен зала (assets/decor/*): знамёна по центру боковых стен (там, где были знамёна-модели), щиты
