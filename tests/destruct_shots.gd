@@ -26,7 +26,20 @@ func wait(sec: float) -> void:
 		if game and is_instance_valid(game) and game.player:
 			game.player.health = game.player.max_health
 
+## Сумма компиляций пайплайнов (Forward+/Mobile; в GL Compatibility — 0). Печатает прирост с прошлого раза:
+## после прогрева зала разрушение не должно компилировать ничего.
+var _pso: int = -1
+func pso(what: String) -> void:
+	var n := 0
+	for m in [Performance.PIPELINE_COMPILATIONS_CANVAS, Performance.PIPELINE_COMPILATIONS_MESH, Performance.PIPELINE_COMPILATIONS_SURFACE,
+			Performance.PIPELINE_COMPILATIONS_DRAW, Performance.PIPELINE_COMPILATIONS_SPECIALIZATION]:
+		n += int(Performance.get_monitor(m))
+	if _pso >= 0:
+		print("pso: %s +%d" % [what, n - _pso])
+	_pso = n
+
 func shot(name: String) -> void:
+	pso(name)
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
 	img.save_png(out_dir.path_join(name + ".png"))

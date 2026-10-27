@@ -133,6 +133,19 @@ func _build() -> void:
 	FX.sparks(game, p, Color(1, 0.8, 0.4), 8, 3.0, 10.0, 0.07, 0.2)
 	# Текстурные эффекты VFX-комплекта: все материалы (по одному на текстуру) во всех режимах billboard
 	FX.warmup_sprites(self, p, right)
+	# Свободный узел пула эффектов отдаёт материал (FX._take): квад остаётся с материалом по умолчанию,
+	# и его пайплайны компилируются при первом же исчезновении дыма (~0.5 с после первой разбитой бочки,
+	# первой смерти) — даже у скрытого узла. Прогреваем здесь: те же общие квады без материала.
+	# (и прозрачными — эффект прячется, когда transparency ещё не 0)
+	for k in 6:
+		var bare := MeshInstance3D.new()
+		bare.mesh = FX.shared_mesh(["quad", "quad_bottom", "quad_floor"][k % 3])
+		bare.transparency = 0.0 if k < 3 else 0.5
+		bare.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		bare.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+		add_child(bare)
+		bare.position = Vector3(0, -3.0, 0)
+		bare.visible = false
 	FX.hit_flash(game, p, 0.4)
 	FX.smoke(game, p, 0.4)
 	if VfxScreen.instance and is_instance_valid(VfxScreen.instance):

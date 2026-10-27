@@ -68,7 +68,9 @@ var _fire: Node3D
 
 ## Источники, разбитые которыми, — заслуга Тора (hit-stop, тряска)
 const PLAYER_SOURCES := ["melee", "melee_finisher", "melee_heavy", "hammer", "ranged", "slam", "dash", "stomp", "lightning", "reflect"]
-## Тесты: < 0 — шанс «сюрпризов» из Economy, иначе — этот (0 — без подмены бочек)
+## Разбил ими — слово комикса (KRAK!/SMASH!)
+const COMIC_SOURCES := ["melee_finisher", "melee_heavy", "hammer", "slam", "dash"]
+## < 0 — шанс «сюрпризов» из Economy (в тестах — 0), иначе — этот (0 — без подмены бочек)
 static var surprise_chance_override: float = -1.0
 
 func _ready() -> void:
@@ -188,7 +190,8 @@ func _break_now(knock: Vector3, source: String) -> void:
 		var p := get_tree().get_first_node_in_group("player") as Player
 		if p and p.camera_fx and p.global_position.distance_to(pos) < 6.0:
 			p.camera_fx.add_trauma(t.break_shake)
-		if comic_event != "" and not explosive:
+		# Слово — только на сильных моментах (GDD 19): не от обычного удара и не от пули
+		if comic_event != "" and not explosive and source in COMIC_SOURCES:
 			ComicFX.pop(comic_event, pos)
 	if explosive:
 		Blast.detonate(parent, pos + Vector3(0, 0.3, 0), blast_radius, blast_damage, self, self, blast_color)
@@ -281,7 +284,8 @@ static func roll_surprises(room: Node) -> int:
 	if room == null or not room.is_inside_tree():
 		return 0
 	var c := Silver.cfg()
-	var chance := surprise_chance_override if surprise_chance_override >= 0.0 else c.explosive_barrel_chance
+	# В тестах (Save.is_test) сюрпризов нет — случайный взрыв ломал бы чужие проверки; свои — через override
+	var chance := surprise_chance_override if surprise_chance_override >= 0.0 else (0.0 if Save.is_test else c.explosive_barrel_chance)
 	if chance <= 0.0 or c.explosive_barrel_max <= 0:
 		return 0
 	var barrels: Array[Destructible] = []

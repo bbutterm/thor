@@ -106,6 +106,7 @@ func _run() -> void:
 	await _test_explosions()
 	await _test_fire()
 	await _test_speed()
+	await _test_comic()
 	await _test_enemies()
 	await _test_loot()
 	await _test_explosive()
@@ -287,6 +288,31 @@ func _test_speed() -> void:
 	c.linear_velocity = Vector3(-14, 3, 0)
 	await wait(0.1)
 	check(broken(b) and broken(c), "отброшенные быстрее %.0f м/с бочка и ящик разбились" % Silver.cfg().barrel_break_speed)
+
+func _test_comic() -> void:
+	print("-- Слово комикса: только сильный удар")
+	var cf := get_tree().root.get_node("ComicFX")
+	var saved: bool = GameSettings.comic_enabled
+	GameSettings.comic_enabled = true
+	await place(Vector3(0, 0.1, 12))
+	var b := spawn(BARREL, Vector3(0, 0, 8))
+	var c := spawn(CRATE, Vector3(1.5, 0, 8))
+	await wait(0.3)
+	FX.reset_time()
+	cf.reset_state()
+	await get_tree().process_frame
+	b.take_hit(99.0, Vector3.ZERO, "melee")
+	await wait(0.2)
+	var evs: Array = cf.history.map(func(h: Dictionary) -> String: return String(h.event))
+	check(not "smash" in evs, "обычный удар разбил бочку — без слова (%s)" % [evs])
+	await wait(0.8)
+	cf.reset_state()
+	c.take_hit(99.0, Vector3.ZERO, "melee_heavy")
+	await wait(0.2)
+	evs = cf.history.map(func(h: Dictionary) -> String: return String(h.event))
+	check("smash" in evs, "сильный удар разбил ящик — KRAK!/SMASH! (%s)" % [evs])
+	GameSettings.comic_enabled = saved
+	FX.reset_time()
 
 # --- Враги ---
 
