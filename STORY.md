@@ -49,7 +49,7 @@
 | 7-я | `freya_intro` | Фрейя и «ребрендинг», благословения |
 | 8–9-я | `odin_notebook`, `ravens_gossip` | Один о прошлом Торе; вороны видели поддельные печати норн |
 | 10-я | `hel_letter` | Письмо от Хель: «Не приходи. Хотя… приходи» |
-| 11–14-я | `sif_braid`, `loki_reveal`, `skadi_intro`, `dwarves_secret` | Признание Локи; Скади с лыжами; Брокк продаёт правду |
+| 11–14-я | `sif_braid`, `loki_reveal`, `skadi_intro`, `dwarves_secret` | Признание Локи; Скади с лыжами; Брокк предлагает доказательство |
 | По причинам | `odin_boss_trauma` (3 смерти от Ярла), `odin_falls` (3 падения), `odin_own_fire`, `odin_quick`, `odin_long`, `odin_many_deaths` (20) | Советы и подколки по стилю игры |
 | Победы | `odin_first_win`, `freya_after_win`, `hild_respect` | Первая гордость Одина, уважение соперницы |
 | Боссы | `jarl_intro`, `hel_intro` | Знакомство перед боем; потом — короткие интро и фразы поражения пузырём |
