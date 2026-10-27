@@ -176,6 +176,7 @@ func _grant_perfect() -> void:
 	FX.perfect_catch(p)
 	player.camera_fx.kick_fov(4.0)
 	perfect_catch.emit()
+	Dialogue.thor_bark("catch", 0.5)
 	trait_call(&"on_perfect_catch", [self])
 
 func current_damage() -> float:

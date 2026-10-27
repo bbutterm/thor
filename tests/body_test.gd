@@ -291,9 +291,9 @@ func _test_passives() -> void:
 	p.health = 50.0
 	p.heal(10.0)
 	check(is_equal_approx(p.health, 55.0), "лечение −50 %% (+%.1f)" % (p.health - 50.0))
-	# Трэлл: урон −30 %
+	# Батрак: урон −30 %
 	p = await _start("thrall")
-	check(is_equal_approx(p.outgoing_damage_mult(null, "hammer"), 0.7), "Трэлл: урон ×0.7")
+	check(is_equal_approx(p.outgoing_damage_mult(null, "hammer"), 0.7), "Батрак: урон ×0.7")
 	# Жрец: руны ×2
 	p = await _start("priest")
 	check(Run.rune_power == 2, "Жрец: руны ×2 (rune_power %d)" % Run.rune_power)

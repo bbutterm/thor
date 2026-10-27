@@ -113,6 +113,7 @@ func _on_room_cleared() -> void:
 		Run.won = true
 		_ending = true
 		Dialogue.on_boss_defeat()
+		Dialogue.thor_bark("boss_win", 1.0)
 		get_tree().create_timer(1.6, false).timeout.connect(func() -> void:
 			Odin.say("victory")
 			_show_end(true))

@@ -748,6 +748,7 @@ func _do_slam_impact(height: float) -> void:
 		h.on_slam(self, power, _last_slam_hits)
 	if height >= big_slam_height:
 		Odin.say("big_slam")
+		Dialogue.thor_bark("slam", 0.6)
 
 # --- Прыжки по GDD 7.2: отскок, прыжок по головам, залезание на уступ ---
 

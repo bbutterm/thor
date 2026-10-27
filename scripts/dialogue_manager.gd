@@ -516,6 +516,20 @@ func bark(line: Dictionary) -> void:
 	else:
 		bubble().show_line(sp, str(line.get("emotion", "neutral")), text)
 
+## Тор хвастается пузырём (пулы thor.<событие>): с шансом и своим кулдауном, чтобы не болтал без умолку.
+@export var thor_bark_cooldown: float = 18.0
+var _thor_next_bark: float = 0.0
+
+func thor_bark(event: String, chance: float = 0.45) -> void:
+	var pool := "thor." + event
+	if not has_pool(pool):
+		return
+	var now := Time.get_ticks_msec() / 1000.0
+	if now < _thor_next_bark or randf() > chance:
+		return
+	_thor_next_bark = now + thor_bark_cooldown
+	bark_pool(pool)
+
 func bark_pool(pool: String) -> void:
 	var lines := pool_lines(pool)
 	if not lines.is_empty():

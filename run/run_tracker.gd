@@ -130,6 +130,7 @@ func _watch_kills() -> void:
 		_kill_times.clear()
 		_pending_ranged_kill = false
 		Odin.say("multikill")
+		Dialogue.thor_bark("wake")
 	elif _pending_ranged_kill:
 		_pending_ranged_kill = false
 		Odin.say("ranged_kill")
@@ -151,6 +152,7 @@ func _on_hurt(amount: float) -> void:
 	if total >= player.max_health * big_damage_fraction and player.health > 0.0:
 		_damage_log.clear()
 		Odin.say("big_damage")
+		Dialogue.thor_bark("whine", 0.35)
 
 ## Итог забега для сохранения и выбора реакции.
 func result(won: bool) -> Dictionary:

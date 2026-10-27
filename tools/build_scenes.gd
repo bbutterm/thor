@@ -248,7 +248,7 @@ func build_resources() -> void:
 	var bodies := [
 		{"id": "berserker", "name": "Берсерк", "desc": "Много здоровья, бьёт тяжело, бегает медленно. Орёт.", "hp": 150.0, "speed": 7.5, "dash": 2, "axe": 1.3, "hammer": 1.0, "glory": 1.0, "hand": Color(1.0, 0.86, 0.78), "sleeve": Color(0.55, 0.22, 0.18), "melee": "axe", "ranged": ""},
 		{"id": "hunter", "name": "Охотник", "desc": "Быстрый и хрупкий. Три заряда рывка.", "hp": 80.0, "speed": 10.0, "dash": 3, "axe": 0.9, "hammer": 1.2, "glory": 1.0, "hand": Color(0.9, 0.76, 0.64), "sleeve": Color(0.32, 0.42, 0.28), "melee": "knife", "ranged": "crossbow"},
-		{"id": "thrall", "name": "Трэлл-раб", "desc": "Всё слабое, но Слава ×2. Социальный лифт.", "hp": 60.0, "speed": 8.5, "dash": 2, "axe": 0.7, "hammer": 0.8, "glory": 2.0, "hand": Color(0.95, 0.82, 0.72), "sleeve": Color(0.55, 0.5, 0.42), "melee": "club", "ranged": ""},
+		{"id": "thrall", "name": "Батрак", "desc": "Всё слабое, но Слава ×2. Социальный лифт.", "hp": 60.0, "speed": 8.5, "dash": 2, "axe": 0.7, "hammer": 0.8, "glory": 2.0, "hand": Color(0.95, 0.82, 0.72), "sleeve": Color(0.55, 0.5, 0.42), "melee": "club", "ranged": ""},
 	]
 	# Тела и руны теперь данные по GDD (блок Г): существующие файлы не перезаписываем — правятся руками
 	for b in bodies:

@@ -84,6 +84,7 @@ func start_berserk() -> void:
 	_since_kill = 0.0
 	Perf.mark("berserk_start")
 	Odin.say("berserk")
+	Dialogue.thor_bark("berserk", 1.0)
 	if player:
 		player.camera_fx.add_trauma(0.45)
 		player.camera_fx.kick_fov(12.0)
