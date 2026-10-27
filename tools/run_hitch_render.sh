@@ -112,10 +112,18 @@ export XDG_CACHE_HOME="$out/cache"
 export XDG_CONFIG_HOME="$out/config"
 limit=${THOR_HITCH_TIMEOUT:-7200}
 threshold=${THOR_HITCH_THRESHOLD_MS:-50}
-printf 'method=%s\ndisplay=%s\nproject=%s\ntimeout=%s\nthreshold_ms=%s\nstarted_utc=%s\n' \
-    "$method" "$DISPLAY" "$root" "$limit" "$threshold" "$(date -u +%FT%TZ)" | tee "$out/metadata.txt"
+test_args=("$threshold")
+asset_load=threaded
+if [[ "$method" == forward_plus ]]; then
+    # Lavapipe can hang while compiling shaders in ResourceLoader workers.
+    # Keep GL on the normal threaded path so it still exercises that path.
+    test_args+=(sync_load)
+    asset_load=synchronous
+fi
+printf 'method=%s\ndisplay=%s\nproject=%s\ntimeout=%s\nthreshold_ms=%s\nasset_load=%s\nstarted_utc=%s\n' \
+    "$method" "$DISPLAY" "$root" "$limit" "$threshold" "$asset_load" "$(date -u +%FT%TZ)" | tee "$out/metadata.txt"
 timeout --signal=TERM --kill-after=30s "$limit" godot --path "$root" --fixed-fps 60 --audio-driver Dummy \
-    --rendering-method "$method" --resolution 320x180 res://tests/hitch_test.tscn -- "$threshold" \
+    --rendering-method "$method" --resolution 320x180 res://tests/hitch_test.tscn -- "${test_args[@]}" \
     2>&1 | head -c 50000000 > "$out/godot.log"
 rc=$?
 if (( rc == 0 )) && ! grep -Fq "медиане, $method)" "$out/godot.log"; then
