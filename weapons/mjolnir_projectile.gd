@@ -87,7 +87,7 @@ func _build_visual() -> void:
 	_mesh_root = Node3D.new()
 	add_child(_mesh_root)
 	var hm := WeaponMeshes.hammer()
-	hm.position = Vector3(0, -0.3, 0)
+	hm.position = Vector3(0, -0.4, 0)
 	hm.scale = Vector3.ONE * 1.15
 	_mesh_root.add_child(hm)
 	_light = OmniLight3D.new()

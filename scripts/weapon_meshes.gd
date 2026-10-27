@@ -120,7 +120,7 @@ static func hammer(layer: int = 1) -> Node3D:
 const MJOLNIR_DIR := "res://assets/mjolnir/"
 const MJOLNIR_FBX := MJOLNIR_DIR + "Mjolnir_LP.fbx"
 ## Длина в игре (м) и доля длины от низа рукояти до точки хвата. В файле рукоять вдоль -Y, боёк вверху, вдоль X.
-const MJOLNIR_LENGTH := 0.62
+const MJOLNIR_LENGTH := 0.82
 const MJOLNIR_GRIP := 0.27
 static var _mjolnir_mat: StandardMaterial3D
 

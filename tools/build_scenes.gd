@@ -731,6 +731,7 @@ func build_player() -> void:
 	arm_l.weapon_offset = Vector3(0, -0.06, 0)
 	# Боёк поперёк кадра (в модели он вдоль Z — к камере торцом)
 	arm_l.weapon_rotation = Vector3(0, 90, 0)
+	arm_l.weapon_scale = 1.2
 	ham_pivot.add_child(arm_l)
 
 	var axe := Node.new()
