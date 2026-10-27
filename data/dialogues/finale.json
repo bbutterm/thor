@@ -1,0 +1,189 @@
+{
+	"id": "finale",
+	"draft": true,
+	"note": "ЧЕРНОВИК — текст и постановку вычитывает владелец; босс и титры ещё не подключены.",
+	"speakers": {},
+	"scenes": [
+		{
+			"id": "finale_a",
+			"trigger": "meet",
+			"priority": 100,
+			"conditions": [
+				"event:odin_finale_unlocked"
+			],
+			"draft": true,
+			"note": "Черновик: после победы над Одином; событие пока не вызывается. Кадр финала — сразу после экзамена.",
+			"backdrop": "yggdrasil",
+			"image": "finale",
+			"lines": [
+				{
+					"id": "finale_a_01",
+					"speaker": "odin",
+					"emotion": "happy",
+					"text": "…Неплохо. Сынок."
+				},
+				{
+					"id": "finale_a_02",
+					"speaker": "thor",
+					"emotion": "embarrassed",
+					"text": "Пап? Я не слишком сильно?"
+				},
+				{
+					"id": "finale_a_03",
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Для выпускного — в самый раз. Подай руку."
+				},
+				{
+					"id": "finale_a_04",
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Дух снова в твоём теле. В форме, как обещал."
+				},
+				{
+					"id": "finale_a_05",
+					"speaker": "thor",
+					"emotion": "happy",
+					"text": "Вот это плечи! Молот, ты тоже заметил?"
+				},
+				{
+					"id": "finale_a_06",
+					"speaker": "hugin",
+					"emotion": "neutral",
+					"text": "Нашли письма. Печати норн поддельные.",
+					"image": "none"
+				},
+				{
+					"id": "finale_a_07",
+					"speaker": "munin",
+					"emotion": "smug",
+					"text": "Все до единой. Даже на том, где «перенесли ещё раз»."
+				},
+				{
+					"id": "finale_a_08",
+					"speaker": "brokk",
+					"emotion": "happy",
+					"text": "А вот чек за печати. С именем покупателя."
+				},
+				{
+					"id": "finale_a_09",
+					"speaker": "loki",
+					"emotion": "embarrassed",
+					"text": "Брокк! Ты говорил, чеки никто не хранит!"
+				},
+				{
+					"id": "finale_a_10",
+					"speaker": "brokk",
+					"emotion": "smug",
+					"text": "Я сказал: «Хранение — за отдельную плату»."
+				},
+				{
+					"id": "finale_a_11",
+					"speaker": "thor",
+					"emotion": "angry",
+					"text": "Локи. Это ты писал, что Рагнарёк перенесли?"
+				},
+				{
+					"id": "finale_a_12",
+					"speaker": "loki",
+					"emotion": "embarrassed",
+					"text": "Я. Пока ты лежал, мне никто не мешал. Ну, почти."
+				},
+				{
+					"id": "finale_a_13",
+					"speaker": "thor",
+					"emotion": "neutral",
+					"text": "А лежать дальше решил я сам. Больше не буду."
+				},
+				{
+					"id": "finale_a_14",
+					"speaker": "heimdall",
+					"emotion": "neutral",
+					"text": "Внимание! Рагнарёк назначен. На этот раз — настоящий."
+				},
+				{
+					"id": "finale_a_15",
+					"speaker": "heimdall",
+					"emotion": "happy",
+					"text": "Гьяллархорн проверен. ВУ-У-У!",
+					"stage_direction": "Хеймдалль трубит в Гьяллархорн. Звук и анимация нужны при постановке финала."
+				},
+				{
+					"id": "finale_a_16",
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Ну что, сынок? Готов?"
+				},
+				{
+					"id": "finale_a_17",
+					"speaker": "thor",
+					"emotion": "happy",
+					"text": "Всё ещё достоин! Пойду разомнусь."
+				}
+			]
+		},
+		{
+			"id": "finale_post_credits_b",
+			"trigger": "meet",
+			"priority": 90,
+			"conditions": [
+				"seen:finale_a",
+				"event:finale_credits_complete"
+			],
+			"draft": true,
+			"note": "Черновик: только после титров. Один впервые за тысячу лет присел отдохнуть; Тор стоит рядом со свистком.",
+			"backdrop": "couch",
+			"lines": [
+				{
+					"id": "finale_post_credits_b_01",
+					"speaker": "odin",
+					"emotion": "neutral",
+					"text": "Пять минут. Просто посижу."
+				},
+				{
+					"id": "finale_post_credits_b_02",
+					"speaker": "odin",
+					"emotion": "happy",
+					"text": "Какой… удобный диван."
+				},
+				{
+					"id": "finale_post_credits_b_03",
+					"speaker": "odin",
+					"emotion": "embarrassed",
+					"text": "Ещё минуточку. Тут сейчас всё решится."
+				},
+				{
+					"id": "finale_post_credits_b_04",
+					"speaker": "thor",
+					"emotion": "smug",
+					"text": "ПОДЪЁМ! Сколько можно лежать?"
+				},
+				{
+					"id": "finale_post_credits_b_05",
+					"speaker": "odin",
+					"emotion": "shocked",
+					"text": "Сынок? Откуда у тебя мой свисток?"
+				},
+				{
+					"id": "finale_post_credits_b_06",
+					"speaker": "thor",
+					"emotion": "happy",
+					"text": "Временно заимствовал. Пап, пора размяться."
+				},
+				{
+					"id": "finale_post_credits_b_07",
+					"speaker": "odin",
+					"emotion": "angry",
+					"text": "Я вообще-то отдыхал."
+				},
+				{
+					"id": "finale_post_credits_b_08",
+					"speaker": "thor",
+					"emotion": "smug",
+					"text": "Отлично. Значит, ты полон сил. Пошёл!"
+				}
+			]
+		}
+	],
+	"pools": {}
+}

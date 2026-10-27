@@ -37,6 +37,7 @@ func _run() -> void:
 	_test_conditions()
 	_test_selection()
 	_test_content()
+	_test_finale_gating()
 	_test_story_order()
 	await _test_box()
 	await _test_run_start_scene()
@@ -176,6 +177,24 @@ func _test_content() -> void:
 		if sc.trigger in ["death", "victory", "run_start"]:
 			story += 1
 	check(story >= 10, "сюжетных сцен между забегами: %d" % story)
+
+## Черновики финала не должны появиться в обычной игре или до титров.
+func _test_finale_gating() -> void:
+	print("-- Финал и сцена после титров")
+	Save.reset()
+	check(Dialogue.pick_scene("meet").is_empty(), "без финального события сцены не выбираются")
+	Save.bump_event("odin_finale_unlocked")
+	check(Dialogue.pick_scene("meet").get("id", "") == "finale_a", "победа над Одином открывает финал A")
+	Save.mark_seen("finale_a")
+	check(Dialogue.pick_scene("meet").is_empty(), "после финала эпилог не открывается до титров")
+	Save.bump_event("finale_credits_complete")
+	check(Dialogue.pick_scene("meet").get("id", "") == "finale_post_credits_b", "эпилог B открывается после финала и титров")
+	Save.mark_seen("finale_post_credits_b")
+	check(Dialogue.pick_scene("meet").is_empty(), "сюжетные сцены не повторяются")
+	Save.reset()
+	Save.bump_event("finale_credits_complete")
+	check(Dialogue.pick_scene("meet").is_empty(), "событие титров само по себе не обходит финал A")
+	Save.reset()
 
 ## Симуляция 30 смертей: какие сцены открываются и когда (для отчёта)
 func _test_story_order() -> void:
