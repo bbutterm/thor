@@ -69,7 +69,7 @@ func _run() -> void:
 	await wait(0.15)
 	await press("jump")
 	check(await _wait_step(t, "dash"), "двойной прыжок — дальше рывок")
-	await wait(0.8)
+	await wait(p.dash_recharge + 0.2) # после двойного прыжка руна восстанавливается на земле
 	await press("dash")
 	check(await _wait_step(t, "attack"), "рывок — дальше удар")
 	await press("attack", 0.1)

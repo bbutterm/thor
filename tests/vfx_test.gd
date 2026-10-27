@@ -281,6 +281,8 @@ func _run() -> void:
 	print("-- Комиксовое слово на рисованном «взрыве»")
 	ComicFX.reset_state()
 	GameSettings.comic_enabled = true
+	var old_chance := ComicFX.routine_chance
+	ComicFX.routine_chance = 1.0 # этот тест проверяет графику, а не случайный пропуск слов
 	ComicFX.pop("lightning", ahead(3.0, 1.5), false)
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -302,6 +304,7 @@ func _run() -> void:
 				used[w.sprite.texture] = true
 	check(used.size() >= 3, "«взрывы» разные (%d из 6 за 12 слов)" % used.size())
 	ComicFX.reset_state()
+	ComicFX.routine_chance = old_chance
 
 	print("-- Итог по материалам")
 	check(FX.materials_created == mats0, "в бою не создано ни одного нового материала эффектов (%d → %d)" % [mats0, FX.materials_created])

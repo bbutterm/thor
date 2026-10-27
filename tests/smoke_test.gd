@@ -136,6 +136,7 @@ func _test_movement(p: Player) -> void:
 	check(p.velocity.y > 5.0, "двойной прыжок (vy=%.1f)" % p.velocity.y)
 	await wait(1.5)
 	check(p.is_on_floor(), "приземлился")
+	await wait(p.dash_recharge + 0.2)  # воздушный прыжок потратил общую руну
 	var charges_before := p.dash_charges
 	Input.action_press("move_forward")
 	await press("dash")
@@ -143,8 +144,8 @@ func _test_movement(p: Player) -> void:
 	check(p.horizontal_speed() > 15.0, "рывок (скорость %.1f)" % p.horizontal_speed())
 	check(p.dash_charges == charges_before - 1, "заряд рывка списан")
 	Input.action_release("move_forward")
-	await wait(1.6)
-	check(p.dash_charges == p.dash_charges_max, "заряды восстановились")
+	await wait(p.dash_recharge + 0.2)
+	check(p.dash_charges == p.dash_charges_max, "руны восстановились на земле")
 	print("    высота прыжка ~", snappedf(y1, 0.01))
 
 func _test_axe(p: Player) -> void:

@@ -14,7 +14,7 @@ class_name MovementProfile
 @export var dash_speed: float = 24.0
 @export var dash_duration: float = 0.16
 ## Перезарядка одного заряда, с
-@export var dash_recharge: float = 1.2
+@export var dash_recharge: float = 2.5
 ## Рывок на земле / в воздухе разрешён
 @export var dash_on_ground: bool = true
 @export var dash_in_air: bool = true

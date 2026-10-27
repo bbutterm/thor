@@ -32,7 +32,8 @@ signal slammed(power: float)
 @export var dash_charges_base: int = 2
 @export var dash_speed: float = 24.0
 @export var dash_duration: float = 0.16
-@export var dash_recharge: float = 1.2
+## Время восстановления одной руны на земле; в воздухе восстановление приостановлено.
+@export var dash_recharge: float = 2.5
 @export var dash_invuln: float = 0.15
 ## Скорость, которая остаётся после рывка (доля от dash_speed)
 @export var dash_exit_keep: float = 0.55
@@ -400,13 +401,13 @@ func _update_timers(delta: float) -> void:
 	_bounce_window_left = maxf(0.0, _bounce_window_left - delta)
 	_stomp_cooldown = maxf(0.0, _stomp_cooldown - delta)
 	_climb_check_cooldown = maxf(0.0, _climb_check_cooldown - delta)
-	if dash_charges < dash_charges_max:
+	if dash_charges < dash_charges_max and is_on_floor() and not is_climbing:
 		_dash_recharge_timer += delta
 		if _dash_recharge_timer >= dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult:
 			_dash_recharge_timer = 0.0
 			dash_charges += 1
 		dash_charges_changed.emit(dash_charges, dash_charges_max, _dash_recharge_timer / (dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult))
-	else:
+	elif dash_charges >= dash_charges_max:
 		_dash_recharge_timer = 0.0
 
 func _process_walk(wish: Vector3, on_floor: bool, delta: float) -> void:
@@ -473,15 +474,16 @@ func _process_jump(on_floor: bool) -> void:
 			Perf.mark("slide_jump")
 		for h in body_handlers:
 			h.on_jump(self)
-	elif _jumps_left > 0:
+	elif _jumps_left > 0 and dash_charges > 0:
 		_jump_buffer_left = 0.0
 		_jumps_left -= 1
+		_spend_dash_charge()
 		# Крылья валькирии ур. 2+: прыжки в воздухе выше
 		velocity.y = jump_velocity * 0.92 * (Run.rune_value("valkyrie_wings", true) if Run.rune_level("valkyrie_wings") > 0 else 1.0)
 		camera_fx.kick_fov(3.0)
 		Audio.sfx("double_jump", "sounds/jump_b.ogg, sounds/jump_c.ogg")
 	elif _wall_jumps_left > 0 and _try_wall_jump():
-		# Отскок от стены — когда прыжки в воздухе кончились (иначе у стены платформы съедал бы двойной прыжок)
+		# Отскок от стены бесплатный, когда воздушных прыжков или рун не осталось.
 		_jump_buffer_left = 0.0
 
 func _process_gravity(on_floor: bool, delta: float) -> void:
@@ -518,6 +520,14 @@ func _dir_or_forward(wish: Vector3) -> Vector3:
 	var dir := -transform.basis.z
 	dir.y = 0
 	return dir.normalized()
+
+## Восстановление рун при ловле Мьёльнира и от приёмов.
+func restore_mjolnir_runes(amount: int) -> void:
+	dash_charges = mini(dash_charges_max, dash_charges + maxi(0, amount))
+	if dash_charges >= dash_charges_max:
+		_dash_recharge_timer = 0.0
+	var duration := maxf(dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult, 0.001)
+	dash_charges_changed.emit(dash_charges, dash_charges_max, _dash_recharge_timer / duration)
 
 func _spend_dash_charge() -> void:
 	dash_charges -= 1

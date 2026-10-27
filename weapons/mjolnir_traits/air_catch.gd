@@ -1,10 +1,10 @@
 extends MjolnirTraitHandler
-## Приём «Перехват в воздухе» (блок Б4): поймал молот в прыжке — восстанавливаются двойной прыжок
-## (и отскоки от стены) и заряд рывка; можно долго не касаться земли. Управление — как у базы.
-## Ур. 2 — восстанавливаются все заряды рывка и Тора чуть подбрасывает.
+## Приём «Перехват в воздухе»: сверх базовой поимки возвращает ещё руны.
+## Ур. 2 — две дополнительные руны и небольшой подброс.
 
-## Сколько зарядов рывка вернуть (ур. 1)
+## Дополнительные руны сверх базовой поимки.
 @export var restore_dash: int = 1
+@export var restore_dash_lvl2: int = 2
 ## Ур. 2: подброс (вертикальная скорость не меньше, м/с)
 @export var hop_lvl2: float = 5.0
 
@@ -16,11 +16,8 @@ func on_caught(h: MjolnirHand) -> void:
 	if p == null or p.is_dead or p.is_on_floor() or p.is_climbing:
 		return
 	catches += 1
-	p._jumps_left = p.extra_jumps
-	p._wall_jumps_left = p.wall_jumps
-	var add := p.dash_charges_max if level >= 2 else restore_dash
-	p.dash_charges = mini(p.dash_charges_max, p.dash_charges + add)
-	p.dash_charges_changed.emit(p.dash_charges, p.dash_charges_max, 0.0)
+	var add := restore_dash_lvl2 if level >= 2 else restore_dash
+	p.restore_mjolnir_runes(add)
 	if level >= 2 and not p.is_slamming:
 		p.velocity.y = maxf(p.velocity.y, hop_lvl2)
 	FX.ring(p.get_parent(), p.global_position, 1.6, Color(0.6, 0.85, 1.0, 0.8), 0.25)

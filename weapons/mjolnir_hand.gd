@@ -42,6 +42,8 @@ signal traits_changed
 @export_group("Без молота")
 ## Пока молота нет в руке, рывок перезаряжается быстрее на эту долю (0.2 = на 20 %)
 @export var dash_recharge_bonus: float = 0.2
+## Сколько рун возвращает обычная поимка.
+@export var catch_runes: int = 1
 
 @export_group("Идеальный хват")
 ## Окно (с) до и после поимки, в которое надо нажать ПКМ
@@ -137,8 +139,6 @@ func _physics_process(delta: float) -> void:
 
 ## Нажата ПКМ: с приёмом удержания и молотом в руке — начать удержание, иначе бросок / возврат.
 func press_throw() -> void:
-	if in_hand and _blocked_by_cooldown():
-		return
 	if in_hand and bool(trait_modify(&"hold_throw", false)):
 		begin_hold()
 	else:
@@ -151,7 +151,10 @@ func begin_hold() -> void:
 	var now := _now()
 	if _perfect_open and now - _caught_time <= perfect_window:
 		_grant_perfect()
+		catch_timing.emit(&"perfect", now - _caught_time)
 	_perfect_open = false
+	if _blocked_by_cooldown():
+		return
 	holding = true
 	hold_time = 0.0
 	hold_progress = 0.0
@@ -273,6 +276,11 @@ func on_caught() -> void:
 	# Нажал раньше окна — «поздний» хват после поимки тоже не засчитывается
 	_perfect_open = not _catch_attempted
 	var perfect := now - _recall_press_time <= perfect_window
+	if player and not player.is_dead:
+		player.restore_mjolnir_runes(catch_runes)
+		if not player.is_on_floor() and not player.is_climbing:
+			player._jumps_left = player.extra_jumps
+			player._wall_jumps_left = player.wall_jumps
 	if perfect:
 		_perfect_open = false
 		_grant_perfect()
@@ -402,6 +410,8 @@ func _twirl(arm: ViewmodelArm, t: ViewmodelMotionTuning) -> void:
 func _grant_perfect() -> void:
 	Perf.mark("hammer_perfect")
 	perfect_ready = true
+	if player and not player.is_dead:
+		player.restore_mjolnir_runes(player.dash_charges_max)
 	cooldown_left = maxf(cooldown_left - float(trait_modify(&"perfect_cooldown_refund", perfect_cooldown_refund)), 0.0)
 	Audio.play("sounds/sfx/perfect_catch.wav")
 	var p := hand_point() + player.get_aim_forward() * 0.7
@@ -431,7 +441,7 @@ func is_throw_held() -> bool:
 ## Без молота в руке рывок перезаряжается быстрее (GDD 10). Таймер игрока подкручиваем снаружи,
 ## чтобы не трогать player.gd; если поле переименуют — бонус просто пропадёт.
 func _dash_bonus_tick(delta: float) -> void:
-	if dash_recharge_bonus <= 0.0 or player.dash_charges >= player.dash_charges_max:
+	if dash_recharge_bonus <= 0.0 or not player.is_on_floor() or player.is_climbing or player.dash_charges >= player.dash_charges_max:
 		return
 	var t: Variant = player.get("_dash_recharge_timer")
 	if t is float:

@@ -185,13 +185,15 @@ func _run() -> void:
 	p.velocity = Vector3(0, 3.0, -1.0)
 	for i in 6:
 		await get_tree().physics_frame
-	p._jumps_left = 0
+	p._jumps_left = 1
+	p.dash_charges = 0
 	p._coyote_left = 0.0
 	p._wall_jumps_left = p.wall_jumps
 	await press("jump")
 	await get_tree().physics_frame
 	check(p.velocity.y > 5.0 and p.velocity.z > 3.0, "отскок от стены: вверх и от стены (v=%s)" % [p.velocity])
-	check(p._wall_jumps_left == p.wall_jumps - 1, "потрачен 1 отскок от стены")
+	check(p._wall_jumps_left == p.wall_jumps - 1 and p._jumps_left == 1 and p.dash_charges == 0, "отскок от стены бесплатный даже без рун")
+	p.restore_mjolnir_runes(p.dash_charges_max)
 	wall2.queue_free()
 	await wait(0.3)
 

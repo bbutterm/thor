@@ -15,7 +15,7 @@
 | Прыжок | `gravity` / `fall_gravity_mult` | 24 / 1.35 | Вес персонажа; падение тяжелее подъёма |
 | Прыжок | `coyote_time` / `jump_buffer` | 0.1 / 0.1 | Прощение поздних/ранних нажатий |
 | Рывок | `dash_speed` / `dash_duration` | 24 / 0.16 | Сила и длина рывка |
-| Рывок | `dash_recharge` | 1.2 | Перезарядка одного заряда |
+| Руны Мьёльнира | `dash_recharge` | 2.5 с | Одна руна восстанавливается только на земле; рывок и каждый воздушный прыжок тратят по руне |
 | Рывок | `dash_invuln` | 0.15 | Неуязвимость в начале рывка |
 | Рывок | `dash_exit_keep` | 0.55 | Сколько скорости остаётся после рывка |
 | Приземление | `slam_speed` | 34 | Скорость падения при Ctrl |
@@ -53,7 +53,7 @@
 ## Мьёльнир — узел **Mjolnir** (`weapons/mjolnir_hand.gd`)
 
 База по GDD 10: `throw_speed` 32, `base_damage` 33 (1.5 У), `max_range` 25 м (дальше — возврат), `auto_return_after` 1.5 с (полёт без попадания в стену), `sticks_to_world` вкл. (втыкается в стену/пол), `stuck_auto_return` 0.8 с (сколько воткнутый молот ждёт ПКМ; трейты «на воткнутый» продлевают до 3–5 с; 0 — ждёт всегда), `return_speed` 36, `return_turn_accel` 140 (дуга возврата), `max_wall_bounces` 0 (было 2: теперь отскоки даёт Рикошет), `chain_targets` 0 (базовой молнии нет — это стихия «Молния»), `chain_damage_ratio` 0.5, `chain_radius` 7, `hit_hitstop` 0.04.
-Без молота: `dash_recharge_bonus` 0.2 (рывок перезаряжается на 20 % быстрее). Идеальный хват: `perfect_window` 0.15 с (ПКМ до или после поимки), `perfect_damage_mult` 2.
+Без молота: `dash_recharge_bonus` 0.2 (руны на земле восстанавливаются на 20 % быстрее); `catch_runes` 1 — обычная поимка возвращает руну и, в воздухе, прыжки; идеальный хват заполняет запас. Перехват в воздухе: `restore_dash` / `restore_dash_lvl2` 1 / 2 дополнительных руны, `hop_lvl2` 5 м/с. Идеальный хват: `perfect_window` 0.15 с (ПКМ до или после поимки), `perfect_damage_mult` 2.
 
 ## Трейты Мьёльнира (блок Б4: стихии × приёмы) — `weapons/mjolnir_traits/*.tres`, связки — `combos/*.tres`
 
@@ -88,7 +88,7 @@
 | Пике молотом | — | взгляд ниже `min_down_angle` 30°, бросок ×`throw_speed_mult` 1.6, Тор летит `follow_speed` 40, бонус высоты `height_bonus` 4 / 7 м, `max_follow_time` 1.5 с |
 | Праща | удержание ПКМ | крутится после `spin_delay` 0.2 с, `orbit_radius` 1.9, `spin_speed` 9 рад/с, `tick` 0.25 с × `spin_damage` 11, `spin_knockback` 8, до `max_spin` 4 / 6 с; бросок ×`launch_speed_mult` 1.4, ×`launch_damage_mult` 1.3 / 1.6, пробивает щиты |
 | Заряд | удержание ПКМ | короче `min_hold` 0.12 с — обычный бросок; полный за `charge_time` 0.8 / 0.55 с: урон до ×`max_damage_mult` 2.2 / 2.6, скорость ×`max_speed_mult` 1.4, дальность ×`max_range_mult` 1.8, пробитие с `pierce_at` 0.95; ур. 2 — оглушение `stun_lvl2` 0.8 с |
-| Перехват в воздухе | — | `restore_dash` 1 заряд (ур. 2 — все), ур. 2 — подброс `hop_lvl2` 5 м/с |
+| Перехват в воздухе | — | `restore_dash` / `restore_dash_lvl2` 1 / 2 дополнительных руны, ур. 2 — подброс `hop_lvl2` 5 м/с |
 | Верный пёс | — | раз в `interval` 1 / 0.6 с бьёт ближайшего в `radius` 8 м на `damage` 15 (0.7 У), `knockback` 6, ждёт `stuck_hold` 6 / 9 с |
 
 **Связки** (`combos/*.tres`): Огненный смерч — `radius_mult` 1.35, тянет в `pull_radius` 7 со `pull_speed` 6, поджог раз в `ignite_tick` 0.3 с, огонь под смерчем раз в `fire_every` 0.7 с (`fire_radius` 2, `fire_time` 2, `fire_dps` 6.6, `max_fires` 3); Ледяной рикошет — корка `crust_radius` 1.6, `crust_time` 4, `crust_fall_stun` 0.8, промерзание в `chill_radius` 2.5, `max_crusts` 6; Грозовой магнит — разряд раз в `interval` 0.6 с на `damage` 8, на возврате цепь `recall_chain` 2 × `recall_chain_damage` 11; Ураганный рывок — путь `path_radius` 2.6 / `path_push` 14, прилёт `arrive_radius` 5.5, `arrive_push` 18, `arrive_lift` 6, `arrive_damage` 5; Кратер — радиус удара ×`radius_mult` 1.5, `pin_time` 1.5, `damage` 11 (корм погибает).
@@ -360,21 +360,21 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 Окно диалога: `portrait_size` 440×660 (пропорции спрайтов 2:3), `portrait_bottom` 40 (низ портрета уходит под плашку текста). Пузырь реплики: крупный план лица, `face_crop` 0.34 (сторона квадрата в долях ширины холста), центр — глаза из `data/portrait_faces.json`. Импорт портретов: WebP с потерями 0.85, не больше 1024 по высоте (иначе сборка выросла бы на ~70 МБ).
 ## Тела смертных (блок Л) — `run/movement/*.tres`, `run/passives/*.tres`, `run/bodies/*.tres`
 
-**Стиль движения** — `run/movement/<стиль>.tres` (`MovementProfile`), имя файла = `BodyDef.movement_style`. Игрок копирует числа в свои поля (`Player.apply_movement_profile`), без тела — значения из группы «Стиль движения» узла Player (= Базовый). Заряды рывка — у тела (`BodyDef.dash_charges`: Берсерк 1, Охотник и Гонец 3, остальные 2), чтобы перк «+1 рывок» работал у всех.
+**Стиль движения** — `run/movement/<стиль>.tres` (`MovementProfile`), имя файла = `BodyDef.movement_style`. Игрок копирует числа в свои поля (`Player.apply_movement_profile`), без тела — значения из группы «Стиль движения» узла Player (= Базовый). Руны Мьёльнира — у тела (`BodyDef.dash_charges`: Берсерк 1, Охотник и Гонец 3, остальные 2), чтобы перк «+1 рывок» работал у всех.
 
 | Стиль (тела) | Что меняет | Числа |
 |---|---|---|
-| Базовый (Трэлл) | — | рывок 24 / 0.16 с, перезарядка 1.2 с, двойной прыжок, 2 отскока от стены |
-| Шустрый (Охотник) | короткие рывки | `dash_duration` 0.11, `dash_recharge` 0.8 |
-| Шустрый+ (Гонец) | ещё быстрее перезарядка (своё решение: GDD не уточняет, чем «+» отличается) | `dash_duration` 0.13, `dash_recharge` 0.6 |
-| Таран (Берсерк) | 1 длинный рывок сквозь врагов | `dash_speed` 26, `dash_duration` 0.34, `dash_recharge` 1.6, `dash_ram`; `ram_damage` 15.4 (0.7 У), `ram_knockback` 13 (в стороны), `ram_knock_up` 4, `ram_radius` 1.4, `ram_prop_impulse` 9 (бочки) |
+| Базовый (Трэлл) | — | рывок 24 / 0.16 с, восстановление рун 2.5 с, двойной прыжок, 2 отскока от стены |
+| Шустрый (Охотник) | короткие рывки | `dash_duration` 0.11, `dash_recharge` 3.337 |
+| Шустрый+ (Гонец) | ещё быстрее перезарядка (своё решение: GDD не уточняет, чем «+» отличается) | `dash_duration` 0.13, `dash_recharge` 1.25 |
+| Таран (Берсерк) | 1 длинный рывок сквозь врагов | `dash_speed` 26, `dash_duration` 0.34, `dash_recharge` 3.33, `dash_ram`; `ram_damage` 15.4 (0.7 У), `ram_knockback` 13 (в стороны), `ram_knock_up` 4, `ram_radius` 1.4, `ram_prop_impulse` 9 (бочки) |
 | Прыгун (Скальд, Дева щита) | тройной прыжок, рывка на земле нет | `extra_jumps` 2, `wall_jumps` 3, `wall_jump_mult` 1.25, `dash_on_ground` false |
 | Тяжёлый (Жрец, Кузнец) | нет двойного прыжка, мощный удар-приземление | `extra_jumps` 0, `slam_radius_mult` / `slam_damage_mult` 1.5, `slam_stun` 1 с, `slam_bounce_mult` 1.35 |
 | Скользящий (Солдат) | рывок на земле → подкат на скорости рывка | `dash_to_slide`, `slide_friction` 0, `momentum_cap` 2.2, `keep_air_momentum` (в воздухе скорость не гасится — bunny-hop) |
 
 **Правила ощущений (GDD 7.4)**, узел Player: `air_control` 0.7; `momentum_cap` 1.8 (предел горизонтальной скорости от рывка, подката и отскоков, × скорость бега); `dash_momentum_bonus` 3 (рывок прибавляет к текущей скорости: выход из рывка = max(24 × 0.55, скорость до рывка + 3), но не выше предела).
 
-**Подкат (GDD 5, 7.2)** — Ctrl + Shift на земле (тратит заряд рывка): `slide_speed` 13 (не ниже текущей), `slide_duration` 0.55 с, `slide_friction` 9 м/с² (у Скользящего 0), `slide_steer` 2.5 рад/с, `slide_camera_drop` 0.55 м, `slide_min_speed_ratio` 0.8 (медленнее — подкат кончается). Прыжок из подката сохраняет скорость. Камера: `crouch_speed` 12 (`camera_fx.gd`).
+**Подкат (GDD 5, 7.2)** — Ctrl + Shift на земле (тратит руну Мьёльнира): `slide_speed` 13 (не ниже текущей), `slide_duration` 0.55 с, `slide_friction` 9 м/с² (у Скользящего 0), `slide_steer` 2.5 рад/с, `slide_camera_drop` 0.55 м, `slide_min_speed_ratio` 0.8 (медленнее — подкат кончается). Прыжок из подката сохраняет скорость. Камера: `crouch_speed` 12 (`camera_fx.gd`).
 
 **Пассивки и изъяны** — `run/passives/<id>.tres` (`PassiveDef`: `implemented`, `todo`, `handler`) + скрипт `run/passives/<id>.gd` (`BodyTraitHandler`). Числа — в инспекторе вложенного ресурса `handler`:
 
@@ -483,7 +483,7 @@ HUD (`ui/style_hud.gd`): `bar_width` 340, `caption_height` 58, `burst_size` 210�
 
 ## HUD и настройки (блок С, GDD 18, 22)
 
-**HUD** — `ui/hud.gd` (узел HUD сцены игры): `hp_bar_height` 84 (полоса HP, ширина по рамке 768×192 — ×4), `hammer_icon_size` 58 (иконка Мьёльнира), `dash_icon_size` 38 (камень рывка), `slam_meter_min_height` 2.5 м (с какой высоты над полом видна шкала удара-приземления; полная шкала — `Player.big_slam_height` 9 м), `crosshair_base_size` 30 px (точка ×1.4; множитель — настройка), `rune_icon_size` 36.
+**HUD** — `ui/hud.gd` (узел HUD сцены игры): `hp_bar_height` 84 (полоса HP, ширина по рамке 768×192 — ×4), `hammer_icon_size` 58 (иконка Мьёльнира), `dash_icon_size` 38 (максимальный размер руны на бойке молота), `slam_meter_min_height` 2.5 м (с какой высоты над полом видна шкала удара-приземления в рукояти молота; полная шкала — `Player.big_slam_height` 9 м), `crosshair_base_size` 30 px (точка ×1.4; множитель — настройка), `rune_icon_size` 36.
 - Полосы `ui/skin_bar.gd`: след урона `trail_speed` 0.6 полосы/с после `trail_delay` 0.35 с. Полоса босса `ui/boss_bar.gd`: `trail_speed` 0.35.
 - Шкала стиля `ui/style_hud.gd`: `bar_width` 340 (высота — четверть ширины), подпись ранга `caption_height` 58 (раздел «Шкала стиля»).
 - Оружие `ui/weapon_hud.gd`: `slot_size` 96, `active_slot_size` 112.

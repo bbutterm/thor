@@ -133,16 +133,6 @@ func _build() -> void:
 	root.add_child(_crosshair)
 	_apply_crosshair()
 
-	# Шкала высоты удара-приземления — справа от прицела
-	_slam_meter = SkinBar.new()
-	_slam_meter.frame_id = "hud_slam_meter_frame"
-	_slam_meter.fill_id = "hud_slam_meter_fill"
-	_slam_meter.flat_color = UIStyle.ICE
-	_slam_meter.trail_delay = 0.0
-	_anchor(_slam_meter, Control.PRESET_CENTER, 46, -48, 80, 48)
-	_slam_meter.visible = false
-	root.add_child(_slam_meter)
-
 	# Левый низ: трейты Мьёльнира, молот + рывок, здоровье
 	var bl := VBoxContainer.new()
 	_anchor(bl, Control.PRESET_BOTTOM_LEFT, 14, -300, 560, -10)
@@ -167,11 +157,26 @@ func _build() -> void:
 	hv.add_theme_constant_override("separation", 0)
 	hv.alignment = BoxContainer.ALIGNMENT_CENTER
 	hv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hammer_row.add_child(hv)
+	# Ресурс и высота образуют один молот: руны на бойке, шкала в рукояти.
+	var rune_hammer := RuneHammer.new()
+	hammer_row.add_child(rune_hammer)
 	_dash_box = HBoxContainer.new()
+	_dash_box.position = Vector2(11, 5)
+	_dash_box.size = Vector2(122, 34)
+	_dash_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	_dash_box.add_theme_constant_override("separation", 2)
 	_dash_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hv.add_child(_dash_box)
+	rune_hammer.add_child(_dash_box)
+	_slam_meter = SkinBar.new()
+	_slam_meter.frame_id = "hud_slam_meter_frame"
+	_slam_meter.fill_id = "hud_slam_meter_fill"
+	_slam_meter.flat_color = UIStyle.ICE
+	_slam_meter.trail_delay = 0.0
+	_slam_meter.position = Vector2(60, 42)
+	_slam_meter.size = Vector2(24, 58)
+	_slam_meter.visible = false
+	rune_hammer.add_child(_slam_meter)
+	hammer_row.add_child(hv)
 	_hammer_label = UIStyle.label("", 15, UIStyle.ICE, 4)
 	hv.add_child(_hammer_label)
 	_hp_bar = SkinBar.new()
@@ -351,7 +356,8 @@ func _on_dash_changed(current: int, maximum: int, progress: float) -> void:
 			c.queue_free()
 		_dash_pips.clear()
 		for i in maximum:
-			var pip := HudIcon.make(UISkin.texture("hud_dash_empty"), dash_icon_size)
+			var icon_size := minf(dash_icon_size, (122.0 - maxf(0, maximum - 1) * 2.0) / maxf(1, maximum))
+			var pip := HudIcon.make(UISkin.texture("hud_dash_empty"), icon_size)
 			pip.over = UISkin.texture("hud_dash_full")
 			_dash_box.add_child(pip)
 			_dash_pips.append(pip)
@@ -421,7 +427,7 @@ func _update_hammer() -> void:
 			_hammer_label.text = tr("ВОЗВРАЩАЕТСЯ · ЛОВИ!")
 			_hammer_label.label_settings.font_color = UIStyle.ICE.lightened(0.3)
 
-## Шкала высоты у прицела: сколько метров будет падение ударом-приземлением
+## Шкала высоты в рукояти молота: сколько метров будет падение ударом-приземлением
 func _update_slam_meter() -> void:
 	if not bool(GameSettings.get_value("hud", "slam_meter")) or player.is_on_floor() or player.is_dead:
 		_slam_meter.visible = false

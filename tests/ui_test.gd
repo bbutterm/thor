@@ -205,7 +205,7 @@ func _test_hud() -> void:
 	check(p.shield > 0.0 and hud._hp_bar.overlay > 0.0 and "⛨" in hud._hp_label.text, "щит Сиф поверх HP (%.0f)" % p.shield)
 	p.dash_charges = 0
 	p.dash_charges_changed.emit(0, p.dash_charges_max, 0.5)
-	check(hud._dash_pips.size() == p.dash_charges_max and is_equal_approx(hud._dash_pips[0].fill, 0.5), "заряды рывка: камни, перезарядка видна (%d)" % hud._dash_pips.size())
+	check(hud._dash_pips.size() == p.dash_charges_max and is_equal_approx(hud._dash_pips[0].fill, 0.5), "руны Мьёльнира на бойке, восстановление видно (%d)" % hud._dash_pips.size())
 	var style_hud := hud.get_node_or_null("StyleHUD") as StyleHUD
 	p.style.set_points(40.0)
 	await wait(0.05)
@@ -247,7 +247,7 @@ func _test_hud() -> void:
 	p.global_position += Vector3.UP * 8.0
 	p.velocity = Vector3.ZERO
 	await wait(0.05)
-	check(hud._slam_meter.visible and hud._slam_meter.value > 0.4, "в воздухе на 8 м — шкала высоты у прицела (%.2f)" % hud._slam_meter.value)
+	check(hud._slam_meter.visible and hud._slam_meter.value > 0.4, "в воздухе на 8 м — шкала высоты в рукояти (%.2f)" % hud._slam_meter.value)
 	var t2 := 0
 	while not p.is_on_floor() and t2 < 240:
 		await get_tree().physics_frame

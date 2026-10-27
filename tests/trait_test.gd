@@ -1004,7 +1004,7 @@ func _scenario_air_catch(lv: int) -> void:
 	await frames(1)
 	check(int(h.get("catches")) == 1, "Перехват: поймал в воздухе")
 	check(p._jumps_left == p.extra_jumps, "двойной прыжок снова есть")
-	check(p.dash_charges >= (p.dash_charges_max if lv >= 2 else 1), "рывок восстановлен (%d)" % p.dash_charges)
+	check(p.dash_charges >= mini(p.dash_charges_max, 1 + (2 if lv >= 2 else 1)), "руны восстановлены: база и приём (%d)" % p.dash_charges)
 	p.gravity = g
 	p.dash_recharge = rech
 	# На земле — без эффекта

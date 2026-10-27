@@ -110,25 +110,25 @@ func _test_all_bodies_start() -> void:
 			check(pd != null and (pd.handler != null or pd.id in ["frail", "social_lift", "odin_scorn"]), "%s: черта %s с обработчиком" % [b.id, pd.id if pd else "?"])
 
 func _test_nimble() -> void:
-	print("-- Шустрый (Охотник): 3 коротких рывка, перезарядка 0.8 с")
+	print("-- Шустрый (Охотник): 3 коротких рывка, перезарядка 1.67 с")
 	var p := await _start("hunter")
 	await _place(p, _floor_pos())
-	check(p.dash_charges_max == 3 and is_equal_approx(p.dash_recharge, 0.8), "3 заряда, перезарядка 0.8 (%d, %.2f)" % [p.dash_charges_max, p.dash_recharge])
+	check(p.dash_charges_max == 3 and is_equal_approx(p.dash_recharge, 1.67), "3 руны, восстановление 1.67 (%d, %.2f)" % [p.dash_charges_max, p.dash_recharge])
 	var base_dur := (load("res://run/movement/base.tres") as MovementProfile).dash_duration
 	check(p.dash_duration < base_dur, "рывок короче базового (%.2f < %.2f)" % [p.dash_duration, base_dur])
 	for i in 3:
 		await press("dash")
 		await wait(0.2)
 	check(p.dash_charges == 0, "три рывка подряд потрачены (%d)" % p.dash_charges)
-	await wait(1.0)
-	check(p.dash_charges >= 1, "заряд вернулся за ~0.8 с")
+	await wait(1.8)
+	check(p.dash_charges >= 1, "руна вернулась за ~1.67 с")
 	var c := await _start("courier")
-	check(c.movement_style() == "nimble_plus" and c.dash_charges_max == 3 and c.dash_recharge < 0.8, "Шустрый+ (гонец): 3 рывка, перезарядка %.2f" % c.dash_recharge)
+	check(c.movement_style() == "nimble_plus" and c.dash_charges_max == 3 and c.dash_recharge < 1.67, "Шустрый+ (гонец): 3 рывка, перезарядка %.2f" % c.dash_recharge)
 
 func _test_ram() -> void:
 	print("-- Таран (Берсерк): 1 длинный рывок сквозь врагов")
 	var p := await _start("berserker")
-	check(p.dash_charges_max == 1 and is_equal_approx(p.dash_recharge, 1.6), "1 заряд, перезарядка 1.6")
+	check(p.dash_charges_max == 1 and is_equal_approx(p.dash_recharge, 3.33), "1 руна, восстановление 3.33")
 	await _place(p, _floor_pos())
 	var e := _dummy(p.global_position + Vector3(0, 0, -3.0))
 	var e2 := _dummy(p.global_position + Vector3(0.6, 0, -5.0))
@@ -145,8 +145,9 @@ func _test_ram() -> void:
 	check(p.collision_mask & (1 << 2) != 0, "после рывка снова сталкивается с врагами")
 	e.queue_free()
 	e2.queue_free()
-	# Бочку толкает
-	await wait(1.8)
+	# Бочку толкает: независимый сценарий после предыдущего рывка.
+	p.restore_mjolnir_runes(p.dash_charges_max)
+	await wait(0.1)
 	await _place(p, _floor_pos() + Vector3(3, 0, 0))
 	var barrel := (load("res://props/barrel.tscn") as PackedScene).instantiate() as RigidBody3D
 	game.add_child(barrel)
@@ -170,6 +171,7 @@ func _test_jumper() -> void:
 	await _place(p, _floor_pos())
 	var n := await _count_air_jumps(p)
 	check(n == 2, "в воздухе ровно 2 прыжка (тройной) — %d" % n)
+	p.restore_mjolnir_runes(p.dash_charges_max)
 	await _place(p, _floor_pos())
 	var ch := p.dash_charges
 	await press("dash")
