@@ -3,6 +3,10 @@ class_name Player
 ## Тор в теле смертного. Движение: бег, двойной прыжок, рывок, удар-приземление, супер-прыжок.
 ## Все «ощущенческие» числа — в группах @export ниже (см. TUNING.md).
 
+## Слои поверхностей: мир (1) и предметы (4), на которые игрок тоже может приземлиться.
+## Врагов намеренно не учитываем: высота удара считается относительно земли/предметов, а не головы.
+const SLAM_SURFACE_MASK := 1 | (1 << 3)
+
 signal health_changed(current: float, maximum: float)
 signal dash_charges_changed(current: int, maximum: int, recharge_progress: float)
 signal died
@@ -689,8 +693,13 @@ func can_start_slam() -> bool:
 		return false
 	if _slam_ready:
 		return true
-	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + Vector3.DOWN * slam_min_height, 1, [get_rid()])
-	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
+	return slam_surface_hit(slam_min_height).is_empty()
+
+## Ближайшая поверхность под ногами для проверки удара и его шкалы в HUD.
+func slam_surface_hit(distance: float) -> Dictionary:
+	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + Vector3.DOWN * distance,
+		collision_mask & SLAM_SURFACE_MASK, [get_rid()])
+	return get_world_3d().direct_space_state.intersect_ray(q)
 
 func _start_slam() -> bool:
 	if not can_start_slam():

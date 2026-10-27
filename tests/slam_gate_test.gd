@@ -84,5 +84,42 @@ func _run() -> void:
 	p._slam_ready = false
 	p._slam_bounce(1.0)
 	check(p._slam_ready and p.can_start_slam(), "отскок от удара разрешает следующий удар")
+	# Поверхность на слое предметов (ящики/бочки): обычный прыжок с неё не должен
+	# разрешать удар только потому, что до пола зала больше трёх метров.
+	var prop := StaticBody3D.new()
+	prop.collision_layer = 1 << 3
+	prop.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(2.0, 2.0, 2.0)
+	shape.shape = box
+	prop.add_child(shape)
+	game.add_child(prop)
+	prop.global_position = Vector3(p.global_position.x, 1.0, p.global_position.z)
+	p.global_position = prop.global_position + Vector3(0.0, 1.05, 0.0)
+	p.velocity = Vector3.ZERO
+	p._super_jump_left = 0.0
+	p._bounce_window_left = 0.0
+	await frames(30)
+	check(p.is_on_floor(), "игрок стоит на поверхности предмета")
+	await press("jump")
+	await frames(10)
+	check(not p.is_on_floor() and p.global_position.y > p.slam_min_height and not p.can_start_slam(),
+		"одинарный прыжок с ящика не обходит ограничение высоты")
+	game.hud._update_slam_meter()
+	check(not game.hud._slam_meter.visible, "шкала учитывает близкую поверхность предмета")
+	var old_gravity := p.gravity
+	p.gravity = 0.0
+	p.global_position.y = 5.2
+	p.velocity = Vector3.ZERO
+	await frames(3)
+	p._air_peak_y = p.global_position.y
+	check(p.can_start_slam(), "удар разрешён выше 3 м над предметом")
+	game.hud._update_slam_meter()
+	var expected := (p._air_peak_y - 2.0) / p.big_slam_height
+	check(game.hud._slam_meter.visible and absf(game.hud._slam_meter.value - expected) < 0.02,
+		"шкала измеряет высоту до предмета, а не до пола")
+	p.gravity = old_gravity
+	prop.queue_free()
 	print("ИТОГ: %d PASS, %d FAIL" % [passes, fails.size()])
 	get_tree().quit(1 if fails.size() else 0)
