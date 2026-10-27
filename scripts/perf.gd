@@ -183,6 +183,8 @@ func _update_label() -> void:
 		Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
 		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
 		int(hitch_ms), _hitch_count, ProjectSettings.globalize_path(LOG_PATH)]
+	# Узлы с instance uniform (вспышки врагов, эффекты): в GL Compatibility их не больше 256 на сцену
+	_label.text += "\ninstance uniform: %d / %d (GL)" % [FX.instance_uniform_users(tree.root), FX.INSTANCE_SLOTS_GL]
 
 func _build() -> void:
 	_panel = PanelContainer.new()

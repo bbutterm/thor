@@ -1,6 +1,7 @@
 extends Node
-## Поиск фризов: проходит все залы, игрок бьёт топором, бросает молот, делает удар-приземление
-## (с руной огня), враги атакуют. Фриз — кадр, который дольше медианы соседних кадров на порог и больше.
+## Поиск фризов: проходит все залы (арена Свена — в зале мини-босса, ларёк/отдых — по дверям), игрок бьёт
+## топором, стреляет, бросает молот, делает удар-приземление (с руной огня), встаёт на прыжковые руны;
+## враги атакуют, боссы получают урон частями и успевают пройти фазы. Фриз — кадр, который дольше медианы соседних кадров на порог и больше.
 ## (Относительно медианы — потому что программный рендер в xvfb сам по себе медленный.)
 ## С рендерингом (нужен xvfb):
 ##   xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 320x180 res://tests/hitch_test.tscn -- 50
@@ -45,6 +46,8 @@ func _run() -> void:
 	Run.start_run("berserker")
 	Run.room_order.assign(Run.ROOM_SCENES.duplicate())
 	Run.room_order.append(Run.BOSS_SCENE)
+	# Зал мини-босса — арена Свена (как в настоящем забеге)
+	Run._place_miniboss_arenas()
 	_load_frames.append(_now())
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 	await wait(0.3)
@@ -78,6 +81,12 @@ func _play_room() -> void:
 		await wait(1.2)
 		print("  тихий зал: %s (%s)" % [room.room_title, Run.current_reward()])
 		return
+	# Прыжковые руны зала (rooms/jump_pad.gd): встаём на каждую — подброс, кольцо, искры
+	for pad in get_tree().get_nodes_in_group("jump_pads"):
+		if room.is_ancestor_of(pad):
+			p.global_position = (pad as Node3D).global_position + Vector3(0, 0.2, 0)
+			p.velocity = Vector3.ZERO
+			await wait(1.2)
 	while not room._is_cleared and safety < 120:
 		safety += 1
 		step += 1
@@ -114,9 +123,13 @@ func _play_room() -> void:
 				await wait(0.05)
 				Input.action_release("slam")
 		await wait(0.25)
-		# Добиваем по одному — смерть каждого врага отдельным событием
+		# Добиваем по одному — смерть каждого врага отдельным событием. Босса и мини-босса — частями
+		# («slam» сбивает Ярла с балкона): успевают показать свои атаки и фазы (таран, лужи, балконы, обломки)
 		if is_instance_valid(e) and not e.is_dead:
-			e.take_hit(9999, Vector3(0, 3, -5), "melee_finisher")
+			if e.kind == Enemy.Kind.BOSS:
+				e.take_hit(e.max_health * 0.12, Vector3(0, 1, -2), "slam")
+			else:
+				e.take_hit(9999, Vector3(0, 3, -5), "melee_finisher")
 	print("  зал зачищен: %s" % room.room_title)
 
 func _go_next() -> void:
@@ -184,7 +197,29 @@ func _report() -> void:
 		print(line)
 	if noise > 0:
 		print("Всплесков без событий > +%d мс: %d (не считаются)" % [int(threshold_ms), noise])
+	_report_pipelines(fr)
 	print("=== ИТОГ HITCH: %d фризов > +%d мс вне загрузки ===" % [bad.size(), int(threshold_ms)])
 	get_tree().paused = false
 	FX.reset_time()
 	get_tree().quit(0 if bad.is_empty() else 1)
+
+## Компиляции пайплайнов (Forward+/Mobile; в GL Compatibility счётчиков нет) вне загрузки залов: сколько и
+## после каких событий. pso_draw — компиляция прямо при отрисовке (= фриз на настоящей видеокарте).
+func _report_pipelines(fr: Array) -> void:
+	var totals := {}
+	var lines: Array = []
+	for x in fr:
+		var ev: String = x[2]
+		if not ev.contains("pso_") or _in_load_window(x[0]):
+			continue
+		var pso := PackedStringArray()
+		for m in ev.split(","):
+			if m.begins_with("pso_"):
+				pso.append(m)
+				var k := m.get_slice("+", 0)
+				totals[k] = int(totals.get(k, 0)) + m.get_slice("+", 1).to_int()
+		if not pso.is_empty() and lines.size() < 40:
+			lines.append("  кадр %d  %.1f мс  %s  [%s]  (до: %s)" % [x[0], x[1], ",".join(pso), ev, x[3]])
+	print("Компиляции пайплайнов вне загрузки залов: %s" % (str(totals) if not totals.is_empty() else "нет"))
+	for l in lines:
+		print(l)

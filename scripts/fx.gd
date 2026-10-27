@@ -23,6 +23,7 @@ static func hitstop(duration: float, scale: float = 0.05) -> void:
 ## Вызывается каждый кадр. Run передаёт delta / текущий time_scale; пересчитываем по масштабу,
 ## с которым движок на самом деле умножил delta этого кадра (см. real_delta).
 static func tick(passed_real_delta: float) -> void:
+	sync_fades()
 	if _hitstop_left <= 0.0:
 		return
 	_hitstop_left -= real_delta(passed_real_delta * maxf(Engine.time_scale, 0.0001))
@@ -217,11 +218,81 @@ static func fx_material(kind: String) -> ShaderMaterial:
 	materials_created += 1
 	return m
 
+## Буфер instance-переменных: каждый узел, у материала которого есть instance uniform, занимает в нём
+## 16 ячеек (ShaderLanguage::MAX_INSTANCE_UNIFORM_INDICES), пока узел жив и материал назначен — даже
+## невидимый. В GL Compatibility буфер — 4096 ячеек (= 256 таких узлов на сцену); сверх — ошибка
+## «Too many instances using shader instance variables», и у новых эффектов пропадают цвет и кадр.
+const INSTANCE_SLOTS_GL := 256
+
+static var _iu_shaders: Dictionary = {}
+
+## Сколько узлов под root сейчас занимают буфер instance-переменных (диагностика: Perf F3, тесты).
+static func instance_uniform_users(root: Node) -> int:
+	if root == null:
+		return 0
+	var n := 0
+	for g in root.find_children("*", "GeometryInstance3D", true, false):
+		var gi := g as GeometryInstance3D
+		if _has_iu(gi.material_override) or _has_iu(gi.material_overlay):
+			n += 1
+	return n
+
+static func _has_iu(m: Material) -> bool:
+	var sm := m as ShaderMaterial
+	if sm == null or sm.shader == null:
+		return false
+	var s := sm.shader
+	if not _iu_shaders.has(s):
+		_iu_shaders[s] = s.code.contains("instance uniform") or s.code.contains("fx_common")
+	return _iu_shaders[s]
+
 ## Назначить эффекту общий материал вида kind и задать цвет/яркость экземпляра.
 static func fx_apply(gi: GeometryInstance3D, kind: String, color: Color, energy: float = 1.0) -> void:
 	gi.material_override = fx_material(kind)
 	gi.set_instance_shader_parameter("color", color)
 	gi.set_instance_shader_parameter("energy", energy)
+	_track_fade(gi)
+
+# --- Затухание в GL Compatibility ---
+# GeometryInstance3D.transparency там не работает: узел не становится прозрачнее, и все затухания эффектов
+# (вспышки, кольца, искры, ихор) обрывались, а телеграфы, лужи, огонь, лава были сплошными пятнами.
+# Узлы с материалами эффектов регистрируются, и раз в кадр (FX.tick) их transparency копируется в
+# instance uniform fade (shaders/fx_common.gdshaderinc, fx_sprite). В Forward+ список пуст — работает сам движок.
+
+static var _gl: int = -1
+static var _fade_nodes: Array = []
+
+static func uses_fade_emulation() -> bool:
+	if _gl < 0:
+		_gl = 1 if RenderingServer.get_current_rendering_method() == "gl_compatibility" else 0
+	return _gl == 1
+
+static func _track_fade(gi: GeometryInstance3D) -> void:
+	if not uses_fade_emulation():
+		return
+	# Материал назначен заново — значения instance-переменных на сервере сброшены: отправим fade снова
+	gi.set_meta("_fade", -1.0)
+	if not gi.has_meta("_fade_tracked"):
+		gi.set_meta("_fade_tracked", true)
+		_fade_nodes.append(gi)
+
+## Раз в кадр: transparency → fade у зарегистрированных узлов (только GL Compatibility).
+static func sync_fades() -> void:
+	if _fade_nodes.is_empty():
+		return
+	var keep: Array = []
+	for n in _fade_nodes:
+		if not is_instance_valid(n):
+			continue
+		var gi := n as GeometryInstance3D
+		keep.append(gi)
+		if gi.material_override == null:
+			continue
+		var f := 1.0 - gi.transparency
+		if absf(f - float(gi.get_meta("_fade", -1.0))) > 0.002:
+			gi.set_meta("_fade", f)
+			gi.set_instance_shader_parameter("fade", f)
+	_fade_nodes = keep
 
 ## Общие меши эффектов единичного размера (масштабируются узлом) — не строим примитив на каждую вспышку.
 static func shared_mesh(kind: String) -> Mesh:
@@ -391,6 +462,11 @@ static func _take(kind: String, parent: Node, limit: int) -> MeshInstance3D:
 		mi = MeshInstance3D.new()
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+		# Спрятанный (свободный) узел отдаёт материал — и вместе с ним 16 ячеек буфера instance-переменных
+		# (INSTANCE_SLOTS_GL). При взятии из пула _sprite назначает материал заново (тот же общий — без компиляции).
+		mi.visibility_changed.connect(func() -> void:
+			if not mi.visible:
+				mi.material_override = null)
 		h.add_child(mi)
 		pool.append(mi)
 	if mi == null:
@@ -413,6 +489,7 @@ static func _sprite(kind: String, parent: Node, key: String, pos: Vector3, size:
 	var mi := _take(kind, parent, limit)
 	mi.mesh = shared_mesh(mesh)
 	mi.material_override = sprite_material(key)
+	_track_fade(mi)
 	sprite_color(mi, color, energy)
 	set_sprite(mi, 0.0, billboard)
 	mi.position = pos
@@ -588,6 +665,7 @@ static func fire_sprites(zone: Node3D, radius: float, duration: float) -> Array[
 		var mi := MeshInstance3D.new()
 		mi.mesh = shared_mesh("quad_bottom")
 		mi.material_override = sprite_material("fire")
+		_track_fade(mi)
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 		sprite_color(mi, Color.WHITE, 1.25)

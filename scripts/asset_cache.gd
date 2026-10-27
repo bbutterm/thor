@@ -17,6 +17,12 @@ const DIRS := [
 	"res://sounds/sfx/",
 	"res://sounds/",
 	"res://sprites/vfx/",
+	# UI-скин: карточки рун/трейтов, панели, кнопки, иконки — первое открытие выбора руны читало их с диска
+	# посреди забега (~30 мс CPU, с рендером — ещё загрузка в видеопамять)
+	"res://sprites/ui/panels/",
+	"res://sprites/ui/buttons/",
+	"res://sprites/ui/hud/",
+	"res://sprites/ui/icons/",
 ]
 const FILES := [
 	"res://assets/quaternius/characters/gaits.glb",
@@ -53,10 +59,13 @@ static func start() -> void:
 	if _started:
 		return
 	_started = true
+	# «-- … sync_load»: грузить сразу в главном потоке. Для замеров Forward+ на программном Vulkan (lavapipe):
+	# там фоновая загрузка с компиляцией шейдеров в потоках намертво зависает в драйвере на старте.
+	var sync := "sync_load" in OS.get_cmdline_user_args()
 	for p in paths():
 		if _held.has(p):
 			continue
-		if ResourceLoader.has_cached(p):
+		if sync or ResourceLoader.has_cached(p):
 			_held[p] = load(p)
 			continue
 		if ResourceLoader.load_threaded_request(p, "", true) == OK:
@@ -92,6 +101,14 @@ static func finish() -> void:
 		HumanoidModel.warm_head_mesh(body)
 	_finished = true
 	print("AssetCache: %d ресурсов, %d мс" % [_held.size(), Time.get_ticks_msec() - t0])
+
+## Выход из игры: дождаться фоновых загрузок (иначе поток читает сцену, пока движок уже выгружает
+## скрипты, — «Parse Error … sven.tscn» при быстром выходе) и отпустить удержанное.
+static func shutdown() -> void:
+	for p in _pending:
+		ResourceLoader.load_threaded_get(p)
+	_pending.clear()
+	_held.clear()
 
 static func is_finished() -> bool:
 	return _finished

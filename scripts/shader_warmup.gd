@@ -37,6 +37,10 @@ func _build() -> void:
 	var right := global_transform.basis.x
 	var center := global_position
 	# Враги: по одному каждого вида, со вспышкой урона и свечением замаха (общий оверлей на скин-мешах)
+	# В GL Compatibility вариант шейдера не зависит от формата вершин, а буфер instance-переменных —
+	# всего 256 узлов на сцену (FX.INSTANCE_SLOTS_GL; прогрев целиком занимал 263–270): оверлей вспышки —
+	# только на паре образцов. В Forward+ (буфер на 4096 узлов) — на всех: там пайплайн на каждый формат вершин.
+	var gl := RenderingServer.get_current_rendering_method() == "gl_compatibility"
 	var i := 0
 	for path in ["res://enemies/grunt.tscn", "res://enemies/thrower.tscn", "res://enemies/boss.tscn",
 			"res://enemies/fodder.tscn", "res://enemies/bloated.tscn", "res://enemies/shieldbearer.tscn", "res://enemies/shaman.tscn", "res://enemies/merc.tscn",
@@ -50,7 +54,8 @@ func _build() -> void:
 		e.remove_from_group("enemies")
 		e.collision_layer = 0
 		e.collision_mask = 0
-		e._set_overlay(1.0, 1.0)
+		if not gl or i < 2:
+			e._set_overlay(1.0, 1.0)
 		# Лазер наёмника (общие материалы эффектов)
 		if e._laser:
 			e._laser.visible = true
@@ -76,7 +81,11 @@ func _build() -> void:
 		h.skin_tint = Color(0.8, 0.85, 0.9)
 		add_child(h)
 		h.position = right * (1.6 if g == "Male" else -1.6)
+		var with_overlay := 0
 		for mi in h.find_children("*", "MeshInstance3D", true, false):
+			if gl and with_overlay >= 2:
+				continue
+			with_overlay += 1
 			var gi := mi as GeometryInstance3D
 			gi.material_overlay = Enemy.FLASH_MATERIAL
 			gi.set_instance_shader_parameter("flash", 1.0)
@@ -92,6 +101,9 @@ func _build() -> void:
 	Loot.warmup_samples(self, right)
 	# Двери-награды: арка, проём, иконка-глиф и подписи (Label3D), котёл привала
 	RewardFlow.warmup_samples(self, right)
+	# Глифы подписей в мире (цифры урона, элита, двери) и экранов выбора — заранее во всех размерах
+	_warm_label_glyphs()
+	_warm_ui_glyphs()
 	# Серебро (монета) и вывеска ларька (блок К)
 	var coin := SilverCoin.new()
 	add_child(coin)
@@ -104,6 +116,8 @@ func _build() -> void:
 	add_child(sign)
 	sign.position = Vector3(0, 1.6, 0)
 	sign.scale = Vector3.ONE * 0.3
+	# Портреты тех, кто может заговорить пузырём в этом зале (загрузка картинки в бою — фриз ~20 мс)
+	Portrait.prefetch(_room_speakers())
 	var pl := game_node.get("player") as Player if game_node else null
 	if pl and pl.weapons:
 		pl.weapons.warmup_viewmodel(FRAMES)
@@ -163,6 +177,88 @@ func _build() -> void:
 	for e in _enemies:
 		if e.kind == Enemy.Kind.BOSS:
 			e._show_slam_telegraph()
+
+## Label3D растеризует букву (FreeType) и перезаливает текстуру кеша шрифта при первом показе этой буквы
+## в этом размере с этой обводкой. Цифры урона прогревались двумя числами, подписи дверей — одной дверью:
+## первые двери-награды давали на Forward+ (llvmpipe) +460 мс, новые цифры и подписи элиты — мелкие рывки.
+## Размеры и обводки — как у FX.damage_number / Loot.make_elite (48/12) и RewardDoor._label (54/9, 34/6, 170/28).
+func _warm_label_glyphs() -> void:
+	var font := load("res://fonts/RussoOne-Regular.ttf") as Font
+	var small := "0123456789()/·+-–—%×:!?., " + I18n.t("Элита")
+	for m in Loot.elite_modifiers():
+		small += I18n.t(m.title)
+	var titles := ""
+	var descs := ""
+	var glyphs := ""
+	for r in Run.all_rewards:
+		titles += tr(r.title).to_upper()
+		descs += tr(r.description)
+		glyphs += r.glyph
+	var y := 0.0
+	for spec in [[48, 12, small], [54, 9, titles], [34, 6, descs], [170, 28, glyphs]]:
+		var chars := {}
+		for ch in String(spec[2]):
+			chars[ch] = true
+		var l := Label3D.new()
+		if font:
+			l.font = font
+		l.font_size = spec[0]
+		l.outline_size = spec[1]
+		l.text = "".join(PackedStringArray(chars.keys()))
+		l.pixel_size = 0.0004
+		l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		l.modulate = Color(1, 1, 1, 0.05)
+		add_child(l)
+		l.position = Vector3(0, 0.6 + y, -0.5)
+		y += 0.1
+
+## Буквы экранов выбора (руна, трейт, привал/Локи), пузыря реплик — в их размерах и обводках
+## (UIStyle.label: шрифт + размер + обводка = свой кеш глифов). Первое открытие выбора руны посреди забега
+## растеризовало весь текст карточек. Один раз за запуск игры: кеш шрифта живёт, пока жив шрифт.
+static var _ui_glyphs_warmed: bool = false
+
+func _warm_ui_glyphs() -> void:
+	if _ui_glyphs_warmed:
+		return
+	_ui_glyphs_warmed = true
+	var text := "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя" \
+		+ "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,:;!?«»\"'—–-+×%()/[]→·…ᛗ "
+	var layer := CanvasLayer.new()
+	layer.layer = 1
+	add_child(layer)
+	var box := VBoxContainer.new()
+	box.modulate = Color(1, 1, 1, 0.02)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(box)
+	# (размер, обводка): заголовки выбора 40/10 и 38/10, подсказки 18/4, имя говорящего 22/6, номер карточки 16/5,
+	# название 19/5, описание 15/3, 14/3, 13/3, статус трейта 15/4, имя в пузыре 16/4
+	for spec in [[40, 10], [38, 10], [18, 4], [22, 6], [16, 5], [19, 5], [15, 3], [14, 3], [13, 3], [15, 4], [16, 4]]:
+		box.add_child(UIStyle.label(text, spec[0], Color.WHITE, spec[1]))
+
+## Кто может заговорить в бою пузырём с портретом: Хугин (обучение), босс/мини-босс, ведущий испытания,
+## хозяин двери-награды (Один на привале, Локи, Фрейя). Один говорящий — 5 эмоций в памяти, поэтому только они.
+func _room_speakers() -> PackedStringArray:
+	var out := PackedStringArray()
+	var tut := game_node.get("tutorial") as Tutorial if game_node else null
+	if tut and tut.active:
+		out.append("hugin")
+	if Run.is_boss_room():
+		out.append("jarl")
+	elif Run.is_miniboss_room():
+		var mb := Run.miniboss_def() as MinibossDef
+		if mb and mb.intro_pool != "":
+			out.append(mb.intro_pool.get_slice(".", 0))
+	var room := game_node.get("room") as Node if game_node else null
+	var trial := room.get_node_or_null("Trial") as TrialRunner if room else null
+	if trial and trial.def:
+		for pool in [trial.def.intro_pool, trial.def.win_pool, trial.def.fail_pool]:
+			if pool != "":
+				out.append(str(pool).get_slice(".", 0))
+	# Хозяин двери-награды: привал — Один (портрет в выборе), сделка — Локи, благословение — Фрейя
+	var host: String = {"rest": "odin", "loki": "loki", "freya": "freya"}.get(Run.current_reward(), "")
+	if host != "":
+		out.append(host)
+	return out
 
 func _process(_delta: float) -> void:
 	_frames_left -= 1

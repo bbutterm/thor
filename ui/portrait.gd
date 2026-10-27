@@ -42,6 +42,45 @@ const FACES_PATH := "res://data/portrait_faces.json"
 
 static var _faces: Dictionary = {}
 
+const EMOTIONS := ["neutral", "happy", "angry", "shocked", "smug"]
+## Портреты, которые держим в памяти (prefetch): путь → текстура; и ещё грузящиеся в фоне
+static var _held: Dictionary = {}
+static var _pending: PackedStringArray = []
+
+## Заранее (при входе в зал, под затемнением) грузит в фоне портреты тех, кто может заговорить в бою
+## пузырём (Хугин в обучении, босс, ведущий испытания): иначе первая реплика читала картинку 1024 px
+## посреди боя — ~20 мс CPU и загрузка в видеопамять. Держит только последний набор, прежний отпускает.
+static func prefetch(speakers: PackedStringArray) -> void:
+	var want: Dictionary = {}
+	for s in speakers:
+		var sp: String = ALIASES.get(s, s)
+		for emo in EMOTIONS:
+			for ext in EXTS:
+				var p := DIR + "%s_%s.%s" % [sp, emo, ext]
+				if ResourceLoader.exists(p):
+					want[p] = true
+	for p in _pending:
+		var res := ResourceLoader.load_threaded_get(p)
+		if res and want.has(p):
+			_held[p] = res
+	_pending.clear()
+	for p in _held.keys():
+		if not want.has(p):
+			_held.erase(p)
+	for p in want:
+		if _held.has(p):
+			continue
+		if ResourceLoader.has_cached(p):
+			_held[p] = load(p)
+		elif ResourceLoader.load_threaded_request(p) == OK:
+			_pending.append(p)
+
+## Что сейчас держит prefetch (тесты)
+static func prefetched() -> PackedStringArray:
+	var out := PackedStringArray(_held.keys())
+	out.append_array(_pending)
+	return out
+
 static func texture_path(sp: String, emo: String) -> String:
 	sp = ALIASES.get(sp, sp)
 	for e in [emo, "neutral"]:
@@ -56,7 +95,8 @@ static func face_of(sp: String) -> Dictionary:
 		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(FACES_PATH))
 		if d is Dictionary:
 			_faces = (d as Dictionary).get("faces", {})
-	return _faces.get(ALIASES.get(sp, sp), {})
+	# Своя точка лица важнее общей картинки (Хугин и Мунин — два ворона на одном рисунке)
+	return _faces.get(sp, _faces.get(ALIASES.get(sp, sp), {}))
 
 ## Компактный вид: квадрат вокруг лица (по центру глаз из данных комплекта портретов).
 func _face_texture(tex: Texture2D, sp: String) -> Texture2D:

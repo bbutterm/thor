@@ -9,6 +9,8 @@ class_name BossBar
 var value: float = 1.0:
 	set(v):
 		v = clampf(v, 0.0, 1.0)
+		if v == value:
+			return  # HUD задаёт значение каждый кадр — без изменений не перерисовываем
 		if v > value:
 			_trail = v
 		value = v
