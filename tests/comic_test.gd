@@ -47,6 +47,10 @@ func last() -> Dictionary:
 func fresh() -> void:
 	FX.reset_time()
 	CF.reset_state()
+	# Слова рангов шкалы стиля (блок Б3) — свой тест (style_test); здесь шкала не мешает
+	if game and is_instance_valid(game.player):
+		game.player.style.reset()
+		game.player.style.reset_cooldowns()
 	await frames(1)
 
 func _run() -> void:

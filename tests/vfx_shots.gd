@@ -145,13 +145,13 @@ func _run() -> void:
 	await wait(0.08)
 	await shot("10_speed_lines")
 	await wait(1.2)
-	p.rage.start_berserk()
+	p.style.start_berserk()
 	await wait(0.8)
 	await shot("11_rage")
 	p.camera_fx.speed_lines_pulse()
 	await wait(0.08)
 	await shot("11b_rage_speed")
-	p.rage.reset()
+	p.style.reset()
 	await wait(1.5)
 
 	# Комиксовые слова

@@ -174,16 +174,16 @@ func _run() -> void:
 	check(_fire_count() > fires_before, "Огненный шаг: рывок оставляет огонь")
 	clear_runes()
 
-	print("-- Ренж, Ярость, мета")
+	print("-- Ренж, шкала стиля, мета")
 	give("endless_quiver", 2)
 	var it := WeaponItem.create(load("res://weapons/defs/pistol.tres") as WeaponDef, 1)
 	check(it.reserve_cap() == it.def.reserve_max * 2, "Бездонный колчан ур. 2: запас ×2")
 	clear_runes()
 	give("berserk_song", 3)
-	p.rage.kills = 0
-	for i in 5:
-		p.rage.add_kill()
-	check(p.rage.kills >= 9, "Песнь берсерка ур. 3: Ярость быстрее (%d за 5 убийств)" % p.rage.kills)
+	p.style.reset()
+	var got := p.style.add_action(&"kill_melee")
+	check(is_equal_approx(got, float(p.style.tuning.points.kill_melee) * (1.0 + Run.rune_value("berserk_song"))) and Run.rune_value("berserk_song") >= 0.8, "Песнь берсерка ур. 3: шкала стиля быстрее (+%.1f за мили-убийство)" % got)
+	p.style.reset()
 	clear_runes()
 	give("ancestor_glory", 3)
 	var g0 := Run.glory

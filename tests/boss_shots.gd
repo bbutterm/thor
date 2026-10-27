@@ -95,8 +95,8 @@ func _doors() -> void:
 		print("дверей нет")
 		return
 	# Без берсерка (зачистка набила серию) — виньетка не закрывает арки
-	if game.player.rage:
-		game.player.rage.reset()
+	if game.player.style:
+		game.player.style.reset()
 	await wait(1.2)
 	var mid := game.rewards.doors[game.rewards.doors.size() / 2]
 	var dz := mid.global_position

@@ -36,7 +36,7 @@ var auto: bool = true
 var user_volume_db: float = 0.0
 
 var current_track: String = ""
-## 0 — фон (бас и пэды), 1 — бой (+ барабаны), 2 — Ярость (полный трек)
+## 0 — фон (бас и пэды), 1 — бой (+ барабаны), 2 — полный трек (ранг «Достойно» и выше, берсерк)
 var intensity: int = 0
 var muffled: bool = false
 
@@ -155,7 +155,7 @@ func play_track(track: String, now: bool = false) -> void:
 	else:
 		_pending_track = track
 
-## 0 — фон, 1 — бой, 2 — Ярость. Смена — на ближайшей доле.
+## 0 — фон, 1 — бой, 2 — полный трек (шкала стиля). Смена — на ближайшей доле.
 func set_intensity(level: int) -> void:
 	level = clampi(level, 0, 2)
 	if level == intensity and _pending_intensity < 0:
@@ -216,7 +216,7 @@ func _target_db(layer: int, level: int) -> float:
 		while top > 0 and not layers.has(LAYERS[top]):
 			top -= 1
 		return 0.0 if layer == top else -80.0
-	# Слой без файла в треке — тишина; иначе base всегда, drums с боя, full с Ярости
+	# Слой без файла в треке — тишина; иначе base всегда, drums с боя, full с ранга «Достойно» и в берсерке
 	return 0.0 if layer <= level else -80.0
 
 ## Секунда внутри петли и длина доли/такта — для переходов «в такт».
@@ -304,9 +304,12 @@ func _auto_state() -> void:
 			play_track("miniboss")
 		else:
 			play_track("midgard")
-		var rage: bool = g.player.has_method("is_berserk") and g.player.call("is_berserk")
-		# Зал зачищен — спокойная петля без обрыва (слой фона)
-		set_intensity(2 if rage else (1 if fighting else 0))
+		# Слой — по шкале стиля игрока (Player.music_intensity → StyleMeter.music_level): в бою барабаны,
+		# с ранга «Достойно» и в берсерке — полный трек; зал зачищен — спокойная петля без обрыва (фон)
+		var level := 1 if fighting else 0
+		if g.player.has_method("music_intensity"):
+			level = int(g.player.call("music_intensity", fighting))
+		set_intensity(level)
 	else:
 		set_muffled(in_dialogue)
 		set_intensity(0)

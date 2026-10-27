@@ -461,7 +461,7 @@ func _test_explosive() -> void:
 # --- Ярость, руны, убийства ---
 
 func _test_rage() -> void:
-	print("-- Удары по пропсам не кормят Ярость, руны и счёт убийств")
+	print("-- Удары по пропсам не кормят шкалу стиля, руны и счёт убийств")
 	var p := game.player
 	await place(Vector3(0, 0.1, 9))
 	Run.add_rune(Run.rune_def("thunder_call"))
@@ -471,7 +471,8 @@ func _test_rage() -> void:
 	var cb := func(_s: String) -> void: kills[0] += 1
 	Run.kill_registered.connect(cb)
 	var g0 := Run.glory
-	var rage0 := p.rage.kills
+	p.style.reset()
+	var rage0 := p.style.points
 	var crates: Array[Destructible] = []
 	for i in 4:
 		crates.append(spawn(CRATE, Vector3(-3 + i * 2, 0, 3)))
@@ -486,7 +487,7 @@ func _test_rage() -> void:
 	await wait(0.2)
 	check(crates.all(func(c: Variant) -> bool: return broken(c)), "deal_damage ломает пропсы")
 	check(p._thunder_hits == 0, "«Зов грома» не считает удары по пропсам (%d)" % p._thunder_hits)
-	check(p.rage.kills == rage0 and not p.rage.active, "Ярость не растёт (%d → %d)" % [rage0, p.rage.kills])
+	check(p.style.points == rage0 and not p.style.active, "шкала стиля не растёт (%.1f → %.1f)" % [rage0, p.style.points])
 	check(kills[0] == 0, "разбитые пропсы — не убийства (%d)" % kills[0])
 	check(Run.glory == g0, "Славы за пропсы нет (%d → %d)" % [g0, Run.glory])
 	# И настоящим взмахом топора
@@ -495,8 +496,8 @@ func _test_rage() -> void:
 	await wait(0.3)
 	p.axe.request_attack()
 	await wait(0.5)
-	check(broken(b) and p._thunder_hits == 0 and kills[0] == 0 and p.rage.kills == rage0,
-		"взмах по бочке — тоже мимо Ярости и рун (разбита %s, гром %d, убийств %d, ярость %d)" % [broken(b), p._thunder_hits, kills[0], p.rage.kills])
+	check(broken(b) and p._thunder_hits == 0 and kills[0] == 0 and p.style.points == rage0,
+		"взмах по бочке — тоже мимо шкалы стиля и рун (разбита %s, гром %d, убийств %d, шкала %.1f)" % [broken(b), p._thunder_hits, kills[0], p.style.points])
 	Run.kill_registered.disconnect(cb)
 	Run.runes.clear()
 	p.recalc_from_runes(Run)

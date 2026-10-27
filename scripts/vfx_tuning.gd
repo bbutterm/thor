@@ -2,7 +2,7 @@ extends Resource
 class_name VfxTuning
 ## «Ощущенческие» числа VFX-комплекта (sprites/vfx/*): размеры, длительности, лимиты пулов, прозрачность.
 ## Данные — data/vfx_tuning.tres (открыть в инспекторе Godot); FX.cfg() читает его один раз.
-## Экранные эффекты (линии скорости, виньетка Ярости, идеальный хват) — в scripts/vfx_screen.gd (@export там же).
+## Экранные эффекты (линии скорости, виньетка берсерка, идеальный хват) — в scripts/vfx_screen.gd (@export там же).
 
 @export_group("Вспышка попадания (vfx_hit_flash)")
 ## Размер вспышки, м (крупный удар — × hit_flash_big_mult)

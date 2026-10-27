@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="StyleTuning" format=3]
+
+[ext_resource type="Script" path="res://player/style_tuning.gd" id="1_st"]
+
+[resource]
+script = ExtResource("1_st")
+rank_points = PackedFloat32Array(0, 15, 35, 60, 100)
+rank_glory_mult = PackedFloat32Array(1, 1.1, 1.25, 1.4, 1.6)
+rank_drain = PackedFloat32Array(0, 0.6, 1.2, 2, 0)
+rank_pop_cooldown = 4.0
+rank_pop_delay = 0.45
+points = {
+"kill_dash": 7.0,
+"kill_explosion": 10.0,
+"kill_fall": 14.0,
+"kill_finisher": 6.0,
+"kill_fire": 5.0,
+"kill_hammer": 9.0,
+"kill_heavy": 7.0,
+"kill_melee": 4.0,
+"kill_other": 3.0,
+"kill_ranged": 2.0,
+"kill_reflect": 12.0,
+"kill_slam": 9.0,
+"kill_stomp": 12.0,
+"kill_wall": 12.0,
+"multikill": 10.0,
+"multikill_big": 15.0,
+"perfect_catch": 8.0,
+"reflect": 8.0,
+"slam_bounce": 5.0,
+"stomp": 5.0,
+"wall_splat": 6.0
+}
+multikill_count = 3
+multikill_big_count = 5
+multikill_window = 0.8
+repeat_falloff = 0.6
+repeat_min_mult = 0.15
+repeat_memory_decay = 0.35
+repeat_memory_max = 4.0
+idle_delay = 2.5
+idle_drain = 5.0
+damage_knock_min = 12.0
+damage_knock_per_hp = 0.8
+berserk_time = 8.0
+damage_mult = 1.5
+speed_mult = 1.5
+hitstop_on_start = 0.12
+after_berserk_rank = 2
+music_full_rank = 3
+voice_rank = 3
+voice_cooldown = 30.0
+voice_retry_time = 2.5

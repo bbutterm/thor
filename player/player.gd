@@ -225,13 +225,17 @@ var _thunder_hits: int = 0
 var _second_wind_used: bool = false
 var _hiccup_t: float = 0.0
 var _spin_t: float = 0.0
-## Ярость и берсерк (GDD 8), см. player/rage.gd
-var rage: Rage
+## Шкала стиля «ДОСТОЙНО!» и берсерк на высшем ранге (блок Б3, GDD 8), см. player/style_meter.gd
+var style: StyleMeter
+## Старое имя (Ярость, блок П) — тот же узел: value/active/berserk_left/start_berserk/reset/is_stun_immune
+var rage: StyleMeter:
+	get:
+		return style
 
 func _ready() -> void:
 	add_to_group("player")
 	_setup_weapons()
-	_setup_rage()
+	_setup_style()
 	health = max_health
 	dash_charges_max = dash_charges_base
 	dash_charges = dash_charges_max
@@ -780,6 +784,7 @@ func _slam_bounce(fall: float) -> void:
 	_jumps_left = extra_jumps
 	_air_peak_y = global_position.y
 	Perf.mark("slam_bounce")
+	StyleMeter.event(&"slam_bounce")
 
 ## Приземлился на врага сверху (без удара-приземления) — отскок, как в Mario.
 func _check_stomp(pre_velocity: Vector3) -> void:
@@ -801,6 +806,7 @@ func _check_stomp(pre_velocity: Vector3) -> void:
 		FX.ring(get_parent(), e.global_position + Vector3(0, 1.8 * e.model_scale, 0), 0.8, Color(1, 0.95, 0.7, 0.8), 0.2)
 		Audio.sfx("helmet_bonk", "sounds/jump_b.ogg")
 		Perf.mark("stomp")
+		StyleMeter.event(&"stomp")
 		return
 
 ## Прыжок по головам и залезание зависят от оружия в руке (этап 1): с ренжем по головам не прыгаем.
@@ -959,8 +965,11 @@ func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln
 		return
 	health -= amount
 	# Берсерк: Тора не сбивают — удары не отбрасывают
-	if not (rage and rage.is_stun_immune()):
+	if not (style and style.is_stun_immune()):
 		velocity += knockback
+	# Урон сбивает шкалу стиля
+	if style:
+		style.on_damaged(amount)
 	_invuln_left = 0.25
 	camera_fx.add_trauma(clampf(amount / 30.0, 0.15, 0.6))
 	Run.register_player_hit()
@@ -1033,7 +1042,7 @@ func _setup_weapons() -> void:
 
 ## Скорость бега с учётом оружия в руке.
 func effective_move_speed() -> float:
-	return move_speed * weapon_move_mult() * (rage.current_speed_mult() if rage else 1.0) * (1.0 + Run.rune_value("njord_wind"))
+	return move_speed * weapon_move_mult() * (style.current_speed_mult() if style else 1.0) * (1.0 + Run.rune_value("njord_wind"))
 
 func weapon_move_mult() -> float:
 	var m := weapons.move_speed_mult() if weapons else 1.0
@@ -1135,9 +1144,9 @@ func body_handler(id: String) -> BodyTraitHandler:
 			return h
 	return null
 
-## Множитель исходящего урона: пассивка/изъян тела (по цели и источнику) и Ярость.
+## Множитель исходящего урона: пассивка/изъян тела (по цели и источнику) и берсерк шкалы стиля.
 func outgoing_damage_mult(target: Object, source: String) -> float:
-	var m := rage.current_damage_mult() if rage else 1.0
+	var m := style.current_damage_mult() if style else 1.0
 	for h in body_handlers:
 		m *= h.damage_mult(target, source)
 	return m
@@ -1146,7 +1155,7 @@ func outgoing_damage_mult(target: Object, source: String) -> float:
 func deal_damage(target: Object, amount: float, knock: Vector3, source: String) -> float:
 	if target == null or not is_instance_valid(target) or not target.has_method("take_hit"):
 		return 0.0
-	# Разрушаемый пропс (бочка, ящик): урон как есть — без множителей тела/Ярости/рун, критов, on_hit,
+	# Разрушаемый пропс (бочка, ящик): урон как есть — без множителей тела/берсерка/рун, критов, on_hit,
 	# «Зова грома» (удары по бочкам не кормят серии и руны «за удар»)
 	if target is Destructible:
 		(target as Destructible).take_hit(amount, knock, source)
@@ -1176,18 +1185,22 @@ func _on_kill_registered(source: String) -> void:
 	for h in body_handlers:
 		h.on_kill(self, source)
 
-# --- Ярость (GDD 8) ---
+# --- Шкала стиля «ДОСТОЙНО!» (блок Б3, GDD 8) ---
 
-func _setup_rage() -> void:
-	rage = get_node_or_null("Rage") as Rage
-	if rage == null:
-		rage = Rage.new()
-		rage.name = "Rage"
-		rage.player = self
-		add_child(rage)
+func _setup_style() -> void:
+	style = get_node_or_null("StyleMeter") as StyleMeter
+	if style == null:
+		style = StyleMeter.new()
+		style.name = "StyleMeter"
+		style.player = self
+		add_child(style)
 
 func is_berserk() -> bool:
-	return rage != null and rage.active
+	return style != null and style.active
+
+## Слой музыки по шкале стиля (Music._auto_state): 0 — фон, 1 — бой, 2 — полный трек.
+func music_intensity(fighting: bool) -> int:
+	return style.music_level(fighting) if style else (1 if fighting else 0)
 
 
 # --- Руны по GDD 11 (блок Т): значения — Run.rune_value(id) по уровню руны ---

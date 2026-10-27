@@ -43,7 +43,7 @@ func _ready() -> void:
 	tracker = RunTracker.attach(self, player)
 	# Обучение в первом зале — подсказки Хугина и Мунина (run/tutorial.gd)
 	tutorial = Tutorial.attach(self)
-	VfxScreen.attach(self, player)  # линии скорости, виньетка Ярости, идеальный хват
+	VfxScreen.attach(self, player)  # линии скорости, виньетка берсерка, идеальный хват
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Дожидаемся фоновой загрузки моделей (обычно уже готово, пока игрок был в меню)
 	AssetCache.finish()
