@@ -16,6 +16,7 @@ const MEDIAN_WINDOW := 31
 var game: Game
 var threshold_ms: float = 50.0
 var _load_frames: Array[int] = []
+var _slam_impacts: int = 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -52,6 +53,7 @@ func _run() -> void:
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 	await wait(0.3)
 	game = get_tree().current_scene as Game
+	game.player.slammed.connect(func(_power: float) -> void: _slam_impacts += 1)
 	# Руна огня — чтобы удар-приземление оставлял огонь; молот — молнии
 	for r in Run.all_runes:
 		if r.id in ["slam_fire", "hammer_power"]:
@@ -134,11 +136,9 @@ func _play_room() -> void:
 				if p.mjolnir.in_hand:
 					p.mjolnir.throw_hammer()
 			2:
-				p.velocity.y = 9.0
-				await wait(0.25)
-				Input.action_press("slam")
-				await wait(0.05)
-				Input.action_release("slam")
+				# Н2: обычный прыжок не открывает удар. Делать воздушный прыжок,
+				# как игрок, либо использовать доступный с высоты/отскока удар.
+				await _jump_and_slam(p)
 		await wait(0.25)
 		# Добиваем по одному — смерть каждого врага отдельным событием. Босса и мини-босса — частями
 		# («slam» сбивает Ярла с балкона): успевают показать свои атаки и фазы (таран, лужи, балконы, обломки)
@@ -148,6 +148,30 @@ func _play_room() -> void:
 			else:
 				e.take_hit(9999, Vector3(0, 3, -5), "melee_finisher")
 	print("  зал зачищен: %s" % room.room_title)
+
+## Страхуем запас рун в тестовой сцене, чтобы независимо от исхода предыдущих действий
+## увидеть эффекты удара в каждом прогоне. Прыжок и Ctrl отправляются через обычный ввод.
+func _jump_and_slam(p: Player) -> void:
+	if p.is_on_floor():
+		Input.action_press("jump")
+		await wait(0.05)
+		Input.action_release("jump")
+		await wait(0.12)
+	if not p.is_on_floor() and not p.can_start_slam() and p._jumps_left > 0:
+		p.restore_mjolnir_runes(p.dash_charges_max)
+		Input.action_press("jump")
+		await wait(0.05)
+		Input.action_release("jump")
+		await wait(0.05)
+	if p.can_start_slam():
+		Input.action_press("slam")
+		await wait(0.05)
+		Input.action_release("slam")
+		# Приземление и эффекты должны случиться до следующего сценария боя.
+		for i in 90:
+			if not p.is_slamming:
+				break
+			await get_tree().physics_frame
 
 func _go_next() -> void:
 	var room := game.room
@@ -215,10 +239,13 @@ func _report() -> void:
 	if noise > 0:
 		print("Всплесков без событий > +%d мс: %d (не считаются)" % [int(threshold_ms), noise])
 	_report_pipelines(fr)
+	print("Удары-приземления с реальным приземлением: %d" % _slam_impacts)
+	if _slam_impacts == 0:
+		printerr("HITCH FAIL: удар-приземление ни разу не выполнился")
 	print("=== ИТОГ HITCH: %d фризов > +%d мс вне загрузки ===" % [bad.size(), int(threshold_ms)])
 	get_tree().paused = false
 	FX.reset_time()
-	get_tree().quit(0 if bad.is_empty() else 1)
+	get_tree().quit(0 if bad.is_empty() and _slam_impacts > 0 else 1)
 
 ## Компиляции пайплайнов (Forward+/Mobile; в GL Compatibility счётчиков нет) вне загрузки залов: сколько и
 ## после каких событий. pso_draw — компиляция прямо при отрисовке (= фриз на настоящей видеокарте).
