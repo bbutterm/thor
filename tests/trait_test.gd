@@ -353,6 +353,7 @@ func _test_pick_ui() -> void:
 		var raven := bubble.visual_rect()
 		var banner := ann.visual_rect()
 		check(not banner.intersects(odin) and not banner.intersects(raven) and not raven.intersects(odin), "плашка, подсказка ворона и реплика Одина не перекрывают друг друга")
+		await _test_combo_word_layout(ann, bubble)
 		GameSettings.set_value("text", "text_scale", text_scale, false)
 		ann.visible = false
 		await frames(3)
@@ -420,6 +421,63 @@ func _test_card_layout() -> void:
 	GameSettings.set_value("text", "language", "ru", false)
 	tp.visible = false
 	tp._status_labels.clear()
+
+func _test_combo_word_layout(ann: ComboAnnounce, bubble: BarkBubble) -> void:
+	var old_size: Vector2i = get_viewport().size
+	var old_language: String = GameSettings.get_value("text", "language")
+	var old_scale := GameSettings.text_scale()
+	var old_enabled := GameSettings.comic_enabled
+	var old_comic_scale := GameSettings.comic_scale
+	GameSettings.comic_enabled = true
+	for viewport_size in [Vector2i(1280, 720), Vector2i(1280, 800)]:
+		get_viewport().size = viewport_size
+		await frames(2)
+		for language in ["ru", "en"]:
+			GameSettings.set_value("text", "language", language, false)
+			for scale in [1.0, 1.6]:
+				GameSettings.set_value("text", "text_scale", scale, false)
+				for comic_scale in [1.0, 1.6]:
+					GameSettings.comic_scale = comic_scale
+					var line := "Связка! Молот и стихия договорились. Тебе бы так с диваном." if language == "ru" else "A fusion! Hammer and element agreed. If only you and the couch could do that."
+					game.hud.show_odin_line(line)
+					bubble.show_line("hugin", "neutral", line)
+					ComicFX.reset_state()
+					ComicFX.pop("combo", Vector3.ZERO, true)
+					await frames(5)
+					game.hud._position_odin_notice()
+					await frames(2)
+					var word: Variant = null
+					for w in ComicFX._pool:
+						if w.active and w.event == "combo" and not w.preview:
+							word = w
+					var odin := _visual_rect(game.hud._odin_panel)
+					var tag := "%dx%d %s text=%.1f word=%.1f" % [viewport_size.x, viewport_size.y, language, scale, comic_scale]
+					check(word != null, "%s: слово связки активно" % tag)
+					if word:
+						var letters: Rect2 = word.label.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, word.label.size)
+						check(not odin.intersects(letters), "%s: реплика не перекрывает слово связки" % tag)
+					var label := game.hud._odin_label
+					var text_rect: Rect2 = label.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, label.size)
+					var contained := odin.encloses(text_rect)
+					var extent := label.label_settings.font.get_multiline_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, label.size.x, label.label_settings.font_size)
+					check(contained and label.size.y >= extent.y + label.label_settings.outline_size * 2.0,
+						"%s: текст реплики помещается в рамке целиком" % tag)
+					check(not odin.intersects(ann.visual_rect()) and not odin.intersects(bubble.visual_rect()),
+						"%s: реплика отдельно от плашки и ворона" % tag)
+					check(not odin.intersects(game.hud._hammer_icon.get_global_rect()) and not odin.intersects(game.hud._mjolnir_traits.get_global_rect()),
+						"%s: реплика не закрывает молот и трейты (трейты %s)" % [tag, game.hud._mjolnir_traits.get_global_rect()])
+					var narrow := game.hud._odin_panel.offset_right - game.hud._odin_panel.offset_left
+					ComicFX.reset_state()
+					await frames(2)
+					game.hud._position_odin_notice()
+					check(game.hud._odin_panel.offset_right - game.hud._odin_panel.offset_left > narrow + 100.0,
+						"%s: после слова возвращается обычная ширина реплики" % tag)
+	GameSettings.comic_enabled = old_enabled
+	GameSettings.comic_scale = old_comic_scale
+	GameSettings.set_value("text", "language", old_language, false)
+	GameSettings.set_value("text", "text_scale", old_scale, false)
+	get_viewport().size = old_size
+	await frames(2)
 
 func _visual_rect(control: Control) -> Rect2:
 	var rect := Rect2(Vector2.ZERO, control.size)
