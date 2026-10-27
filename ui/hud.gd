@@ -331,6 +331,7 @@ func _notification(what: int) -> void:
 		_odin_panel.visible = true
 
 func _process(delta: float) -> void:
+	_position_odin_notice()
 	if player and is_instance_valid(player):
 		_speed_mat.set_shader_parameter("intensity", player.camera_fx.speed_lines)
 		_update_hammer()
@@ -341,6 +342,32 @@ func _process(delta: float) -> void:
 	if absf(_glory_shown - Run.glory) > 0.5:
 		_glory_shown = lerpf(_glory_shown, Run.glory, minf(1.0, delta * 8.0))
 		_glory_label.text = tr("СЛАВА %d") % int(round(_glory_shown))
+
+## Объявление связки и реплика Одина часто появляются одновременно. Пузырь
+## временно уходит ниже плашки, затем возвращается на обычное место.
+func _position_odin_notice() -> void:
+	if _odin_panel == null:
+		return
+	var top := 104.0
+	var left := -340.0
+	var announce := get_parent().get_node_or_null("ComboAnnounce") as ComboAnnounce
+	if announce and announce.is_showing():
+		var bounds := announce.visual_rect()
+		var style := _odin_panel.get_theme_stylebox("panel") as SkinStyleBox
+		var frame_top := style.grow.y if style else 0.0
+		top = maxf(top, bounds.end.y + frame_top + 12.0)
+		# Если ворон тоже говорит, размещаем подписи рядом, чтобы их можно было читать.
+		var bubble := Dialogue.get("_bubble") as BarkBubble
+		if is_instance_valid(bubble) and is_instance_valid(bubble._panel) and bubble._panel.modulate.a > 0.01:
+			var vp_width := get_viewport().get_visible_rect().size.x
+			var frame_right := style.grow.z if style else 0.0
+			var right_limit := bubble.visual_rect().position.x - frame_right - 12.0
+			left = minf(left, right_limit - 680.0 - vp_width * 0.5)
+			left = maxf(left, -vp_width * 0.5 + (style.grow.x if style else 0.0) + 6.0)
+	_odin_panel.offset_left = left
+	_odin_panel.offset_right = left + 680.0
+	_odin_panel.offset_top = top
+	_odin_panel.offset_bottom = top + 60.0
 
 func _on_health_changed(current: float, maximum: float) -> void:
 	_hp_bar.value = current / maxf(maximum, 1.0)
