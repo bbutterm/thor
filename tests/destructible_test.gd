@@ -217,7 +217,7 @@ func _test_slam() -> void:
 	var b := spawn(BARREL, at + Vector3(1.6, -0.08, 0))
 	var c := spawn(CRATE, at + Vector3(-2.0, -0.08, 0.5))
 	await wait(0.3)
-	p.global_position = at + Vector3(0, 3.0, 0)
+	p.global_position = at + Vector3(0, 3.5, 0)
 	p.velocity = Vector3.ZERO
 	await get_tree().physics_frame
 	p._start_slam()

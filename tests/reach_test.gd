@@ -19,8 +19,8 @@ func frames(n: int) -> void:
 	for i in n:
 		await get_tree().physics_frame
 
-func _start(room: String) -> Game:
-	Run.start_run("berserker")
+func _start(room: String, body_id: String = "berserker") -> Game:
+	Run.start_run(body_id)
 	Run.room_order.assign([room, Run.BOSS_SCENE])
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 	await frames(20)
@@ -63,7 +63,8 @@ func _run() -> void:
 		fails += 1
 
 	# Зал 3: башня 4x4 в (0, -2), верх 5 м. Встаём у южной грани
-	g = await _start("res://rooms/room_03.tscn")
+	# Две руны нужны: на второй прыжок перед ударом и ещё один после супер-прыжка.
+	g = await _start("res://rooms/room_03.tscn", "hunter")
 	p = g.player
 	p.global_position = Vector3(0, 0.1, 1.6)
 	p.rotation_target = Vector2(0, 0)
@@ -73,9 +74,14 @@ func _run() -> void:
 	await frames(2)
 	Input.action_release("jump")
 	await frames(12)
+	Input.action_press("jump")
+	await frames(2)
+	Input.action_release("jump")
+	await frames(2)
 	Input.action_press("slam")
 	await frames(2)
 	Input.action_release("slam")
+	var started_slam := p.is_slamming
 	for i in 90:
 		await get_tree().physics_frame
 		if p.is_on_floor():
@@ -83,6 +89,7 @@ func _run() -> void:
 	Input.action_press("jump")
 	await frames(2)
 	Input.action_release("jump")
+	var started_super := p.velocity.y > p.jump_velocity * 1.2
 	# Второй прыжок — у вершины супер-прыжка (а не через N кадров: hit-stop удара-приземления
 	# замедляет время, и фиксированное число кадров попадает в разную точку дуги)
 	for i in 60:
@@ -102,8 +109,8 @@ func _run() -> void:
 			break
 	Input.action_release("move_forward")
 	await frames(20)
-	var ok2 := on_top and p.global_position.y > 4.8
-	print("[%s] супер+двойной на башню 5 м: y=%.2f" % ["OK" if ok2 else "FAIL", p.global_position.y])
+	var ok2 := started_slam and started_super and on_top and p.global_position.y > 4.8
+	print("[%s] супер+двойной на башню 5 м: slam=%s, super=%s, y=%.2f" % ["OK" if ok2 else "FAIL", started_slam, started_super, p.global_position.y])
 	if not ok2:
 		fails += 1
 

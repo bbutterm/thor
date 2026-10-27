@@ -195,7 +195,7 @@ func _test_heavy() -> void:
 	check(p.slam_bounce_mult > 1.0, "отскок от удара-приземления выше (×%.2f)" % p.slam_bounce_mult)
 	# Враг на 4.6 м — дальше базового радиуса 3.5 + 0.25*4, но внутри ×1.5
 	var e := _dummy(_floor_pos() + Vector3(0, 0, -4.6))
-	await _place(p, _floor_pos() + Vector3(0, 4.0, 0))
+	await _place(p, _floor_pos() + Vector3(0, 5.0, 0))
 	await press("slam")
 	var stunned := false
 	for i in 90:

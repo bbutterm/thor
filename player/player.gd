@@ -8,6 +8,7 @@ signal dash_charges_changed(current: int, maximum: int, recharge_progress: float
 signal died
 signal hurt(amount: float)
 signal slammed(power: float)
+signal slam_unavailable
 
 @export_group("Бег")
 @export var move_speed: float = 8.0
@@ -40,6 +41,10 @@ signal slammed(power: float)
 @export var dash_damage: float = 15.0
 
 @export_group("Удар-приземление и супер-прыжок")
+## С какой высоты над поверхностью можно бить без воздушного прыжка (м).
+@export var slam_min_height: float = 3.0
+## Интервал подсказки о недоступном ударе (с).
+@export var slam_hint_cooldown: float = 8.0
 @export var slam_speed: float = 34.0
 @export var slam_base_radius: float = 3.5
 @export var slam_radius_per_meter: float = 0.25
@@ -158,6 +163,9 @@ var _invuln_left: float = 0.0
 var _dash_hit: Dictionary = {}
 
 var _jumps_left: int = 1
+## Разрешение после воздушного прыжка, супер-прыжка, руны или отскока; сбрасывается при посадке.
+var _slam_ready: bool = false
+var _slam_hint_left: float = 0.0
 var _coyote_left: float = 0.0
 var _jump_buffer_left: float = 0.0
 var _was_on_floor: bool = true
@@ -400,6 +408,7 @@ func _update_timers(delta: float) -> void:
 	_super_jump_left = maxf(0.0, _super_jump_left - delta)
 	_bounce_window_left = maxf(0.0, _bounce_window_left - delta)
 	_stomp_cooldown = maxf(0.0, _stomp_cooldown - delta)
+	_slam_hint_left = maxf(0.0, _slam_hint_left - delta)
 	_climb_check_cooldown = maxf(0.0, _climb_check_cooldown - delta)
 	if dash_charges < dash_charges_max and is_on_floor() and not is_climbing:
 		_dash_recharge_timer += delta
@@ -449,6 +458,7 @@ func _process_jump(on_floor: bool) -> void:
 		# Прыжок в окне отскока от удара-приземления — подбрасывает выше
 		_jump_buffer_left = 0.0
 		_bounce_window_left = 0.0
+		_slam_ready = true
 		velocity.y = maxf(velocity.y, _bounce_boost_velocity)
 		camera_fx.kick_fov(8.0)
 		Audio.play("sounds/sfx/super_jump.wav")
@@ -457,6 +467,7 @@ func _process_jump(on_floor: bool) -> void:
 	if _super_jump_left > 0.0:
 		_jump_buffer_left = 0.0
 		_super_jump_left = 0.0
+		_slam_ready = true
 		velocity.y = jump_velocity * sqrt(super_jump_height_mult)
 		camera_fx.kick_fov(10.0)
 		camera_fx.add_trauma(0.25)
@@ -466,6 +477,7 @@ func _process_jump(on_floor: bool) -> void:
 	if on_floor or _coyote_left > 0.0:
 		_jump_buffer_left = 0.0
 		_coyote_left = 0.0
+		_slam_ready = false
 		velocity.y = jump_velocity
 		Audio.play("sounds/jump_a.ogg, sounds/jump_b.ogg")
 		if is_sliding:
@@ -478,6 +490,7 @@ func _process_jump(on_floor: bool) -> void:
 		_jump_buffer_left = 0.0
 		_jumps_left -= 1
 		_spend_dash_charge()
+		_slam_ready = true
 		# Крылья валькирии ур. 2+: прыжки в воздухе выше
 		velocity.y = jump_velocity * 0.92 * (Run.rune_value("valkyrie_wings", true) if Run.rune_level("valkyrie_wings") > 0 else 1.0)
 		camera_fx.kick_fov(3.0)
@@ -670,7 +683,21 @@ func _dash_damage_tick() -> void:
 
 # --- Удар-приземление ---
 
-func _start_slam() -> void:
+## Доступен после воздушного прыжка/специального подброса или на достаточной высоте над поверхностью.
+func can_start_slam() -> bool:
+	if is_dead or is_on_floor() or is_climbing or is_slamming:
+		return false
+	if _slam_ready:
+		return true
+	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + Vector3.DOWN * slam_min_height, 1, [get_rid()])
+	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
+
+func _start_slam() -> bool:
+	if not can_start_slam():
+		if _slam_hint_left <= 0.0:
+			_slam_hint_left = slam_hint_cooldown
+			slam_unavailable.emit()
+		return false
 	# Пике (GDD 7.2): сразу после рывка в воздухе — наклонно по направлению взгляда
 	is_diving = (_dash_time_left > 0.0 and _dash_in_air) or _dive_window_left > 0.0
 	_dive_window_left = 0.0
@@ -689,6 +716,7 @@ func _start_slam() -> void:
 	camera_fx.kick_fov(-6.0)
 	Audio.play("sounds/jump_c.ogg")
 	Audio.thor_grunt()
+	return true
 
 ## Отмена удара-приземления (GDD 7.2): рывок во время падения — дальше обычное падение
 func _cancel_slam() -> void:
@@ -698,6 +726,10 @@ func _cancel_slam() -> void:
 	Perf.mark("slam_cancel")
 
 func _on_landed() -> void:
+	# Контакт с головой врага может считаться полом в тот же кадр: это отскок, а не посадка.
+	if _stomp_cooldown > 0.0 and velocity.y > 0.0:
+		return
+	_slam_ready = false
 	var fall := maxf(0.0, _air_peak_y - global_position.y)
 	if is_slamming:
 		is_slamming = false
@@ -794,6 +826,7 @@ func _slam_bounce(fall: float) -> void:
 	# Прыжок в окне — не ниже супер-прыжка: отскок от врагов не должен отнимать супер-прыжок
 	_bounce_boost_velocity = maxf(sqrt(2.0 * gravity * h * slam_bounce_boost), jump_velocity * sqrt(super_jump_height_mult))
 	_bounce_window_left = maxf(slam_bounce_window, super_jump_window)
+	_slam_ready = true
 	_jumps_left = extra_jumps
 	_air_peak_y = global_position.y
 	Perf.mark("slam_bounce")
@@ -812,6 +845,7 @@ func _check_stomp(pre_velocity: Vector3) -> void:
 		if e.has_method("stun"):
 			e.stun(stomp_stun)
 		velocity.y = stomp_bounce_velocity
+		_slam_ready = true
 		_jumps_left = extra_jumps
 		_air_peak_y = global_position.y
 		_stomp_cooldown = 0.2
@@ -999,6 +1033,7 @@ func launch_up(height: float) -> void:
 		_cancel_slam()
 	_dash_time_left = 0.0
 	velocity.y = sqrt(2.0 * gravity * maxf(height, 0.5))
+	_slam_ready = true
 	_jumps_left = extra_jumps
 	_wall_jumps_left = wall_jumps
 	_coyote_left = 0.0

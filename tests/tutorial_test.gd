@@ -77,7 +77,7 @@ func _run() -> void:
 	await press("throw")
 	check(await _wait_step(t, "slam"), "бросок — дальше удар-приземление")
 	await wait(0.5)
-	p.global_position += Vector3(0, 3.0, 0)
+	p.global_position += Vector3(0, 4.0, 0)
 	await wait(0.05)
 	await press("slam")
 	check(await _wait_step(t, "doors", 5.0), "удар-приземление — дальше двери")

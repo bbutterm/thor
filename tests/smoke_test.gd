@@ -156,9 +156,16 @@ func _test_axe(p: Player) -> void:
 	await wait(0.35)
 	check(dummy.health < hp0, "удар топором нанёс урон (%.0f → %.0f)" % [hp0, dummy.health])
 	p.axe.request_attack()
-	await wait(0.1)
+	# Ждём фактический второй взмах: hit-stop может менять длительность кадров.
+	for i in 120:
+		if p.axe.stage == 1:
+			break
+		await get_tree().physics_frame
 	p.axe.request_attack()
-	await wait(0.6)
+	for i in 120:
+		if p.axe.stage == 2:
+			break
+		await get_tree().physics_frame
 	check(p.axe.stage == 2, "комбо дошло до 3-го удара")
 	if is_instance_valid(dummy):
 		dummy.take_hit(9999, Vector3.ZERO, "test")
@@ -201,7 +208,9 @@ func _test_slam(p: Player) -> void:
 	var dummy := _make_dummy(p, 2.5)
 	var hp0 := dummy.health
 	await press("jump")
-	await wait(0.35)
+	await wait(0.15)
+	await press("jump")
+	await wait(0.1)
 	await press("slam")
 	# Удар задел манекен → автоматический отскок (GDD 7.2), а Пробел в окне после приземления
 	# даёт не меньше супер-прыжка. Ждём окно (отскока или супер-прыжка), потом жмём прыжок.

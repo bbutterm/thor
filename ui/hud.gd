@@ -74,6 +74,7 @@ func bind_player(p: Player) -> void:
 	player.health_changed.connect(_on_health_changed)
 	player.dash_charges_changed.connect(_on_dash_changed)
 	player.hurt.connect(_on_hurt)
+	player.slam_unavailable.connect(func() -> void: toast(tr("НУЖЕН ВТОРОЙ ПРЫЖОК")))
 	player.mjolnir.state_changed.connect(_on_hammer_state)
 	# Бросок на перезарядке: подпись вспыхивает красным, иконка дёргается
 	player.mjolnir.throw_blocked.connect(func(_left: float) -> void:

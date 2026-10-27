@@ -130,6 +130,8 @@ func _run() -> void:
 			break
 	check(e3.health < hp3, "враг получил урон от прыжка на голову (%.0f → %.0f)" % [hp3, e3.health])
 	check(stomp_v > 5.0, "Тор отскочил от головы (vy=%.1f)" % stomp_v)
+	await wait(0.05) # контакт с головой перестаёт считаться полом
+	check(p.can_start_slam(), "отскок по голове разрешает удар-приземление")
 	check(e3.state == Enemy.State.STUNNED, "враг оглушён")
 	e3.queue_free()
 	await wait(1.5)
@@ -198,7 +200,7 @@ func _run() -> void:
 	await wait(0.3)
 
 	print("-- Пике и отмена удара-приземления")
-	p.global_position = floor_pos + Vector3(-6, 7.0, 0)
+	p.global_position = floor_pos + Vector3(0, 7.0, 0)
 	p.velocity = Vector3.ZERO
 	await wait(0.1)
 	await press("dash")
@@ -214,9 +216,10 @@ func _run() -> void:
 	check(not p.is_slamming and p.is_on_floor(), "пике приземлилось")
 	await wait(0.6)
 	p.dash_charges = p.dash_charges_max
-	p.global_position = floor_pos + Vector3(-6, 8.0, 0)
+	p.global_position = floor_pos + Vector3(0, 8.0, 0)
 	p.velocity = Vector3.ZERO
-	await wait(0.6)  # окно пике после прошлого рывка истекло
+	p._dive_window_left = 0.0  # независимый сценарий без окна предыдущего рывка
+	await wait(0.05)
 	await press("slam")
 	await get_tree().physics_frame
 	check(p.is_slamming and not p.is_diving and absf(p.velocity.x) + absf(p.velocity.z) < 0.5, "обычный удар-приземление — вертикально")

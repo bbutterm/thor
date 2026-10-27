@@ -469,10 +469,15 @@ func _recall_and_wait() -> bool:
 
 ## Прыжок и удар-приземление на месте (как игрок: Пробел, Ctrl), ждём приземления
 func _slam() -> void:
+	p.restore_mjolnir_runes(p.dash_charges_max)
 	Input.action_press("jump")
 	await frames(2)
 	Input.action_release("jump")
-	await wait(0.35)
+	await wait(0.15)
+	Input.action_press("jump")
+	await frames(2)
+	Input.action_release("jump")
+	await wait(0.1)
 	Input.action_press("slam")
 	await frames(2)
 	Input.action_release("slam")
