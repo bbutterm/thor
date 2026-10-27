@@ -73,6 +73,8 @@ enum Act { NONE, THROW, ARMLESS, LEAP, PERCH, KNOCKED, ROAR, BREAK, BUTT_AIM, BU
 
 ## Удары, которые сбивают Ярла с балкона
 const KNOCK_SOURCES := ["slam", "stomp", "hammer", "lightning"]
+## Имя на полосе босса (ключ перевода — HUD показывает через tr)
+const BOSS_TITLE := "ЯРЛ БЬОРН МЁРТВЫЙ"
 
 var phase: int = 1
 var _pending_phase: int = 1
@@ -95,7 +97,7 @@ var _base_speed: float = 0.0
 
 func _ready() -> void:
 	super._ready()
-	set_meta("boss_title", "ЯРЛ БЬОРН МЁРТВЫЙ")
+	set_meta("boss_title", BOSS_TITLE)
 	set_meta("death_source_id", "boss_jarl")
 	_base_speed = move_speed
 

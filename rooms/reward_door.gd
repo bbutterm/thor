@@ -104,9 +104,9 @@ func _build_icon(col: Color) -> void:
 		_icon.add_child(spr)
 	else:
 		_icon.add_child(_label("Glyph", reward.glyph if reward else "?", 170, col, 0.45))
-	_icon.add_child(_label("Title", (reward.title if reward else reward_id).to_upper(), 54, Color(1, 0.96, 0.88), -0.3))
+	_icon.add_child(_label("Title", (tr(reward.title) if reward else reward_id).to_upper(), 54, Color(1, 0.96, 0.88), -0.3))
 	if reward and reward.description != "":
-		_icon.add_child(_label("Desc", reward.description, 34, Color(0.92, 0.9, 0.85), -0.68))
+		_icon.add_child(_label("Desc", tr(reward.description), 34, Color(0.92, 0.9, 0.85), -0.68))
 	var tw := _icon.create_tween().set_loops()
 	tw.tween_property(_icon, "position:y", ICON_HEIGHT + 0.15, 0.9).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(_icon, "position:y", ICON_HEIGHT - 0.05, 0.9).set_trans(Tween.TRANS_SINE)

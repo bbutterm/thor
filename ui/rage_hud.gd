@@ -59,7 +59,7 @@ func _build() -> void:
 	box.alignment = BoxContainer.ALIGNMENT_END
 	box.add_theme_constant_override("separation", 3)
 	add_child(box)
-	_label = UIStyle.label("ЯРОСТЬ", 16, Color(RAGE_COLOR, 0.85), 4)
+	_label = UIStyle.label(tr("ЯРОСТЬ"), 16, Color(RAGE_COLOR, 0.85), 4)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_label)
 	_bar = SkinBar.new()
@@ -117,10 +117,10 @@ func _apply(v: float, active: bool) -> void:
 	_bar.value = v
 	_bar.fill_modulate = Color(1.3, 0.75, 0.6) if active else Color.WHITE
 	if active and rage:
-		_label.text = "БЕРСЕРК  %.1f" % maxf(rage.berserk_left, 0.0)
+		_label.text = tr("БЕРСЕРК  %.1f") % maxf(rage.berserk_left, 0.0)
 		_label.label_settings.font_color = BERSERK_COLOR.lightened(0.3)
 	else:
-		_label.text = "ЯРОСТЬ" if rage == null or rage.kills == 0 else "ЯРОСТЬ  %d / %d" % [rage.kills, rage.kills_to_full]
+		_label.text = tr("ЯРОСТЬ") if rage == null or rage.kills == 0 else tr("ЯРОСТЬ  %d / %d") % [rage.kills, rage.kills_to_full]
 		_label.label_settings.font_color = Color(RAGE_COLOR, 0.85)
 	# Пустая шкала вне боя — приглушена
 	modulate.a = 1.0 if active or v > 0.0 else 0.55

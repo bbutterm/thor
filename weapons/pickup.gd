@@ -72,13 +72,13 @@ func can_interact() -> bool:
 	return _ready_to_take and item != null
 
 func prompt_text(holder: WeaponHolder) -> String:
-	var cls := "ренж" if item.is_ranged() else "мили"
+	var cls := tr("ренж") if item.is_ranged() else tr("мили")
 	var cur := holder.ranged if item.is_ranged() else holder.melee
-	var txt := "[E] Взять: %s (%s, ур. %d)" % [item.def.display_name, cls, item.level]
+	var txt := tr("[E] Взять: %s (%s, ур. %d)") % [tr(item.def.display_name), cls, item.level]
 	if cur and cur.def.id == item.def.id and item.level <= cur.level and item.is_ranged():
-		txt = "[E] Забрать патроны: %s" % item.def.display_name
+		txt = tr("[E] Забрать патроны: %s") % tr(item.def.display_name)
 	elif cur:
-		txt += " — бросить %s" % cur.title()
+		txt += tr(" — бросить %s") % cur.title()
 	return txt
 
 func interact(holder: WeaponHolder) -> void:

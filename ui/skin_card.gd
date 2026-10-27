@@ -95,13 +95,13 @@ func set_icon(tex: Texture2D, glyph: String = "", color: Color = Color.WHITE) ->
 		c.queue_free()
 	var d := icon_box.size.x
 	if tex:
-		var tr := TextureRect.new()
-		tr.texture = tex
-		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tr.custom_minimum_size = Vector2(d, d) * 0.86
-		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon_box.add_child(tr)
+		var trect := TextureRect.new()
+		trect.texture = tex
+		trect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		trect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		trect.custom_minimum_size = Vector2(d, d) * 0.86
+		trect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_box.add_child(trect)
 		if glyph != "":
 			# Руна поверх картинки категории — в углу круга
 			var g := UIStyle.label(glyph, int(d * 0.3), color, 6)

@@ -27,6 +27,33 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	GameSettings.ensure_loaded()
+	GameSettings.events.changed.connect(_on_setting_changed)
+	_build()
+	show_tab(0)
+
+## Смена языка — экран собирается заново на новом языке (та же вкладка)
+func _on_setting_changed(section: String, key: String) -> void:
+	if section == "text" and key == "language":
+		_rebuild.call_deferred()
+
+func _rebuild() -> void:
+	if not is_inside_tree():
+		return
+	var tab := _current
+	_cancel_capture()
+	for c in get_children():
+		remove_child(c)
+		c.queue_free()
+	_tab_buttons.clear()
+	_pages.clear()
+	_key_buttons.clear()
+	_refreshers.clear()
+	_build()
+	show_tab(tab)
+	if tab < _tab_buttons.size():
+		_tab_buttons[tab].grab_focus.call_deferred()
+
+func _build() -> void:
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.72)
 	UIStyle.full_rect(dim)
@@ -41,7 +68,7 @@ func _ready() -> void:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 10)
 	panel.add_child(vb)
-	var t := UIStyle.label("НАСТРОЙКИ", 38, UIStyle.GOLD, 10)
+	var t := UIStyle.label(tr("НАСТРОЙКИ"), 38, UIStyle.GOLD, 10)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(t)
 	var tabs := HBoxContainer.new()
@@ -50,7 +77,7 @@ func _ready() -> void:
 	vb.add_child(tabs)
 	for i in TABS.size():
 		var b := Button.new()
-		b.text = TABS[i]
+		b.text = tr(TABS[i])
 		b.theme_type_variation = &"SmallButton"
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(146, 42)
@@ -83,15 +110,14 @@ func _ready() -> void:
 	foot.alignment = BoxContainer.ALIGNMENT_CENTER
 	foot.add_theme_constant_override("separation", 16)
 	vb.add_child(foot)
-	var reset := UIStyle.button("Сбросить всё", 19, "danger")
+	var reset := UIStyle.button(tr("Сбросить всё"), 19, "danger")
 	reset.custom_minimum_size = Vector2(240, 50)
 	reset.pressed.connect(_reset_all)
 	foot.add_child(reset)
-	var back := UIStyle.button("Назад", 22)
+	var back := UIStyle.button(tr("Назад"), 22)
 	back.custom_minimum_size = Vector2(260, 54)
 	back.pressed.connect(close)
 	foot.add_child(back)
-	show_tab(0)
 	back.grab_focus.call_deferred()
 
 func tab_count() -> int:
@@ -179,19 +205,19 @@ func _slider(page: Control, caption: String, section: String, key: String, lo: f
 
 func _check(page: Control, caption: String, section: String, key: String, on_change: Callable = Callable()) -> CheckBox:
 	var c := CheckBox.new()
-	c.text = "вкл"
+	c.text = tr("вкл")
 	c.button_pressed = bool(GameSettings.get_value(section, key))
-	c.text = "вкл" if c.button_pressed else "выкл"
+	c.text = tr("вкл") if c.button_pressed else tr("выкл")
 	c.focus_mode = Control.FOCUS_ALL
 	c.toggled.connect(func(on: bool) -> void:
 		GameSettings.set_value(section, key, on)
-		c.text = "вкл" if on else "выкл"
+		c.text = tr("вкл") if on else tr("выкл")
 		if on_change.is_valid():
 			on_change.call())
 	_row(page, caption, c)
 	_refreshers.append([section, key, func(v: Variant) -> void:
 		c.set_pressed_no_signal(bool(v))
-		c.text = "вкл" if bool(v) else "выкл"])
+		c.text = tr("вкл") if bool(v) else tr("выкл")])
 	c.set_meta("setting", section + "/" + key)
 	return c
 
@@ -222,24 +248,24 @@ static func _pct(v: float) -> String:
 # --- Вкладки ---
 
 func _build_audio(page: Control) -> void:
-	_header(page, "ГРОМКОСТЬ")
-	_slider(page, "Общая", "audio", "master", 0.0, 1.0, 0.05, _pct)
-	_slider(page, "Музыка", "audio", "music", 0.0, 1.0, 0.05, _pct)
-	_slider(page, "Эффекты", "audio", "sfx", 0.0, 1.0, 0.05, _pct,
+	_header(page, tr("ГРОМКОСТЬ"))
+	_slider(page, tr("Общая"), "audio", "master", 0.0, 1.0, 0.05, _pct)
+	_slider(page, tr("Музыка"), "audio", "music", 0.0, 1.0, 0.05, _pct)
+	_slider(page, tr("Эффекты"), "audio", "sfx", 0.0, 1.0, 0.05, _pct,
 		func() -> void: Audio.play("sounds/sfx/hammer_catch.wav"))
-	_slider(page, "Голоса", "audio", "voice", 0.0, 1.0, 0.05, _pct)
+	_slider(page, tr("Голоса"), "audio", "voice", 0.0, 1.0, 0.05, _pct)
 
 func _build_controls(page: Control) -> void:
-	_header(page, "МЫШЬ И ГЕЙМПАД")
-	_slider(page, "Чувствительность мыши", "controls", "mouse_sensitivity", 0.1, 3.0, 0.05,
+	_header(page, tr("МЫШЬ И ГЕЙМПАД"))
+	_slider(page, tr("Чувствительность мыши"), "controls", "mouse_sensitivity", 0.1, 3.0, 0.05,
 		func(v: float) -> String: return "×%.2f" % v)
-	_slider(page, "Чувствительность стика", "controls", "gamepad_sensitivity", 0.1, 3.0, 0.05,
+	_slider(page, tr("Чувствительность стика"), "controls", "gamepad_sensitivity", 0.1, 3.0, 0.05,
 		func(v: float) -> String: return "×%.2f" % v)
-	_check(page, "Инверсия по вертикали", "controls", "invert_y")
-	_note(page, "Клавиши переназначаются на вкладке «Клавиши».")
+	_check(page, tr("Инверсия по вертикали"), "controls", "invert_y")
+	_note(page, tr("Клавиши переназначаются на вкладке «Клавиши»."))
 
 func _build_keys(page: Control) -> void:
-	_header(page, "КЛАВИШИ — клик по кнопке, затем нажми клавишу или кнопку мыши (Esc — отмена)")
+	_header(page, tr("КЛАВИШИ — клик по кнопке, затем нажми клавишу или кнопку мыши (Esc — отмена)"))
 	for pair in GameSettings.REMAP_ACTIONS:
 		var action: String = pair[0]
 		var b := Button.new()
@@ -250,70 +276,76 @@ func _build_keys(page: Control) -> void:
 		b.pressed.connect(_start_capture.bind(action, b))
 		var box := HBoxContainer.new()
 		box.add_child(b)
-		_row(page, pair[1], box)
+		_row(page, tr(pair[1]), box)
 		_key_buttons[action] = b
-	var reset := UIStyle.button("Сбросить клавиши", 18, "danger")
+	var reset := UIStyle.button(tr("Сбросить клавиши"), 18, "danger")
 	reset.custom_minimum_size = Vector2(260, 48)
 	reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	reset.pressed.connect(func() -> void:
 		GameSettings.reset_input()
 		_refresh_keys()
-		_key_note.text = "Клавиши — как по умолчанию.")
+		_key_note.text = tr("Клавиши — как по умолчанию."))
 	page.add_child(reset)
-	_key_note = _note(page, "Esc — пауза, 1/2/3 — выбор карточек; геймпад не меняется.")
+	_key_note = _note(page, tr("Esc — пауза, 1/2/3 — выбор карточек; геймпад не меняется."))
 
 func _build_video(page: Control) -> void:
-	_header(page, "ОКНО")
-	_check(page, "Полноэкранный режим", "video", "fullscreen")
-	_check(page, "Вертикальная синхронизация (VSync)", "video", "vsync")
+	_header(page, tr("ОКНО"))
+	_check(page, tr("Полноэкранный режим"), "video", "fullscreen")
+	_check(page, tr("Вертикальная синхронизация (VSync)"), "video", "vsync")
 	var fps: Array = []
 	for f in GameSettings.FPS_OPTIONS:
-		fps.append([f, "без ограничения" if f == 0 else "%d" % f])
-	_option(page, "Ограничение FPS", "video", "max_fps", fps)
-	_header(page, "КАМЕРА")
-	_slider(page, "Поле зрения (FOV)", "video", "fov", GameSettings.FOV_MIN, GameSettings.FOV_MAX, 1.0,
+		fps.append([f, tr("без ограничения") if f == 0 else "%d" % f])
+	_option(page, tr("Ограничение FPS"), "video", "max_fps", fps)
+	_header(page, tr("КАМЕРА"))
+	_slider(page, tr("Поле зрения (FOV)"), "video", "fov", GameSettings.FOV_MIN, GameSettings.FOV_MAX, 1.0,
 		func(v: float) -> String: return "%d°" % roundi(v))
-	_slider(page, "Тряска камеры", "video", "shake", 0.0, 1.0, 0.05, _pct)
-	_check(page, "Покачивание и наклон камеры", "video", "head_bob")
+	_slider(page, tr("Тряска камеры"), "video", "shake", 0.0, 1.0, 0.05, _pct)
+	_check(page, tr("Покачивание и наклон камеры"), "video", "head_bob")
 
 func _build_interface(page: Control) -> void:
-	_header(page, "ПРИЦЕЛ")
-	_option(page, "Вид прицела", "hud", "crosshair",
-		[["dot", "точка"], ["cross", "крест"], ["circle", "круг с молнией"], ["classic", "классический"]])
-	_slider(page, "Размер прицела", "hud", "crosshair_size", 0.4, 2.5, 0.05, _pct)
-	_slider(page, "Яркость прицела", "hud", "crosshair_alpha", 0.2, 1.0, 0.05, _pct)
-	_option(page, "Цвет прицела", "hud", "crosshair_color",
-		[["white", "белый"], ["yellow", "жёлтый"], ["green", "зелёный"], ["cyan", "голубой"], ["red", "красный"], ["magenta", "пурпурный"]])
+	_header(page, tr("ЯЗЫК"))
+	# Подписи языков — каждая на своём языке (I18n.NAMES); смена — сразу, экран перестраивается
+	var langs: Array = []
+	for loc in I18n.LOCALES:
+		langs.append([loc, I18n.NAMES[loc]])
+	_option(page, tr("Язык / Language"), "text", "language", langs)
+	_header(page, tr("ПРИЦЕЛ"))
+	_option(page, tr("Вид прицела"), "hud", "crosshair",
+		[["dot", tr("точка")], ["cross", tr("крест")], ["circle", tr("круг с молнией")], ["classic", tr("классический")]])
+	_slider(page, tr("Размер прицела"), "hud", "crosshair_size", 0.4, 2.5, 0.05, _pct)
+	_slider(page, tr("Яркость прицела"), "hud", "crosshair_alpha", 0.2, 1.0, 0.05, _pct)
+	_option(page, tr("Цвет прицела"), "hud", "crosshair_color",
+		[["white", tr("белый")], ["yellow", tr("жёлтый")], ["green", tr("зелёный")], ["cyan", tr("голубой")], ["red", tr("красный")], ["magenta", tr("пурпурный")]])
 	_header(page, "HUD")
-	_check(page, "Индикаторы врагов за экраном", "hud", "offscreen")
-	_check(page, "Шкала высоты удара-приземления", "hud", "slam_meter")
-	_slider(page, "Масштаб интерфейса", "video", "ui_scale", 0.75, 1.5, 0.05, _pct)
-	_header(page, "КОМИКСОВЫЕ СЛОВА")
+	_check(page, tr("Индикаторы врагов за экраном"), "hud", "offscreen")
+	_check(page, tr("Шкала высоты удара-приземления"), "hud", "slam_meter")
+	_slider(page, tr("Масштаб интерфейса"), "video", "ui_scale", 0.75, 1.5, 0.05, _pct)
+	_header(page, tr("КОМИКСОВЫЕ СЛОВА"))
 	_comic_rows(page)
-	_header(page, "СУБТИТРЫ И ТЕКСТ")
-	_slider(page, "Размер текста диалогов", "text", "text_scale", 0.75, 1.6, 0.05, _pct)
-	_option(page, "Скорость печати", "text", "typing_speed",
-		[[0.6, "медленно"], [1.0, "обычно"], [1.6, "быстро"], [2.5, "очень быстро"], [0.0, "сразу целиком"]])
+	_header(page, tr("СУБТИТРЫ И ТЕКСТ"))
+	_slider(page, tr("Размер текста диалогов"), "text", "text_scale", 0.75, 1.6, 0.05, _pct)
+	_option(page, tr("Скорость печати"), "text", "typing_speed",
+		[[0.6, tr("медленно")], [1.0, tr("обычно")], [1.6, tr("быстро")], [2.5, tr("очень быстро")], [0.0, tr("сразу целиком")]])
 
 func _comic_rows(page: Control) -> void:
 	var holder: Array = [null]
-	_check(page, "Комиксовые слова (Comic FX)", "comic", "enabled", func() -> void:
+	_check(page, tr("Комиксовые слова (Comic FX)"), "comic", "enabled", func() -> void:
 		if holder[0]:
 			(holder[0] as HSlider).editable = GameSettings.comic_enabled
 		ComicFX.preview())
-	var size_slider := _slider(page, "Размер слов", "comic", "scale", GameSettings.COMIC_SCALE_MIN, GameSettings.COMIC_SCALE_MAX, 0.05,
+	var size_slider := _slider(page, tr("Размер слов"), "comic", "scale", GameSettings.COMIC_SCALE_MIN, GameSettings.COMIC_SCALE_MAX, 0.05,
 		_pct, func() -> void: ComicFX.preview())
 	size_slider.editable = GameSettings.comic_enabled
 	holder[0] = size_slider
 
 func _build_access(page: Control) -> void:
-	_header(page, "ЦВЕТ")
-	_option(page, "Цветовая слепота (коррекция экрана)", "access", "colorblind",
-		[["off", "выкл"], ["protanopia", "протанопия"], ["deuteranopia", "дейтеранопия"], ["tritanopia", "тританопия"]])
-	_note(page, "Телеграфы атак врагов дублируются формой и звуком, не только цветом.")
-	_header(page, "ПОМОЩЬ (облегчённый режим, без штрафа к Славе)")
-	_check(page, "Помощь в прицеливании (ренж)", "access", "aim_assist")
-	_check(page, "Замедление времени при ударе-приземлении", "access", "slam_slowmo")
+	_header(page, tr("ЦВЕТ"))
+	_option(page, tr("Цветовая слепота (коррекция экрана)"), "access", "colorblind",
+		[["off", tr("выкл")], ["protanopia", tr("протанопия")], ["deuteranopia", tr("дейтеранопия")], ["tritanopia", tr("тританопия")]])
+	_note(page, tr("Телеграфы атак врагов дублируются формой и звуком, не только цветом."))
+	_header(page, tr("ПОМОЩЬ (облегчённый режим, без штрафа к Славе)"))
+	_check(page, tr("Помощь в прицеливании (ренж)"), "access", "aim_assist")
+	_check(page, tr("Замедление времени при ударе-приземлении"), "access", "slam_slowmo")
 
 # --- Переназначение клавиш ---
 
@@ -321,8 +353,8 @@ func _start_capture(action: String, b: Button) -> void:
 	_cancel_capture()
 	_capture_action = action
 	_capture_btn = b
-	b.text = "нажми клавишу…"
-	_key_note.text = "Esc — отмена."
+	b.text = tr("нажми клавишу…")
+	_key_note.text = tr("Esc — отмена.")
 
 func _cancel_capture() -> void:
 	if _capture_action == "":
@@ -342,7 +374,7 @@ func _input(event: InputEvent) -> void:
 		if k.physical_keycode == KEY_ESCAPE or k.keycode == KEY_ESCAPE:
 			get_viewport().set_input_as_handled()
 			_cancel_capture()
-			_key_note.text = "Отменено."
+			_key_note.text = tr("Отменено.")
 			return
 		ok = true
 	elif event is InputEventMouseButton and event.pressed:
@@ -363,14 +395,14 @@ func apply_capture(event: InputEvent) -> void:
 	_capture_btn = null
 	var label := GameSettings.binding_label(GameSettings.event_to_string(event))
 	if taken != "":
-		_key_note.text = "%s — теперь «%s» (снято с «%s»)." % [label, _title(action), _title(taken)]
+		_key_note.text = tr("%s — теперь «%s» (снято с «%s»).") % [label, _title(action), _title(taken)]
 	else:
-		_key_note.text = "%s — теперь «%s»." % [label, _title(action)]
+		_key_note.text = tr("%s — теперь «%s».") % [label, _title(action)]
 
 func _title(action: String) -> String:
 	for pair in GameSettings.REMAP_ACTIONS:
 		if pair[0] == action:
-			return pair[1]
+			return tr(pair[1])
 	return action
 
 func _refresh_keys() -> void:

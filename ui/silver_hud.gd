@@ -34,7 +34,7 @@ func _ready() -> void:
 	Run.silver_changed.connect(_on_silver_changed)
 
 func _update_text() -> void:
-	_label.text = "%d" % int(round(_shown)) if get_child_count() > 1 else "СЕРЕБРО %d" % int(round(_shown))
+	_label.text = "%d" % int(round(_shown)) if get_child_count() > 1 else tr("СЕРЕБРО %d") % int(round(_shown))
 
 func _on_silver_changed(total: int) -> void:
 	var up := total > _shown

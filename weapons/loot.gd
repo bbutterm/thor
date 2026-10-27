@@ -210,7 +210,7 @@ static func refresh_elite_label(enemy: Enemy) -> void:
 	if label == null:
 		return
 	var mod := get_elite_modifier(str(enemy.get_meta("elite_mod", "")))
-	var text := mod.title if mod else "Элита"
+	var text := I18n.t(mod.title) if mod else I18n.t("Элита")
 	for h in enemy.elite_handlers:
 		text += (h as EliteHandler).label_suffix()
 	label.text = text

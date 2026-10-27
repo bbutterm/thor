@@ -40,7 +40,7 @@ func can_interact() -> bool:
 	return not opened
 
 func prompt_text(_holder: WeaponHolder) -> String:
-	return "[E] Открыть сундук"
+	return tr("[E] Открыть сундук")
 
 func interact(_holder: WeaponHolder) -> void:
 	if opened:

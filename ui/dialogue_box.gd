@@ -154,10 +154,10 @@ func _build() -> void:
 	top.alignment = BoxContainer.ALIGNMENT_END
 	top.add_theme_constant_override("separation", 10)
 	_root.add_child(top)
-	_log_btn = _small_button("Журнал [Tab]")
+	_log_btn = _small_button(tr("Журнал [Tab]"))
 	_log_btn.pressed.connect(toggle_log)
 	top.add_child(_log_btn)
-	_skip_btn = _small_button("Пропустить ▸▸")
+	_skip_btn = _small_button(tr("Пропустить ▸▸"))
 	_skip_btn.pressed.connect(skip)
 	top.add_child(_skip_btn)
 
@@ -174,10 +174,10 @@ func _build() -> void:
 	_log_panel.add_child(lv)
 	var lh := HBoxContainer.new()
 	lv.add_child(lh)
-	var lt := UIStyle.label("ЖУРНАЛ", 26, UIStyle.GOLD, 6)
+	var lt := UIStyle.label(tr("ЖУРНАЛ"), 26, UIStyle.GOLD, 6)
 	lt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lh.add_child(lt)
-	var lc := _small_button("Закрыть")
+	var lc := _small_button(tr("Закрыть"))
 	lc.pressed.connect(toggle_log)
 	lh.add_child(lc)
 	_log_text = RichTextLabel.new()
@@ -203,13 +203,13 @@ func _make_couch_backdrop() -> Control:
 	gt.fill_to = Vector2(0.5, 1.0)
 	gt.width = 4
 	gt.height = 128
-	var tr := TextureRect.new()
-	tr.texture = gt
-	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tr.stretch_mode = TextureRect.STRETCH_SCALE
-	UIStyle.full_rect(tr)
-	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	c.add_child(tr)
+	var trect := TextureRect.new()
+	trect.texture = gt
+	trect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	trect.stretch_mode = TextureRect.STRETCH_SCALE
+	UIStyle.full_rect(trect)
+	trect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.add_child(trect)
 	# Окно с луной и тусклый свет телевизора
 	var win := ColorRect.new()
 	win.color = Color(0.16, 0.2, 0.32, 0.55)
@@ -251,7 +251,7 @@ func _make_couch_backdrop() -> Control:
 	UIStyle.full_rect(tv)
 	tv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	c.add_child(tv)
-	var cap := UIStyle.label("Асгард · диван Тора", 18, Color(UIStyle.TEXT_DIM, 0.8), 4)
+	var cap := UIStyle.label(tr("Асгард · диван Тора"), 18, Color(UIStyle.TEXT_DIM, 0.8), 4)
 	cap.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	cap.position = Vector2(28, 24)
 	c.add_child(cap)

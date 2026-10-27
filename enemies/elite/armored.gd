@@ -36,4 +36,4 @@ func _break() -> void:
 	Loot.refresh_elite_label(enemy)
 
 func label_suffix() -> String:
-	return " %d" % ceili(armor) if armor > 0.0 else " — сломана"
+	return " %d" % ceili(armor) if armor > 0.0 else tr(" — сломана")

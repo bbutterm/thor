@@ -144,7 +144,7 @@ func _on_trait_picked(t: MjolnirTrait) -> void:
 	Run.add_mjolnir_trait(t)
 	Odin.say("trait_pick")
 	Audio.play("sounds/sfx/rune_pick.wav")
-	hud.toast("%s %s — %s" % [t.glyph, t.title, "уровень 2" if Run.mjolnir_trait_level(t.id) > 1 else "Мьёльнир"])
+	hud.toast("%s %s — %s" % [t.glyph, tr(t.title), tr("уровень 2") if Run.mjolnir_trait_level(t.id) > 1 else tr("Мьёльнир")])
 	get_tree().create_timer(0.5, false).timeout.connect(func() -> void:
 		if not player.is_dead:
 			_offer_rune())
@@ -168,7 +168,7 @@ func _after_reward() -> void:
 		rewards.show_doors()
 	else:
 		room.open_door()
-		hud.toast("Дверь открыта — вперёд!")
+		hud.toast(tr("Дверь открыта — вперёд!"))
 
 func _on_exit_reached() -> void:
 	if _ending:
@@ -207,7 +207,7 @@ func _after_run() -> void:
 	var plan := TrainingPlan.new()
 	plan.name = "TrainingPlan"
 	add_child(plan)
-	plan.open("В меню")
+	plan.open(tr("В меню"))
 	var start: bool = await plan.closed
 	if not start:
 		go_to_menu()
@@ -216,7 +216,7 @@ func _after_run() -> void:
 	var bs := BodySelect.new()
 	bs.name = "BodySelect"
 	add_child(bs)
-	bs.open("В меню", Run.body.id if Run.body else "")
+	bs.open(tr("В меню"), Run.body.id if Run.body else "")
 	var body_id: String = await bs.closed
 	if body_id == "":
 		go_to_menu()

@@ -89,8 +89,8 @@ func _build() -> void:
 	tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tv.add_theme_constant_override("separation", 0)
 	head.add_child(tv)
-	tv.add_child(UIStyle.label("В КОГО ВСЕЛИТЬСЯ?", 40, UIStyle.GOLD, 10))
-	tv.add_child(UIStyle.label("Один подобрал смертных. Выбирай тело на забег.", 17, UIStyle.TEXT_DIM, 4))
+	tv.add_child(UIStyle.label(tr("В КОГО ВСЕЛИТЬСЯ?"), 40, UIStyle.GOLD, 10))
+	tv.add_child(UIStyle.label(tr("Один подобрал смертных. Выбирай тело на забег."), 17, UIStyle.TEXT_DIM, 4))
 	var gp := UIStyle.panel(Color(0.1, 0.08, 0.05, 0.95), Color(UIStyle.GOLD, 0.8), "plate")
 	head.add_child(gp)
 	_glory_label = UIStyle.label("", 30, UIStyle.GOLD, 8)
@@ -141,13 +141,13 @@ func _build() -> void:
 	_start_label = UIStyle.label("", 18, UIStyle.TEXT, 4)
 	_start_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rv.add_child(_start_label)
-	var pair := _section(rv, "ДВИЖЕНИЕ", UIStyle.ICE)
+	var pair := _section(rv, tr("ДВИЖЕНИЕ"), UIStyle.ICE)
 	_move_title = pair[0]
 	_move_desc = pair[1]
-	pair = _section(rv, "ПАССИВКА", Color(0.55, 0.9, 0.5))
+	pair = _section(rv, tr("ПАССИВКА"), Color(0.55, 0.9, 0.5))
 	_passive_title = pair[0]
 	_passive_desc = pair[1]
-	pair = _section(rv, "ИЗЪЯН", Color(0.95, 0.5, 0.4))
+	pair = _section(rv, tr("ИЗЪЯН"), Color(0.95, 0.5, 0.4))
 	_flaw_title = pair[0]
 	_flaw_desc = pair[1]
 	var op := UIStyle.panel(Color(0.06, 0.055, 0.08, 0.95), Color(0.3, 0.42, 0.85, 0.8))
@@ -161,7 +161,7 @@ func _build() -> void:
 	var ov := VBoxContainer.new()
 	ov.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	oh.add_child(ov)
-	ov.add_child(UIStyle.label("ОДИН", 15, Color(0.55, 0.68, 1.0), 4))
+	ov.add_child(UIStyle.label(tr("ОДИН"), 15, Color(0.55, 0.68, 1.0), 4))
 	_odin_text = UIStyle.label("", 18, UIStyle.TEXT, 4)
 	_odin_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_odin_text.custom_minimum_size = Vector2(300, 0)
@@ -171,16 +171,16 @@ func _build() -> void:
 	foot.alignment = BoxContainer.ALIGNMENT_END
 	foot.add_theme_constant_override("separation", 14)
 	main.add_child(foot)
-	var hint := UIStyle.label("Закрытые тела открываются за Славу — здесь или в «Плане тренировок».", 16, UIStyle.TEXT_DIM, 3)
+	var hint := UIStyle.label(tr("Закрытые тела открываются за Славу — здесь или в «Плане тренировок»."), 16, UIStyle.TEXT_DIM, 3)
 	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size = Vector2(200, 0)
 	foot.add_child(hint)
-	_back_btn = UIStyle.button("Назад", 22)
+	_back_btn = UIStyle.button(tr("Назад"), 22)
 	_back_btn.custom_minimum_size = Vector2(200, 56)
 	_back_btn.pressed.connect(func() -> void: close(""))
 	foot.add_child(_back_btn)
-	_fight_btn = UIStyle.button("В бой ▸", 28)
+	_fight_btn = UIStyle.button(tr("В бой ▸"), 28)
 	_fight_btn.custom_minimum_size = Vector2(300, 60)
 	_fight_btn.pressed.connect(_on_fight)
 	foot.add_child(_fight_btn)
@@ -205,7 +205,7 @@ func open(back_text: String = "Назад", preselect: String = "") -> void:
 	_was_paused = get_tree().paused
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	_back_btn.text = back_text
+	_back_btn.text = tr(back_text)
 	_odin.set_speaker("odin", "smug", Dialogue.speakers.get("odin", {}), 0.0)
 	_rebuild()
 	var pick: BodyDef = null
@@ -238,7 +238,7 @@ func _rebuild() -> void:
 		var card := _make_card(b)
 		_grid.add_child(card)
 		_cards[b.id] = card
-	_glory_label.text = "СЛАВА %d" % Save.glory_bank()
+	_glory_label.text = tr("СЛАВА %d") % Save.glory_bank()
 	if selected:
 		_update_detail()
 
@@ -277,12 +277,12 @@ func _make_card(b: BodyDef) -> Button:
 	icon_box.add_theme_stylebox_override("panel", isb)
 	hb.add_child(icon_box)
 	if locked and _lock_tex:
-		var tr := TextureRect.new()
-		tr.texture = _lock_tex
-		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon_box.add_child(tr)
+		var trect := TextureRect.new()
+		trect.texture = _lock_tex
+		trect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		trect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		trect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_box.add_child(trect)
 	else:
 		var gl := UIStyle.label("ᛉ" if locked else STYLE_GLYPH.get(b.movement_style, "ᚱ"), 28,
 			Color(0.6, 0.6, 0.6, 0.6) if locked else UIStyle.ICE, 3)
@@ -295,14 +295,14 @@ func _make_card(b: BodyDef) -> Button:
 	tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tv.add_theme_constant_override("separation", 0)
 	hb.add_child(tv)
-	var nl := UIStyle.label(b.display_name, 17, UIStyle.TEXT if not locked else UIStyle.TEXT_DIM, 4)
+	var nl := UIStyle.label(tr(b.display_name), 17, UIStyle.TEXT if not locked else UIStyle.TEXT_DIM, 4)
 	nl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	nl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tv.add_child(nl)
-	var sl := UIStyle.label("HP %d · %s м/с" % [int(b.max_health), _num(b.move_speed)], 14, UIStyle.TEXT_DIM, 2)
+	var sl := UIStyle.label(tr("HP %d · %s м/с") % [int(b.max_health), _num(b.move_speed)], 14, UIStyle.TEXT_DIM, 2)
 	sl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tv.add_child(sl)
-	var ml := UIStyle.label(("ЗАКРЫТО · %d ᛟ" % price_of(b)) if locked else (mp.title if mp else ""), 15,
+	var ml := UIStyle.label((tr("ЗАКРЫТО · %d ᛟ") % price_of(b)) if locked else (tr(mp.title) if mp else ""), 15,
 		Color(0.85, 0.6, 0.4) if locked else UIStyle.ICE, 2)
 	ml.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tv.add_child(ml)
@@ -343,28 +343,28 @@ func _update_detail() -> void:
 	var b := selected
 	var locked := is_locked(b.id)
 	_mark_selected()
-	_name_label.text = b.display_name.to_upper()
-	_stats_label.text = ("ЗАКРЫТО · %d ᛟ\n" % price_of(b) if locked else "") + \
-		"HP %d  ·  скорость %s  ·  рывков %d" % [int(b.max_health), _num(b.move_speed), b.dash_charges]
+	_name_label.text = tr(b.display_name).to_upper()
+	_stats_label.text = (tr("ЗАКРЫТО · %d ᛟ\n") % price_of(b) if locked else "") + \
+		tr("HP %d  ·  скорость %s  ·  рывков %d") % [int(b.max_health), _num(b.move_speed), b.dash_charges]
 	_stats_label.label_settings.font_color = Color(0.95, 0.7, 0.5) if locked else UIStyle.TEXT
-	var start := b.start_melee.display_name if b.start_melee else "—"
+	var start := tr(b.start_melee.display_name) if b.start_melee else "—"
 	if b.start_ranged:
-		start += " + " + b.start_ranged.display_name
-	_start_label.text = "Старт: " + start
+		start += " + " + tr(b.start_ranged.display_name)
+	_start_label.text = tr("Старт: %s") % start
 	var mp := b.movement_profile()
-	_move_title.text = mp.title if mp else b.movement_style
-	_move_desc.text = mp.description if mp else ""
+	_move_title.text = tr(mp.title) if mp else b.movement_style
+	_move_desc.text = tr(mp.description) if mp else ""
 	_fill_trait(b.passive, _passive_title, _passive_desc)
 	_fill_trait(b.flaw, _flaw_title, _flaw_desc)
-	_odin_text.text = b.odin_comment if b.odin_comment != "" else b.description
+	_odin_text.text = tr(b.odin_comment if b.odin_comment != "" else b.description)
 	if locked:
 		var price := price_of(b)
 		var u := unlock_for(b.id)
 		var can := u != null and Save.buy_block_reason(u.id) == ""
-		_fight_btn.text = ("Открыть · %d ᛟ" % price) if can else ("Нужно %d ᛟ" % price)
+		_fight_btn.text = (tr("Открыть · %d ᛟ") % price) if can else (tr("Нужно %d ᛟ") % price)
 		_fight_btn.disabled = not can
 	else:
-		_fight_btn.text = "В бой ▸"
+		_fight_btn.text = tr("В бой ▸")
 		_fight_btn.disabled = false
 
 func _fill_trait(pd: PassiveDef, title: Label, desc: Label) -> void:
@@ -372,8 +372,8 @@ func _fill_trait(pd: PassiveDef, title: Label, desc: Label) -> void:
 		title.text = "—"
 		desc.text = ""
 		return
-	title.text = pd.title + ("" if pd.implemented else "  (скоро)")
-	desc.text = pd.description + (("\n· " + pd.todo) if pd.todo != "" else "")
+	title.text = tr(pd.title) + ("" if pd.implemented else tr("  (скоро)"))
+	desc.text = tr(pd.description) + (("\n· " + tr(pd.todo)) if pd.todo != "" else "")
 
 func _on_fight() -> void:
 	if selected == null:

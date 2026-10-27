@@ -38,7 +38,7 @@ func add_ammo(amount: int) -> int:
 func title() -> String:
 	if def == null:
 		return ""
-	return def.display_name + ("" if level <= 1 else " +%d" % (level - 1))
+	return tr(def.display_name) + ("" if level <= 1 else " +%d" % (level - 1))
 
 ## Предел запаса патронов: у оружия + руна «Бездонный колчан» (+50 % → +150 %)
 func reserve_cap() -> int:

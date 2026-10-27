@@ -66,7 +66,7 @@ func _build() -> void:
 	tv.add_theme_constant_override("separation", 0)
 	tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(tv)
-	tv.add_child(UIStyle.label("ПЛАН ТРЕНИРОВОК ОДИНА", 40, UIStyle.GOLD, 10))
+	tv.add_child(UIStyle.label(tr("ПЛАН ТРЕНИРОВОК ОДИНА"), 40, UIStyle.GOLD, 10))
 	_stats_label = UIStyle.label("", 17, UIStyle.TEXT_DIM, 4)
 	tv.add_child(_stats_label)
 	var gp := UIStyle.panel(Color(0.1, 0.08, 0.05, 0.95), Color(UIStyle.GOLD, 0.8), "plate")
@@ -93,7 +93,7 @@ func _build() -> void:
 	left.add_child(sp)
 	var sv := VBoxContainer.new()
 	sp.add_child(sv)
-	sv.add_child(UIStyle.label("ОДИН", 16, Color(0.55, 0.68, 1.0), 4))
+	sv.add_child(UIStyle.label(tr("ОДИН"), 16, Color(0.55, 0.68, 1.0), 4))
 	_odin_text = UIStyle.label("", 19, UIStyle.TEXT, 4)
 	_odin_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_odin_text.custom_minimum_size = Vector2(270, 0)
@@ -116,14 +116,14 @@ func _build() -> void:
 	foot.alignment = BoxContainer.ALIGNMENT_END
 	foot.add_theme_constant_override("separation", 14)
 	main.add_child(foot)
-	var hint := UIStyle.label("Слава копится за забеги и не сгорает. Купленное действует со следующего забега.", 16, UIStyle.TEXT_DIM, 3)
+	var hint := UIStyle.label(tr("Слава копится за забеги и не сгорает. Купленное действует со следующего забега."), 16, UIStyle.TEXT_DIM, 3)
 	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	foot.add_child(hint)
-	_back_btn = UIStyle.button("В меню", 22)
+	_back_btn = UIStyle.button(tr("В меню"), 22)
 	_back_btn.custom_minimum_size = Vector2(200, 56)
 	_back_btn.pressed.connect(func() -> void: close(false))
 	foot.add_child(_back_btn)
-	_fight_btn = UIStyle.button("В бой ▸", 28)
+	_fight_btn = UIStyle.button(tr("В бой ▸"), 28)
 	_fight_btn.custom_minimum_size = Vector2(260, 60)
 	_fight_btn.pressed.connect(func() -> void: close(true))
 	foot.add_child(_fight_btn)
@@ -135,7 +135,7 @@ func open(back_text: String = "В меню") -> void:
 	_was_paused = get_tree().paused
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	_back_btn.text = back_text
+	_back_btn.text = tr(back_text)
 	_rebuild()
 	_odin.set_speaker("odin", "neutral", Dialogue.speakers.get("odin", {}), 0.0)
 	_say(Dialogue.pool_lines("odin.plan_open"))
@@ -178,7 +178,7 @@ func _rebuild() -> void:
 		for u in items:
 			if Save.is_unlocked(u.id):
 				owned += 1
-		var h := UIStyle.label("%s %s   %d / %d" % [sec[2], sec[1], owned, items.size()], 20, sec[3], 5)
+		var h := UIStyle.label("%s %s   %d / %d" % [sec[2], tr(sec[1]), owned, items.size()], 20, sec[3], 5)
 		_list.add_child(h)
 		var grid := GridContainer.new()
 		grid.columns = 2
@@ -193,8 +193,8 @@ func _rebuild() -> void:
 	_update_header()
 
 func _update_header() -> void:
-	_glory_label.text = "СЛАВА %d" % Save.glory_bank()
-	_stats_label.text = "Забегов: %d · Смертей: %d · Побед: %d · Открыто: %d из %d" % [
+	_glory_label.text = tr("СЛАВА %d") % Save.glory_bank()
+	_stats_label.text = tr("Забегов: %d · Смертей: %d · Побед: %d · Открыто: %d из %d") % [
 		Save.runs(), Save.deaths(), Save.wins(), Save.data.unlocks.size(), Save.all_unlocks.size()]
 
 func _make_card(u: UnlockDef, glyph: String, col: Color) -> PanelContainer:
@@ -224,11 +224,11 @@ func _make_card(u: UnlockDef, glyph: String, col: Color) -> PanelContainer:
 	icon_box.add_theme_stylebox_override("panel", isb)
 	hb.add_child(icon_box)
 	if u.icon:
-		var tr := TextureRect.new()
-		tr.texture = u.icon
-		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon_box.add_child(tr)
+		var trect := TextureRect.new()
+		trect.texture = u.icon
+		trect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		trect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_box.add_child(trect)
 	else:
 		var gl := UIStyle.label(u.glyph if u.glyph != "" else glyph, 28, col if reason != "soon" else Color(col, 0.35), 3)
 		gl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -238,10 +238,10 @@ func _make_card(u: UnlockDef, glyph: String, col: Color) -> PanelContainer:
 	tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tv.add_theme_constant_override("separation", 2)
 	hb.add_child(tv)
-	var title := UIStyle.label(u.title, 19, UIStyle.TEXT if reason != "soon" else UIStyle.TEXT_DIM, 4)
+	var title := UIStyle.label(tr(u.title), 19, UIStyle.TEXT if reason != "soon" else UIStyle.TEXT_DIM, 4)
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	tv.add_child(title)
-	var desc := UIStyle.label(u.description, 14, UIStyle.TEXT_DIM, 2)
+	var desc := UIStyle.label(tr(u.description), 14, UIStyle.TEXT_DIM, 2)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.custom_minimum_size = Vector2(150, 0)
 	tv.add_child(desc)
@@ -252,19 +252,19 @@ func _make_card(u: UnlockDef, glyph: String, col: Color) -> PanelContainer:
 	btn.add_theme_font_size_override("font_size", 17)
 	match reason:
 		"owned":
-			btn.text = "✓ Есть"
+			btn.text = tr("✓ Есть")
 			btn.disabled = true
 			btn.add_theme_color_override("font_disabled_color", Color(0.6, 0.95, 0.55))
 		"soon":
-			btn.text = "Скоро"
+			btn.text = tr("Скоро")
 			btn.disabled = true
-			btn.tooltip_text = "Этого ещё нет в игре — откроется, когда появится."
+			btn.tooltip_text = tr("Этого ещё нет в игре — откроется, когда появится.")
 		"requires":
 			var r := Save.get_unlock(u.requires)
 			btn.text = "%d ᛟ" % u.price
 			btn.disabled = true
-			btn.tooltip_text = "Сначала: %s" % (r.title if r else u.requires)
-			desc.text = "Сначала «%s». %s" % [r.title if r else u.requires, u.description]
+			btn.tooltip_text = tr("Сначала: %s") % (tr(r.title) if r else u.requires)
+			desc.text = tr("Сначала «%s». %s") % [tr(r.title) if r else u.requires, tr(u.description)]
 		"no_glory":
 			btn.text = "%d ᛟ" % u.price
 			btn.add_theme_color_override("font_color", Color(0.85, 0.45, 0.4))
@@ -300,7 +300,7 @@ func buy(id: String) -> bool:
 		return false
 	Audio.play("sounds/sfx/rune_pick.wav")
 	if u and u.odin_comment != "":
-		_say([{"speaker": "odin", "emotion": "happy", "text": u.odin_comment}])
+		_say([{"speaker": "odin", "emotion": "happy", "text": tr(u.odin_comment)}])
 	else:
 		_say(Dialogue.pool_lines("odin.plan_buy"), "happy")
 	var scroll_pos := _scroll.scroll_vertical

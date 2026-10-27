@@ -2,7 +2,7 @@ extends Node
 ## Кадры интерфейса на скине комплекта (блок С): меню, настройки, выбор тела, «План тренировок»,
 ## HUD в бою, Ярость, выбор рун/трейтов/награды, ларёк, пауза, диалог, экран конца.
 ## xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/ui_shots.tscn -- <папка>
-## (то же с --resolution 1920x1080 — проверка масштаба)
+## (то же с --resolution 1920x1080 — проверка масштаба). Второй аргумент — язык: `-- <папка> en`.
 
 var out_dir := "user://ui_shots"
 
@@ -17,6 +17,8 @@ func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	if args.size() > 0:
 		out_dir = args[0]
+	if args.size() > 1:
+		GameSettings.set_value("text", "language", args[1], false)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	_run.call_deferred()
 
@@ -111,9 +113,9 @@ func _run() -> void:
 		game.trait_pick.choose(0, true)
 	await wait(0.1)
 	if game.rewards and game.rewards.choice:
-		game.rewards.choice.open("ПРИВАЛ", "Отдохни, воин. Выбери одно.", [
-			{"id": "heal", "title": "Котёл похлёбки", "desc": "Восстановить 40 % здоровья", "glyph": "ᚺ", "color": Color(0.9, 0.5, 0.3)},
-			{"id": "rune", "title": "Заточить руну", "desc": "Повысить уровень одной руны", "glyph": "ᚱ", "color": Color(0.6, 0.7, 1.0)},
+		game.rewards.choice.open(tr("ПРИВАЛ"), tr("Один разрешил пять минут. Выбери одно."), [
+			{"id": "heal", "title": tr("Похлёбка"), "desc": tr("Лечение %d %% (+%d HP)") % [40, 60], "glyph": "ᚺ", "color": Color(0.9, 0.5, 0.3)},
+			{"id": "rune", "title": tr("Точить руну"), "desc": tr("Улучшить руну на 1 уровень"), "glyph": "ᚱ", "color": Color(0.6, 0.7, 1.0)},
 		], "odin")
 		await wait(0.4)
 		await shot("10_choice_pick")
@@ -134,8 +136,9 @@ func _run() -> void:
 	await shot("12_pause")
 	game.pause_menu.toggle()
 	await wait(0.1)
-	Dialogue.play_lines([{"speaker": "odin", "emotion": "smug", "text": "Ну что, скуф, опять на диван? Вставай, Асгард сам себя не спасёт."},
-		{"speaker": "thor", "emotion": "angry", "text": "Я просто прилёг на минутку."}])
+	# Реплики с id — на английском берутся из data/dialogues/en/odin.json
+	Dialogue.play_lines([{"id": "odin_intro_03", "speaker": "odin", "emotion": "smug", "text": "Там уже тысячу лет «всё решится». Посмотри на себя."},
+		{"id": "odin_intro_04", "speaker": "thor", "emotion": "angry", "text": "А что не так? Плечи на месте. Пузо… тоже на месте."}])
 	await wait(1.6)
 	await shot("13_dialogue")
 	Dialogue.box().skip()

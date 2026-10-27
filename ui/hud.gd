@@ -20,6 +20,8 @@ class_name HUD
 
 const CROSSHAIR_IDS := {"dot": "crosshair_dot", "cross": "crosshair_cross", "circle": "crosshair_circle"}
 const CLASSIC_CROSSHAIR := "res://sprites/crosshair.png"
+## Имя на полосе босса, если враг не задал своё (ключ перевода)
+const DEFAULT_BOSS_TITLE := "ХРИМТУРС ПОЖИРАТЕЛЬ ГЕРОЕВ"
 
 var player: Player
 
@@ -52,6 +54,10 @@ var _crosshair: TextureRect
 var _slam_meter: SkinBar
 var _offscreen: OffscreenIndicators
 var _glory_shown: float = 0.0
+## Для перевода на лету (смена языка из паузы): последние аргументы set_room и число врагов
+var _room_args: Array = []
+var _enemies_alive: int = 0
+var _odin_name: Label
 
 func _ready() -> void:
 	layer = 5
@@ -77,7 +83,7 @@ func bind_player(p: Player) -> void:
 	if _offscreen:
 		_offscreen.player = p
 	if Run.body:
-		_body_label.text = "Тело: " + Run.body.display_name
+		_body_label.text = tr("Тело: %s") % tr(Run.body.display_name)
 	# Слоты оружия, патроны, подсказка подбора — ui/weapon_hud.gd
 	WeaponHUD.attach(self, p)
 	# Шкала Ярости и виньетка берсерка — ui/rage_hud.gd (блок П)
@@ -176,26 +182,26 @@ func _build() -> void:
 	_hp_bar.resized.connect(_place_hp_label)
 
 	# Правый верх: Слава, серебро, тело, руны (сжатый ряд)
-	var tr := VBoxContainer.new()
-	_anchor(tr, Control.PRESET_TOP_RIGHT, -380, 18, -24, 300)
-	tr.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	tr.alignment = BoxContainer.ALIGNMENT_BEGIN
-	tr.add_theme_constant_override("separation", 2)
-	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(tr)
-	_glory_label = UIStyle.label("СЛАВА 0", 30, UIStyle.GOLD, 8)
+	var top_right := VBoxContainer.new()
+	_anchor(top_right, Control.PRESET_TOP_RIGHT, -380, 18, -24, 300)
+	top_right.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	top_right.alignment = BoxContainer.ALIGNMENT_BEGIN
+	top_right.add_theme_constant_override("separation", 2)
+	top_right.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(top_right)
+	_glory_label = UIStyle.label(tr("СЛАВА 0"), 30, UIStyle.GOLD, 8)
 	_glory_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	tr.add_child(_glory_label)
+	top_right.add_child(_glory_label)
 	# Серебро — ui/silver_hud.gd (SilverHUD.attach в bind_player встаёт сразу под Славу)
 	_body_label = UIStyle.label("", 16, UIStyle.TEXT_DIM, 4)
 	_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	tr.add_child(_body_label)
+	top_right.add_child(_body_label)
 	_runes_box = HFlowContainer.new()
 	_runes_box.alignment = FlowContainer.ALIGNMENT_END
 	_runes_box.add_theme_constant_override("h_separation", 2)
 	_runes_box.add_theme_constant_override("v_separation", 2)
 	_runes_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tr.add_child(_runes_box)
+	top_right.add_child(_runes_box)
 
 	# Левый верх: зал и враги
 	var tl := VBoxContainer.new()
@@ -214,7 +220,7 @@ func _build() -> void:
 	_boss_box.add_theme_constant_override("separation", 0)
 	_boss_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_boss_box)
-	_boss_title = UIStyle.label("ХРИМТУРС ПОЖИРАТЕЛЬ ГЕРОЕВ", 20, UIStyle.GOLD)
+	_boss_title = UIStyle.label(tr(DEFAULT_BOSS_TITLE), 20, UIStyle.GOLD)
 	_boss_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_boss_box.add_child(_boss_title)
 	_boss_bar = BossBar.new()
@@ -232,7 +238,8 @@ func _build() -> void:
 	var ob := VBoxContainer.new()
 	ob.add_theme_constant_override("separation", 0)
 	_odin_panel.add_child(ob)
-	ob.add_child(UIStyle.label("ОДИН", 15, UIStyle.GOLD, 4))
+	_odin_name = UIStyle.label(tr("ОДИН"), 15, UIStyle.GOLD, 4)
+	ob.add_child(_odin_name)
 	_odin_label = UIStyle.label("", int(19 * GameSettings.text_scale()), UIStyle.TEXT, 5)
 	_odin_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_odin_label.custom_minimum_size = Vector2(560, 0)
@@ -277,12 +284,31 @@ func _apply_crosshair() -> void:
 	_anchor(_crosshair, Control.PRESET_CENTER, -s * 0.5, -s * 0.5, s * 0.5, s * 0.5)
 	_crosshair.modulate = GameSettings.crosshair_color()
 
-func _on_setting_changed(section: String, _key: String) -> void:
+func _on_setting_changed(section: String, key: String) -> void:
 	if section == "hud":
 		_apply_crosshair()
 		_offscreen.enabled = bool(GameSettings.get_value("hud", "offscreen"))
 	elif section == "text":
 		_odin_label.label_settings.font_size = int(19 * GameSettings.text_scale())
+		if key == "language":
+			_retranslate()
+
+## Смена языка посреди забега: подписи, которые сами не обновляются каждый кадр
+func _retranslate() -> void:
+	_odin_name.text = tr("ОДИН")
+	_hammer_state = ""
+	if player and is_instance_valid(player):
+		_update_hammer()
+	_glory_label.text = tr("СЛАВА %d") % int(round(_glory_shown))
+	if Run.body:
+		_body_label.text = tr("Тело: %s") % tr(Run.body.display_name)
+	if _room_args.size() == 4:
+		var t := tr(str(_room_args[2]))
+		_room_label.text = (tr("ФИНАЛ: %s") % t) if _room_args[3] else (tr("ЗАЛ %d / %d · %s") % [_room_args[0], _room_args[1], t])
+	set_enemy_count(_enemies_alive)
+	if _boss and is_instance_valid(_boss):
+		_boss_title.text = tr(str(_boss.get_meta("boss_title", DEFAULT_BOSS_TITLE)))
+	_on_runes_changed(Run.runes)
 
 func _process(delta: float) -> void:
 	if player and is_instance_valid(player):
@@ -294,7 +320,7 @@ func _process(delta: float) -> void:
 		_boss_bar.value = maxf(0.0, _boss.health) / _boss.max_health
 	if absf(_glory_shown - Run.glory) > 0.5:
 		_glory_shown = lerpf(_glory_shown, Run.glory, minf(1.0, delta * 8.0))
-		_glory_label.text = "СЛАВА %d" % int(round(_glory_shown))
+		_glory_label.text = tr("СЛАВА %d") % int(round(_glory_shown))
 
 func _on_health_changed(current: float, maximum: float) -> void:
 	_hp_bar.value = current / maxf(maximum, 1.0)
@@ -348,23 +374,23 @@ func _update_hammer() -> void:
 		"hand":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_ready")
 			_hammer_icon.tint = Color.WHITE
-			_hammer_label.text = "МЬЁЛЬНИР В РУКЕ · ПКМ"
+			_hammer_label.text = tr("МЬЁЛЬНИР В РУКЕ · ПКМ")
 			_hammer_label.label_settings.font_color = UIStyle.ICE
 			_hammer_icon.pop()
 		"out":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_thrown")
 			_hammer_icon.tint = Color.WHITE
-			_hammer_label.text = "ЛЕТИТ · ПКМ — ВЕРНУТЬ"
+			_hammer_label.text = tr("ЛЕТИТ · ПКМ — ВЕРНУТЬ")
 			_hammer_label.label_settings.font_color = Color(1, 0.85, 0.4)
 		"stuck":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_thrown")
 			_hammer_icon.tint = Color(1.0, 0.8, 0.55)
-			_hammer_label.text = "ВОТКНУТ · ПКМ — ВЕРНУТЬ"
+			_hammer_label.text = tr("ВОТКНУТ · ПКМ — ВЕРНУТЬ")
 			_hammer_label.label_settings.font_color = Color(1, 0.7, 0.35)
 		"return":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_returning")
 			_hammer_icon.tint = Color.WHITE
-			_hammer_label.text = "ВОЗВРАЩАЕТСЯ · ЛОВИ!"
+			_hammer_label.text = tr("ВОЗВРАЩАЕТСЯ · ЛОВИ!")
 			_hammer_label.label_settings.font_color = UIStyle.ICE.lightened(0.3)
 
 ## Шкала высоты у прицела: сколько метров будет падение ударом-приземлением
@@ -425,7 +451,7 @@ func _on_runes_changed(runes: Array) -> void:
 		if rr.cursed:
 			icon.tint = Color(0.8, 0.55, 1.0)
 			icon.badge_color = Color(0.85, 0.5, 1.0)
-		icon.tooltip_text = rr.title
+		icon.tooltip_text = tr(rr.title)
 		_runes_box.add_child(icon)
 
 func show_odin_line(text: String) -> void:
@@ -448,20 +474,23 @@ func toast(text: String) -> void:
 	tw.tween_property(_toast_label, "modulate:a", 0.0, 0.4)
 
 func set_room(index: int, total: int, title: String, boss: bool) -> void:
-	_room_label.text = ("ФИНАЛ: %s" % title) if boss else ("ЗАЛ %d / %d · %s" % [index, total, title])
+	_room_args = [index, total, title, boss]
+	title = tr(title)
+	_room_label.text = (tr("ФИНАЛ: %s") % title) if boss else (tr("ЗАЛ %d / %d · %s") % [index, total, title])
 	_boss_box.visible = false
 	_boss = null
 	toast(title.to_upper())
 
 func set_enemy_count(alive: int) -> void:
-	_enemies_label.text = "Врагов: %d" % alive if alive > 0 else ""
+	_enemies_alive = alive
+	_enemies_label.text = tr("Врагов: %d") % alive if alive > 0 else ""
 
 func show_boss(boss: Enemy) -> void:
 	_boss = boss
 	_boss_box.visible = true
 	_boss_bar.value = 1.0
 	# Имя на полосе — из метаданных врага (мини-босс), иначе финальный босс
-	_boss_title.text = str(boss.get_meta("boss_title", "ХРИМТУРС ПОЖИРАТЕЛЬ ГЕРОЕВ"))
+	_boss_title.text = tr(str(boss.get_meta("boss_title", DEFAULT_BOSS_TITLE)))
 	boss.died.connect(func(_e: Enemy) -> void: _boss_box.visible = false)
 
 func fade_in(time: float = 0.35) -> void:

@@ -150,10 +150,10 @@ func _offer_runes(mode: String) -> void:
 		return
 	var title := ""
 	if mode == "freya":
-		title = "БЛАГОСЛОВЕНИЕ ФРЕЙИ — РУНА СРАЗУ УР. %d" % map().freya_rune_level
+		title = tr("БЛАГОСЛОВЕНИЕ ФРЕЙИ — РУНА СРАЗУ УР. %d") % map().freya_rune_level
 		Dialogue.bark_pool("freya.blessing")
 	elif mode == "trial":
-		title = "РУНА ИСПЫТАНИЯ — СРАЗУ НА УРОВЕНЬ ВЫШЕ"
+		title = tr("РУНА ИСПЫТАНИЯ — СРАЗУ НА УРОВЕНЬ ВЫШЕ")
 	game.rune_pick.open(choices, title)
 
 ## Game._on_rune_picked уже добавил руну; Фрейя добавляет ещё уровни (повтор руны = уровень, Run.rune_level).
@@ -161,23 +161,23 @@ func _offer_runes(mode: String) -> void:
 func on_rune_picked(rune: RuneDef) -> bool:
 	if rune_mode == "shop":
 		rune_mode = "rune"
-		game.hud.toast("%s %s — уровень %d" % [rune.glyph, rune.title, Run.rune_level(rune.id)])
+		game.hud.toast(tr("%s %s — уровень %d") % [rune.glyph, tr(rune.title), Run.rune_level(rune.id)])
 		if shop:
 			shop.reopen()
-			shop.say("Руна «%s». Почти не проклятая." % rune.title, "smug")
+			shop.say(tr("Руна «%s». Почти не проклятая.") % tr(rune.title), "smug")
 		return false
 	if rune_mode == "freya":
 		var target := mini(map().freya_rune_level, map().rune_max_level)
 		while Run.rune_level(rune.id) < target:
 			Run.add_rune(rune)
 		Dialogue.bark_pool("freya.blessing_pick")
-		game.hud.toast("ᛒ %s — уровень %d" % [rune.title, Run.rune_level(rune.id)])
+		game.hud.toast(tr("ᛒ %s — уровень %d") % [tr(rune.title), Run.rune_level(rune.id)])
 	elif rune_mode == "trial":
 		if Run.rune_level(rune.id) < map().rune_max_level:
 			Run.add_rune(rune)
-		game.hud.toast("%s %s — уровень %d" % [rune.glyph, rune.title, Run.rune_level(rune.id)])
+		game.hud.toast(tr("%s %s — уровень %d") % [rune.glyph, tr(rune.title), Run.rune_level(rune.id)])
 	elif rune_mode == "upgrade":
-		game.hud.toast("%s %s — уровень %d" % [rune.glyph, rune.title, Run.rune_level(rune.id)])
+		game.hud.toast(tr("%s %s — уровень %d") % [rune.glyph, tr(rune.title), Run.rune_level(rune.id)])
 	rune_mode = "rune"
 	return true
 
@@ -199,7 +199,7 @@ func _grant_elite() -> void:
 	Run.add_glory(map().elite_reward_glory)
 	_give_silver(map().elite_reward_silver)
 	Odin.say("elite_reward")
-	game.hud.toast("ЭЛИТА ПОВЕРЖЕНА: ОРУЖИЕ + СЛАВА")
+	game.hud.toast(tr("ЭЛИТА ПОВЕРЖЕНА: ОРУЖИЕ + СЛАВА"))
 	finish()
 
 ## Серебро (блок К): монеты рассыпаются перед Тором и летят к нему.
@@ -215,15 +215,15 @@ func _grant_trial() -> void:
 		# Зал зачищен, а итог ещё не подведён (условие «до конца зала»)
 		t._on_room_cleared()
 	if t == null or not t.is_success():
-		game.hud.toast("ИСПЫТАНИЕ ПРОВАЛЕНО — БЕЗ НАГРАДЫ")
+		game.hud.toast(tr("ИСПЫТАНИЕ ПРОВАЛЕНО — БЕЗ НАГРАДЫ"))
 		finish()
 		return
 	if t.def.reward_rune:
-		game.hud.toast("ИСПЫТАНИЕ ПРОЙДЕНО!")
+		game.hud.toast(tr("ИСПЫТАНИЕ ПРОЙДЕНО!"))
 		_offer_runes("trial")
 		return
 	Run.add_glory(t.def.reward_glory)
-	game.hud.toast("ИСПЫТАНИЕ ПРОЙДЕНО: +%d СЛАВЫ" % t.def.reward_glory)
+	game.hud.toast(tr("ИСПЫТАНИЕ ПРОЙДЕНО: +%d СЛАВЫ") % t.def.reward_glory)
 	finish()
 
 # --- Отдых ---
@@ -245,9 +245,9 @@ func _offer_rest() -> void:
 	var heal := int(round(p.max_health * map().rest_heal_fraction))
 	var ups := upgradable_runes()
 	_choice_kind = "rest"
-	choice.open("ПРИВАЛ", "Один разрешил пять минут. Выбери одно.", [
-		{"id": "heal", "title": "Похлёбка", "desc": "Лечение %d %% (+%d HP)" % [int(map().rest_heal_fraction * 100), heal], "glyph": "ᚹ", "color": Color(0.45, 1.0, 0.55)},
-		{"id": "upgrade", "title": "Точить руну", "desc": "Улучшить руну на 1 уровень" if not ups.is_empty() else "Нет рун для улучшения", "glyph": "ᚱ", "color": Color(0.55, 0.8, 1.0), "enabled": not ups.is_empty()},
+	choice.open(tr("ПРИВАЛ"), tr("Один разрешил пять минут. Выбери одно."), [
+		{"id": "heal", "title": tr("Похлёбка"), "desc": tr("Лечение %d %% (+%d HP)") % [int(map().rest_heal_fraction * 100), heal], "glyph": "ᚹ", "color": Color(0.45, 1.0, 0.55)},
+		{"id": "upgrade", "title": tr("Точить руну"), "desc": tr("Улучшить руну на 1 уровень") if not ups.is_empty() else tr("Нет рун для улучшения"), "glyph": "ᚱ", "color": Color(0.55, 0.8, 1.0), "enabled": not ups.is_empty()},
 	], "odin", "neutral")
 
 # --- Сделка Локи ---
@@ -262,11 +262,11 @@ func _offer_loki() -> void:
 	# GDD 15.1: «проклятая руна или риск»; вариантов три (клавиши 1–3) — проклятая руна вытесняет «Кости»
 	_loki_cursed = Run.random_cursed_rune()
 	var opts: Array = [
-		{"id": "blood", "title": "Кровь за сталь", "desc": "−%d %% здоровья → легендарное оружие (ур. 3)" % int(m.loki_hp_cost * 100), "glyph": "ᛚ", "color": Color(0.35, 0.9, 0.35), "enabled": game.player.health > 2.0},
-		{"id": "cursed", "title": _loki_cursed.title, "desc": "Проклятая руна: " + _loki_cursed.description, "glyph": _loki_cursed.glyph, "color": Color(0.75, 0.35, 0.95)} if _loki_cursed else {"id": "dice", "title": "Кости Локи", "desc": "%d %%: две руны. Иначе −%d %% здоровья" % [int(m.loki_dice_win_chance * 100), int(m.loki_dice_hp_loss * 100)], "glyph": "ᛜ", "color": Color(0.6, 0.95, 0.4)},
-		{"id": "refuse", "title": "Отказаться", "desc": "Локи обидится. Ненадолго.", "glyph": "ᚾ", "color": Color(0.7, 0.7, 0.7)},
+		{"id": "blood", "title": tr("Кровь за сталь"), "desc": tr("−%d %% здоровья → легендарное оружие (ур. 3)") % int(m.loki_hp_cost * 100), "glyph": "ᛚ", "color": Color(0.35, 0.9, 0.35), "enabled": game.player.health > 2.0},
+		{"id": "cursed", "title": tr(_loki_cursed.title), "desc": tr("Проклятая руна: %s") % tr(_loki_cursed.description), "glyph": _loki_cursed.glyph, "color": Color(0.75, 0.35, 0.95)} if _loki_cursed else {"id": "dice", "title": tr("Кости Локи"), "desc": tr("%d %%: две руны. Иначе −%d %% здоровья") % [int(m.loki_dice_win_chance * 100), int(m.loki_dice_hp_loss * 100)], "glyph": "ᛜ", "color": Color(0.6, 0.95, 0.4)},
+		{"id": "refuse", "title": tr("Отказаться"), "desc": tr("Локи обидится. Ненадолго."), "glyph": "ᚾ", "color": Color(0.7, 0.7, 0.7)},
 	]
-	choice.open("СДЕЛКА ЛОКИ", "Проклятая руна или риск. Подписывай, не читая.", opts, "loki", "smug")
+	choice.open(tr("СДЕЛКА ЛОКИ"), tr("Проклятая руна или риск. Подписывай, не читая."), opts, "loki", "smug")
 
 func _loki_result(id: String) -> void:
 	var m := map()
@@ -281,26 +281,26 @@ func _loki_result(id: String) -> void:
 			if d:
 				Loot.spawn_weapon(game.room, at, WeaponItem.create(d, 3), at + Vector3(0, 2.0, 0))
 			Dialogue.bark_pool("loki.deal_blood")
-			game.hud.toast("ЛЕГЕНДАРНОЕ ОРУЖИЕ — ЗА ПОЛОВИНУ ЗДОРОВЬЯ")
+			game.hud.toast(tr("ЛЕГЕНДАРНОЕ ОРУЖИЕ — ЗА ПОЛОВИНУ ЗДОРОВЬЯ"))
 		"dice":
 			if randf() < m.loki_dice_win_chance:
 				var got: Array[String] = []
 				for r in Run.random_rune_choices(2):
 					Run.add_rune(r)
-					got.append(r.title)
+					got.append(tr(r.title))
 				p.recalc_from_runes(Run)
 				Dialogue.bark_pool("loki.deal_dice_win")
-				game.hud.toast("КОСТИ: " + ", ".join(got))
+				game.hud.toast(tr("КОСТИ: %s") % ", ".join(got))
 			else:
 				p.pay_health(p.health * m.loki_dice_hp_loss)
 				Dialogue.bark_pool("loki.deal_dice_lose")
-				game.hud.toast("КОСТИ: НЕ ПОВЕЗЛО")
+				game.hud.toast(tr("КОСТИ: НЕ ПОВЕЗЛО"))
 		"cursed":
 			if _loki_cursed:
 				Run.add_rune(_loki_cursed)
 				p.recalc_from_runes(Run)
 				Dialogue.bark_pool("loki.deal_dice_win")
-				game.hud.toast("☠ %s — ПРОКЛЯТАЯ РУНА" % _loki_cursed.title)
+				game.hud.toast(tr("☠ %s — ПРОКЛЯТАЯ РУНА") % tr(_loki_cursed.title))
 		_:
 			Dialogue.bark_pool("loki.deal_refuse")
 
@@ -313,12 +313,12 @@ func _on_choice_picked(id: String) -> void:
 				rune_mode = "upgrade"
 				var ups := upgradable_runes()
 				ups.shuffle()
-				game.rune_pick.open(ups.slice(0, 3), "УЛУЧШИТЬ РУНУ (+1 УРОВЕНЬ)")
+				game.rune_pick.open(ups.slice(0, 3), tr("УЛУЧШИТЬ РУНУ (+1 УРОВЕНЬ)"))
 				return
 			var p := game.player
 			p.heal(p.max_health * map().rest_heal_fraction)
 			Audio.play("sounds/sfx/rune_pick.wav")
-			game.hud.toast("ПОХЛЁБКА: +%d %% ЗДОРОВЬЯ" % int(map().rest_heal_fraction * 100))
+			game.hud.toast(tr("ПОХЛЁБКА: +%d %% ЗДОРОВЬЯ") % int(map().rest_heal_fraction * 100))
 		"loki":
 			_loki_result(id)
 	finish()
@@ -390,7 +390,7 @@ func show_doors() -> void:
 	if "shop" in offers and Run.map and ResourceLoader.exists(Run.map.shop_scene):
 		ResourceLoader.load_threaded_request(Run.map.shop_scene, "", true)
 	Audio.play("sounds/sfx/door_open.wav")
-	game.hud.toast("ВЫБЕРИ ДВЕРЬ" if n > 1 else "ДВЕРЬ ОТКРЫТА — ВПЕРЁД!")
+	game.hud.toast(tr("ВЫБЕРИ ДВЕРЬ") if n > 1 else tr("ДВЕРЬ ОТКРЫТА — ВПЕРЁД!"))
 	if n > 1:
 		Odin.say("doors")
 	doors_shown.emit(doors)

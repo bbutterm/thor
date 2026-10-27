@@ -49,10 +49,10 @@ func _ready() -> void:
 	hb.alignment = BoxContainer.ALIGNMENT_CENTER
 	hb.add_theme_constant_override("separation", 16)
 	vb.add_child(hb)
-	_restart = UIStyle.button("К Одину ▸")
+	_restart = UIStyle.button(tr("К Одину ▸"))
 	_restart.pressed.connect(func() -> void: restart_requested.emit())
 	hb.add_child(_restart)
-	var menu := UIStyle.button("В меню")
+	var menu := UIStyle.button(tr("В меню"))
 	menu.pressed.connect(func() -> void: menu_requested.emit())
 	hb.add_child(menu)
 
@@ -61,16 +61,16 @@ func show_result(victory: bool) -> void:
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	if victory:
-		_title.text = "ЗАЧЁТ СДАН!"
+		_title.text = tr("ЗАЧЁТ СДАН!")
 		_title.label_settings.font_color = UIStyle.GOLD
 		_quote.text = "«%s»" % Odin.pick("victory")
 	else:
-		_title.text = "ТЫ ПАЛ"
+		_title.text = tr("ТЫ ПАЛ")
 		_title.label_settings.font_color = UIStyle.BLOOD
 		_quote.text = RunTracker.describe_last_death()
-	_verdict.text = "Вердикт Одина: %s" % Run.verdict()
-	var body_name := Run.body.display_name if Run.body else "—"
-	_stats.text = "Тело: %s\nСлава: %d\nУбито врагов: %d\nЛучшая серия: %d\nПройдено залов: %d из %d\nРун собрано: %d" % [
+	_verdict.text = tr("Вердикт Одина: %s") % Run.verdict()
+	var body_name := tr(Run.body.display_name) if Run.body else "—"
+	_stats.text = tr("Тело: %s\nСлава: %d\nУбито врагов: %d\nЛучшая серия: %d\nПройдено залов: %d из %d\nРун собрано: %d") % [
 		body_name, Run.glory, Run.kills, Run.best_streak,
 		Run.room_index + (1 if victory else 0), Run.total_rooms(), Run.runes.size()]
 	_root.modulate.a = 0.0

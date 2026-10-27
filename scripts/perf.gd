@@ -72,7 +72,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_F5:
 			# «Сообщить о лаге»: zip с логом и сохранением на рабочий стол
 			var path := report_lag()
-			_flash("Отчёт о лаге: " + path if path != "" else "Не удалось сохранить отчёт")
+			_flash(tr("Отчёт о лаге: %s") % path if path != "" else tr("Не удалось сохранить отчёт"))
 			get_viewport().set_input_as_handled()
 		KEY_F4:
 			# Папка с логом фризов — чтобы прислать его
