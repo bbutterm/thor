@@ -190,7 +190,7 @@ static func _side_only(src: Mesh, key: String, which: String, cut_x: float = 0.1
 		if keep.is_empty():
 			continue
 		arrays[Mesh.ARRAY_INDEX] = keep
-		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {}, _surface_flags(src, sidx))
 		out.surface_set_material(out.get_surface_count() - 1, src.surface_get_material(sidx))
 	_side_cache[k] = out
 	return out
@@ -205,6 +205,17 @@ func _tint_skin_surfaces(m: MeshInstance3D) -> void:
 			m.set_surface_override_material(sidx, c)
 
 static var _head_cache: Dictionary = {}
+
+## Флаги формата поверхности для add_surface_from_arrays: форматы каналов CUSTOM0..3 и 8 весов костей.
+## Без них движок считает CUSTOM-каналы байтовыми, а surface_get_arrays отдаёт их float-массивом —
+## «Invalid array format for surface», и поверхность не создаётся (у одетых драугров пропадала голова).
+static func _surface_flags(src: Mesh, sidx: int) -> int:
+	var fmt: int = src.surface_get_format(sidx)
+	var flags: int = fmt & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS
+	for ch in 4:
+		var shift := Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT + ch * Mesh.ARRAY_FORMAT_CUSTOM_BITS
+		flags |= fmt & (Mesh.ARRAY_FORMAT_CUSTOM_MASK << shift)
+	return flags
 
 ## Заранее режет меш головы для тела (AssetCache.finish) — иначе это делает первый враг волны.
 static func warm_head_mesh(body_path: String) -> void:
@@ -241,7 +252,7 @@ static func _head_only(src: Mesh, key: String) -> Mesh:
 				keep.append(idx[t + 1])
 				keep.append(idx[t + 2])
 		arrays[Mesh.ARRAY_INDEX] = keep
-		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {}, _surface_flags(src, sidx))
 		out.surface_set_material(out.get_surface_count() - 1, src.surface_get_material(sidx))
 	_head_cache[key] = out
 	return out

@@ -310,6 +310,16 @@ func _retranslate() -> void:
 		_boss_title.text = tr(str(_boss.get_meta("boss_title", DEFAULT_BOSS_TITLE)))
 	_on_runes_changed(Run.runes)
 
+## На паузе (выбор руны/трейта/награды, ларёк, меню паузы) HUD стоит, и его твин тоже: пузырь Одина
+## застывал видимым под затемнением и наезжал на заголовок экрана выбора. Прячем до снятия паузы.
+func _notification(what: int) -> void:
+	if _odin_panel == null:
+		return
+	if what == NOTIFICATION_PAUSED:
+		_odin_panel.visible = false
+	elif what == NOTIFICATION_UNPAUSED:
+		_odin_panel.visible = true
+
 func _process(delta: float) -> void:
 	if player and is_instance_valid(player):
 		_speed_mat.set_shader_parameter("intensity", player.camera_fx.speed_lines)

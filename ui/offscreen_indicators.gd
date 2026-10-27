@@ -40,6 +40,8 @@ func _collect() -> void:
 	var center := vp * 0.5
 	var inner := Rect2(Vector2.ZERO, vp).grow(-8.0)
 	var list: Array = []
+	var to_cam := cam.global_transform.affine_inverse()
+	var cam_back := cam.global_transform.basis.z
 	for n in get_tree().get_nodes_in_group("enemies"):
 		var e := n as Enemy
 		if e == null or e.is_dead or not e.is_inside_tree():
@@ -49,6 +51,10 @@ func _collect() -> void:
 		if dist > max_distance:
 			continue
 		var behind := cam.is_position_behind(pos)
+		# Точка в плоскости камеры (глубина 0) — unproject_position падает с ошибкой «p.d == 0»:
+		# сдвигаем её чуть вперёд вдоль взгляда (направление на краю экрана то же)
+		if absf((to_cam * pos).z) < 0.05:
+			pos -= cam_back * 0.1
 		var sp := cam.unproject_position(pos)
 		if not behind and inner.has_point(sp):
 			continue

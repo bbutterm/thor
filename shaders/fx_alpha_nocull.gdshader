@@ -4,5 +4,5 @@ render_mode unshaded, shadows_disabled, depth_draw_never, cull_disabled;
 
 void fragment() {
 	ALBEDO = color.rgb * energy;
-	ALPHA = color.a;
+	ALPHA *= color.a * fade;
 }

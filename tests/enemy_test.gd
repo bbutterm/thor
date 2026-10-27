@@ -310,7 +310,9 @@ func _test_fall_and_reflect() -> void:
 	for e in [f, g]:
 		e._last_hit_time = Time.get_ticks_msec() / 1000.0
 		e.global_position += Vector3(0, 9.0, 0)
-	await wait_until(3.0, func() -> bool: return (not is_instance_valid(f) or f.is_dead) and g.health < 200.0)
+	# Корм разбивается и исчезает — в лямбде держим слабую ссылку (захват удалённого узла — ошибка движка)
+	var fref: WeakRef = weakref(f)
+	await wait_until(3.0, func() -> bool: return (fref.get_ref() == null or (fref.get_ref() as Enemy).is_dead) and g.health < 200.0)
 	check(not is_instance_valid(f) or f.is_dead, "сброшенный с 9 м корм разбился")
 	check(absf((200.0 - g.health) - g.fall_damage) < 0.5, "боец получил 2 У за падение (%.0f)" % (200.0 - g.health))
 	var s := await _ready_enemy("fodder", Vector3(0, 0, -8))

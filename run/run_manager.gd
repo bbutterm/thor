@@ -94,6 +94,9 @@ var _recent_kill_times: Array[float] = []
 ## Во сколько раз считается каждая руна (Старый жрец: «все руны ×2»), см. BodyDef.stat("rune_power")
 var rune_power: int = 1
 
+func _exit_tree() -> void:
+	AssetCache.shutdown()
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Русский шрифт + запасной шрифт с рунами (ᚠ ᛗ ᚦ ...)

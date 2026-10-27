@@ -49,6 +49,15 @@ var _layer_target: PackedFloat32Array = PackedFloat32Array([0.0, -80.0, -80.0])
 var _connected_player: Node = null
 var _duck_left: float = 0.0
 
+## Выход: останавливаем слои и стингер и отпускаем потоки — иначе воспроизведение ogg остаётся висеть
+## в AudioServer («ObjectDB instances leaked», «resources still in use at exit» в логах тестов)
+func _exit_tree() -> void:
+	for p in [_player, _old, _stinger]:
+		if p and is_instance_valid(p):
+			(p as AudioStreamPlayer).stop()
+			(p as AudioStreamPlayer).stream = null
+	_tracks.clear()
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_bus()

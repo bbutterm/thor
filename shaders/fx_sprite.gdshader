@@ -2,9 +2,10 @@ shader_type spatial;
 // Текстурные эффекты VFX-комплекта (sprites/vfx/*): вспышка, искры, ихор, дым, огонь, молния, волна, трещины, лёд.
 // Один шейдер — один пайплайн; материал на текстуру создаётся один раз (FX.sprite_material) и живёт всегда.
 // Всё, что меняется у отдельного эффекта, — на экземпляре: цвет и яркость, кадр полосы,
-// режим billboard, поворот в плоскости, скорость петли. Затухание — GeometryInstance3D.transparency.
-// Instance-переменных две (по ячейке буфера на каждую): в GL Compatibility буфер всего 4096 ячеек на всю сцену,
-// а в прогреве его почти целиком занимают части одежды драугров.
+// режим billboard, поворот в плоскости, скорость петли. Затухание — GeometryInstance3D.transparency
+// (альфу умножаем: присваивание ALPHA = … отключало его), в GL Compatibility — instance uniform fade (FX.sync_fades).
+// Буфер instance-переменных: каждый узел с ними занимает 16 ячеек независимо от их числа; в GL Compatibility
+// всего 4096 ячеек = 256 узлов на сцену (FX.INSTANCE_SLOTS_GL) — поэтому свободные узлы пулов отдают материал.
 render_mode unshaded, shadows_disabled, depth_draw_never, cull_disabled;
 // rgb — оттенок (текстуры комплекта белые/серые там, где tintable), a — яркость (> 1 — светится в Glow)
 instance uniform vec4 color : source_color = vec4(1.0);
@@ -19,6 +20,8 @@ uniform vec2 grid = vec2(1.0, 1.0);
 // z — поворот в плоскости квада, рад (у billboard-спрайта поворот узла не виден);
 // w — > 0: кадры идут сами по TIME с этой частотой, x — сдвиг фазы (петля огня)
 instance uniform vec4 sprite = vec4(0.0);
+// 1 - transparency узла для GL Compatibility (FX.sync_fades); в Forward+ всегда 1.0
+instance uniform float fade = 1.0;
 
 void vertex() {
 	float frame = sprite.x;
@@ -55,5 +58,5 @@ void vertex() {
 void fragment() {
 	vec4 t = texture(tex, UV);
 	ALBEDO = t.rgb * color.rgb * color.a;
-	ALPHA = t.a;
+	ALPHA *= t.a * fade;
 }
