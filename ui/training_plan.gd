@@ -120,6 +120,7 @@ func _build() -> void:
 	body.add_child(lp)
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.follow_focus = true
 	lp.add_child(_scroll)
 	_list = VBoxContainer.new()
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -164,6 +165,11 @@ func close(start_run: bool) -> void:
 	get_tree().paused = _was_paused
 	Save.save_game()
 	closed.emit(start_run)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		close(false)
 
 func _say(lines: Array, fallback_emotion: String = "neutral") -> void:
 	if lines.is_empty():
@@ -336,15 +342,39 @@ func buy(id: String) -> bool:
 		_say([{"speaker": "odin", "emotion": "happy", "text": tr(u.odin_comment)}])
 	else:
 		_say(Dialogue.pool_lines("odin.plan_buy"), "happy")
+	var focus := get_viewport().gui_get_focus_owner()
+	var restore_focus := focus != null and _scroll.is_ancestor_of(focus)
 	var scroll_pos := _scroll.scroll_vertical
 	_rebuild()
 	_scroll.set_deferred("scroll_vertical", scroll_pos)
+	if restore_focus:
+		_focus_after_purchase.call_deferred(id)
 	_glory_label.pivot_offset = _glory_label.size * Vector2(1, 0.5)
 	var tw := _glory_label.create_tween()
 	tw.tween_property(_glory_label, "scale", Vector2(1.15, 1.15), glory_pulse_time * 0.4)
 	tw.tween_property(_glory_label, "scale", Vector2.ONE, glory_pulse_time * 0.6)
 	Dialogue.run_trigger("plan_buy")
 	return true
+
+## После покупки карточка пересоздаётся, а её кнопка становится неактивной.
+## Переводим фокус на ближайшее доступное открытие; если их нет — на «В бой».
+func _focus_after_purchase(id: String) -> void:
+	if Dialogue.is_playing():
+		await Dialogue.scene_finished
+	if not is_inside_tree() or not visible:
+		return
+	var ids := _cards.keys()
+	var index := ids.find(id)
+	for distance in range(1, ids.size() + 1):
+		for candidate in [index + distance, index - distance]:
+			if candidate < 0 or candidate >= ids.size():
+				continue
+			var card := _cards[ids[candidate]] as Control
+			var b := card.get_meta("button") as Button
+			if b and not b.disabled:
+				b.grab_focus()
+				return
+	_fight_btn.grab_focus()
 
 func _shake(c: Control) -> void:
 	var x := c.position.x

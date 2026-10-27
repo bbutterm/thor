@@ -139,6 +139,7 @@ func _build(focus: bool = true) -> void:
 	controls.modulate.a = 0.92
 	var cl := UIStyle.label(
 		tr("WASD — бег  ·  Пробел — прыжок / двойной\nShift — рывок  ·  Ctrl или C в воздухе — удар-приземление\nCtrl+Shift — подкат  ·  Пробел после приземления — СУПЕР-ПРЫЖОК\nЛКМ — удар (комбо из 3)  ·  ПКМ — метнуть / вернуть Мьёльнир\nQ — сменить оружие  ·  E — подобрать  ·  Esc — пауза"), 15, UIStyle.TEXT_DIM, 3)
+	cl.text += "\n" + tr("Геймпад: управление и кнопки — в настройках.")
 	controls.add_child(cl)
 	_ui.add_child(controls)
 	if focus:

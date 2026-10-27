@@ -41,7 +41,7 @@ func can_interact() -> bool:
 	return not opened
 
 func prompt_text(_holder: WeaponHolder) -> String:
-	return tr("[E] Открыть сундук")
+	return tr("[E] Открыть сундук").replace("[E]", "[%s]" % GameSettings.current_binding("interact"))
 
 func interact(_holder: WeaponHolder) -> void:
 	if opened:
