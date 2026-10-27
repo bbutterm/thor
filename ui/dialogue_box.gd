@@ -29,6 +29,8 @@ signal line_shown(line: Dictionary)
 @export var story_fade_time: float = 0.35
 ## Яркость картинки-фона (чуть темнее — портреты и текст читаются)
 @export var backdrop_brightness: float = 0.82
+## Прокрутка журнала правым стиком, px/s.
+@export var log_scroll_speed: float = 320.0
 
 var _root: Control
 var _backdrop: ColorRect
@@ -65,6 +67,7 @@ var _waiting_choice: bool = false
 var _age: float = 0.0
 var _left_sp: String = ""
 var _right_sp: String = ""
+var _log_scroll_axis: float = 0.0
 
 func _ready() -> void:
 	layer = 40
@@ -210,6 +213,7 @@ func _build() -> void:
 	_log_text.add_theme_font_size_override("normal_font_size", 19)
 	_log_text.add_theme_color_override("default_color", UIStyle.TEXT)
 	lv.add_child(_log_text)
+	lv.add_child(UIStyle.label(tr("Правый стик — прокрутка журнала."), 14, UIStyle.TEXT_DIM, 3))
 
 ## Фон «между забегами»: тёмная комната, диван-силуэт и подпись — Тор проснулся на диване.
 func _make_couch_backdrop() -> Control:
@@ -430,6 +434,9 @@ func _process(delta: float) -> void:
 		return
 	_age += delta
 	_next_mark.modulate.a = 0.55 + 0.45 * sin(_now() * 6.0)
+	if _log_panel.visible and _log_scroll_axis != 0.0:
+		var bar := _log_text.get_v_scroll_bar()
+		bar.value += _log_scroll_axis * log_scroll_speed * delta
 	if not _typing:
 		return
 	if _pause_left > 0.0:
@@ -536,6 +543,7 @@ func _close() -> void:
 
 func toggle_log() -> void:
 	_log_panel.visible = not _log_panel.visible
+	_log_scroll_axis = 0.0
 
 func _log_append(def: Dictionary, col: Color, text: String) -> void:
 	var name := str(def.get("name", "?"))
@@ -549,13 +557,19 @@ func _on_click_input(event: InputEvent) -> void:
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
+	if event is InputEventJoypadMotion and _log_panel.visible:
+		if event.axis == JOY_AXIS_RIGHT_Y:
+			_log_scroll_axis = event.axis_value if absf(event.axis_value) >= 0.25 else 0.0
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventJoypadButton and event.pressed:
 		if event.button_index == JOY_BUTTON_BACK:
 			toggle_log()
 			get_viewport().set_input_as_handled()
 			return
-		if _log_panel.visible and event.is_action_pressed("ui_cancel"):
-			toggle_log()
+		if _log_panel.visible:
+			if event.is_action_pressed("ui_cancel"):
+				toggle_log()
 			get_viewport().set_input_as_handled()
 			return
 		if event.button_index == JOY_BUTTON_Y and _age >= open_guard:
@@ -574,6 +588,8 @@ func _input(event: InputEvent) -> void:
 			toggle_log()
 		elif _log_panel.visible and k.physical_keycode == KEY_ESCAPE:
 			toggle_log()
+		elif _log_panel.visible:
+			pass
 		elif _waiting_choice and (event.is_action("pick_1") or k.physical_keycode == KEY_KP_1):
 			choose(0)
 		elif _waiting_choice and (event.is_action("pick_2") or k.physical_keycode == KEY_KP_2):
