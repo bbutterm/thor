@@ -70,6 +70,25 @@ func _run() -> void:
 	await frames(3)
 	p.set_physics_process(false)
 	check(not p.is_on_floor(), "игрок в воздухе")
+	# Зарядка в воздухе стоит. Первая трата из полного запаса начинает отсчёт с нуля,
+	# следующая сохраняет уже накопленную долю и показывает её на текущей руне.
+	var duration := p.dash_recharge * p.weapon_dash_recharge_mult() * p._rune_dash_recharge_mult
+	p.dash_charges = p.dash_charges_max
+	p._dash_recharge_timer = duration * 0.5
+	p._coyote_left = 0.0
+	p._jumps_left = 1
+	p._jump_buffer_left = 1.0
+	p._process_jump(false)
+	check(p.dash_charges == p.dash_charges_max - 1 and is_zero_approx(p._dash_recharge_timer)
+		and is_zero_approx(game.hud._dash_pips[p.dash_charges].fill), "трата из полного запаса сбрасывает долю в HUD")
+	p._dash_recharge_timer = duration * 0.5
+	p._jumps_left = 1
+	p._jump_buffer_left = 1.0
+	p._process_jump(false)
+	check(p.dash_charges == p.dash_charges_max - 2 and is_equal_approx(game.hud._dash_pips[p.dash_charges].fill, 0.5),
+		"воздушный прыжок показывает сохранённую долю восстановления")
+	p._update_timers(4.0)
+	check(is_equal_approx(game.hud._dash_pips[p.dash_charges].fill, 0.5), "в воздухе доля не меняется")
 	p.dash_charges = 0
 	p._dash_recharge_timer = 0.5
 	p._update_timers(4.0)
