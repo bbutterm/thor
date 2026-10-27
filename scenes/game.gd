@@ -34,6 +34,7 @@ func _ready() -> void:
 	trait_pick.name = "TraitPick"
 	add_child(trait_pick)
 	trait_pick.picked.connect(_on_trait_picked)
+	Run.mjolnir_combo_unlocked.connect(_on_combo_unlocked)
 	rewards = RewardFlow.attach(self)
 	end_screen.restart_requested.connect(_after_run)
 	end_screen.menu_requested.connect(go_to_menu)
@@ -132,7 +133,7 @@ func _on_room_cleared() -> void:
 			return
 		# После мини-босса — сначала трейт Мьёльнира, потом руна
 		if Run.is_miniboss_room():
-			var traits := Run.random_mjolnir_trait_choices(3)
+			var traits := Run.random_mjolnir_trait_choices()
 			if not traits.is_empty():
 				trait_pick.open(traits)
 				return
@@ -150,13 +151,29 @@ func _offer_rune() -> void:
 		rune_pick.open(choices)
 
 func _on_trait_picked(t: MjolnirTrait) -> void:
-	Run.add_mjolnir_trait(t)
-	Odin.say("trait_pick")
+	var combos := Run.add_mjolnir_trait(t)
+	if combos.is_empty():
+		Odin.say("trait_pick")
 	Audio.play("sounds/sfx/rune_pick.wav")
-	hud.toast("%s %s — %s" % [t.glyph, tr(t.title), tr("уровень 2") if Run.mjolnir_trait_level(t.id) > 1 else tr("Мьёльнир")])
+	var lv := Run.mjolnir_trait_level(t.id)
+	hud.toast("%s %s — %s" % [t.glyph, tr(t.title), tr("уровень %d") % lv if lv > 1 else (tr("стихия") if t.is_element() else tr("приём"))])
+	# Наковальня Эйтри: выбор стихии и был наградой зала — дальше двери; мини-босс — дальше руна
+	var anvil := rewards.take_anvil_pick()
 	get_tree().create_timer(0.5, false).timeout.connect(func() -> void:
-		if not player.is_dead:
+		if player.is_dead:
+			return
+		if anvil:
+			rewards.finish()
+		else:
 			_offer_rune())
+
+## Стихия и приём сложились в связку (блок Б4): карточка-объявление, комикс-слово, реплика Одина.
+func _on_combo_unlocked(c: MjolnirTrait) -> void:
+	ComboAnnounce.show_combo(self, c)
+	if player and is_instance_valid(player):
+		ComicFX.pop("combo", player.get_aim_origin() + player.get_aim_forward() * 3.0, true)
+	if Odin.say("combo_" + str(c.id)) == "":
+		Odin.say("combo")
 
 func _on_rune_picked(rune: RuneDef) -> void:
 	Run.add_rune(rune)

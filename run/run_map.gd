@@ -25,6 +25,11 @@ class_name RunMap
 @export var no_peaceful_twice: bool = true
 ## Сцена зала-ларька (блок К); нет файла — ларёк не предлагается
 @export var shop_scene: String = "res://rooms/shop_room.tscn"
+## Наковальня Эйтри (блок Б4: стихия Мьёльнира или её новый уровень): гарантирована в наборах дверей к залам
+## с номерами anvil_earliest_room…anvil_latest_room, пока в неё не зашли anvil_per_world раз (и есть что дать)
+@export var anvil_per_world: int = 1
+@export var anvil_earliest_room: int = 2
+@export var anvil_latest_room: int = 3
 
 @export_group("Небо и атмосфера")
 ## Панорама неба мира (equirect 2:1, assets/sky/<мир>.webp); пусто — небо сцены игры (процедурное).
@@ -73,8 +78,9 @@ func miniboss_index() -> int:
 	return miniboss_room - 1
 
 ## Набор дверей к залу next_index. rewards — все RewardDef, visits — сколько раз заходили (id → n),
-## prev — награда зала, из которого выходим; boss_index — номер зала босса.
-func roll_offers(rewards: Array, next_index: int, boss_index: int, visits: Dictionary, prev: String, shop_ok: bool) -> Array[String]:
+## prev — награда зала, из которого выходим; boss_index — номер зала босса;
+## anvil_ok — наковальне есть что дать (Run.anvil_available()).
+func roll_offers(rewards: Array, next_index: int, boss_index: int, visits: Dictionary, prev: String, shop_ok: bool, anvil_ok: bool = false) -> Array[String]:
 	var out: Array[String] = []
 	if next_index >= boss_index:
 		out.append("boss")
@@ -97,6 +103,11 @@ func roll_offers(rewards: Array, next_index: int, boss_index: int, visits: Dicti
 	if shop_ok and int(visits.get("shop", 0)) < shop_per_world and next_index + 1 >= shop_earliest_room \
 			and not (no_peaceful_twice and peaceful_prev):
 		out.append("shop")
+	# Наковальня Эйтри — в ранних залах (стихия молота до мини-босса), если такая награда есть
+	var room_no := next_index + 1
+	if anvil_ok and int(visits.get("anvil", 0)) < anvil_per_world and room_no >= anvil_earliest_room \
+			and room_no <= anvil_latest_room and out.size() < n and _has_reward(rewards, "anvil"):
+		out.append("anvil")
 	while out.size() < n and not pool.is_empty():
 		var total := 0.0
 		for rd in pool:
@@ -114,3 +125,10 @@ func roll_offers(rewards: Array, next_index: int, boss_index: int, visits: Dicti
 		out.append(pick.id)
 	out.shuffle()
 	return out
+
+func _has_reward(rewards: Array, id: String) -> bool:
+	for r in rewards:
+		var rd := r as RewardDef
+		if rd and rd.id == id and rd.enabled:
+			return true
+	return false

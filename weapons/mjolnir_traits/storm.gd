@@ -1,5 +1,5 @@
 extends MjolnirTraitHandler
-## Буря (группа «бросок»): зажми ПКМ при броске — молот зависает и крутится на месте, нанося урон по кругу.
+## Приём «Буря» (группа «удержание ПКМ» — с Пращой и Зарядом не берётся): зажми ПКМ при броске — молот зависает и крутится на месте, нанося урон по кругу.
 ## Отпустил ПКМ или вышло время — летит обратно. Ур. 2 — дольше и тянет к себе корм (не боссов).
 
 ## Через сколько секунд после броска (ПКМ всё ещё зажата) молот зависает
@@ -54,7 +54,7 @@ func on_flight_tick(proj: MjolnirProjectile, delta: float) -> void:
 		dir = dir.normalized() if dir.length() > 0.01 else Vector3.FORWARD
 		# Касательная + наружу — враги «закручиваются»
 		var tangent := dir.cross(Vector3.UP)
-		e.take_hit(tick_damage * proj.damage_mult, (dir + tangent).normalized() * knockback + Vector3.UP * 1.5, "hammer")
+		hurt(e, tick_damage * proj.damage_mult, (dir + tangent).normalized() * knockback + Vector3.UP * 1.5, "hammer")
 		any = true
 	FX.ring(proj.fx_parent(), hp - Vector3(0, 0.6, 0), radius, Color(0.55, 0.85, 1.0, 0.55), tick)
 	if any:

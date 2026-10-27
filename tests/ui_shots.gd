@@ -76,7 +76,7 @@ func _run() -> void:
 	p.recalc_from_runes(Run)
 	p.refill_shield()
 	for t in Run.all_mjolnir_traits:
-		if str(t.id) in ["fire_trail", "chain_lightning"]:
+		if str(t.id) in ["fire", "storm"]:
 			Run.add_mjolnir_trait(t)
 	p.health = p.max_health * 0.62
 	p.health_changed.emit(p.health, p.max_health)

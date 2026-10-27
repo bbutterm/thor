@@ -1,11 +1,14 @@
 extends HBoxContainer
 class_name MjolnirTraitsHud
 ## Иконки активных трейтов Мьёльнира (отдельно от рун) — слева внизу, над здоровьем и строкой молота.
-## Иконка трейта из UI-комплекта (нет — руна в круге цвета трейта), уровень в углу. Справа — «ИДЕАЛЬНЫЙ ХВАТ ×2», пока следующий бросок усилен.
+## Порядок: стихия, приёмы, связки (золотая рамка). Иконка трейта из UI-комплекта (нет — руна в круге цвета
+## трейта), уровень в углу римской цифрой. Справа — «ИДЕАЛЬНЫЙ ХВАТ ×2», пока следующий бросок усилен,
+## и полоска удержания ПКМ (Заряд, Праща — MjolnirHand.hold_progress).
 
 var player: Player
 var _icons: HBoxContainer
 var _perfect: Label
+var _hold: Label
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -24,30 +27,48 @@ func _ready() -> void:
 	_perfect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_perfect.visible = false
 	add_child(_perfect)
+	_hold = UIStyle.label("", 18, UIStyle.ICE, 6)
+	_hold.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_hold.visible = false
+	add_child(_hold)
 	Run.mjolnir_traits_changed.connect(_rebuild)
 	_rebuild(Run.mjolnir_traits)
 
 func _process(_delta: float) -> void:
-	var on := player != null and is_instance_valid(player) and player.mjolnir.perfect_ready
+	var ok := player != null and is_instance_valid(player)
+	var on := ok and player.mjolnir.perfect_ready
 	if on != _perfect.visible:
 		_perfect.visible = on
+	var hp := player.mjolnir.hold_progress if ok and player.mjolnir.holding else 0.0
+	_hold.visible = hp > 0.0
+	if _hold.visible:
+		var n := int(round(hp * 10.0))
+		_hold.text = "%s %s" % [tr(player.mjolnir.hold_label), "▮".repeat(n) + "▯".repeat(10 - n)]
+		_hold.label_settings.font_color = UIStyle.GOLD if hp >= 1.0 else UIStyle.ICE
 
 func _rebuild(traits: Array = []) -> void:
 	for c in _icons.get_children():
 		c.queue_free()
+	var ordered: Array = []
 	for t in traits:
-		var mt := t as MjolnirTrait
-		if mt == null:
-			continue
+		if t is MjolnirTrait and (t as MjolnirTrait).is_element():
+			ordered.append(t)
+	for t in traits:
+		if t is MjolnirTrait and not (t as MjolnirTrait).is_element():
+			ordered.append(t)
+	for mt in ordered:
 		_icons.add_child(_icon(mt, Run.mjolnir_trait_level(mt.id)))
+	for c in Run.active_combos():
+		_icons.add_child(_icon(c, 0))
 
 func _icon(t: MjolnirTrait, level: int) -> Control:
 	# Иконка трейта из комплекта (UISkin.trait_icon); нет картинки — руна в круге цвета трейта
 	var tex := UISkin.trait_icon(str(t.id))
+	var badge := "★" if t.is_combo() else TraitPick.roman(level)
 	if tex:
 		var icon := HudIcon.make(tex, 44)
-		icon.badge = "I" if level <= 1 else "II"
-		icon.badge_color = t.color.lightened(0.3)
+		icon.badge = badge
+		icon.badge_color = Color(1.0, 0.78, 0.3) if t.is_combo() else t.color.lightened(0.3)
 		icon.tooltip_text = tr(t.title)
 		return icon
 	var box := VBoxContainer.new()
@@ -57,8 +78,8 @@ func _icon(t: MjolnirTrait, level: int) -> Control:
 	ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.03, 0.06, 0.12, 0.8)
-	sb.border_color = t.color
-	sb.set_border_width_all(2)
+	sb.border_color = Color(1.0, 0.78, 0.3) if t.is_combo() else t.color
+	sb.set_border_width_all(3 if t.is_combo() else 2)
 	sb.set_corner_radius_all(20)
 	ring.add_theme_stylebox_override("panel", sb)
 	ring.custom_minimum_size = Vector2(40, 40)
@@ -67,7 +88,7 @@ func _icon(t: MjolnirTrait, level: int) -> Control:
 	g.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	ring.add_child(g)
 	box.add_child(ring)
-	var l := UIStyle.label("I" if level <= 1 else "II", 12, UIStyle.TEXT_DIM, 3)
+	var l := UIStyle.label(badge, 12, UIStyle.TEXT_DIM, 3)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(l)
 	box.tooltip_text = tr(t.title)

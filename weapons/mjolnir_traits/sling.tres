@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MjolnirTrait" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/mjolnir_trait.gd" id="1_trait"]
+[ext_resource type="Script" path="res://weapons/mjolnir_traits/sling.gd" id="2_handler"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("2_handler")
+
+[resource]
+script = ExtResource("1_trait")
+id = &"sling"
+kind = "technique"
+title = "Праща"
+description = "Держи ПКМ — молот крутится вокруг Тора и бьёт всех рядом. Отпустил — летит быстрее и пробивает щиты насквозь."
+description_lvl2 = "Крутится до 6 с, бросок ×1.6 урона."
+glyph = "ᛃ"
+color = Color(0.5, 0.9, 0.95, 1)
+group = "удержание ПКМ"
+max_level = 2
+handler = SubResource("Resource_handler")

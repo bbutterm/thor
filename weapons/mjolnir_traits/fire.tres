@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="MjolnirTrait" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/mjolnir_trait.gd" id="1_trait"]
+[ext_resource type="Script" path="res://weapons/mjolnir_traits/fire.gd" id="2_handler"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("2_handler")
+
+[resource]
+script = ExtResource("1_trait")
+id = &"fire"
+kind = "element"
+title = "Огонь"
+description = "Попадание поджигает: урон со временем, огонь перекидывается на соседей. Удар-приземление по горящим — вспышка вокруг каждого."
+description_lvl2 = "След на полу: молот в полёте оставляет полосу огня (3 с, 0.3 У/с)."
+description_lvl3 = "Аура: воткнутый молот поджигает всех вокруг. Огненный след — 5 с и шире."
+description_lvl4 = "С неба: идеальный хват — огненный столб в точку прицела."
+glyph = "ᚲ"
+color = Color(1, 0.5, 0.15, 1)
+group = "стихия"
+max_level = 4
+level_pool_ids = PackedStringArray("", "fire_trail", "", "")
+handler = SubResource("Resource_handler")

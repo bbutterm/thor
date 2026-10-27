@@ -21,6 +21,8 @@ var _choice_kind: String = ""
 var _granted: bool = false
 ## Испытание текущего зала (блок Ф), null — нет
 var trial: TrialRunner
+## Открыт выбор стихии наковальни Эйтри (блок Б4): после выбора — сразу двери (Game.take_anvil_pick)
+var _anvil_pick: bool = false
 
 static func attach(g: Game) -> RewardFlow:
 	var f := RewardFlow.new()
@@ -138,8 +140,26 @@ func grant() -> void:
 			_offer_loki()
 		"trial":
 			_grant_trial()
+		"anvil":
+			_offer_anvil()
 		_:
 			_offer_runes("rune")
+
+## Наковальня Эйтри (блок Б4, GDD 10): выбор стихии Мьёльнира (или нового уровня своей) вместо руны.
+func _offer_anvil() -> void:
+	var choices := Run.random_mjolnir_trait_choices(-1, ["element"])
+	if choices.is_empty():
+		_offer_runes("rune")
+		return
+	_anvil_pick = true
+	Dialogue.bark_pool("dwarves.eitri")
+	game.trait_pick.open(choices, tr("НАКОВАЛЬНЯ ЭЙТРИ — СТИХИЯ МОЛОТА"))
+
+## Выбор трейта был наградой наковальни (тогда после него — двери, а не руна). Сбрасывает признак.
+func take_anvil_pick() -> bool:
+	var was := _anvil_pick
+	_anvil_pick = false
+	return was
 
 ## Награда выдана — открыть двери (или старая дверь, если двери выключены).
 func finish() -> void:
@@ -352,9 +372,9 @@ func _on_trait_reroll() -> void:
 		return
 	Run.trait_rerolls -= 1
 	Perf.mark("trait_reroll")
-	var traits := Run.random_mjolnir_trait_choices(3)
+	var traits := Run.random_mjolnir_trait_choices(-1, ["element"] if _anvil_pick else [])
 	if not traits.is_empty():
-		game.trait_pick.open(traits)
+		game.trait_pick.open(traits, game.trait_pick.title_text)
 
 # --- Двери ---
 

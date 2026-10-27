@@ -27,6 +27,9 @@ class_name StyleTuning
 	"kill_fire": 5.0, "kill_other": 3.0,
 	"slam_bounce": 5.0, "stomp": 5.0, "perfect_catch": 8.0, "wall_splat": 6.0, "reflect": 8.0,
 	"multikill": 10.0, "multikill_big": 15.0,
+	# Мьёльнир (блок Б4): перехват в воздухе, связка стихии с ударом-приземлением, пике молотом,
+	# прыжок с молота-ступеньки, обмен местами, раскол замёрзшего
+	"air_catch": 6.0, "element_slam": 6.0, "hammer_dive": 6.0, "hammer_step": 6.0, "hammer_swap": 5.0, "shatter": 8.0,
 }
 ## Мульти-килл: столько убийств за multikill_window секунд (и multikill_big_count — крупный)
 @export var multikill_count: int = 3

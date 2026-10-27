@@ -231,9 +231,12 @@ const WEAPON_ICON := {
 	"sawed_off": "weapon_sawed_off", "nailgun": "weapon_nail_gun", "nail_gun": "weapon_nail_gun",
 }
 ## Иконка трейта Мьёльнира по MjolnirTrait.id
+## Стихии и приёмы (блок Б4) — картинки бывших трейтов: молния — цепная, земля — «Тяжесть»; новых приёмов,
+## ветра и связок в комплекте нет — у них руна-глиф в круге (запасной вид в HUD и на карточках)
 const TRAIT_ICON := {
 	"fire_trail": "trait_fire", "ice_trail": "trait_ice", "pull_to_hammer": "trait_pull", "sky_thunder": "trait_sky_lightning",
 	"heaviness": "trait_heavy", "two_hammers": "trait_double",
+	"fire": "trait_fire", "ice": "trait_ice", "lightning": "trait_chain_lightning", "earth": "trait_heavy",
 }
 ## Иконка категории руны (RuneDef.category); у Мьёльнира своей категории в комплекте нет — молот
 const RUNE_CATEGORY_ICON := {"mjolnir": "hud_mjolnir_ready"}

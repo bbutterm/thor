@@ -35,6 +35,10 @@ var recalled_from_stuck: bool = false
 var data: Dictionary = {}
 ## Кого уже задели на этом проходе (туда / обратно) — id коллайдеров
 var hit_ids: Dictionary = {}
+## Пробивает щит Щитоносца и броню элиты (Заряд в полную силу, Праща — блок Б4)
+var pierce: bool = false
+## Оглушение каждого задетого врага, с (Заряд ур. 2); 0 — нет
+var stun_on_hit: float = 0.0
 
 var _time: float = 0.0
 var _caught: bool = false
@@ -96,9 +100,38 @@ func _build_visual() -> void:
 	_light.omni_range = 4.0
 	add_child(_light)
 
-## Включить свечение «идеального» броска (вызывает рука после launch)
+## Усиление броска от приёмов (рука после launch): hand.next_throw — damage_mult, range_mult, pierce, stun
+func apply_throw_mods(mods: Dictionary) -> void:
+	if mods.is_empty():
+		return
+	damage_mult *= float(mods.get("damage_mult", 1.0))
+	var rm := float(mods.get("range_mult", 1.0))
+	_max_range *= rm
+	_auto_return_after *= rm
+	pierce = pierce or bool(mods.get("pierce", false))
+	stun_on_hit = maxf(stun_on_hit, float(mods.get("stun", 0.0)))
+	if pierce and _light:
+		_light.light_color = Color(1.0, 0.95, 0.75)
+		_light.light_energy = 2.5
+
+## Воткнутый молот ждёт ПКМ не меньше sec секунд (приёмы «воткнутого молота»: ступенька, пёс, пике)
+func hold_stuck(sec: float) -> void:
+	if _stuck_auto_return > 0.0:
+		_stuck_auto_return = maxf(_stuck_auto_return, sec)
+
+## Боёк «кусает» точку to и возвращается (Верный пёс): только вид, сам молот остаётся воткнутым
+func lunge(to: Vector3) -> void:
+	if _mesh_root == null:
+		return
+	var local := to_local(to).limit_length(3.0) * 0.85
+	var tw := _mesh_root.create_tween()
+	tw.tween_property(_mesh_root, "position", local, 0.07).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_mesh_root, "position", Vector3.ZERO, 0.14).set_ease(Tween.EASE_IN_OUT)
+
+## Включить свечение «идеального» броска (вызывает рука после launch). Множитель складывается
+## с уже набранным (Два молота ×0.6, Заряд) — раньше перезаписывал его.
 func set_empowered(mult: float) -> void:
-	damage_mult = mult
+	damage_mult *= mult
 	if _light:
 		_light.light_color = Color(1.0, 0.85, 0.45) if mult > 1.0 else Color(0.5, 0.8, 1.0)
 		_light.light_energy = 3.0 if mult > 1.0 else 1.5
@@ -349,7 +382,14 @@ func _on_hit(c: Object, dir: Vector3) -> void:
 		return
 	if c.has_method("take_hit"):
 		var dmg := damage()
+		var en := c as Enemy
+		if pierce and en:
+			en.armor_pierce_hit = true
 		hand.player.deal_damage(c, dmg, knock, "hammer")
+		if en and is_instance_valid(en):
+			en.armor_pierce_hit = false
+			if stun_on_hit > 0.0 and not en.is_dead:
+				en.stun(stun_on_hit)
 		ComicFX.on_hammer_hit(c, global_position, state == State.RETURN, bounces_done)
 		FX.hitstop(hand.hit_hitstop)
 		hand.player.camera_fx.add_trauma(0.12)

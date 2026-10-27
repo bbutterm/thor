@@ -1,9 +1,12 @@
 extends Node
 class_name MjolnirHand
 ## Мьёльнир в левой руке: ПКМ — метнуть, повторное ПКМ (или таймер) — вернуть.
-## Сам полёт — в mjolnir_projectile.gd. Трейты (GDD 10) — обработчики MjolnirTraitHandler,
-## собираются из Run.mjolnir_traits; рука и снаряд вызывают их хуки (trait_call / trait_modify).
+## Сам полёт — в mjolnir_projectile.gd. Трейты (GDD 10, блок Б4: стихия + приёмы + связки) — обработчики
+## MjolnirTraitHandler, собираются из Run.mjolnir_traits и Run.active_combos(); рука и снаряд вызывают
+## их хуки (trait_call / trait_modify).
 ## Идеальный хват: ПКМ в окне ±perfect_window от поимки — следующий бросок ×perfect_damage_mult.
+## Удержание ПКМ (Праща, Заряд — trait_modify(&"hold_throw")): нажал — держишь (on_hold_tick), отпустил —
+## бросок с усилением next_throw. Без таких приёмов ПКМ бросает сразу по нажатию, как раньше.
 
 signal state_changed(in_hand: bool)
 signal perfect_catch
@@ -60,6 +63,16 @@ var perfect_ready: bool = false
 var hold_override: bool = false
 ## Активные обработчики трейтов (копии на забег)
 var traits: Array[MjolnirTraitHandler] = []
+## Обработчики активных связок «стихия + приём» (Run.active_combos(); отдельно — тесты сверяют traits с Run.mjolnir_traits)
+var combo_traits: Array[MjolnirTraitHandler] = []
+## Усиление следующего броска от приёмов удержания: damage_mult, speed_mult, range_mult, pierce, stun
+var next_throw: Dictionary = {}
+## ПКМ зажата с молотом в руке (Праща, Заряд) и сколько секунд
+var holding: bool = false
+var hold_time: float = 0.0
+## Для HUD: прогресс удержания 0…1 и подпись («ЗАРЯД», «ПРАЩА»); пишут обработчики приёмов
+var hold_progress: float = 0.0
+var hold_label: String = ""
 
 var _caught_time: float = -10.0
 var _recall_press_time: float = -10.0
@@ -100,10 +113,62 @@ func _physics_process(delta: float) -> void:
 	if not in_hand:
 		_dash_bonus_tick(delta)
 		_anim_recall_tick()
+	if holding:
+		_hold_tick(delta)
 	if not player.input_enabled:
 		return
 	if Input.is_action_just_pressed("throw"):
+		press_throw()
+
+## Нажата ПКМ: с приёмом удержания и молотом в руке — начать удержание, иначе бросок / возврат.
+func press_throw() -> void:
+	if in_hand and bool(trait_modify(&"hold_throw", false)):
+		begin_hold()
+	else:
 		request_throw_or_recall()
+
+## Начать удержание ПКМ (Праща, Заряд). Идеальный хват засчитывается по нажатию, как у обычного броска.
+func begin_hold() -> void:
+	if not in_hand or holding:
+		return
+	var now := _now()
+	if _perfect_open and now - _caught_time <= perfect_window:
+		_grant_perfect()
+	_perfect_open = false
+	holding = true
+	hold_time = 0.0
+	hold_progress = 0.0
+	trait_call(&"on_hold_start", [self])
+
+func _hold_tick(delta: float) -> void:
+	if not in_hand or player.is_dead:
+		cancel_hold()
+		return
+	if is_throw_held():
+		hold_time += delta
+		trait_call(&"on_hold_tick", [self, hold_time, delta])
+	else:
+		release_hold()
+
+## Отпустил ПКМ (или приём отпустил сам): обработчики кладут усиление в next_throw, затем бросок.
+func release_hold() -> void:
+	if not holding:
+		return
+	holding = false
+	trait_call(&"on_hold_release", [self, hold_time])
+	hold_progress = 0.0
+	hold_label = ""
+	throw_hammer()
+
+## Прервать удержание без броска (смена зала, смерть, смена трейтов): обработчики убирают за собой (held = -1)
+func cancel_hold() -> void:
+	if not holding:
+		return
+	holding = false
+	trait_call(&"on_hold_release", [self, -1.0])
+	next_throw = {}
+	hold_progress = 0.0
+	hold_label = ""
 
 ## Игровое время (сумма шагов физики): окно хвата не зависит от скорости прогона тестов
 func _now() -> float:
@@ -135,9 +200,12 @@ func throw_hammer() -> void:
 	var proj := MjolnirProjectile.new()
 	player.get_parent().add_child(proj)
 	var origin := player.get_aim_origin() + player.get_aim_forward() * 0.8 + player.global_transform.basis.x * -0.35
-	var speed := float(trait_modify(&"throw_speed", throw_speed))
+	var mods := next_throw
+	next_throw = {}
+	var speed := float(trait_modify(&"throw_speed", throw_speed)) * float(mods.get("speed_mult", 1.0))
 	projectile = proj
 	proj.launch(self, origin, player.get_aim_forward() * speed)
+	proj.apply_throw_mods(mods)
 	if perfect_ready:
 		perfect_ready = false
 		proj.set_empowered(perfect_damage_mult)
@@ -322,6 +390,7 @@ func _dash_bonus_tick(delta: float) -> void:
 
 ## Сбросить при смене зала (на всякий случай).
 func force_return_instant() -> void:
+	cancel_hold()
 	if projectile and is_instance_valid(projectile):
 		projectile.queue_free()
 	if not in_hand:
@@ -332,34 +401,63 @@ func force_return_instant() -> void:
 func _rebuild_traits(_list: Array = []) -> void:
 	if not in_hand and is_inside_tree():
 		force_return_instant()
-	for h in traits:
+	cancel_hold()
+	next_throw = {}
+	for h in traits + combo_traits:
 		h.on_unequip(self)
 	traits.clear()
+	combo_traits.clear()
 	for t in Run.mjolnir_traits:
-		if t == null or t.handler == null:
-			continue
-		var h := t.handler.duplicate(true) as MjolnirTraitHandler
-		h.level = Run.mjolnir_trait_level(t.id)
-		h.trait_def = t
-		h.hand = self
-		traits.append(h)
+		var h := _make_handler(t, Run.mjolnir_trait_level(t.id) if t else 1)
+		if h:
+			traits.append(h)
+	for c in Run.active_combos():
+		var h := _make_handler(c, 1)
+		if h:
+			combo_traits.append(h)
+	for h in traits + combo_traits:
 		h.on_equip(self)
 	traits_changed.emit()
 
+func _make_handler(t: MjolnirTrait, lv: int) -> MjolnirTraitHandler:
+	if t == null or t.handler == null:
+		return null
+	var h := t.handler.duplicate(true) as MjolnirTraitHandler
+	h.level = lv
+	h.trait_def = t
+	h.hand = self
+	return h
+
+## Сначала трейты (стихия, приёмы), потом связки — связки видят, что уже сделали их части
 func trait_call(method: StringName, args: Array) -> void:
 	for h in traits:
+		h.callv(method, args)
+	for h in combo_traits:
 		h.callv(method, args)
 
 func trait_modify(stat: StringName, value: Variant) -> Variant:
 	for h in traits:
 		value = h.modify(stat, value)
+	for h in combo_traits:
+		value = h.modify(stat, value)
 	return value
 
 func has_trait(id: StringName) -> bool:
-	for h in traits:
+	return trait_handler(id) != null
+
+## Обработчик трейта или связки по id (null — нет)
+func trait_handler(id: StringName) -> MjolnirTraitHandler:
+	for h in traits + combo_traits:
 		if h.trait_def and h.trait_def.id == id:
-			return true
-	return false
+			return h
+	return null
+
+## Обработчик стихии молота (null — стихии нет)
+func element_handler() -> MjolnirElementHandler:
+	for h in traits:
+		if h is MjolnirElementHandler:
+			return h as MjolnirElementHandler
+	return null
 
 func _on_player_slammed(power: float) -> void:
 	trait_call(&"on_player_slam", [self, power, player.global_position])

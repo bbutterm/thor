@@ -1,5 +1,5 @@
 extends MjolnirTraitHandler
-## Магнит (группа «возврат»): воткнутый молот стягивает к себе врагов, а при возврате раскидывает их.
+## Приём «Магнит»: воткнутый молот стягивает к себе врагов, а при возврате раскидывает их.
 
 @export var radius: float = 6.0
 @export var radius_lvl2: float = 9.0
@@ -60,7 +60,7 @@ func on_recall_start(proj: MjolnirProjectile, _by_player: bool) -> void:
 		var d := dir.length()
 		dir = dir / d if d > 0.01 else Vector3.FORWARD
 		var falloff := clampf(1.0 - d / r, 0.4, 1.0)
-		e.take_hit(blast_damage * proj.damage_mult, dir * blast_knockback * falloff + Vector3.UP * 5.0 * falloff, "hammer")
+		hurt(e, blast_damage * proj.damage_mult, dir * blast_knockback * falloff + Vector3.UP * 5.0 * falloff, "hammer")
 	FX.ring(proj.fx_parent(), hp - Vector3(0, 0.3, 0), r, Color(0.55, 0.85, 1.0, 0.9), 0.35)
 	FX.burst(proj.fx_parent(), hp, 1.2, Color(0.55, 0.85, 1.0, 0.5), 0.2)
 	hand.player.camera_fx.add_trauma(0.25)

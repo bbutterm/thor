@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MjolnirTrait" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/mjolnir_trait.gd" id="1_trait"]
+[ext_resource type="Script" path="res://weapons/mjolnir_traits/swap.gd" id="2_handler"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("2_handler")
+
+[resource]
+script = ExtResource("1_trait")
+id = &"swap"
+kind = "technique"
+title = "Обмен"
+description = "ПКМ по летящему молоту — Тор и молот меняются местами, молот летит к руке сквозь толпу."
+description_lvl2 = "В точке прибытия — волна, раскидывающая врагов."
+glyph = "ᛈ"
+color = Color(0.65, 0.7, 1, 1)
+group = "к молоту"
+max_level = 2
+handler = SubResource("Resource_handler")
