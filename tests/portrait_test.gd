@@ -6,7 +6,7 @@ extends Node
 func _ready() -> void:
 	var fails := 0
 	var ok := 0
-	for sp in ["thor", "odin", "loki", "sif", "freya", "hild", "hel", "skadi", "heimdall", "jarl", "hugin", "munin"]:
+	for sp in ["thor", "odin", "loki", "sif", "freya", "hild", "hel", "skadi", "heimdall", "jarl", "hugin", "munin", "sven"]:
 		for emo in ["neutral", "happy", "angry", "shocked", "smug"]:
 			var p := Portrait.texture_path(sp, emo)
 			if p == "" or not p.contains(emo):
@@ -45,5 +45,23 @@ func _ready() -> void:
 			print("  [FAIL] запасной портрет, импорт или точка лица гнома: ", sp)
 		else:
 			ok += 1
+	# Свен — отдельный персонаж, его эмоции больше не используют общий портрет драугров.
+	for emo in ["neutral", "happy", "angry", "shocked", "smug"]:
+		var path := Portrait.texture_path("sven", emo)
+		var variant := load(path) as Texture2D if path != "" else null
+		var img: Image = variant.get_image() if variant else null
+		if not path.ends_with("sven_%s.webp" % emo) or variant == null or variant.get_height() > 768 or img == null or img.get_pixel(0, 0).a > 0.01:
+			fails += 1
+			print("  [FAIL] портрет Свена отсутствует, велик или не прозрачен: ", emo)
+		else:
+			ok += 1
+	Portrait.prefetch(PackedStringArray(["sven"]))
+	for emo in ["neutral", "happy", "angry", "shocked", "smug"]:
+		if not Portrait.texture_path("sven", emo) in Portrait.prefetched():
+			fails += 1
+			print("  [FAIL] портрет Свена не прогрет для ", emo)
+		else:
+			ok += 1
+	Portrait.prefetch(PackedStringArray())
 	print("=== ИТОГ PORTRAITS: %d OK, %d FAIL ===" % [ok, fails])
 	get_tree().quit(0 if fails == 0 else 1)

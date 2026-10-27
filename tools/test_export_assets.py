@@ -23,10 +23,11 @@ class ExportAuditTest(unittest.TestCase):
         (self.root / "assets/quaternius/village").mkdir(parents=True)
         (self.root / "sprites/portraits/hugin_shocked.webp").touch()
         (self.root / "sprites/portraits/freya_angry.webp").touch()
+        (self.root / "sprites/portraits/draugr_neutral.webp").touch()
         (self.root / "assets/quaternius/village/Stairs_Stone.gltf").touch()
         (self.root / "export_presets.cfg").write_text(
             '[preset.0]\nexclude_filter="sprites/portraits/hugin_shocked.webp, '
-            'sprites/portraits/freya_angry.webp, assets/quaternius/village/Stair*.gltf"\n',
+            'sprites/portraits/freya_angry.webp, sprites/portraits/draugr_*.webp, assets/quaternius/village/Stair*.gltf"\n',
             encoding="utf-8",
         )
 
@@ -48,6 +49,11 @@ class ExportAuditTest(unittest.TestCase):
 
     def test_direct_ui_call(self):
         (self.root / "ui/example.gd").write_text('p.set_speaker("freya", "angry", {})', encoding="utf-8")
+        self.assertEqual(self.check(), 1)
+
+    def test_new_dialogue_needs_excluded_neutral_fallback(self):
+        line = {"speaker": "draugr", "emotion": "embarrassed", "text": "..."}
+        (self.root / "data/dialogues/new.json").write_text(json.dumps({"lines": [line]}), encoding="utf-8")
         self.assertEqual(self.check(), 1)
 
     def test_scene_dependency(self):
