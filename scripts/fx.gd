@@ -643,6 +643,42 @@ static func smoke(parent: Node, pos: Vector3, size: float, color: Color = Color(
 	tw.tween_property(mi, "scale", Vector3.ONE * size * 1.25, c.smoke_time)
 	tw.chain().tween_callback(mi.hide)
 
+## Взрыв (enemies/blast.gd: Раздутый, элита «Взрывной», взрывная бочка, Свен): вместо плоского шара-диска —
+## вспышка-ядро vfx_hit_flash, короткий огненный шар из языков vfx_fire, клубы тёмного дыма, ударная волна
+## vfx_shockwave по полу на радиус урона (радиус читается), звёзды-искры. Всё — пулы и общие материалы FX.
+static func explosion(parent: Node, pos: Vector3, radius: float, color: Color = Color(1.0, 0.45, 0.15)) -> void:
+	Perf.mark("fx_explosion")
+	if parent == null or not parent.is_inside_tree():
+		return
+	var c := cfg()
+	var hot := color.lerp(Color(1.0, 0.92, 0.7), 0.45)
+	hit_flash(parent, pos, radius * c.explosion_flash, hot)
+	var ground := pos
+	var hit := _floor(_holder_for(parent), pos)
+	if not hit.is_empty():
+		ground = hit.position
+	# Огненный шар: языки пламени вокруг центра, держатся explosion_fire_time и гаснут вместе с узлом
+	if c.explosion_fire_time > 0.0:
+		var ball := Node3D.new()
+		ball.name = "ExplosionFire"
+		ball.set_meta("transient", true)
+		parent.add_child(ball)
+		ball.global_position = ground
+		ball.scale = Vector3.ONE * c.explosion_fire_scale
+		fire_sprites(ball, maxf(radius * c.explosion_fire, 0.4), c.explosion_fire_time)
+		var tw := ball.create_tween()
+		tw.tween_property(ball, "scale", Vector3.ONE * c.explosion_fire_scale * 1.25, c.explosion_fire_time).set_ease(Tween.EASE_OUT)
+		tw.tween_interval(c.fire_fade + 0.1)
+		tw.tween_callback(ball.queue_free)
+	for i in maxi(c.explosion_smoke, 0):
+		var a := TAU * float(i) / maxf(c.explosion_smoke, 1) + randf_range(-0.5, 0.5)
+		var off := Vector3(cos(a), randf_range(0.1, 0.5), sin(a)) * radius * 0.35
+		smoke(parent, pos + off, radius * c.explosion_smoke_size * randf_range(0.85, 1.15), c.explosion_smoke_color)
+	shockwave(parent, ground, radius, hot)
+	for i in maxi(c.explosion_stars, 0):
+		var off2 := Vector3(randf_range(-1, 1), randf_range(-0.3, 0.8), randf_range(-1, 1)) * radius * 0.3
+		spark_star(parent, pos + off2, hot, c.explosion_star_size * randf_range(0.8, 1.2))
+
 ## Дым взрыва (enemies/blast.gd): размер от радиуса.
 static func blast_smoke(parent: Node, pos: Vector3, radius: float) -> void:
 	var c := cfg()
