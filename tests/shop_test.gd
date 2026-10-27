@@ -86,7 +86,12 @@ func _test_silver_sources() -> void:
 		e.take_hit(9999, Vector3(0, 3, -5), "melee_finisher")
 	await wait(0.1)
 	check(_coins() > 0, "с врагов выпали монеты (%d)" % _coins())
+	# Отброшенные враги разбивают бочки и ящики — из них тоже летят монеты, поэтому ждём, пока соберутся все
 	await wait(3.0)
+	for i in 50:
+		if _coins() == 0:
+			break
+		await wait(0.1)
 	check(Run.silver >= s0 + expected and Run.silver > s0, "монеты долетели до Тора: %d → %d (не меньше %d)" % [s0, Run.silver, s0 + expected])
 	check(_coins() == 0, "все монеты собраны")
 	if hud_silver:
@@ -104,7 +109,8 @@ func _test_silver_sources() -> void:
 		barrel.linear_velocity = Vector3(1, 0, 0)
 		await wait(0.2)
 		check(is_instance_valid(barrel) and not barrel.is_queued_for_deletion(), "медленная бочка цела")
-		barrel.linear_velocity = Vector3(14, 3, 0)
+		# Вверх, чтобы не задеть соседние ящики (их серебро не в счёт)
+		barrel.linear_velocity = Vector3(0, 14, 0)
 		await wait(0.1)
 		check(not is_instance_valid(barrel) or barrel.is_queued_for_deletion(), "отброшенная бочка разбилась")
 		await wait(3.0)
