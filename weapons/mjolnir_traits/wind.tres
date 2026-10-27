@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="MjolnirTrait" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/mjolnir_trait.gd" id="1_trait"]
+[ext_resource type="Script" path="res://weapons/mjolnir_traits/wind.gd" id="2_handler"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("2_handler")
+
+[resource]
+script = ExtResource("1_trait")
+id = &"wind"
+kind = "element"
+title = "Ветер"
+description = "Попадание сильно отбрасывает: сбивает с краёв и балконов, бросает о стены. Удар-приземление — вихрь, сносящий всех вокруг."
+description_lvl2 = "След на полу: порывы ветра сдувают наступивших."
+description_lvl3 = "Аура: воткнутый молот отталкивает всех вокруг."
+description_lvl4 = "С неба: идеальный хват — смерч в точке прицела подбрасывает врагов."
+glyph = "ᚹ"
+color = Color(0.78, 0.95, 0.85, 1)
+group = "стихия"
+max_level = 4
+handler = SubResource("Resource_handler")

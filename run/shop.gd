@@ -58,7 +58,7 @@ static func price(game: Game, it: ShopItemDef) -> int:
 static func upgradable_traits() -> Array[MjolnirTrait]:
 	var out: Array[MjolnirTrait] = []
 	for t in Run.mjolnir_traits:
-		if Run.mjolnir_trait_level(t.id) < t.max_level:
+		if Run.can_level_up(t):
 			out.append(t)
 	return out
 

@@ -153,6 +153,8 @@ var _cooldown: float = 0.0
 var _stun_left: float = 0.0
 var _last_splat_time: float = -10.0
 var _last_hit_time: float = -10.0
+## Следующий удар пробивает щит и броню элиты (Мьёльнир: Заряд в полную силу, Праща — weapons/mjolnir_projectile.gd)
+var armor_pierce_hit: bool = false
 var _airborne: bool = false
 var _fall_peak_y: float = 0.0
 var _fall_forced: bool = false
@@ -610,6 +612,8 @@ func _shield_blocks(knockback: Vector3, source: String) -> bool:
 
 ## Удар мили оружием, ломающим броню и щиты (кирка: WeaponDef.special = "armor_break").
 func hit_breaks_armor(source: String) -> bool:
+	if armor_pierce_hit:
+		return true
 	if not source.begins_with("melee") or player == null or not is_instance_valid(player):
 		return false
 	var w := player.current_weapon()

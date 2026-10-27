@@ -9,10 +9,12 @@ script = ExtResource("2_handler")
 [resource]
 script = ExtResource("1_trait")
 id = &"storm"
+kind = "technique"
 title = "Буря"
 description = "Зажми ПКМ при броске — молот зависнет и будет крутиться 3 с, нанося урон по кругу."
 description_lvl2 = "5 с и тянет к себе корм."
 glyph = "ᚺ"
 color = Color(0.6, 0.75, 0.95, 1)
-group = "бросок"
+group = "удержание ПКМ"
+max_level = 2
 handler = SubResource("Resource_handler")

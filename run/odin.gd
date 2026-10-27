@@ -11,7 +11,8 @@ signal line_spoken(text: String)
 ## События, которые не ждут лимита (начало забега, босс, итог)
 ## «rank_top» («ДОСТОЙНЕЙШИЙ!») и «berserk» — высший ранг шкалы стиля (GDD 8), не ждут лимита (но и не
 ## сбрасывают его); «rank_worthy» («Достойно!») — обычная боевая реплика с лимитом
-const EXEMPT := ["run_start", "boss_start", "miniboss_start", "miniboss_death", "victory", "death", "berserk", "rank_top"]
+## «combo» — связка стихии и приёма Мьёльнира (блок Б4): редкое событие на экране выбора
+const EXEMPT := ["run_start", "boss_start", "miniboss_start", "miniboss_death", "victory", "death", "berserk", "rank_top", "combo"]
 
 var _last_combat_time: float = -1000.0
 

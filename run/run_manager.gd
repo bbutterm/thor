@@ -5,6 +5,8 @@ signal glory_changed(total: int)
 signal runes_changed(runes: Array)
 signal kill_streak(count: int)
 signal mjolnir_traits_changed(traits: Array)
+## Взятая стихия или приём сложились в связку (блок Б4) — Game показывает карточку, слово и реплику Одина
+signal mjolnir_combo_unlocked(combo: MjolnirTrait)
 ## Убийство засчитано (после Славы). Слушают пассивки тела (Player) и шкала стиля (StyleMeter).
 signal kill_registered(source: String)
 ## Серебро — валюта забега (блок К, GDD 15.2), сгорает после смерти
@@ -25,6 +27,9 @@ const ROOM_SCENES := [
 ]
 const BOSS_SCENE := "res://rooms/boss_arena.tscn"
 const MJOLNIR_TRAITS_DIR := "res://weapons/mjolnir_traits/"
+## Связки «стихия + приём» (не выбираются — включаются сами) и правила выбора (блок Б4)
+const MJOLNIR_COMBOS_DIR := "res://weapons/mjolnir_traits/combos/"
+const MJOLNIR_RULES_PATH := "res://weapons/mjolnir_rules.tres"
 ## Двери-награды (блок И, GDD 15.1): награды и структура мира
 const REWARDS_DIR := "res://run/rewards/"
 const MAP_PATH := "res://run/maps/midgard.tres"
@@ -71,6 +76,8 @@ var style_glory_mult: float = 1.0
 var all_bodies: Array[BodyDef] = []
 var all_runes: Array[RuneDef] = []
 var all_mjolnir_traits: Array[MjolnirTrait] = []
+var all_mjolnir_combos: Array[MjolnirTrait] = []
+var mjolnir_rules: MjolnirRules
 ## Двери-награды (блок И): структура мира, награды залов
 var map: RunMap
 var all_rewards: Array[RewardDef] = []
@@ -92,7 +99,8 @@ var silver_earned: int = 0
 var trait_rerolls: int = 0
 ## Для тестов: наборы дверей по очереди (каждый — массив id наград); пусто — случайно по GDD
 var forced_offers: Array = []
-## Активные трейты Мьёльнира (не больше одного на группу) и их уровни (id → 1..2)
+## Активные трейты Мьёльнира: стихия (≤ MjolnirRules.max_elements) и приёмы (≤ max_techniques),
+## без несовместимых; уровни (id → 1..max_level). Связки сюда не входят — Run.active_combos()
 var mjolnir_traits: Array[MjolnirTrait] = []
 var mjolnir_trait_levels: Dictionary = {}
 var _recent_kill_times: Array[float] = []
@@ -113,6 +121,8 @@ func _ready() -> void:
 	all_bodies.assign(_load_dir(BODIES_DIR))
 	all_runes.assign(_load_dir(RUNES_DIR))
 	all_mjolnir_traits.assign(_load_dir(MJOLNIR_TRAITS_DIR))
+	all_mjolnir_combos.assign(_load_dir(MJOLNIR_COMBOS_DIR))
+	mjolnir_rules = load(MJOLNIR_RULES_PATH) as MjolnirRules if ResourceLoader.exists(MJOLNIR_RULES_PATH) else MjolnirRules.new()
 	all_rewards.assign(_load_dir(REWARDS_DIR))
 	all_trials.assign(_load_dir(TRIALS_DIR))
 	map = load(MAP_PATH) as RunMap if ResourceLoader.exists(MAP_PATH) else null
@@ -333,39 +343,149 @@ func miniboss_def() -> Resource:
 func mjolnir_trait_level(id: StringName) -> int:
 	return int(mjolnir_trait_levels.get(id, 0))
 
-## Активный трейт той же группы (его заменит t), или null
+# --- Трейты Мьёльнира: стихии, приёмы, связки (блок Б4, GDD 10) ---
+
+func rules() -> MjolnirRules:
+	if mjolnir_rules == null:
+		mjolnir_rules = MjolnirRules.new()
+	return mjolnir_rules
+
+func mjolnir_trait_def(id: StringName) -> MjolnirTrait:
+	for t in all_mjolnir_traits + all_mjolnir_combos:
+		if t.id == id:
+			return t
+	return null
+
+func owned_elements() -> Array[MjolnirTrait]:
+	var out: Array[MjolnirTrait] = []
+	for t in mjolnir_traits:
+		if t.is_element():
+			out.append(t)
+	return out
+
+## Стихия молота (null — ещё не выбрана)
+func owned_element() -> MjolnirTrait:
+	var els := owned_elements()
+	return els[0] if not els.is_empty() else null
+
+func owned_techniques() -> Array[MjolnirTrait]:
+	var out: Array[MjolnirTrait] = []
+	for t in mjolnir_traits:
+		if t.is_technique():
+			out.append(t)
+	return out
+
+## Активные связки: взяты и стихия, и приём связки
+func active_combos() -> Array[MjolnirTrait]:
+	var out: Array[MjolnirTrait] = []
+	for c in all_mjolnir_combos:
+		if mjolnir_trait_level(c.combo_element) > 0 and mjolnir_trait_level(c.combo_technique) > 0:
+			out.append(c)
+	return out
+
+## Связки, которые включатся, если взять t (для карточки «+ СВЯЗКА» на экране выбора)
+func combos_completed_by(t: MjolnirTrait) -> Array[MjolnirTrait]:
+	var out: Array[MjolnirTrait] = []
+	if t == null or t.is_combo() or mjolnir_trait_level(t.id) > 0:
+		return out
+	var replaced := mjolnir_trait_conflict(t)
+	for c in all_mjolnir_combos:
+		var other := c.combo_technique if c.combo_element == t.id else (c.combo_element if c.combo_technique == t.id else &"")
+		if other != &"" and mjolnir_trait_level(other) > 0 and (replaced == null or replaced.id != other):
+			out.append(c)
+	return out
+
+## Уровень lv трейта открыт в «Плане тренировок» (бывшие трейты-способы доставки: lightning_rod, sky_thunder…)
+func mjolnir_level_in_pool(t: MjolnirTrait, lv: int) -> bool:
+	var pid := t.level_pool_id(lv)
+	return pid == "" or Save.is_in_pool("trait", pid)
+
+## Можно ли поднять уровень взятого трейта (ларёк, повтор карточки)
+func can_level_up(t: MjolnirTrait) -> bool:
+	var lv := mjolnir_trait_level(t.id)
+	return lv > 0 and lv < t.max_level and mjolnir_level_in_pool(t, lv + 1)
+
+## Можно ли предложить t в выборе: новым (есть место и он открыт) или повышением уровня
+func mjolnir_offer_ok(t: MjolnirTrait) -> bool:
+	if t == null or t.is_combo() or not Save.is_in_pool("trait", str(t.id)):
+		return false
+	if mjolnir_trait_level(t.id) > 0:
+		return can_level_up(t)
+	if not mjolnir_level_in_pool(t, 1):
+		return false
+	if mjolnir_trait_conflict(t):
+		return true  # заменит несовместимый (с подтверждением)
+	if t.is_element():
+		return owned_elements().size() < rules().max_elements
+	return owned_techniques().size() < rules().max_techniques
+
+## Активный трейт, который заменит t, или null. Приёмы — по группе и списку conflicts; стихия — только если
+## стихию можно менять (MjolnirRules.element_swap) и место занято.
 func mjolnir_trait_conflict(t: MjolnirTrait) -> MjolnirTrait:
-	if t.group == "":
+	if t == null:
 		return null
 	for o in mjolnir_traits:
-		if o.id != t.id and o.group == t.group:
+		if o.id == t.id:
+			continue
+		if t.is_element() and o.is_element():
+			if rules().element_swap and owned_elements().size() >= rules().max_elements:
+				return o
+			continue
+		if t.is_element() or o.is_element():
+			continue
+		if t.conflicts_with(o):
 			return o
 	return null
 
-## Выбор 1 из count: в одном предложении нет двух трейтов одной группы; трейты на макс. уровне не выпадают.
-## Уже взятый трейт может выпасть — это повышение уровня; трейт группы, которая занята, — замена.
-func random_mjolnir_trait_choices(count: int = 3) -> Array[MjolnirTrait]:
+## Выбор 1 из count (по умолчанию MjolnirRules.offer_count). kinds — только эти виды ("element" — наковальня).
+## В одном наборе нет несовместимых приёмов; трейты на макс. уровне и закрытые не выпадают; уже взятый —
+## повышение уровня, несовместимый — замена. Без kinds (мини-босс) — если можно и то и другое, есть оба вида.
+func random_mjolnir_trait_choices(count: int = -1, kinds: Array = []) -> Array[MjolnirTrait]:
+	if count < 0:
+		count = rules().offer_count
 	var pool: Array[MjolnirTrait] = []
 	for t in all_mjolnir_traits:
-		# Закрытые в «Плане тренировок» трейты не выпадают (Save.is_in_pool)
-		if mjolnir_trait_level(t.id) < t.max_level and Save.is_in_pool("trait", str(t.id)):
+		if (kinds.is_empty() or t.kind in kinds) and mjolnir_offer_ok(t):
 			pool.append(t)
 	pool.shuffle()
 	var out: Array[MjolnirTrait] = []
-	var groups: Dictionary = {}
+	if rules().mix_kinds and kinds.is_empty():
+		for want in ["element", "technique"]:
+			for t in pool:
+				if t.kind == want:
+					out.append(t)
+					break
 	for t in pool:
 		if out.size() >= count:
 			break
-		if t.group != "" and groups.has(t.group):
+		if t in out:
 			continue
-		out.append(t)
-		if t.group != "":
-			groups[t.group] = true
+		var clash := false
+		for o in out:
+			if t.conflicts_with(o) and not (t.is_element() or o.is_element()):
+				clash = true
+				break
+		if not clash:
+			out.append(t)
+	while out.size() > count:
+		out.pop_back()
+	out.shuffle()
 	return out
 
-## Взять трейт: новый — уровень 1 (трейт той же группы уходит), повтор — уровень выше.
-func add_mjolnir_trait(t: MjolnirTrait) -> void:
+## Наковальня Эйтри может что-то дать: новая стихия или новый уровень своей
+func anvil_available() -> bool:
+	if not rules().anvil_enabled:
+		return false
+	for t in all_mjolnir_traits:
+		if t.is_element() and mjolnir_offer_ok(t):
+			return true
+	return false
+
+## Взять трейт: новый — уровень 1 (несовместимый уходит), повтор — уровень выше.
+## Возвращает связки, которые появились (они же — сигнал mjolnir_combo_unlocked).
+func add_mjolnir_trait(t: MjolnirTrait) -> Array[MjolnirTrait]:
 	Perf.mark("trait_pick")
+	var before := active_combos()
 	if mjolnir_trait_levels.has(t.id):
 		mjolnir_trait_levels[t.id] = mini(mjolnir_trait_level(t.id) + 1, t.max_level)
 	else:
@@ -376,6 +496,13 @@ func add_mjolnir_trait(t: MjolnirTrait) -> void:
 		mjolnir_traits.append(t)
 		mjolnir_trait_levels[t.id] = 1
 	mjolnir_traits_changed.emit(mjolnir_traits)
+	var fresh: Array[MjolnirTrait] = []
+	for c in active_combos():
+		if not c in before:
+			fresh.append(c)
+			Perf.mark("trait_combo")
+			mjolnir_combo_unlocked.emit(c)
+	return fresh
 
 # --- Двери-награды (блок И, GDD 15.1) ---
 
@@ -438,7 +565,7 @@ func roll_door_offers() -> Array[String]:
 	if map == null:
 		out.append("boss" if next >= boss_index else "combat")
 		return out
-	return map.roll_offers(all_rewards, next, boss_index, reward_visits, current_reward(), shop_available())
+	return map.roll_offers(all_rewards, next, boss_index, reward_visits, current_reward(), shop_available(), anvil_available())
 
 ## Игрок вошёл в дверь: следующий зал получит эту награду.
 func choose_door(id: String) -> void:

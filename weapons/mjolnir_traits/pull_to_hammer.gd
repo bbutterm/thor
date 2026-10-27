@@ -1,5 +1,5 @@
 extends MjolnirTraitHandler
-## Притяжение к молоту (группа «возврат»): по ПКМ не молот летит к тебе, а ты к нему, сбивая всех на пути.
+## Приём «Притяжение к молоту» (группа «к молоту» — вместе с Обменом не берётся): по ПКМ не молот летит к тебе, а ты к нему, сбивая всех на пути.
 ## Способ перемещения: метни молот в стену у края башни — и «дёрни» себя наверх.
 ## На время полёта у игрока выключен его _physics_process — двигаем его сами (player.gd не трогаем).
 ## Возврат по таймеру — обычный (молот летит к руке), тянет только ПКМ.
@@ -131,7 +131,7 @@ func control_recall_tick(proj: MjolnirProjectile, delta: float) -> void:
 		side.y = 0
 		side = side.normalized() if side.length() > 0.01 else Vector3.RIGHT
 		var flat := Vector3(_dir.x, 0, _dir.z)
-		e.take_hit(damage * proj.damage_mult, (side + flat * 0.5).normalized() * knockback + Vector3.UP * 4.0, "hammer")
+		hurt(e, damage * proj.damage_mult, (side + flat * 0.5).normalized() * knockback + Vector3.UP * 4.0, "hammer")
 		FX.hitstop(0.03)
 		p.camera_fx.add_trauma(0.12)
 		Audio.play("sounds/sfx/hammer_hit.wav")
@@ -149,6 +149,8 @@ func _finish(proj: MjolnirProjectile, arrived: bool) -> void:
 			p.velocity = flat * exit_forward + Vector3.UP * exit_up
 		if level >= 2:
 			_arrive_slam(p)
+		# Связки (Ветер + Притяжение — снос толпы на прилёте)
+		hand.trait_call(&"on_pull_arrive", [hand, p.global_position])
 	proj.catch()
 
 func _arrive_slam(p: Player) -> void:
@@ -158,7 +160,7 @@ func _arrive_slam(p: Player) -> void:
 		var dir := e.global_position - center
 		dir.y = 0
 		dir = dir.normalized() if dir.length() > 0.01 else Vector3.FORWARD
-		e.take_hit(arrive_slam_damage, dir * arrive_slam_knockback + Vector3.UP * 5.0, "slam")
+		hurt(e, arrive_slam_damage, dir * arrive_slam_knockback + Vector3.UP * 5.0, "slam")
 	FX.ring(p.get_parent(), center, arrive_slam_radius, Color(0.6, 0.85, 1.0, 0.9), 0.3)
 	FX.hitstop(0.05)
 	p.camera_fx.add_trauma(0.35)

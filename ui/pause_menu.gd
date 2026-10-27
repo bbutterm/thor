@@ -131,8 +131,10 @@ func _fill_journal() -> void:
 		for t in traits:
 			var mt := t as MjolnirTrait
 			var lv := Run.mjolnir_trait_level(mt.id)
-			_journal.add_child(_entry(UISkin.trait_icon(str(mt.id)), mt.glyph, "%s  %s" % [tr(mt.title), "I" if lv <= 1 else "II"],
-				tr(mt.description_lvl2 if lv > 1 and mt.description_lvl2 != "" else mt.description), mt.color))
+			_journal.add_child(_entry(UISkin.trait_icon(str(mt.id)), mt.glyph, "%s  %s  ·  %s" % [tr(mt.title), TraitPick.roman(lv), TraitPick.kind_line(mt, lv)],
+				_trait_text(mt, lv), mt.color))
+		for c in Run.active_combos():
+			_journal.add_child(_entry(UISkin.trait_icon(str(c.id)), c.glyph, "%s  ★  ·  %s" % [tr(c.title), tr("СВЯЗКА")], tr(c.description), Color(1.0, 0.78, 0.3)))
 	var counts := {}
 	var order: Array = []
 	for r in Run.runes:
@@ -171,3 +173,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("pause"):
 		toggle()
 		get_viewport().set_input_as_handled()
+
+## Что делает трейт на уровне lv: у стихии — все взятые способы доставки по строке, у приёма — текст уровня
+func _trait_text(t: MjolnirTrait, lv: int) -> String:
+	if not t.is_element():
+		return tr(t.level_description(lv))
+	var lines: Array[String] = []
+	for i in range(1, lv + 1):
+		lines.append(tr(t.level_description(i)))
+	return "\n".join(lines)

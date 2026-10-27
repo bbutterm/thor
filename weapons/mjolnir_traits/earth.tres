@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="MjolnirTrait" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/mjolnir_trait.gd" id="1_trait"]
+[ext_resource type="Script" path="res://weapons/mjolnir_traits/earth.gd" id="2_handler"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("2_handler")
+
+[resource]
+script = ExtResource("1_trait")
+id = &"earth"
+kind = "element"
+title = "Земля"
+description = "Попадание прибивает врага к полу и оглушает на 1.5 с. Удар-приземление рядом с прибитыми — вторая волна."
+description_lvl2 = "След на полу: разлом — наступивший падает. Попадание оглушает всех в радиусе 2 м."
+description_lvl3 = "Аура (Землетрясение): воткнутый молот трясёт землю; удар-приземление в 5 м от него — волна у молота."
+description_lvl4 = "С неба: идеальный хват — глыба в точку прицела. Каждая волна — ещё и третья."
+glyph = "ᛟ"
+color = Color(0.72, 0.58, 0.4, 1)
+group = "стихия"
+max_level = 4
+level_pool_ids = PackedStringArray("heaviness", "", "earthquake", "")
+handler = SubResource("Resource_handler")

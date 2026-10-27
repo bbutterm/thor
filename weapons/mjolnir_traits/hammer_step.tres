@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MjolnirTrait" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/mjolnir_trait.gd" id="1_trait"]
+[ext_resource type="Script" path="res://weapons/mjolnir_traits/hammer_step.gd" id="2_handler"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("2_handler")
+
+[resource]
+script = ExtResource("1_trait")
+id = &"hammer_step"
+kind = "technique"
+title = "Молот-ступенька"
+description = "Воткнутый в стену молот — ступенька: встань на него и прыгни — прыжок в 1.5 раза выше. Молот ждёт ПКМ 6 с."
+description_lvl2 = "Прыжок в 1.85 раза выше, молот ждёт 10 с."
+glyph = "ᛞ"
+color = Color(0.6, 0.8, 1, 1)
+max_level = 2
+handler = SubResource("Resource_handler")

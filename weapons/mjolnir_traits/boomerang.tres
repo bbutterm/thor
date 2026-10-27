@@ -9,10 +9,12 @@ script = ExtResource("2_handler")
 [resource]
 script = ExtResource("1_trait")
 id = &"boomerang"
+kind = "technique"
 title = "Бумеранг"
 description = "Молот не втыкается: летит по дуге и возвращается сам, ПКМ не нужен. Бросок быстрее."
 description_lvl2 = "Две петли."
 glyph = "ᛜ"
 color = Color(0.6, 1, 0.7, 1)
-group = "возврат"
+conflicts = Array[StringName]([&"magnet", &"hammer_step", &"loyal_dog", &"hammer_dive"])
+max_level = 2
 handler = SubResource("Resource_handler")

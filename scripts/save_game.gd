@@ -325,7 +325,11 @@ func _scan_ids(dir_path: String) -> Array:
 		var clean := f.trim_suffix(".remap")
 		if clean.ends_with(".tres"):
 			var r := load(dir_path + clean)
-			if r and r.get("id") != null:
+			if r and r.has_method("all_ids"):
+				# Стихия Мьёльнира: свой id и id бывших трейтов-уровней (открытия ice_trail, lightning_rod…)
+				for x in r.call("all_ids"):
+					out.append(str(x))
+			elif r and r.get("id") != null:
 				out.append(str(r.get("id")))
 	return out
 

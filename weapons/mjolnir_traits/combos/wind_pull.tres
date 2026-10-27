@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MjolnirTrait" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/mjolnir_trait.gd" id="1_trait"]
+[ext_resource type="Script" path="res://weapons/mjolnir_traits/combos/wind_pull.gd" id="2_handler"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("2_handler")
+
+[resource]
+script = ExtResource("1_trait")
+id = &"wind_pull"
+kind = "combo"
+title = "Ураганный рывок"
+description = "Тор летит к молоту, сдувая всех с пути, а на прилёте вихрь сносит толпу вокруг."
+glyph = "ᚹ"
+color = Color(0.82, 0.97, 0.88, 1)
+max_level = 1
+combo_element = &"wind"
+combo_technique = &"pull_to_hammer"
+handler = SubResource("Resource_handler")

@@ -1,9 +1,13 @@
 extends Node
-## Тест трейтов Мьёльнира и базы молота (GDD 10):
+## Тест трейтов Мьёльнира (GDD 10, блок Б4 «стихии × приёмы»):
 ##  • база: втыкается в стену, сам возвращается; идеальный хват → следующий бросок ×2; без молота рывок быстрее;
-##  • выбор трейтов: в предложении нет двух из одной группы, трейт той же группы заменяет, повтор — уровень 2,
-##    на макс. уровне не выпадает; экран выбора требует подтверждения замены;
-##  • каждый трейт (ур. 1 и 2): бросок, полёт, попадание/втыкание, возврат — и его особый эффект.
+##  • данные: 5 стихий (4 уровня), 13 приёмов, 5 связок; все бывшие 13 трейтов нашли место; открытия
+##    «Плана тренировок» (ice_trail, lightning_rod, sky_thunder, heaviness, earthquake…) работают и не «скоро»;
+##  • правила: одна стихия, не больше двух приёмов (и это настраивается), несовместимые заменяют друг друга,
+##    в одном наборе нет несовместимых, после мини-босса — и стихия, и приём, наковальня — только стихии;
+##  • выбор: экран (связка — особая карточка, замена с подтверждением), объявление связки, HUD, наковальня Эйтри;
+##  • каждая стихия на уровнях 1–4: эффект на враге, след, аура, удар с неба, связка с ударом-приземлением;
+##  • каждый приём на уровнях 1–2 и каждая связка; окружение — лужи браги под током и в огне, бочки.
 ## godot --headless --path . --fixed-fps 60 res://tests/trait_test.tscn
 
 var _fails: Array[String] = []
@@ -11,8 +15,15 @@ var _passes: int = 0
 var game: Game
 var p: Player
 var hand: MjolnirHand
-## Длинный дом Ярла (Run.BOSS_SCENE): стена за «стенными» манекенами (16 м вперёд) — в 2 м от них, как в старой арене
+## Длинный дом Ярла (Run.BOSS_SCENE): стена за «стенными» манекенами (16 м вперёд) — в 2 м от них
 const START := Vector3(-3, 0.1, -4)
+const ELEMENTS := [&"fire", &"ice", &"lightning", &"earth", &"wind"]
+const TECHNIQUES := [&"pull_to_hammer", &"magnet", &"boomerang", &"ricochet", &"storm", &"two_hammers",
+	&"hammer_step", &"swap", &"hammer_dive", &"sling", &"charge", &"air_catch", &"loyal_dog"]
+const COMBOS := [&"fire_tornado", &"ice_ricochet", &"lightning_magnet", &"wind_pull", &"earth_dive"]
+## Бывшие 13 трейтов → где они теперь (id стихии/приёма или id уровня стихии в level_pool_ids)
+const OLD_TRAITS := [&"fire_trail", &"ice_trail", &"pull_to_hammer", &"magnet", &"boomerang", &"chain_lightning",
+	&"heaviness", &"ricochet", &"lightning_rod", &"storm", &"two_hammers", &"earthquake", &"sky_thunder"]
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -55,120 +66,335 @@ func _run() -> void:
 	for e in game.room.alive_enemies().duplicate():
 		e.queue_free()
 	await frames(5)
-	check(Run.all_mjolnir_traits.size() >= 13, "трейтов загружено: %d (13 по GDD 10)" % Run.all_mjolnir_traits.size())
-	# Закрытые в «Плане тренировок» не выпадают; дальше тест открывает все трейты
-	var locked_ok := true
-	for i in 40:
-		for t in Run.random_mjolnir_trait_choices(3):
-			if not Save.is_in_pool("trait", str(t.id)):
-				locked_ok = false
-	check(locked_ok, "закрытые трейты («План тренировок») в выбор не попадают")
+	_test_data()
+	_test_locked_pool()
 	for u in Save.all_unlocks:
 		if u.kind == "trait":
 			Save.data.unlocks[u.id] = 0
-
-	_test_choices()
+	_test_rules()
+	_test_doors()
 	await _test_pick_ui()
+	await _test_anvil_flow()
 	await _test_base()
-	for t in Run.all_mjolnir_traits:
-		for lv in [1, 2]:
-			await _test_trait(t, lv)
+	await _test_environment()
+	# -- elements / -- techniques / -- combos: прогнать только эту часть (отладка)
+	var only := OS.get_cmdline_user_args()
+	if only.is_empty() or "elements" in only:
+		for id in ELEMENTS:
+			for lv in [1, 2, 3, 4]:
+				await _test_element(_find(id), lv)
+	if only.is_empty() or "techniques" in only:
+		for id in TECHNIQUES:
+			for lv in [1, 2]:
+				await _test_technique(_find(id), lv)
+	if only.is_empty() or "combos" in only:
+		for id in COMBOS:
+			await _test_combo(_find(id))
 	_finish()
 
-# --- Выбор ---
+# --- Данные и правила ---
 
 func _set_traits(list: Array) -> void:
 	Run.mjolnir_traits.clear()
 	Run.mjolnir_trait_levels.clear()
 	Run.mjolnir_traits_changed.emit(Run.mjolnir_traits)
 	for t in list:
-		Run.add_mjolnir_trait(t)
+		if t:
+			Run.add_mjolnir_trait(t)
 
 func _find(id: StringName) -> MjolnirTrait:
-	for t in Run.all_mjolnir_traits:
-		if t.id == id:
-			return t
-	return null
+	return Run.mjolnir_trait_def(id)
 
-func _test_choices() -> void:
-	print("-- Выбор трейтов")
-	var bad_groups := 0
-	var bad_max := 0
-	var short := 0
-	var all := Run.all_mjolnir_traits
-	for i in 300:
-		# Случайный набор взятых трейтов (по правилам добавления)
-		var owned: Array = []
-		for t in all:
-			if randf() < 0.25:
-				owned.append(t)
-				if randf() < 0.3:
-					owned.append(t)
-		_set_traits(owned)
-		var ch := Run.random_mjolnir_trait_choices(3)
-		var groups := {}
-		for t in ch:
-			if t.group != "":
-				if groups.has(t.group):
-					bad_groups += 1
-				groups[t.group] = true
-			if Run.mjolnir_trait_level(t.id) >= t.max_level:
-				bad_max += 1
-		if ch.size() < 3:
-			short += 1
-		# Не больше одного активного трейта на группу
-		var active := {}
-		for t in Run.mjolnir_traits:
-			if t.group != "":
-				if active.has(t.group):
-					bad_groups += 1
-				active[t.group] = true
-	check(bad_groups == 0, "в предложении и в активных нет двух трейтов одной группы")
-	check(bad_max == 0, "трейт на макс. уровне не выпадает")
-	check(short == 0, "всегда есть 3 варианта")
-	var pull := _find(&"pull_to_hammer")
-	var magnet := _find(&"magnet")
-	var ric := _find(&"ricochet")
-	var rod := _find(&"lightning_rod")
-	if pull and magnet and ric and rod:
-		_set_traits([pull, magnet])
-		check(Run.mjolnir_trait_level(&"pull_to_hammer") == 0 and Run.mjolnir_trait_level(&"magnet") == 1, "Магнит заменил Притяжение (одна группа)")
-		_set_traits([ric, rod])
-		check(Run.mjolnir_traits.size() == 1 and Run.mjolnir_traits[0] == rod, "Громоотвод заменил Рикошет (одна группа)")
-		_set_traits([rod, rod])
-		check(Run.mjolnir_trait_level(&"lightning_rod") == 2, "повтор — уровень 2")
-		var offered := false
-		for i in 50:
-			for t in Run.random_mjolnir_trait_choices(3):
-				if t == rod:
-					offered = true
-		check(not offered, "трейт уровня 2 больше не предлагается")
+func _lv(id: StringName, n: int) -> Array:
+	var out: Array = []
+	for i in n:
+		out.append(_find(id))
+	return out
+
+func _test_data() -> void:
+	print("-- Данные: стихии, приёмы, связки")
+	var els := Run.all_mjolnir_traits.filter(func(t: MjolnirTrait) -> bool: return t.is_element())
+	var techs := Run.all_mjolnir_traits.filter(func(t: MjolnirTrait) -> bool: return t.is_technique())
+	check(els.size() == ELEMENTS.size(), "стихий: %d" % els.size())
+	check(techs.size() == TECHNIQUES.size(), "приёмов: %d (6 старых + 7 новых)" % techs.size())
+	check(Run.all_mjolnir_combos.size() == COMBOS.size(), "связок: %d" % Run.all_mjolnir_combos.size())
+	var bad := 0
+	for id in ELEMENTS + TECHNIQUES + COMBOS:
+		var t := _find(id)
+		if t == null or t.handler == null or t.title == "" or t.description == "":
+			bad += 1
+			print("    нет данных: ", id)
+	check(bad == 0, "у каждого трейта есть .tres, обработчик и описание")
+	check(els.all(func(t: MjolnirTrait) -> bool: return t.max_level == 4 and t.description_lvl4 != "" and t.handler is MjolnirElementHandler), "у стихий 4 уровня (попадание / след / аура / с неба)")
+	check(techs.all(func(t: MjolnirTrait) -> bool: return t.max_level == 2 and t.description_lvl2 != ""), "у приёмов 2 уровня")
+	var combos_ok := Run.all_mjolnir_combos.all(func(c: MjolnirTrait) -> bool:
+		var e := _find(c.combo_element)
+		var te := _find(c.combo_technique)
+		return c.is_combo() and e != null and e.is_element() and te != null and te.is_technique())
+	check(combos_ok, "связки ссылаются на существующие стихию и приём")
+	var lost: Array[String] = []
+	for old in OLD_TRAITS:
+		var found := false
+		for t in Run.all_mjolnir_traits:
+			if old in t.all_ids():
+				found = true
+		if not found:
+			lost.append(str(old))
+	check(lost.is_empty(), "все 13 бывших трейтов нашли место (потеряны: %s)" % ", ".join(lost))
+	var soon: Array[String] = []
+	for u in Save.all_unlocks:
+		if u.kind == "trait" and not Save.target_exists(u):
+			soon.append(u.id)
+	check(soon.is_empty(), "открытия трейтов «Плана тренировок» не «скоро» (%s)" % ", ".join(soon))
+
+func _test_locked_pool() -> void:
+	print("-- Пул открытий (Save.is_in_pool)")
 	_set_traits([])
+	var earth := _find(&"earth")
+	var locked_earth := not Save.is_in_pool("trait", "heaviness")
+	var offered_earth := false
+	var locked_ok := true
+	for i in 60:
+		for t in Run.random_mjolnir_trait_choices():
+			if not Save.is_in_pool("trait", str(t.id)) or not Run.mjolnir_level_in_pool(t, 1):
+				locked_ok = false
+			if t == earth:
+				offered_earth = true
+	check(locked_ok, "закрытые трейты («План тренировок») в выбор не попадают")
+	if locked_earth:
+		check(not offered_earth, "Земля закрыта открытием «heaviness» (бывшая Тяжесть)")
+	if not Save.is_in_pool("trait", "lightning_rod"):
+		_set_traits(_lv(&"lightning", 2))
+		check(not Run.can_level_up(_find(&"lightning")), "Молния ур. 3 (Громоотвод) закрыта открытием «lightning_rod»")
+	_set_traits([])
+
+func _test_rules() -> void:
+	print("-- Правила выбора")
+	var r := Run.rules()
+	check(r.max_elements == 1 and not r.element_swap and r.max_techniques == 2, "по умолчанию: 1 стихия на забег, до 2 приёмов")
+	var fire := _find(&"fire")
+	_set_traits(_lv(&"lightning", 2))
+	check(Run.can_level_up(_find(&"lightning")), "после открытия lightning_rod — Молния ур. 3")
+	# Одна стихия: другие не предлагаются; не больше двух приёмов; несовместимых нет ни в наборе, ни у игрока
+	var other_el := 0
+	var too_many := 0
+	var clash := 0
+	var maxed := 0
+	var short := 0
+	for i in 300:
+		var owned: Array = []
+		if randf() < 0.6:
+			owned.append(_find(ELEMENTS[randi() % ELEMENTS.size()]))
+		for k in randi() % 3:
+			owned.append(_find(TECHNIQUES[randi() % TECHNIQUES.size()]))
+		if randf() < 0.3 and not owned.is_empty():
+			owned.append(owned[0])
+		_set_traits(owned)
+		var ch := Run.random_mjolnir_trait_choices()
+		var el := Run.owned_element()
+		for t in ch:
+			if el and t.is_element() and t != el:
+				other_el += 1
+			if Run.mjolnir_trait_level(t.id) >= t.max_level:
+				maxed += 1
+		for a in ch:
+			for b in ch:
+				if a != b and a.is_technique() and b.is_technique() and a.conflicts_with(b):
+					clash += 1
+		if Run.owned_elements().size() > 1 or Run.owned_techniques().size() > 2:
+			too_many += 1
+		for a in Run.mjolnir_traits:
+			for b in Run.mjolnir_traits:
+				if a != b and a.is_technique() and b.is_technique() and a.conflicts_with(b):
+					clash += 1
+		# 3 варианта, если в пуле хватает (меньше — только если оставшиеся несовместимы между собой)
+		var pool := Run.all_mjolnir_traits.filter(func(x: MjolnirTrait) -> bool: return Run.mjolnir_offer_ok(x))
+		var pool_clash := false
+		for a in pool:
+			for b in pool:
+				if a != b and a.is_technique() and b.is_technique() and a.conflicts_with(b):
+					pool_clash = true
+		if ch.size() < mini(3, pool.size()) and not pool_clash:
+			short += 1
+	check(other_el == 0, "одна стихия на забег: другие стихии не предлагаются")
+	check(too_many == 0, "у игрока не больше 1 стихии и 2 приёмов")
+	check(clash == 0, "в наборе и у игрока нет несовместимых приёмов")
+	check(maxed == 0, "трейт на макс. уровне не выпадает")
+	check(short == 0, "3 варианта, если в пуле хватает")
+	# Мини-босс: и стихия, и приём
+	_set_traits([])
+	var mixed := 0
+	for i in 100:
+		var ch := Run.random_mjolnir_trait_choices()
+		if ch.any(func(t: MjolnirTrait) -> bool: return t.is_element()) and ch.any(func(t: MjolnirTrait) -> bool: return t.is_technique()):
+			mixed += 1
+	check(mixed == 100, "выбор после мини-босса: есть и стихия, и приём (%d/100)" % mixed)
+	var only_el := true
+	for i in 50:
+		for t in Run.random_mjolnir_trait_choices(-1, ["element"]):
+			if not t.is_element():
+				only_el = false
+	check(only_el, "наковальня: только стихии")
+	# Два приёма — новый не предлагается, кроме замены несовместимого
+	_set_traits([fire, _find(&"magnet"), _find(&"storm")])
+	var new_tech := 0
+	var sling_offered := false
+	for i in 100:
+		for t in Run.random_mjolnir_trait_choices():
+			if t.is_technique() and Run.mjolnir_trait_level(t.id) == 0:
+				if Run.mjolnir_trait_conflict(t) == null:
+					new_tech += 1
+				if t.id == &"sling":
+					sling_offered = true
+	check(new_tech == 0, "два приёма — новый приём только как замена")
+	check(sling_offered, "Праща предлагается как замена Бури (одна группа «удержание ПКМ»)")
+	_set_traits([_find(&"storm"), _find(&"sling")])
+	check(Run.mjolnir_trait_level(&"storm") == 0 and Run.mjolnir_trait_level(&"sling") == 1, "Праща заменила Бурю")
+	_set_traits([_find(&"boomerang"), _find(&"magnet")])
+	check(Run.mjolnir_trait_level(&"boomerang") == 0 and Run.mjolnir_trait_level(&"magnet") == 1, "Магнит заменил Бумеранг (не втыкается)")
+	_set_traits([_find(&"pull_to_hammer"), _find(&"swap")])
+	check(Run.mjolnir_traits.size() == 1 and Run.mjolnir_traits[0].id == &"swap", "Обмен заменил Притяжение (группа «к молоту»)")
+	# Настройки: один приём; смена стихии
+	r.max_techniques = 1
+	_set_traits([_find(&"magnet")])
+	var any_new := false
+	for i in 60:
+		for t in Run.random_mjolnir_trait_choices():
+			if t.is_technique() and Run.mjolnir_trait_level(t.id) == 0 and Run.mjolnir_trait_conflict(t) == null:
+				any_new = true
+	check(not any_new, "MjolnirRules.max_techniques = 1 — второй приём не предлагается")
+	r.max_techniques = 2
+	r.element_swap = true
+	_set_traits([fire])
+	var ice := _find(&"ice")
+	check(Run.mjolnir_offer_ok(ice) and Run.mjolnir_trait_conflict(ice) == fire, "element_swap: Лёд заменит Огонь")
+	_set_traits([fire, ice])
+	check(Run.owned_element() == ice and Run.owned_elements().size() == 1, "element_swap: стихия сменилась")
+	r.element_swap = false
+	# Повтор — уровень; стихия до 4, на 4-м — больше не предлагается, наковальне нечего дать
+	_set_traits(_lv(&"fire", 4))
+	check(Run.mjolnir_trait_level(&"fire") == 4, "повтор стихии — уровень (до 4)")
+	check(not Run.mjolnir_offer_ok(fire) and not Run.anvil_available(), "Огонь ур. 4 — не предлагается, наковальня закрыта")
+	_set_traits([])
+	check(Run.anvil_available(), "без стихии наковальне есть что дать")
+	# Связки
+	var fired: Array = []
+	var cb := func(c: MjolnirTrait) -> void: fired.append(c)
+	Run.mjolnir_combo_unlocked.connect(cb)
+	_set_traits([fire])
+	var storm := _find(&"storm")
+	var completes := Run.combos_completed_by(storm)
+	check(completes.size() == 1 and completes[0].id == &"fire_tornado", "карточка Бури при Огне — «+ СВЯЗКА: Огненный смерч»")
+	var got := Run.add_mjolnir_trait(storm)
+	check(got.size() == 1 and fired.size() == 1 and Run.active_combos().size() == 1, "Огонь + Буря — связка появилась сама (сигнал)")
+	Run.add_mjolnir_trait(storm)
+	check(fired.size() == 1, "повышение уровня связку не объявляет повторно")
+	Run.mjolnir_combo_unlocked.disconnect(cb)
+	check(hand.combo_traits.size() == 1 and hand.traits.size() == Run.mjolnir_traits.size(), "обработчик связки у молота — отдельно от трейтов")
+	_set_traits([])
+
+func _test_doors() -> void:
+	print("-- Дверь «Наковальня Эйтри»")
+	var m := Run.map
+	var boss := 7
+	var seen := 0
+	for i in 200:
+		if "anvil" in m.roll_offers(Run.all_rewards, 1, boss, {"shop": 9}, "combat", false, true):
+			seen += 1
+	check(seen == 200, "к залу 2 — наковальня в каждом наборе, пока есть что дать (%d/200)" % seen)
+	var late := 0
+	var visited := 0
+	var closed := 0
+	for i in 200:
+		if "anvil" in m.roll_offers(Run.all_rewards, 4, boss, {"shop": 9}, "combat", false, true):
+			late += 1
+		if "anvil" in m.roll_offers(Run.all_rewards, 1, boss, {"shop": 9, "anvil": 1}, "combat", false, true):
+			visited += 1
+		if "anvil" in m.roll_offers(Run.all_rewards, 1, boss, {"shop": 9}, "combat", false, false):
+			closed += 1
+	check(late == 0 and visited == 0 and closed == 0, "не после зала %d, не повторно, не когда нечего дать" % m.anvil_latest_room)
+	var d := Run.reward_def("anvil")
+	check(d != null and d.combat and is_zero_approx(d.weight), "награда «anvil»: боевой зал, только по правилу (вес 0)")
+
+# --- Экран выбора, объявление связки, HUD ---
 
 func _test_pick_ui() -> void:
 	print("-- Экран выбора трейта")
-	var pull := _find(&"pull_to_hammer")
+	var fire := _find(&"fire")
+	var storm := _find(&"storm")
 	var magnet := _find(&"magnet")
-	var chain := _find(&"chain_lightning")
-	_set_traits([pull])
+	_set_traits([fire])
+	await frames(2)
+	var tp := game.trait_pick
+	var choices: Array[MjolnirTrait] = [storm, magnet]
+	tp.open(choices)
+	tp._open_time = -10.0
+	check(tp.visible and get_tree().paused, "экран открыт, игра на паузе")
+	var card := tp._cards.get_child(0)
+	var texts := _texts(card)
+	check(texts.any(func(s: String) -> bool: return s.contains("СВЯЗКА")), "карточка Бури — особая: «+ СВЯЗКА»")
+	check(_texts(tp._cards.get_child(1)).any(func(s: String) -> bool: return s.contains("ПРИЁМ")), "на карточке подписан вид (ПРИЁМ)")
+	tp.choose(0)
+	await wait(0.6)
+	check(not tp.visible and Run.mjolnir_trait_level(&"storm") == 1, "Буря взята")
+	var ann := game.get_node_or_null("ComboAnnounce") as ComboAnnounce
+	check(ann != null and ann.visible and ann.combo and ann.combo.id == &"fire_tornado", "объявление связки на экране")
+	var hud_icons: int = game.hud._mjolnir_traits._icons.get_child_count()
+	check(hud_icons == 3, "HUD: стихия, приём и связка (%d иконки)" % hud_icons)
+	if game.rune_pick.visible:
+		game.rune_pick._open_time = -10.0
+		game.rune_pick.choose(0)
+	await wait(0.3)
+	get_tree().paused = false
+	# Замена несовместимого — с подтверждением
+	_set_traits([storm])
 	var got: Array = []
 	var cb := func(t: MjolnirTrait) -> void: got.append(t)
-	# Игровой обработчик (руна после трейта) на время теста отключаем
-	game.trait_pick.picked.disconnect(game._on_trait_picked)
-	game.trait_pick.picked.connect(cb)
-	var choices: Array[MjolnirTrait] = [magnet, chain]
-	game.trait_pick.open(choices)
-	game.trait_pick._open_time = -10.0
-	check(game.trait_pick.visible and get_tree().paused, "экран открыт, игра на паузе")
-	game.trait_pick.choose(0)
-	check(game.trait_pick.visible and got.is_empty(), "замена требует подтверждения")
-	game.trait_pick.choose(0)
-	check(not game.trait_pick.visible and got.size() == 1 and got[0] == magnet, "второе нажатие — выбрано")
-	game.trait_pick.picked.disconnect(cb)
-	game.trait_pick.picked.connect(game._on_trait_picked)
+	tp.picked.disconnect(game._on_trait_picked)
+	tp.picked.connect(cb)
+	var c2: Array[MjolnirTrait] = [_find(&"sling")]
+	tp.open(c2)
+	tp._open_time = -10.0
+	tp.choose(0)
+	check(tp.visible and got.is_empty(), "замена приёма требует подтверждения")
+	tp.choose(0)
+	check(not tp.visible and got.size() == 1, "второе нажатие — выбрано")
+	tp.picked.disconnect(cb)
+	tp.picked.connect(game._on_trait_picked)
 	check(not get_tree().paused, "пауза снята")
 	await frames(5)
 	_set_traits([])
+
+func _texts(n: Node) -> Array[String]:
+	var out: Array[String] = []
+	if n is Label:
+		out.append((n as Label).text)
+	for c in n.get_children():
+		out.append_array(_texts(c))
+	return out
+
+func _test_anvil_flow() -> void:
+	print("-- Наковальня Эйтри: награда зала")
+	_set_traits([])
+	while Run.room_rewards.size() <= Run.room_index:
+		Run.room_rewards.append("")
+	var was: String = Run.room_rewards[Run.room_index]
+	Run.room_rewards[Run.room_index] = "anvil"
+	game.rewards._granted = false
+	game.rewards.grant()
+	var tp := game.trait_pick
+	check(tp.visible and tp._title.text.contains("НАКОВАЛЬНЯ"), "после зачистки — выбор стихии у наковальни")
+	check(tp._choices.all(func(t: MjolnirTrait) -> bool: return t.is_element()), "в выборе только стихии")
+	tp._open_time = -10.0
+	tp.choose(0)
+	await wait(0.8)
+	check(Run.owned_element() != null, "стихия взята: %s" % (str(Run.owned_element().id) if Run.owned_element() else "—"))
+	check(not game.rune_pick.visible and not tp.visible, "после наковальни — без руны (награда выдана)")
+	check(not game.rewards._anvil_pick, "признак наковальни сброшен")
+	Run.room_rewards[Run.room_index] = was
+	get_tree().paused = false
+	_set_traits([])
+	await frames(5)
 
 # --- База молота ---
 
@@ -183,29 +409,38 @@ func _reset_player(pitch: float = 0.0) -> void:
 	p.rotation.y = 0.0
 	p.head.rotation.x = pitch
 	p.health = p.max_health
+	p._invuln_left = 0.0
 	hand.perfect_ready = false
+	if p.is_slamming:
+		p._cancel_slam()
 
 func _clear_dummies() -> void:
 	for e in get_tree().get_nodes_in_group("enemies"):
 		e.queue_free()
 	for n in game.get_children():
-		if n.get_script() and n.get_script().resource_path.ends_with("fire_zone.gd"):
+		var s: Script = n.get_script()
+		if s and (s.resource_path.ends_with("fire_zone.gd") or s.resource_path.ends_with("ice_zone.gd") or s.resource_path.ends_with("element_zone.gd") \
+				or s.resource_path.ends_with("brew_puddle.gd")):
 			n.queue_free()
 
 ## Манекен: без своего ИИ (если physics = false), много HP. Позиция — относительно START (x вбок, z — вперёд по -Z).
-func _dummy(side: float, fwd: float, physics: bool = false) -> Enemy:
-	var e := (load("res://enemies/grunt.tscn") as PackedScene).instantiate() as Enemy
-	e.max_health = 500
+func _dummy(side: float, fwd: float, physics: bool = false, scene: String = "grunt") -> Enemy:
+	var e := (load("res://enemies/%s.tscn" % scene) as PackedScene).instantiate() as Enemy
+	if scene == "grunt":
+		e.max_health = 500
 	e.move_speed = 0.0
 	e.attack_range = 0.0
 	game.add_child(e)
 	e.global_position = Vector3(START.x + side, 0.0, START.z - fwd)
 	e.set_physics_process(physics)
-	e.health = 500
+	e.health = e.max_health
 	return e
 
 func _hurt(e: Enemy) -> bool:
 	return not is_instance_valid(e) or e.health < e.max_health
+
+func _hp(e: Enemy) -> float:
+	return e.health if is_instance_valid(e) else -1.0
 
 ## Ждать, пока молот в руке (или timeout). Возвращает true, если вернулся.
 func _wait_in_hand(timeout: float) -> bool:
@@ -225,6 +460,25 @@ func _wait_state(s: MjolnirProjectile.State, timeout: float) -> bool:
 		await get_tree().physics_frame
 	return false
 
+func _recall_and_wait() -> bool:
+	if not hand.in_hand and hand.projectile and is_instance_valid(hand.projectile) and hand.projectile.state != MjolnirProjectile.State.RETURN:
+		hand.request_throw_or_recall()
+	return await _wait_in_hand(4.0)
+
+## Прыжок и удар-приземление на месте (как игрок: Пробел, Ctrl), ждём приземления
+func _slam() -> void:
+	Input.action_press("jump")
+	await frames(2)
+	Input.action_release("jump")
+	await wait(0.35)
+	Input.action_press("slam")
+	await frames(2)
+	Input.action_release("slam")
+	for i in 90:
+		await get_tree().physics_frame
+		if p.is_on_floor():
+			break
+
 func _test_base() -> void:
 	print("-- База молота (без трейтов)")
 	_set_traits([])
@@ -240,7 +494,8 @@ func _test_base() -> void:
 	check(_hurt(d), "попал по манекену на пути")
 	var back := await _wait_in_hand(3.0)
 	check(back, "воткнутый молот сам вернулся (stuck_auto_return %.1f с)" % hand.stuck_auto_return)
-	# Рывок перезаряжается быстрее, пока молота нет (без манекена: hit-stop от крита съедал время)
+	# Без трейтов удержания ПКМ бросает сразу по нажатию
+	check(not bool(hand.trait_modify(&"hold_throw", false)), "без Пращи/Заряда — бросок по нажатию")
 	_clear_dummies()
 	await frames(2)
 	p.dash_charges = p.dash_charges_max - 1
@@ -250,7 +505,6 @@ func _test_base() -> void:
 	var t: float = p.get("_dash_recharge_timer")
 	check(t > 0.55, "без молота рывок перезаряжается быстрее (таймер %.2f за 0.5 с)" % t)
 	await _wait_in_hand(4.0)
-	# Идеальный хват: ПКМ сразу после поимки — бросок ×2
 	hand.throw_hammer()
 	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
 	hand.request_throw_or_recall()
@@ -260,28 +514,233 @@ func _test_base() -> void:
 	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
 	hand.request_throw_or_recall()
 	await _wait_in_hand(3.0)
-	# Обычная (не идеальная) поимка — бросок без усиления
 	await wait(0.4)
 	hand.request_throw_or_recall()
 	check(hand.projectile != null and is_equal_approx(hand.projectile.damage_mult, 1.0), "без идеального хвата — обычный урон")
 	await _wait_in_hand(4.0)
 	_clear_dummies()
 
-# --- Трейты ---
+# --- Окружение ---
 
-func _test_trait(t: MjolnirTrait, lv: int) -> void:
-	print("-- Трейт %s (%s), ур. %d" % [t.title, t.id, lv])
-	_set_traits([t] if lv == 1 else [t, t])
+func _test_environment() -> void:
+	print("-- Окружение: брага Свена, бочки")
+	_set_traits([_find(&"lightning")])
+	_clear_dummies()
+	await frames(3)
+	_reset_player()
+	var d := _dummy(0, 6)
+	var puddle := BrewPuddle.spawn(game, d.global_position, 1.8, 7.0, 0.55)
+	await frames(3)
+	var el := hand.element_handler()
+	el.world_effect(d.global_position + Vector3(1.0, 0, 0), 0.5)
+	check(puddle.shock_left > 0.0, "молния: лужа браги под током")
+	await wait(0.7)
+	check(_hurt(d) and ElementStatus.is_shocked(d), "ток в луже бьёт врага в ней")
+	_set_traits([_find(&"fire")])
+	await frames(2)
+	var puddle2 := BrewPuddle.spawn(game, START + Vector3(4, 0, -6), 1.8, 7.0, 0.55)
+	var barrel := (load("res://props/barrel.tscn") as PackedScene).instantiate() as Destructible
+	game.add_child(barrel)
+	barrel.global_position = START + Vector3(-4, 0.5, -6)
+	await frames(5)
+	el = hand.element_handler()
+	el.world_effect(puddle2.global_position, 0.5)
+	el.world_effect(barrel.global_position, 0.8)
+	check(puddle2.burning, "огонь: брага горит")
+	check(not is_instance_valid(barrel) or barrel.burning or barrel.is_broken, "огонь: бочка загорелась")
+	if is_instance_valid(barrel):
+		barrel.queue_free()
+	_set_traits([])
+	_clear_dummies()
+	await frames(5)
+
+# --- Стихии ---
+
+func _test_element(t: MjolnirTrait, lv: int) -> void:
+	print("-- Стихия %s (%s), ур. %d" % [t.title, t.id, lv])
+	_set_traits(_lv(t.id, lv))
+	var h := hand.element_handler()
+	check(h != null and h.level == lv and hand.traits.size() == 1, "обработчик стихии у молота, уровень %d" % lv)
+	_clear_dummies()
+	await frames(3)
+	await _element_throw(t, h, lv)
+	if lv == 1:
+		_clear_dummies()
+		await frames(3)
+		await _element_slam(t, h)
+	if lv == 3 and t.id == &"earth":
+		_clear_dummies()
+		await frames(3)
+		await _scenario_quake()
+	if lv == 4:
+		_clear_dummies()
+		await frames(3)
+		await _scenario_sky(t)
+	check(hand.in_hand, "молот в руке после сценария")
+	check(p.is_physics_processing(), "игрок снова управляется")
+	_clear_dummies()
+	await frames(3)
+
+func _element_throw(t: MjolnirTrait, h: MjolnirElementHandler, lv: int) -> void:
+	_reset_player()
+	await frames(5)
+	var wind := t.id == &"wind"
+	var line := _dummy(0, 4, wind)
+	# Ветер толкает врага на линии вперёд — второй на пути не стоит
+	var line2 := _dummy(4.0 if wind else 0.0, 7)
+	var side := _dummy(3.0, 7.5)
+	var wall_l := _dummy(2.2, 16.0)
+	var wall_r := _dummy(-2.2, 16.0)
+	var line_pos := line.global_position
+	var saw_stuck := false
+	hand.throw_hammer()
+	for i in 150:
+		await get_tree().physics_frame
+		if hand.projectile and is_instance_valid(hand.projectile) and hand.projectile.is_stuck():
+			saw_stuck = true
+			break
+		if hand.in_hand:
+			break
+	check(_hurt(line), "попал по врагу на линии")
+	match t.id:
+		&"fire":
+			check(ElementStatus.is_burning(line), "Огонь: враг горит")
+		&"ice":
+			var s := ElementStatus.of(line)
+			check(s != null and (s.chill_stacks >= 1 or s.frozen_left > 0.0), "Лёд: враг промёрз (стак)")
+			check(is_instance_valid(line) and line.move_speed <= 0.0 or (s and s._base_speed >= 0.0), "Лёд: замедление")
+		&"lightning":
+			check(ElementStatus.is_shocked(line), "Молния: враг под током")
+			check(_hurt(side), "Молния: перескочила на врага в стороне")
+		&"earth":
+			check(ElementStatus.is_pinned(line) and line.state == Enemy.State.STUNNED, "Земля: прибила и оглушила")
+			if lv >= 2:
+				check(ElementStatus.is_pinned(line2) or line2.state == Enemy.State.STUNNED or ElementStatus.is_pinned(side), "Земля ур. 2+: оглушение по кругу")
+		&"wind":
+			await wait(0.4)
+			var moved := line_pos.distance_to(line.global_position) if is_instance_valid(line) else 99.0
+			check(moved > 1.5, "Ветер: отбросило на %.1f м" % moved)
+	if lv >= 2:
+		check(h.active_zones() > 0, "ур. 2: след на полу (%d пятен)" % h.active_zones())
+	check(saw_stuck, "молот воткнулся")
+	if saw_stuck and lv >= 3:
+		await wait(1.3)
+		check(hand.projectile != null and hand.projectile.is_stuck(), "ур. 3: воткнутый молот с аурой ждёт ПКМ дольше")
+		check(_hurt(wall_l) or _hurt(wall_r), "ур. 3: аура задела врага у молота")
+	check(await _recall_and_wait(), "молот вернулся")
+	if lv >= 2:
+		check(h.active_zones() <= h.trail_max_zones, "пятен следа не больше trail_max_zones")
+	# Ледяная заморозка: третье попадание
+	if t.id == &"ice" and is_instance_valid(line):
+		var s := ElementStatus.of(line, true)
+		h.apply_element(line, 1.0, line.global_position, null)
+		h.apply_element(line, 1.0, line.global_position, null)
+		h.apply_element(line, 1.0, line.global_position, null)
+		check(s.frozen_left > 0.0 and line.state == Enemy.State.STUNNED, "Лёд: на третьем попадании замёрз")
+
+## Связка стихии с ударом-приземлением
+func _element_slam(t: MjolnirTrait, h: MjolnirElementHandler) -> void:
+	_reset_player()
+	await frames(5)
+	var near := _dummy(0, 2.0)
+	var other := _dummy(0, -2.0)
+	var far := _dummy(0, 2.0 + 2.5) if t.id != &"wind" else _dummy(5.0, 2.0)
+	var very_far := _dummy(0, 10.0)
+	if t.id == &"wind":
+		near.queue_free()
+		near = _dummy(0, 2.5, true)
+	await frames(2)
+	var ns := ElementStatus.of(near, true)
+	match t.id:
+		&"fire":
+			ns.ignite(1.0, 10.0)
+		&"ice":
+			ns.freeze(10.0)
+		&"lightning":
+			ElementStatus.of(very_far, true).shock(10.0)
+		&"earth":
+			ns.pin(10.0)
+	var near0 := near.global_position
+	var hp_near := near.health
+	var hp_other := other.health
+	var hp_far := far.health
+	var hp_vfar := very_far.health
+	await _slam()
+	var landed_near := _hp(near)
+	await wait(0.5)
+	match t.id:
+		&"fire":
+			check(_hp(far) < hp_far, "Огонь + удар-приземление: вспышка у горящего задела соседа")
+		&"ice":
+			check(hp_near - _hp(near) > (hp_other - _hp(other)) * 1.5, "Лёд + удар-приземление: раскол — двойной урон (%.0f против %.0f)" % [hp_near - _hp(near), hp_other - _hp(other)])
+			check(_hp(far) < hp_far, "Лёд: осколки задели соседа")
+		&"lightning":
+			check(_hp(very_far) < hp_vfar, "Молния + удар-приземление: разряд по врагу под током в 10 м")
+		&"earth":
+			check(_hp(near) < landed_near, "Земля + удар-приземление: вторая волна у прибитого")
+		&"wind":
+			var moved := near0.distance_to(near.global_position) if is_instance_valid(near) else 99.0
+			check(moved > 2.0, "Ветер + удар-приземление: вихрь снёс врага на %.1f м" % moved)
+
+func _scenario_quake() -> void:
+	# Бывшее «Землетрясение»: молот — в пол в ~4 м, враг в 3 м за молотом (вне волны игрока)
+	var pitch := -atan2(1.6, 4.0)
+	_reset_player(pitch)
+	await frames(5)
+	var far := _dummy(0, 7.6)
+	hand.throw_hammer()
+	var stuck := await _wait_state(MjolnirProjectile.State.STUCK, 1.0)
+	check(stuck and hand.projectile.stuck_normal.y > 0.6, "молот воткнулся в пол")
+	if stuck:
+		await _slam()
+		await wait(0.5)
+		check(_hurt(far), "Земля ур. 3 (Землетрясение): волна у молота задела врага")
+	check(await _recall_and_wait(), "молот вернулся")
+
+func _scenario_sky(t: MjolnirTrait) -> void:
+	var pitch := -atan2(1.6, 8.0)
+	_reset_player(pitch)
+	await frames(5)
+	var target := _dummy(0, 8.5)
+	hand.throw_hammer()
+	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+	hand.request_throw_or_recall()
+	await _wait_in_hand(3.0)
+	var hp0 := target.health
+	hand.request_throw_or_recall()
+	await frames(2)
+	check(_hp(target) < hp0, "ур. 4 (%s): удар с неба в точку прицела" % t.id)
+	if t.id == &"lightning":
+		check(target.state == Enemy.State.STUNNED, "Гром небесный оглушает")
+	check(hand.projectile != null and hand.projectile.damage_mult > 1.0, "бросок после идеального хвата усилен")
+	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+	check(await _recall_and_wait(), "молот вернулся")
+
+# --- Приёмы ---
+
+func _test_technique(t: MjolnirTrait, lv: int) -> void:
+	print("-- Приём %s (%s), ур. %d" % [t.title, t.id, lv])
+	_set_traits(_lv(t.id, lv))
 	check(hand.traits.size() == 1 and hand.traits[0].level == lv, "обработчик у молота, уровень %d" % lv)
 	_clear_dummies()
 	await frames(3)
 	match t.id:
-		&"earthquake":
-			await _scenario_earthquake()
-		&"sky_thunder":
-			await _scenario_sky_thunder()
 		&"storm":
 			await _scenario_storm()
+		&"hammer_step":
+			await _scenario_step(lv)
+		&"swap":
+			await _scenario_swap(lv)
+		&"hammer_dive":
+			await _scenario_dive()
+		&"sling":
+			await _scenario_sling(lv)
+		&"charge":
+			await _scenario_charge(lv)
+		&"air_catch":
+			await _scenario_air_catch(lv)
+		&"loyal_dog":
+			await _scenario_dog()
 		_:
 			await _scenario_generic(t)
 	check(hand.in_hand, "молот в руке после сценария")
@@ -293,15 +752,11 @@ func _scenario_generic(t: MjolnirTrait) -> void:
 	_reset_player()
 	await frames(5)
 	var line := [_dummy(0, 4), _dummy(0, 7)]
-	# Сбоку от линии полёта — их задевают только трейты (молния, рикошет)
 	var side := [_dummy(3.0, 7.5), _dummy(-3.0, 10.0)]
-	# У стены (точка втыкания ~ z = -15.6) — для Магнита и Громоотвода
 	var wall_l := _dummy(2.2, 16.0, t.id == &"magnet")
-	var wall_r := _dummy(-2.2, 16.0, t.id == &"magnet")
+	var _wall_r := _dummy(-2.2, 16.0, t.id == &"magnet")
 	var wall_d0 := 0.0
-	var holds := t.handler.get("stuck_hold") != null
 	var start_pos := p.global_position
-	var fires := 0
 	var saw_stuck := false
 	var clones_seen := 0
 	hand.throw_hammer()
@@ -319,7 +774,6 @@ func _scenario_generic(t: MjolnirTrait) -> void:
 			break
 		if hand.in_hand:
 			break
-		fires = maxi(fires, _fire_count())
 	check(line.any(_hurt), "попал по врагу на линии")
 	match t.id:
 		&"boomerang":
@@ -328,32 +782,17 @@ func _scenario_generic(t: MjolnirTrait) -> void:
 			return
 		&"ricochet":
 			check(side.any(_hurt), "рикошет задел врага в стороне")
-		&"chain_lightning":
-			check(side.any(_hurt), "молния перескочила на врага в стороне")
-		&"fire_trail":
-			check(fires > 0, "огненный след: пятен %d" % fires)
-		&"ice_trail":
-			var ih := hand.traits[0]
-			check(int(ih.call("active_zones")) > 0, "ледяной след: пятен льда %d" % int(ih.call("active_zones")))
-		&"heaviness":
-			var pinned := line.filter(func(e: Enemy) -> bool: return is_instance_valid(e) and e.state == Enemy.State.STUNNED)
-			check(not pinned.is_empty(), "Тяжесть прибила врага (стан)")
-			if hand.traits[0].level >= 2:
-				check(side.any(func(e: Enemy) -> bool: return is_instance_valid(e) and e.state == Enemy.State.STUNNED) or pinned.size() >= 2, "Тяжесть ур. 2: стан по кругу")
 		&"two_hammers":
 			check(clones_seen >= hand.traits[0].level, "Два молота: копий в полёте %d" % clones_seen)
 	if t.id != &"ricochet":
 		check(saw_stuck, "молот воткнулся")
 	if saw_stuck:
-		await wait(1.2 if holds else 0.3)
-		match t.id:
-			&"magnet":
-				var d1 := _flat_dist(wall_l, hand.projectile.global_position)
-				check(d1 < wall_d0 - 0.5, "Магнит стянул врага (%.1f → %.1f м)" % [wall_d0, d1])
-			&"lightning_rod":
-				check(_hurt(wall_l) or _hurt(wall_r), "Громоотвод ударил молнией врага рядом")
+		await wait(1.2 if t.handler.get("stuck_hold") != null else 0.3)
+		if t.id == &"magnet":
+			var d1 := _flat_dist(wall_l, hand.projectile.global_position)
+			check(d1 < wall_d0 - 0.5, "Магнит стянул врага (%.1f → %.1f м)" % [wall_d0, d1])
 		check(hand.projectile != null and hand.projectile.is_stuck(), "воткнутый молот ждёт ПКМ")
-		var hp_before := wall_l.health if is_instance_valid(wall_l) else 0.0
+		var hp_before := _hp(wall_l)
 		hand.request_throw_or_recall()
 		if t.id == &"pull_to_hammer":
 			check(not p.is_physics_processing(), "Притяжение: игрок летит к молоту")
@@ -364,21 +803,11 @@ func _scenario_generic(t: MjolnirTrait) -> void:
 	if t.id == &"pull_to_hammer":
 		var moved := start_pos.distance_to(p.global_position)
 		check(moved > 10.0, "Притяжение перенесло игрока к стене (%.1f м)" % moved)
-	if t.id == &"fire_trail":
-		var h := hand.traits[0]
-		check(int(h.call("active_zones")) <= int(h.get("max_zones")), "огней не больше max_zones")
 
 func _flat_dist(e: Node3D, pos: Vector3) -> float:
 	if not is_instance_valid(e):
 		return 0.0
 	return Vector2(e.global_position.x - pos.x, e.global_position.z - pos.z).length()
-
-func _fire_count() -> int:
-	var n := 0
-	for c in game.get_children():
-		if c.get_script() and c.get_script().resource_path.ends_with("fire_zone.gd") and not c.is_queued_for_deletion():
-			n += 1
-	return n
 
 func _scenario_storm() -> void:
 	_reset_player()
@@ -394,52 +823,282 @@ func _scenario_storm() -> void:
 	hand.hold_override = false
 	check(await _wait_in_hand(3.0), "отпустил ПКМ — вернулся")
 
-func _scenario_earthquake() -> void:
-	# Молот — в пол в ~4 м перед игроком; враг в 3 м за молотом (вне волны игрока)
-	var pitch := -atan2(1.6, 4.0)
-	_reset_player(pitch)
+func _scenario_step(lv: int) -> void:
+	_reset_player()
 	await frames(5)
-	var far := _dummy(0, 7.6)
+	var h := hand.traits[0]
 	hand.throw_hammer()
-	var stuck := await _wait_state(MjolnirProjectile.State.STUCK, 1.0)
-	check(stuck, "молот воткнулся в пол")
-	if stuck:
-		check(hand.projectile.stuck_normal.y > 0.6, "воткнулся именно в пол")
+	var stuck := await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+	check(stuck and absf(hand.projectile.stuck_normal.y) < 0.5, "молот воткнулся в стену")
+	check(bool(h.call("has_step")), "Ступенька: площадка на рукояти")
+	if bool(h.call("has_step")):
+		var top: Vector3 = h.call("step_top")
+		p.global_position = top + Vector3(0, 0.05, 0)
+		p.velocity = Vector3.ZERO
+		await wait(0.3)
+		check(p.is_on_floor(), "Тор стоит на молоте (%.2f м)" % p.global_position.y)
 		Input.action_press("jump")
 		await frames(2)
 		Input.action_release("jump")
-		await wait(0.35)
-		Input.action_press("slam")
-		await frames(2)
-		Input.action_release("slam")
+		var peak := p.global_position.y
 		for i in 90:
 			await get_tree().physics_frame
-			if p.is_on_floor():
-				break
-		await wait(0.5)
-		check(_hurt(far), "Землетрясение: вторая волна у молота задела врага")
-		hand.request_throw_or_recall()
-	check(await _wait_in_hand(4.0), "молот вернулся")
+			peak = maxf(peak, p.global_position.y)
+		var normal := p.jump_velocity * p.jump_velocity / (2.0 * p.gravity)
+		check(peak - top.y > normal * 1.6, "прыжок со ступеньки выше обычного (%.1f м против %.1f)" % [peak - top.y, normal])
+		if lv >= 2:
+			check(peak - top.y > normal * 2.5, "ур. 2: ещё выше (%.1f м)" % (peak - top.y))
+		check(hand.projectile != null and hand.projectile.is_stuck(), "молот-ступенька ждёт ПКМ")
+	check(await _recall_and_wait(), "молот вернулся")
+	check(not bool(h.call("has_step")), "площадка исчезла с молотом")
 
-func _scenario_sky_thunder() -> void:
-	# Целимся в пол у манекена; идеальный хват вызывает молнию туда
-	var pitch := -atan2(1.6, 8.0)
-	_reset_player(pitch)
+func _scenario_swap(lv: int) -> void:
+	_reset_player()
 	await frames(5)
-	var target := _dummy(0, 8.5)
+	# Между старым и новым местом Тора: молот задевает его и туда (до обмена), и обратно — с места Тора
+	var near_old := _dummy(0.0, 1.6)
+	var start_pos := p.global_position
+	hand.throw_hammer()
+	await wait(0.22)
+	check(hand.projectile != null and hand.projectile.state == MjolnirProjectile.State.OUT, "молот в полёте")
+	var hp0 := _hp(near_old)
+	hand.request_throw_or_recall()
+	await frames(1)
+	var moved := start_pos.distance_to(p.global_position)
+	check(moved > 4.0, "Обмен: Тор на месте молота (%.1f м)" % moved)
+	check(await _wait_in_hand(3.0), "молот прилетел с места Тора в руку")
+	check(_hp(near_old) < hp0, "молот на возврате задел врага у старого места Тора")
+	var h := hand.traits[0]
+	check(int(h.get("swaps")) == 1, "обмен засчитан")
+	if lv >= 2:
+		check(int(h.get("bursts")) == 1, "ур. 2: волна в точке прибытия")
+	# Воткнутый молот ПКМ возвращает как обычно
+	_reset_player()
+	await frames(3)
 	hand.throw_hammer()
 	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+	var before := p.global_position
+	hand.request_throw_or_recall()
+	await frames(2)
+	check(before.distance_to(p.global_position) < 1.0, "воткнутый молот — обычный возврат (без обмена)")
+	await _wait_in_hand(3.0)
+
+func _scenario_dive() -> void:
+	_reset_player(-1.2)
+	p.global_position = START + Vector3(0, 7.0, 0)
+	await frames(2)
+	var target := _dummy(0, 3.3)
+	var powers: Array[float] = []
+	var cb := func(pw: float) -> void: powers.append(pw)
+	p.slammed.connect(cb)
+	hand.throw_hammer()
+	check(hand.projectile != null and hand.projectile.data.get("dive", false), "Пике: бросок вниз в воздухе")
+	var followed := false
+	for i in 120:
+		await get_tree().physics_frame
+		if p.is_slamming:
+			followed = true
+		if hand.in_hand:
+			break
+	p.slammed.disconnect(cb)
+	check(followed, "Тор полетел за молотом ударом-приземлением")
+	check(not powers.is_empty() and powers[0] > 0.25 + 7.0 / 14.0, "бонус высоты: сила %.2f (без бонуса ≤ %.2f)" % [powers[0] if not powers.is_empty() else 0.0, 0.25 + 7.0 / 14.0])
+	check(hand.in_hand, "после удара молот сразу в руке")
+	check(_hurt(target), "удар пике задел врага у молота")
+	# На земле бросок вниз — обычный
+	_reset_player(-1.2)
+	await frames(10)
+	hand.throw_hammer()
+	check(hand.projectile != null and not hand.projectile.data.get("dive", false), "на земле — обычный бросок")
+	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+	check(await _recall_and_wait(), "молот вернулся")
+
+func _scenario_sling(lv: int) -> void:
+	_reset_player()
+	await frames(5)
+	var h := hand.traits[0]
+	var near := _dummy(1.6, 0.6)
+	check(bool(hand.trait_modify(&"hold_throw", false)), "Праща: бросок по отпусканию ПКМ")
+	hand.hold_override = true
+	hand.begin_hold()
+	await wait(1.0)
+	check(hand.in_hand and hand.holding, "держим ПКМ — молот ещё «в руке»")
+	check(bool(h.call("is_spinning")), "молот крутится вокруг Тора")
+	check(_hurt(near), "Праща: удар по врагу рядом")
+	check(hand.hold_progress > 0.0, "HUD: прогресс пращи")
+	hand.hold_override = false
+	await frames(2)
+	check(not hand.in_hand and hand.projectile != null, "отпустил — бросок")
+	if hand.projectile:
+		var want: float = float(h.get("launch_damage_mult_lvl2") if lv >= 2 else h.get("launch_damage_mult"))
+		check(hand.projectile.pierce and is_equal_approx(hand.projectile.damage_mult, want), "бросок с разгона: пробивает, ×%.1f урона" % want)
+	check(not bool(h.call("is_spinning")), "молот на ремне исчез")
+	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+	check(await _recall_and_wait(), "молот вернулся")
+	# Короткое нажатие — обычный бросок
+	await wait(0.4)
+	hand.hold_override = true
+	hand.begin_hold()
+	await frames(3)
+	hand.hold_override = false
+	await frames(2)
+	check(hand.projectile != null and not hand.projectile.pierce and is_equal_approx(hand.projectile.damage_mult, 1.0), "короткое нажатие — обычный бросок")
+	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+	check(await _recall_and_wait(), "молот вернулся")
+
+func _scenario_charge(lv: int) -> void:
+	_reset_player()
+	await frames(5)
+	var h := hand.traits[0]
+	# Щитоносец на линии, смотрит на Тора: обычный бросок щит держит, полный заряд — пробивает
+	var sh := _dummy(0, 5, false, "shieldbearer")
+	sh.state = Enemy.State.CHASE
+	var to := p.global_position - sh.global_position
+	sh.rotation.y = atan2(to.x, to.z)
+	await frames(2)
+	var hp0 := sh.health
+	hand.hold_override = true
+	hand.begin_hold()
+	await frames(3)
+	hand.hold_override = false
+	await frames(2)
+	check(hand.projectile != null and is_equal_approx(hand.projectile.damage_mult, 1.0) and not hand.projectile.pierce, "короткое нажатие — обычный бросок")
+	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+	check(is_equal_approx(sh.health, hp0), "щит держит обычный бросок")
+	await _recall_and_wait()
+	sh.state = Enemy.State.CHASE
+	await wait(0.4)
+	hand.hold_override = true
+	hand.begin_hold()
+	await wait(1.0)
+	check(is_equal_approx(hand.hold_progress, 1.0) and hand.hold_label != "", "полный заряд (HUD: %s)" % hand.hold_label)
+	hand.hold_override = false
+	await frames(2)
+	var want: float = float(h.get("max_damage_mult_lvl2") if lv >= 2 else h.get("max_damage_mult"))
+	check(hand.projectile != null and hand.projectile.pierce and is_equal_approx(hand.projectile.damage_mult, want), "полный заряд: ×%.1f урона и пробитие" % want)
+	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+	check(sh.health < hp0, "полный заряд пробил щит")
+	if lv >= 2:
+		check(not is_instance_valid(sh) or sh.state == Enemy.State.STUNNED or sh.is_dead, "ур. 2: полный заряд оглушает")
+	check(await _recall_and_wait(), "молот вернулся")
+
+func _scenario_air_catch(lv: int) -> void:
+	_reset_player()
+	var g := p.gravity
+	var rech := p.dash_recharge
+	p.gravity = 0.0
+	p.dash_recharge = 999.0
+	p.global_position = START + Vector3(0, 3.0, 0)
+	p.velocity = Vector3.ZERO
+	await frames(3)
+	var h := hand.traits[0]
+	hand.throw_hammer()
+	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+	p._jumps_left = 0
+	p._wall_jumps_left = 0
+	p.dash_charges = 0
 	hand.request_throw_or_recall()
 	await _wait_in_hand(3.0)
-	var hp0 := target.health
-	hand.request_throw_or_recall()
-	check(target.health < hp0, "Гром небесный: молния в точку прицела")
-	check(hand.projectile != null and hand.projectile.damage_mult > 1.0, "бросок после идеального хвата усилен")
+	await frames(1)
+	check(int(h.get("catches")) == 1, "Перехват: поймал в воздухе")
+	check(p._jumps_left == p.extra_jumps, "двойной прыжок снова есть")
+	check(p.dash_charges >= (p.dash_charges_max if lv >= 2 else 1), "рывок восстановлен (%d)" % p.dash_charges)
+	p.gravity = g
+	p.dash_recharge = rech
+	# На земле — без эффекта
+	_reset_player()
+	await wait(0.4)
+	hand.throw_hammer()
 	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
-	hand.request_throw_or_recall()
-	check(await _wait_in_hand(4.0), "молот вернулся")
+	await _recall_and_wait()
+	check(int(h.get("catches")) == 1, "на земле — без перехвата")
+
+func _scenario_dog() -> void:
+	_reset_player()
+	await frames(5)
+	var h := hand.traits[0]
+	var wall_l := _dummy(2.5, 12.0)
+	hand.throw_hammer()
+	var stuck := await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+	check(stuck, "молот воткнулся")
+	var hp0 := _hp(wall_l)
+	await wait(2.2)
+	check(int(h.get("bites")) >= 1 and _hp(wall_l) < hp0, "Верный пёс укусил врага рядом (%d раз)" % int(h.get("bites")))
+	check(hand.projectile != null and hand.projectile.is_stuck(), "молот остаётся воткнутым")
+	check(await _recall_and_wait(), "молот вернулся")
+
+# --- Связки ---
+
+func _test_combo(c: MjolnirTrait) -> void:
+	print("-- Связка %s (%s)" % [c.title, c.id])
+	_set_traits([_find(c.combo_element), _find(c.combo_technique)])
+	check(Run.active_combos().size() == 1 and Run.active_combos()[0] == c, "связка активна сама")
+	check(hand.combo_traits.size() == 1, "обработчик связки у молота")
+	var h := hand.combo_traits[0]
+	_clear_dummies()
+	await frames(3)
+	match c.id:
+		&"fire_tornado":
+			_reset_player()
+			await frames(5)
+			var d := _dummy(2.0, 6.5)
+			hand.hold_override = true
+			hand.throw_hammer()
+			await _wait_state(MjolnirProjectile.State.HOVER, 1.0)
+			await wait(1.0)
+			check(ElementStatus.is_burning(d) and int(h.get("ignited")) > 0, "Огненный смерч поджигает врагов в круге")
+			hand.hold_override = false
+			await _wait_in_hand(3.0)
+		&"ice_ricochet":
+			_reset_player()
+			await frames(5)
+			var _a := [_dummy(0, 4), _dummy(3.0, 7.5), _dummy(-3.0, 10.0)]
+			hand.throw_hammer()
+			await _wait_in_hand(4.0)
+			if not hand.in_hand:
+				await _recall_and_wait()
+			check(int(h.get("crusts")) > 0, "Ледяной рикошет: корок на полу %d" % int(h.get("crusts")))
+		&"lightning_magnet":
+			_reset_player()
+			await frames(5)
+			var _w := [_dummy(2.2, 16.0, true), _dummy(-2.2, 16.0, true)]
+			hand.throw_hammer()
+			await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+			await wait(1.4)
+			check(int(h.get("discharges")) > 0, "Грозовой магнит: разряды по стянутым (%d)" % int(h.get("discharges")))
+			await _recall_and_wait()
+		&"wind_pull":
+			# Молот — в пол в 7 м, враг рядом с точкой прилёта
+			_reset_player(-atan2(1.6, 7.0))
+			await frames(5)
+			var w := _dummy(2.2, 7.5, true)
+			var w0 := w.global_position
+			hand.throw_hammer()
+			await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
+			hand.request_throw_or_recall()
+			await _wait_in_hand(3.0)
+			await wait(0.4)
+			check(int(h.get("gusts")) == 1, "Ураганный рывок: вихрь на прилёте")
+			check(not is_instance_valid(w) or w0.distance_to(w.global_position) > 1.0, "толпу у молота снесло (%.1f м)" % (w0.distance_to(w.global_position) if is_instance_valid(w) else 0.0))
+		&"earth_dive":
+			_reset_player(-1.2)
+			p.global_position = START + Vector3(0, 7.0, 0)
+			await frames(2)
+			var f := _dummy(1.5, 3.3, false, "fodder")
+			var g := _dummy(-1.5, 3.3)
+			hand.throw_hammer()
+			await _wait_in_hand(3.0)
+			await frames(3)
+			check(int(h.get("craters")) == 1, "Кратер после пике")
+			check(not is_instance_valid(f) or f.is_dead, "корм в кратере упал замертво")
+			check(ElementStatus.is_pinned(g) or not is_instance_valid(g), "остальных прибило к полу")
+	check(hand.in_hand, "молот в руке после сценария")
+	check(p.is_physics_processing(), "игрок снова управляется")
+	_clear_dummies()
+	await frames(3)
 
 func _finish() -> void:
+	_set_traits([])
 	print("=== ИТОГ TRAITS: %d OK, %d FAIL ===" % [_passes, _fails.size()])
 	for f in _fails:
 		print("   FAIL: ", f)

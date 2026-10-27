@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MjolnirTrait" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/mjolnir_trait.gd" id="1_trait"]
+[ext_resource type="Script" path="res://weapons/mjolnir_traits/combos/fire_tornado.gd" id="2_handler"]
+
+[sub_resource type="Resource" id="Resource_handler"]
+script = ExtResource("2_handler")
+
+[resource]
+script = ExtResource("1_trait")
+id = &"fire_tornado"
+kind = "combo"
+title = "Огненный смерч"
+description = "Зависший молот Бури — огненный смерч: шире, тянет к себе всех и поджигает, под ним горит земля."
+glyph = "ᚲ"
+color = Color(1, 0.62, 0.2, 1)
+max_level = 1
+combo_element = &"fire"
+combo_technique = &"storm"
+handler = SubResource("Resource_handler")

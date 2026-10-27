@@ -1,5 +1,41 @@
 {
 	"_comment": "Комиксовые слова (scripts/comic_fx.gd). Событие -> слова (берём случайное), цвет букв (fill), цвет «взрыва» за словом (burst), приоритет (если в одном кадре несколько событий — показываем старшее). Слова всегда на английском. Рисованный «взрыв» можно подложить в sprites/comic/<событие>.png (или общий sprites/comic/burst.png) — код менять не нужно.",
+	"combo": {
+		"words": ["FUSION!", "COMBO!", "DUET!"],
+		"fill": "#ffe03a",
+		"burst": "#ff7a1a",
+		"priority": 85
+	},
+	"freeze": {
+		"words": ["FREEZE!", "KRSSH!", "CHILL!"],
+		"fill": "#e8fbff",
+		"burst": "#2a8fd8",
+		"priority": 35
+	},
+	"shatter": {
+		"words": ["SHATTER!", "KRISSH!", "CRACK!"],
+		"fill": "#ffffff",
+		"burst": "#3ab0f0",
+		"priority": 62
+	},
+	"burn": {
+		"words": ["FWOOSH!", "WHOOMPH!", "BURN!"],
+		"fill": "#ffe03a",
+		"burst": "#e8461e",
+		"priority": 58
+	},
+	"gust": {
+		"words": ["WHOOSH!", "FWOOM!", "SWOOSH!"],
+		"fill": "#f2fff4",
+		"burst": "#5fae86",
+		"priority": 50
+	},
+	"quake": {
+		"words": ["RUMBLE!", "KRA-KOOM!", "THOOM!"],
+		"fill": "#ffd77a",
+		"burst": "#7a4a22",
+		"priority": 61
+	},
 	"slam": {
 		"words": ["KA-BOOM!", "BLAM!", "WHAM!"],
 		"fill": "#ffe03a",
