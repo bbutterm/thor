@@ -230,7 +230,7 @@ static func push_enemy(en: Enemy, push: Vector3) -> void:
 		return
 	var k := push * (1.0 - en.knock_resist)
 	# Сброшен Тором: падение с высоты засчитывается (enemy.gd _check_fall смотрит на время последнего удара)
-	en._last_hit_time = Time.get_ticks_msec() / 1000.0
+	en._last_hit_time = Run.now()
 	en.knockback_velocity += Vector3(k.x, 0, k.z)
 	en.velocity.x += k.x
 	en.velocity.z += k.z

@@ -135,6 +135,19 @@ func _process(delta: float) -> void:
 	# delta здесь уже умножен на Engine.time_scale — возвращаем реальное время для hit-stop
 	FX.tick(delta / maxf(Engine.time_scale, 0.0001))
 
+## Игровые часы (с): сумма шагов физики вне паузы (с Engine.time_scale). Окна мульти-килла, «об стену»,
+## «сброшен с высоты» меряются ими, а не часами ОС: иначе ускоренный headless-прогон (бот-плейтест Б5, тесты)
+## растягивал окна в разы и раздувал Славу. В обычной игре 1 с часов ≈ 1 с реального времени (кроме hit-stop).
+var clock: float = 0.0
+
+func _physics_process(delta: float) -> void:
+	if not get_tree().paused:
+		clock += delta
+
+## Текущее игровое время (Run.clock), с.
+func now() -> float:
+	return clock
+
 func _load_dir(path: String) -> Array:
 	var out: Array = []
 	var dir := DirAccess.open(path)
@@ -232,7 +245,7 @@ func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: Stri
 	amount = int(round(amount * style_glory_mult))
 	if is_boss:
 		amount += glory_boss_kill
-	var now := Time.get_ticks_msec() / 1000.0
+	var now := clock
 	_recent_kill_times = _recent_kill_times.filter(func(t: float) -> bool: return now - t <= multikill_window)
 	if not _recent_kill_times.is_empty():
 		amount += glory_multikill_bonus * _recent_kill_times.size()
