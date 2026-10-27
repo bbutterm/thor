@@ -95,6 +95,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if not in_hand:
 		_dash_bonus_tick(delta)
+		_anim_recall_tick()
 	if not player.input_enabled:
 		return
 	if Input.is_action_just_pressed("throw"):
@@ -133,11 +134,7 @@ func throw_hammer() -> void:
 	if perfect_ready:
 		perfect_ready = false
 		proj.set_empowered(perfect_damage_mult)
-	if pivot:
-		var tw := pivot.create_tween()
-		tw.tween_property(pivot, "position", REST_POS + Vector3(0.3, 0.2, -0.4), 0.06)
-		tw.tween_property(pivot, "position", REST_POS + Vector3(0, -0.8, 0), 0.1)
-		tw.tween_callback(func() -> void: pivot.visible = false)
+	_anim_throw()
 	player.camera_fx.add_trauma(0.12)
 	Audio.play("sounds/sfx/hammer_throw.wav")
 	state_changed.emit(false)
@@ -150,21 +147,130 @@ func on_caught() -> void:
 	var now := _now()
 	_caught_time = now
 	_perfect_open = true
-	if now - _recall_press_time <= perfect_window:
+	var perfect := now - _recall_press_time <= perfect_window
+	if perfect:
 		_perfect_open = false
 		_grant_perfect()
 	_recall_press_time = -10.0
-	if pivot:
-		pivot.visible = true
-		pivot.position = REST_POS + Vector3(0.15, 0.1, -0.35)
-		pivot.rotation_degrees = REST_ROT + Vector3(30, 0, 0)
-		var tw := pivot.create_tween().set_parallel(true)
-		tw.tween_property(pivot, "position", REST_POS, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.tween_property(pivot, "rotation_degrees", REST_ROT, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_anim_catch(perfect)
 	player.camera_fx.add_trauma(catch_shake)
 	Audio.play("sounds/sfx/hammer_catch.wav")
 	state_changed.emit(true)
 	trait_call(&"on_caught", [self])
+
+# --- Вид: левая рука (ViewmodelMotion.Hand над HammerPivot) ---
+
+## Рука вьюмодели, null — пока Player не собрал руки.
+func view_hand() -> ViewmodelMotion.Hand:
+	if player == null or player.view_motion == null or pivot == null:
+		return null
+	return player.view_motion.hand_for(pivot)
+
+## Бросок: рука сразу взведена за плечо → резкий выпуск вперёд (молот вылетает в этом же кадре — вид его
+## догоняет за throw_time) → пустая рука с разжатыми пальцами опускается.
+func _anim_throw() -> void:
+	var h := view_hand()
+	if h == null:
+		if pivot:
+			pivot.visible = false
+		return
+	var t := player.view_motion.tuning
+	h.rest_pos = REST_POS
+	h.rest_rot = REST_ROT
+	h.set_state(&"throw", t.throw_time + 0.05)
+	h.snap(REST_POS + t.throw_cock_pos, REST_ROT + t.throw_cock_rot)
+	h.wrist_target = Vector3(-25, 0, 0)
+	var arm := h.arm
+	var tw := h.new_tween()
+	tw.set_parallel(true)
+	tw.tween_property(h, "position", REST_POS + t.throw_release_pos, t.throw_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(h, "rotation_degrees", REST_ROT + t.throw_release_rot, t.throw_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func() -> void:
+		h.wrist_target = Vector3(20, 0, 0)
+		if arm:
+			arm.set_weapon_visible(false)
+			arm.grip_target = 0.0
+			arm.open_style = 0.0).set_delay(t.throw_time * 0.45)
+	tw.chain().tween_callback(func() -> void:
+		h.set_state(&"empty", t.empty_time)
+		h.wrist_target = Vector3.ZERO
+		if arm:
+			arm.grip_target = 0.35)
+	tw.chain().tween_property(h, "position", REST_POS + t.empty_pos, t.empty_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(h, "rotation_degrees", REST_ROT + t.empty_rot, t.empty_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	h.rest_pos = REST_POS + t.empty_pos
+	h.rest_rot = REST_ROT + t.empty_rot
+
+## Возврат: рука тянется навстречу молоту, пальцы раскрыты «хватом»; на подлёте — чуть следит за ним.
+func _anim_recall_tick() -> void:
+	var h := view_hand()
+	if h == null or projectile == null or not is_instance_valid(projectile):
+		return
+	if projectile.state != MjolnirProjectile.State.RETURN:
+		return
+	var t := player.view_motion.tuning
+	if h.state != &"recall":
+		h.set_state(&"recall")
+		var tw := h.tween_to(REST_POS + t.recall_pos, REST_ROT + t.recall_rot, t.recall_time, Tween.TRANS_BACK, Tween.EASE_OUT)
+		tw.set_parallel(true)
+		if h.arm:
+			h.arm.grip_target = 0.0
+			h.arm.open_style = 1.0
+		h.wrist_target = Vector3(-20, 0, 0)
+		return
+	if h.is_tweening():
+		return
+	# Тянуться к молоту по экрану (в системе камеры)
+	var cam := player.camera
+	var to := cam.global_transform.basis.inverse() * (projectile.global_position - cam.global_position)
+	var dir := Vector2(to.x, to.y) / maxf(absf(to.z), 1.0)
+	var target := REST_POS + t.recall_pos + Vector3(dir.x, dir.y, 0).limit_length(1.0) * t.recall_track
+	h.position = h.position.lerp(target, 0.2)
+
+## Ловля: молот в руке, пальцы сжаты, толчок назад; идеальный хват — сильнее и прокрут молота в руке.
+func _anim_catch(perfect: bool) -> void:
+	var h := view_hand()
+	if h == null:
+		if pivot:
+			pivot.visible = true
+			pivot.position = REST_POS
+			pivot.rotation_degrees = REST_ROT
+		return
+	var t := player.view_motion.tuning
+	h.rest_pos = REST_POS
+	h.rest_rot = REST_ROT
+	h.visible = true
+	h.wrist_target = Vector3.ZERO
+	var arm := h.arm
+	if arm:
+		arm.set_weapon_visible(true)
+		arm.grip_target = 1.0
+		arm.grip = 1.0
+		arm.open_style = 0.0
+	h.tween_to(REST_POS, REST_ROT, 0.24, Tween.TRANS_BACK, Tween.EASE_OUT)
+	if perfect:
+		h.set_state(&"perfect_catch", t.perfect_twirl_time)
+		h.kick(Vector3(0, 0.3, 1.0) * t.perfect_kick, Vector3(t.perfect_tilt, 0, -t.perfect_tilt * 0.3))
+		_twirl(arm, t)
+	else:
+		h.set_state(&"catch", 0.1)
+		h.kick(Vector3(0, 0.2, 1.0) * t.catch_kick, Vector3(t.catch_tilt, 0, 0))
+
+## Прокрут молота вокруг рукояти (только модель в кулаке; рука держит хват).
+var _twirl_tween: Tween
+
+func _twirl(arm: ViewmodelArm, t: ViewmodelMotionTuning) -> void:
+	if arm == null or arm.weapon == null:
+		return
+	if _twirl_tween and _twirl_tween.is_valid():
+		_twirl_tween.kill()
+	var w := arm.weapon
+	var base := arm.weapon_rotation
+	w.rotation_degrees = base
+	_twirl_tween = w.create_tween()
+	_twirl_tween.tween_property(w, "rotation_degrees:y", base.y + 360.0 * t.perfect_twirl_turns, t.perfect_twirl_time) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_twirl_tween.tween_callback(func() -> void: w.rotation_degrees = base)
 
 ## Идеальный хват: «дзынь», вспышка, следующий бросок усилен.
 func _grant_perfect() -> void:

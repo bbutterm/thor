@@ -89,7 +89,8 @@ const THRUST_POSES := [
 	[Vector3(0.45, -0.1, -0.35), Vector3(-70, 12, -20), Vector3(0.05, -0.25, -1.75), Vector3(-95, 0, 0)],
 ]
 ## Сильный удар: высокий замах из-за головы
-const HEAVY_POSE := [Vector3(0.35, 0.35, -0.55), Vector3(100, 15, -15), Vector3(0.05, -0.8, -1.2), Vector3(-90, 5, -10)]
+## (замах — оружие взведено над правым плечом и видно в кадре, рука с наручем — справа)
+const HEAVY_POSE := [Vector3(0.45, -0.04, -0.72), Vector3(50, 22, -30), Vector3(0.05, -0.8, -1.2), Vector3(-90, 5, -10)]
 
 func _ready() -> void:
 	if hitbox and hitbox.shape is BoxShape3D:
@@ -98,6 +99,17 @@ func _ready() -> void:
 	if pivot:
 		pivot.position = rest_pos
 		pivot.rotation_degrees = rest_rot
+
+## Рука вьюмодели (ViewmodelMotion.Hand над пивотом; null — пока Player не собрал руки)
+var _vm_hand: ViewmodelMotion.Hand
+
+func view_hand() -> ViewmodelMotion.Hand:
+	if _vm_hand == null and player and player.view_motion:
+		_vm_hand = player.view_motion.hand_for(pivot)
+	return _vm_hand
+
+func _tuning() -> ViewmodelMotionTuning:
+	return player.view_motion.tuning
 
 ## Цвет кожи и рукава (из тела BodyDef). Рука — ViewmodelArm или (старое) простой меш.
 func set_hand_color(c: Color, sleeve: Color = Color(0, 0, 0, 0)) -> void:
@@ -113,6 +125,10 @@ func apply_def(d: WeaponDef, lvl: int = 1) -> void:
 	cancel()
 	rest_pos = d.view_rest_pos if d else REST_POS
 	rest_rot = d.view_rest_rot if d else REST_ROT
+	var h := view_hand()
+	if h:
+		h.rest_pos = rest_pos
+		h.rest_rot = rest_rot
 	if hitbox:
 		var reach := d.reach if d else 1.0
 		var arc := d.arc if d else 1.0
@@ -130,6 +146,11 @@ func cancel() -> void:
 	_since_swing_end = 99.0
 	if _tween and _tween.is_valid():
 		_tween.kill()
+	var h := view_hand()
+	if h:
+		h.kill_tween()
+		h.tremor = 0.0
+		h.wrist_target = Vector3.ZERO
 
 func combo_count() -> int:
 	return maxi(1, def.combo_count) if def else 3
@@ -221,8 +242,11 @@ func _tick(delta: float) -> void:
 	match phase:
 		Phase.WINDUP:
 			if heavy:
-				# Набор силы: рука дрожит
+				# Набор силы: рука дрожит (всё сильнее к выпуску)
 				player.camera_fx.add_trauma(delta * 0.25)
+				var h := view_hand()
+				if h:
+					h.tremor = _tuning().heavy_tremor * clampf(_phase_time / maxf(_windup_time(), 0.01), 0.2, 1.0)
 			if _phase_time >= _windup_time():
 				_enter_active()
 		Phase.ACTIVE:
@@ -240,7 +264,7 @@ func _tick(delta: float) -> void:
 				phase = Phase.IDLE
 				_since_swing_end = 99.0 if heavy else 0.0
 				heavy = false
-				_animate_to(rest_pos, rest_rot, 0.18, Tween.TRANS_QUAD)
+				_animate_to(rest_pos, rest_rot, 0.18, Tween.TRANS_QUAD, Tween.EASE_OUT)
 
 func _begin_stage(s: int, is_heavy: bool = false) -> void:
 	Perf.mark("melee_heavy" if is_heavy else "axe_swing")
@@ -253,7 +277,15 @@ func _begin_stage(s: int, is_heavy: bool = false) -> void:
 	_hits_this_swing = 0
 	_enemies_hit = 0
 	var p: Array = _pose()
-	_animate_to(p[0], p[1], _windup_time(), Tween.TRANS_SINE)
+	var h := view_hand()
+	if h:
+		# Замах: запястье взводится; сильный — медленный набор с дрожью
+		h.set_state(&"heavy_charge" if heavy else (&"finisher_windup" if is_finisher() else &"melee_windup"))
+		h.wrist_target = _tuning().windup_wrist * (1.5 if heavy else 1.0)
+	if heavy:
+		_animate_to(p[0], p[1], _windup_time(), Tween.TRANS_QUAD, Tween.EASE_OUT)
+	else:
+		_animate_to(p[0], p[1], _windup_time(), Tween.TRANS_SINE)
 	swung.emit(stage)
 
 func _enter_active() -> void:
@@ -261,6 +293,15 @@ func _enter_active() -> void:
 	_phase_time = 0.0
 	var p: Array = _pose()
 	_animate_to(p[2], p[3], _active_time() * 1.15, Tween.TRANS_EXPO, Tween.EASE_OUT)
+	var h := view_hand()
+	if h:
+		var t := _tuning()
+		h.set_state(&"heavy_release" if heavy else (&"finisher" if is_finisher() else &"melee_strike"))
+		h.tremor = 0.0
+		h.wrist_target = t.strike_wrist * (1.4 if heavy or is_finisher() else 1.0)
+		# Доводка: пружина толкает дальше по ходу взмаха
+		var dir := ((p[2] as Vector3) - (p[0] as Vector3)).normalized()
+		h.kick(dir * (t.heavy_release_kick if heavy else t.strike_follow))
 	Audio.play("sounds/sfx/axe_swing_%d.wav" % (3 if heavy else _slot(stage) + 1))
 	if heavy:
 		Audio.thor_grunt()
@@ -269,9 +310,23 @@ func _enter_active() -> void:
 func _enter_recovery() -> void:
 	phase = Phase.RECOVERY
 	_phase_time = 0.0
+	var h := view_hand()
+	if h:
+		var t := _tuning()
+		h.wrist_target = Vector3.ZERO
+		# Сильный и добивающий — «тяжёлый» конец взмаха вниз
+		if heavy or is_finisher():
+			h.kick(Vector3(0, -t.finisher_kick, 0.2 * t.finisher_kick))
+		# Восстановление: часть пути назад к покою, остальное — после (тайминги фаз не меняются)
+		h.tween_to(h.position.lerp(rest_pos, t.recovery_blend), h.rotation_degrees.lerp(rest_rot, t.recovery_blend),
+			_recovery_time(), Tween.TRANS_SINE, Tween.EASE_OUT)
 
 func _animate_to(pos: Vector3, rot: Vector3, time: float, trans: Tween.TransitionType, ease_type: Tween.EaseType = Tween.EASE_IN_OUT) -> void:
 	if pivot == null:
+		return
+	var h := view_hand()
+	if h:
+		h.tween_to(pos, rot, time, trans, ease_type)
 		return
 	if _tween and _tween.is_valid():
 		_tween.kill()
@@ -339,6 +394,10 @@ func _do_hitbox() -> void:
 		_hits_this_swing += new_hits
 		var hs_mult := def.hitstop_mult if def else 1.0
 		FX.hitstop((heavy_hitstop if heavy else stage_hitstop[slot]) * hs_mult)
+		var h := view_hand()
+		if h:
+			# Отдача от попадания: рука вздрагивает назад (в hit-stop замирает — «вязнет» в цели)
+			h.kick(Vector3(0, 0, 0.25), Vector3(_tuning().hit_recoil * (1.6 if strong else 1.0), 0, 0))
 		player.camera_fx.add_trauma(heavy_shake if heavy else stage_shake[slot])
 		if strong:
 			Audio.play("sounds/sfx/axe_finisher.wav")

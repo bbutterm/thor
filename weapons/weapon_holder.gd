@@ -188,10 +188,20 @@ func switch_to(slot: int, instant: bool = false) -> void:
 		if _switch_tween and _switch_tween.is_valid():
 			_switch_tween.kill()
 		var half := switch_time * 0.5
-		_switch_tween = pivot.create_tween()
-		_switch_tween.set_parallel(true)
-		_switch_tween.tween_property(pivot, "position", pivot.position + Vector3(0.05, -0.55, 0.2), half).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		_switch_tween.tween_property(pivot, "rotation_degrees", pivot.rotation_degrees + Vector3(-45, 0, 0), half).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		var h := _hand()
+		if h:
+			# Убрать: рука уходит вниз и запрокидывает оружие, во второй половине — достать новое снизу
+			var t := player.view_motion.tuning
+			h.set_state(&"switch_down")
+			h.wrist_target = Vector3.ZERO
+			_switch_tween = h.new_tween().set_parallel(true)
+			_switch_tween.tween_property(h, "position", h.position + t.switch_down_pos, half).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			_switch_tween.tween_property(h, "rotation_degrees", h.rotation_degrees + t.switch_down_rot, half).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		else:
+			_switch_tween = pivot.create_tween()
+			_switch_tween.set_parallel(true)
+			_switch_tween.tween_property(pivot, "position", pivot.position + Vector3(0.05, -0.55, 0.2), half).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			_switch_tween.tween_property(pivot, "rotation_degrees", pivot.rotation_degrees + Vector3(-45, 0, 0), half).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		_switch_tween.chain().tween_callback(func() -> void: _show_slot(active_slot, true))
 	active_changed.emit(slot)
 	slots_changed.emit()
@@ -205,9 +215,24 @@ func _show_slot(slot: int, raise: bool) -> void:
 	if it == null or arm == null or pivot == null:
 		return
 	var d := it.def
-	arm.set_weapon(d.model, d.view_offset, d.view_rotation, d.view_scale)
+	arm.set_weapon(d.model, d.view_offset, d.view_rotation, d.view_scale * (ViewmodelMotion.tuning_res().gun_view_scale if it.is_ranged() else 1.0))
 	if _switch_tween and _switch_tween.is_valid() and not raise:
 		_switch_tween.kill()
+	var h := _hand()
+	if h:
+		var t := player.view_motion.tuning
+		h.rest_pos = d.view_rest_pos
+		h.rest_rot = d.view_rest_rot
+		h.stiffness_mult = 1.0
+		if raise:
+			h.set_state(&"switch_up")
+			h.snap(d.view_rest_pos + t.switch_down_pos, d.view_rest_rot + t.switch_down_rot)
+			_switch_tween = h.new_tween().set_parallel(true)
+			_switch_tween.tween_property(h, "position", d.view_rest_pos, switch_time * 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			_switch_tween.tween_property(h, "rotation_degrees", d.view_rest_rot, switch_time * 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		else:
+			h.snap(d.view_rest_pos, d.view_rest_rot)
+		return
 	if raise:
 		pivot.position = d.view_rest_pos + Vector3(0.05, -0.55, 0.2)
 		pivot.rotation_degrees = d.view_rest_rot + Vector3(-45, 0, 0)
@@ -218,6 +243,12 @@ func _show_slot(slot: int, raise: bool) -> void:
 	else:
 		pivot.position = d.view_rest_pos
 		pivot.rotation_degrees = d.view_rest_rot
+
+## Правая рука вьюмодели (ViewmodelMotion.Hand), null — пока Player не собрал руки.
+func _hand() -> ViewmodelMotion.Hand:
+	if player == null or player.view_motion == null or pivot == null:
+		return null
+	return player.view_motion.hand_for(pivot)
 
 func _enable_slot(slot: int) -> void:
 	axe.active = slot == MELEE

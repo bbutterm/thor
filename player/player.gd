@@ -227,11 +227,14 @@ var _hiccup_t: float = 0.0
 var _spin_t: float = 0.0
 ## Ярость и берсерк (GDD 8), см. player/rage.gd
 var rage: Rage
+## Анимация рук от первого лица (блок Б2), см. player/viewmodel_motion.gd
+var view_motion: ViewmodelMotion
 
 func _ready() -> void:
 	add_to_group("player")
 	_setup_weapons()
 	_setup_rage()
+	_setup_view_motion()
 	health = max_health
 	dash_charges_max = dash_charges_base
 	dash_charges = dash_charges_max
@@ -1185,6 +1188,14 @@ func _setup_rage() -> void:
 		rage.name = "Rage"
 		rage.player = self
 		add_child(rage)
+
+## Руки от первого лица: пружины, покачивание, позы действий (узел создаётся здесь, в player.tscn его нет).
+func _setup_view_motion() -> void:
+	view_motion = get_node_or_null("ViewmodelMotion") as ViewmodelMotion
+	if view_motion == null:
+		view_motion = ViewmodelMotion.new()
+		view_motion.name = "ViewmodelMotion"
+		add_child(view_motion)
 
 func is_berserk() -> bool:
 	return rage != null and rage.active

@@ -27,7 +27,6 @@ var _fire_slow_left: float = 0.0
 var _flash_left: float = 0.0
 var _flash: MeshInstance3D
 var _light: OmniLight3D
-var _tween: Tween
 
 func setup(h: WeaponHolder) -> void:
 	holder = h
@@ -245,6 +244,10 @@ func cancel_reload() -> void:
 	if not reloading:
 		return
 	reloading = false
+	var h := _hand()
+	if h and h.state == &"reload" and active:
+		h.wrist_target = Vector3.ZERO
+		h.to_rest(0.15)
 	reload_changed.emit(false, 0.0)
 
 func _finish_reload() -> void:
@@ -381,35 +384,44 @@ static func make_casing() -> RigidBody3D:
 	rb.add_child(mi)
 	return rb
 
-func _animate_kick(d: WeaponDef) -> void:
-	var pivot := holder.pivot
-	if pivot == null or holder.is_switching():
-		return
-	if _tween and _tween.is_valid():
-		_tween.kill()
-	var kick := clampf(d.recoil_kick_deg / 2.0, 0.3, 2.5)
-	_tween = pivot.create_tween().set_parallel(true)
-	_tween.tween_property(pivot, "position", d.view_rest_pos + Vector3(0, 0.02, 0.08) * kick, 0.03)
-	_tween.tween_property(pivot, "rotation_degrees", d.view_rest_rot + Vector3(9, 0, 0) * kick, 0.03)
-	_tween.chain().tween_property(pivot, "position", d.view_rest_pos, minf(0.16, d.fire_interval * 0.9 + 0.04)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	_tween.parallel().tween_property(pivot, "rotation_degrees", d.view_rest_rot, minf(0.16, d.fire_interval * 0.9 + 0.04)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+## Рука вьюмодели (правая, общая с мили), null — пока Player не собрал руки.
+func _hand() -> ViewmodelMotion.Hand:
+	if player == null or player.view_motion == null or holder.pivot == null:
+		return null
+	return player.view_motion.hand_for(holder.pivot)
 
+## Отдача в руке: импульс пружины по силе отдачи оружия (тяжёлое — сильнее и возвращается медленнее).
+func _animate_kick(d: WeaponDef) -> void:
+	var h := _hand()
+	if h == null or holder.is_switching():
+		return
+	var t := player.view_motion.tuning
+	var deg := maxf(0.2, d.recoil_kick_deg)
+	var back := minf(t.fire_kick_per_deg * deg, t.fire_kick_max)
+	var tilt := minf(t.fire_tilt_per_deg * deg, t.fire_tilt_max)
+	h.stiffness_mult = 1.0 / (1.0 + deg * 0.12)
+	h.kick(Vector3(randf_range(-0.05, 0.05), 0.22, 1.0) * back, Vector3(tilt, randf_range(-0.15, 0.15) * tilt, randf_range(-0.2, 0.2) * tilt))
+	h.set_state(&"fire", 0.05)
+
+## Перезарядка: опустить и наклонить, «вставили магазин» (толчок вверх), поднять. Длится ровно reload_time.
 func _animate_reload(time: float) -> void:
-	var pivot := holder.pivot
-	if pivot == null or item == null:
+	var h := _hand()
+	if h == null or item == null:
 		return
 	var d := item.def
-	if _tween and _tween.is_valid():
-		_tween.kill()
-	_tween = pivot.create_tween()
-	var low_pos := d.view_rest_pos + Vector3(-0.08, -0.22, 0.12)
-	var low_rot := d.view_rest_rot + Vector3(-30, 25, 35)
-	_tween.set_parallel(true)
-	_tween.tween_property(pivot, "position", low_pos, time * 0.25).set_trans(Tween.TRANS_SINE)
-	_tween.tween_property(pivot, "rotation_degrees", low_rot, time * 0.25).set_trans(Tween.TRANS_SINE)
-	# Встряхнуть (вставили магазин)
-	_tween.chain().tween_property(pivot, "position", low_pos + Vector3(0, 0.06, 0), time * 0.12)
-	_tween.chain().tween_property(pivot, "position", low_pos, time * 0.13)
-	_tween.chain().tween_interval(time * 0.2)
-	_tween.chain().tween_property(pivot, "position", d.view_rest_pos, time * 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_tween.parallel().tween_property(pivot, "rotation_degrees", d.view_rest_rot, time * 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var t := player.view_motion.tuning
+	var low_pos := d.view_rest_pos + t.reload_low_pos
+	var low_rot := d.view_rest_rot + t.reload_low_rot
+	h.set_state(&"reload", time)
+	h.wrist_target = Vector3(-10, 0, 0)
+	var tw := h.new_tween()
+	tw.set_parallel(true)
+	tw.tween_property(h, "position", low_pos, time * 0.25).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(h, "rotation_degrees", low_rot, time * 0.25).set_trans(Tween.TRANS_SINE)
+	tw.chain().tween_interval(time * 0.2)
+	tw.chain().tween_callback(func() -> void:
+		h.kick(Vector3(0, t.reload_slap, -0.2), Vector3(-t.reload_slap * 60.0, 0, 0)))
+	tw.chain().tween_interval(time * 0.25)
+	tw.chain().tween_callback(func() -> void: h.wrist_target = Vector3.ZERO)
+	tw.chain().tween_property(h, "position", d.view_rest_pos, time * 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(h, "rotation_degrees", d.view_rest_rot, time * 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
