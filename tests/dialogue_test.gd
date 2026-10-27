@@ -36,6 +36,7 @@ func _run() -> void:
 	_test_data()
 	_test_conditions()
 	_test_selection()
+	_test_shop_greeting_history()
 	_test_content()
 	_test_finale_gating()
 	_test_story_order()
@@ -137,6 +138,36 @@ func _test_selection() -> void:
 	Save.bump_event("death")
 	first = Dialogue.pick_scene("death")
 	check(not first.is_empty(), "на первую смерть есть сюжетная сцена (%s)" % first.get("id", ""))
+	Save.reset()
+
+## Брокк не называет Тора постоянным клиентом до повторного открытия ларька.
+func _test_shop_greeting_history() -> void:
+	print("-- Приветствие ларька")
+	Save.reset()
+	var regular: Dictionary = {}
+	for item in Dialogue.pools.get("dwarves.shop_enter", []):
+		if str(item.lines[0].get("id", "")) == "dwarves.shop_enter.03":
+			regular = item
+			break
+	check(not regular.is_empty(), "реплика о постоянном клиенте существует")
+	if regular.is_empty():
+		return
+	check(not Dialogue.check(regular._conds, Dialogue.context()), "в первый вход в зал реплика недоступна")
+	Save.data.stats.deaths = 1
+	Save.bump_event("shop_enter")
+	check(not Dialogue.check(regular._conds, Dialogue.context()), "первое открытие после смерти ещё не делает Тора постоянным клиентом")
+	Save.reset()
+	# Событие увеличивается при открытии прилавка, до реплики в ShopScreen.open().
+	Save.bump_event("shop_enter")
+	check(not Dialogue.check(regular._conds, Dialogue.context()), "в первое открытие прилавка реплика недоступна")
+	Save.end_run({"won": false, "cause": "draugr", "rooms": 1})
+	Save.load_game()
+	check(Save.deaths() == 1 and Save.event_count("shop_enter") == 1, "смерть и первое открытие сохраняются между забегами")
+	check(not Dialogue.check(regular._conds, Dialogue.context()), "на входе в ларёк следующего забега реплика ещё недоступна")
+	Save.bump_event("shop_enter")
+	check(Dialogue.check(regular._conds, Dialogue.context()), "после повторного открытия и смерти реплика доступна")
+	Save.data.stats.deaths = 0
+	check(not Dialogue.check(regular._conds, Dialogue.context()), "без смертей реплика об умирающем клиенте недоступна")
 	Save.reset()
 
 func _pool_size(prefix: String) -> int:
