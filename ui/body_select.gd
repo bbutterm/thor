@@ -1,7 +1,8 @@
 extends CanvasLayer
 class_name BodySelect
-## Экран выбора тела перед забегом (GDD 6, 18): слева — 9 тел (закрытые под замком с ценой),
-## справа — выбранное тело: HP и скорость, стартовое оружие, стиль движения, пассивка, изъян и слово Одина.
+## Экран выбора тела перед забегом (GDD 6, 18): слева — портрет выбранного тела во весь рост
+## (sprites/bodies/<id>.webp, закрытое — locked.webp; ScreenArt) и слово Одина, в середине — 9 тел
+## (закрытые под замком с ценой), справа — HP и скорость, стартовое оружие, стиль движения, пассивка, изъян.
 ## Открывают главное меню («Начать забег») и Game после «Плана тренировок». Строится кодом.
 ## Закрытое тело можно открыть прямо здесь, если хватает Славы (то же открытие, что в «Плане тренировок»).
 
@@ -9,8 +10,15 @@ class_name BodySelect
 signal closed(body_id: String)
 
 ## Колонок в сетке тел
-@export var columns: int = 3
-@export var card_size: Vector2 = Vector2(230, 100)
+@export var columns: int = 2
+@export var card_size: Vector2 = Vector2(212, 74)
+## Ширина колонки с портретом (портрет 2:3)
+@export var portrait_width: float = 300.0
+## Портрет при смене тела въезжает на столько пикселей и за столько секунд
+@export var portrait_slide: float = 36.0
+@export var portrait_slide_time: float = 0.18
+## Яркость фона-картинки (sprites/backgrounds/midgard_village.webp)
+@export var backdrop_alpha: float = 0.2
 const STYLE_GLYPH := {"base": "ᚱ", "nimble": "ᚹ", "nimble_plus": "ᚹ", "ram": "ᚦ", "jumper": "ᛇ", "heavy": "ᛟ", "slider": "ᛚ"}
 
 var bodies: Array[BodyDef] = []
@@ -34,6 +42,8 @@ var _fight_btn: Button
 var _back_btn: Button
 var _was_paused: bool = false
 var _lock_tex: Texture2D
+var _portrait: TextureRect
+var _portrait_tween: Tween
 
 func _ready() -> void:
 	layer = 36
@@ -70,6 +80,17 @@ func _build() -> void:
 	bg.color = Color(0.045, 0.04, 0.06, 1.0)
 	UIStyle.full_rect(bg)
 	_root.add_child(bg)
+	# Деревня Мидгарда за спиной — тускло, только настроение
+	var art := ScreenArt.backdrop("midgard")
+	if art:
+		var bga := TextureRect.new()
+		bga.texture = art
+		bga.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		bga.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		bga.modulate = Color(1, 1, 1, backdrop_alpha)
+		bga.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		UIStyle.full_rect(bga)
+		_root.add_child(bga)
 	var glyph := UIStyle.label("ᛒ", 460, Color(UIStyle.GOLD, 0.035), 0)
 	glyph.position = Vector2(-40, 140)
 	_root.add_child(glyph)
@@ -101,7 +122,20 @@ func _build() -> void:
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	main.add_child(body)
 
-	# Слева: сетка тел, под ней — слово Одина о выбранном теле
+	# Слева: портрет выбранного тела во весь рост, поверх ног — слово Одина
+	var pcol := Control.new()
+	pcol.custom_minimum_size = Vector2(portrait_width, 0)
+	pcol.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(pcol)
+	_portrait = TextureRect.new()
+	_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_portrait.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	_portrait.offset_top = -portrait_width * 1.5
+	_portrait.offset_bottom = -40
+	pcol.add_child(_portrait)
+	# В середине: сетка тел
 	var left := VBoxContainer.new()
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.add_theme_constant_override("separation", 12)
@@ -120,7 +154,7 @@ func _build() -> void:
 
 	# Карточка выбранного тела
 	var rp := UIStyle.panel(Color(0.06, 0.055, 0.08, 0.95), Color(UIStyle.GOLD, 0.6), "wood")
-	rp.custom_minimum_size = Vector2(450, 0)
+	rp.custom_minimum_size = Vector2(410, 0)
 	body.add_child(rp)
 	var rv := VBoxContainer.new()
 	rv.add_theme_constant_override("separation", 6)
@@ -132,11 +166,11 @@ func _build() -> void:
 	rscroll.add_child(rv)
 	_name_label = UIStyle.label("", 30, UIStyle.GOLD, 8)
 	_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_name_label.custom_minimum_size = Vector2(380, 0)
+	_name_label.custom_minimum_size = Vector2(340, 0)
 	rv.add_child(_name_label)
 	_stats_label = UIStyle.label("", 17, UIStyle.TEXT, 4)
 	_stats_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_stats_label.custom_minimum_size = Vector2(380, 0)
+	_stats_label.custom_minimum_size = Vector2(340, 0)
 	rv.add_child(_stats_label)
 	_start_label = UIStyle.label("", 18, UIStyle.TEXT, 4)
 	_start_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -151,20 +185,24 @@ func _build() -> void:
 	_flaw_title = pair[0]
 	_flaw_desc = pair[1]
 	var op := UIStyle.panel(Color(0.06, 0.055, 0.08, 0.95), Color(0.3, 0.42, 0.85, 0.8))
-	left.add_child(op)
+	op.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	op.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	op.offset_top = -120
+	op.offset_bottom = 0
+	pcol.add_child(op)
 	var oh := HBoxContainer.new()
-	oh.add_theme_constant_override("separation", 12)
+	oh.add_theme_constant_override("separation", 8)
 	op.add_child(oh)
 	_odin = Portrait.new()
-	_odin.custom_minimum_size = Vector2(96, 104)
+	_odin.custom_minimum_size = Vector2(64, 84)
 	oh.add_child(_odin)
 	var ov := VBoxContainer.new()
 	ov.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	oh.add_child(ov)
-	ov.add_child(UIStyle.label(tr("ОДИН"), 15, Color(0.55, 0.68, 1.0), 4))
-	_odin_text = UIStyle.label("", 18, UIStyle.TEXT, 4)
+	ov.add_child(UIStyle.label(tr("ОДИН"), 14, Color(0.55, 0.68, 1.0), 4))
+	_odin_text = UIStyle.label("", 16, UIStyle.TEXT, 4)
 	_odin_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_odin_text.custom_minimum_size = Vector2(300, 0)
+	_odin_text.custom_minimum_size = Vector2(190, 0)
 	ov.add_child(_odin_text)
 
 	var foot := HBoxContainer.new()
@@ -195,7 +233,7 @@ func _section(parent: Control, caption: String, col: Color) -> Array:
 	parent.add_child(t)
 	var d := UIStyle.label("", 16, UIStyle.TEXT_DIM, 3)
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	d.custom_minimum_size = Vector2(380, 0)
+	d.custom_minimum_size = Vector2(340, 0)
 	parent.add_child(d)
 	return [t, d]
 
@@ -261,10 +299,10 @@ func _make_card(b: BodyDef) -> Button:
 	UIStyle.full_rect(hb)
 	hb.offset_left = 12
 	hb.offset_right = -10
-	hb.offset_top = 8
-	hb.offset_bottom = -8
+	hb.offset_top = 6
+	hb.offset_bottom = -6
 	btn.add_child(hb)
-	# Значок: руна стиля движения или замок
+	# Значок: голова с портрета тела (закрытое — силуэт с замком), нет картинки — руна стиля движения или замок
 	var icon_box := PanelContainer.new()
 	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon_box.custom_minimum_size = Vector2(56, 56)
@@ -276,7 +314,26 @@ func _make_card(b: BodyDef) -> Button:
 	isb.set_corner_radius_all(28)
 	icon_box.add_theme_stylebox_override("panel", isb)
 	hb.add_child(icon_box)
-	if locked and _lock_tex:
+	var thumb := ScreenArt.body_thumb(b.id, locked)
+	if thumb:
+		# Круглая «монета» с головой: картинка обрезана по кругу панели (clip_children), кольцо — поверх
+		icon_box.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
+		var face := TextureRect.new()
+		face.texture = thumb
+		face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		face.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if locked:
+			face.modulate = Color(0.75, 0.75, 0.8)
+		icon_box.add_child(face)
+		# Кольцо — поверх картинки (внутри круга, поэтому обрезка его не трогает)
+		var ring := Panel.new()
+		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var rsb := isb.duplicate() as StyleBoxFlat
+		rsb.draw_center = false
+		ring.add_theme_stylebox_override("panel", rsb)
+		icon_box.add_child(ring)
+	elif locked and _lock_tex:
 		var trect := TextureRect.new()
 		trect.texture = _lock_tex
 		trect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -343,6 +400,7 @@ func _update_detail() -> void:
 	var b := selected
 	var locked := is_locked(b.id)
 	_mark_selected()
+	_show_portrait(b.id, locked)
 	_name_label.text = tr(b.display_name).to_upper()
 	_stats_label.text = (tr("ЗАКРЫТО · %d ᛟ\n") % price_of(b) if locked else "") + \
 		tr("HP %d  ·  скорость %s  ·  рывков %d") % [int(b.max_health), _num(b.move_speed), b.dash_charges]
@@ -366,6 +424,25 @@ func _update_detail() -> void:
 	else:
 		_fight_btn.text = tr("В бой ▸")
 		_fight_btn.disabled = false
+
+## Портрет выбранного тела: новый въезжает сбоку и проявляется. Закрытое — силуэт с замком.
+func _show_portrait(id: String, locked: bool) -> void:
+	var t := ScreenArt.body_portrait(id, locked)
+	if t == _portrait.texture:
+		return
+	_portrait.texture = t
+	_portrait.set_meta("body", id)
+	if _portrait_tween and _portrait_tween.is_valid():
+		_portrait_tween.kill()
+	_portrait.modulate = Color(1, 1, 1, 0.0) if not locked else Color(0.85, 0.85, 0.9, 0.0)
+	_portrait.position.x = portrait_slide
+	_portrait_tween = _portrait.create_tween().set_parallel()
+	_portrait_tween.tween_property(_portrait, "modulate:a", 1.0, portrait_slide_time)
+	_portrait_tween.tween_property(_portrait, "position:x", 0.0, portrait_slide_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+## Что сейчас на портрете (тесты): текстура и id тела
+func portrait_texture() -> Texture2D:
+	return _portrait.texture
 
 func _fill_trait(pd: PassiveDef, title: Label, desc: Label) -> void:
 	if pd == null:

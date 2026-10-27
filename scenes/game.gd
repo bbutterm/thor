@@ -84,6 +84,7 @@ func _load_room() -> void:
 	room.cleared.connect(_on_room_cleared)
 	room.exit_reached.connect(_on_exit_reached)
 	room.boss_spawned.connect(hud.show_boss)
+	room.boss_spawned.connect(_on_boss_spawned)
 	room.enemy_count_changed.connect(hud.set_enemy_count)
 	# Руна «Щит Сиф» восстанавливается между волнами
 	room.wave_started.connect(func(_i: int) -> void: player.refill_shield())
@@ -97,6 +98,8 @@ func _load_room() -> void:
 	hud.fade_in()
 	# Пока экран затемнён — прогреваем шейдеры (в каждом зале: свои материалы под светом огня/снарядов)
 	ShaderWarmup.run(self)
+	# Загрузочный экран (старт забега / переход между залами) — зал готов, убираем
+	LoadingScreen.finish(get_tree())
 	if Run.is_boss_room() and not Dialogue.on_boss_intro():
 		Odin.say("boss_start")
 	# Даём осмотреться полсекунды
@@ -112,6 +115,7 @@ func _on_room_cleared() -> void:
 	if Run.is_boss_room():
 		Run.won = true
 		_ending = true
+		ScreenArt.prefetch_between_runs()
 		Dialogue.on_boss_defeat()
 		Dialogue.thor_bark("boss_win", 1.0)
 		get_tree().create_timer(1.6, false).timeout.connect(func() -> void:
@@ -176,6 +180,7 @@ func _on_exit_reached() -> void:
 		return
 	if Run.advance_room():
 		hud.fade_out(0.25)
+		LoadingScreen.transition(get_tree(), 0.25)
 		get_tree().create_timer(0.25, false).timeout.connect(_load_room)
 	else:
 		Run.won = true
@@ -185,8 +190,28 @@ func _on_player_died() -> void:
 	if _ending:
 		return
 	_ending = true
-	tracker.finish(false)
+	var result := tracker.finish(false)
+	ScreenArt.prefetch_between_runs()  # фоны дивана, портреты тел — пока идёт страница и итог
+	# «Страница комикса» (ui/comic_page.gd): стоп-кадр смерти ~2 с, потом сразу итог
+	var page := ComicPage.show_death(self, result)
+	if page:
+		await page.closed
+		_show_end(false)
+		return
 	get_tree().create_timer(1.4, false).timeout.connect(func() -> void: _show_end(false))
+
+## Босс со своей заставкой (Свен, Ярл — ScreenArt.BOSSES): карточка-«вклейка» при появлении,
+## «страница комикса» при смерти. Поток не меняется: вставки ставят игру на паузу и ждут.
+func _on_boss_spawned(boss: Enemy) -> void:
+	var info := ScreenArt.boss_info(boss)
+	if info.is_empty():
+		return
+	BossCard.show_for(self, boss)
+	var boss_id := str(info.id)
+	var title := str(boss.get_meta("boss_title", ""))
+	boss.died.connect(func(_e: Enemy) -> void:
+		if not player.is_dead:
+			ComicPage.show_boss(self, boss_id, title), CONNECT_ONE_SHOT)
 
 func _on_kill_streak(_count: int) -> void:
 	Odin.say("streak10")
@@ -231,6 +256,7 @@ func restart_run(body_id: String = "") -> void:
 	if body_id == "" and Run.body:
 		body_id = Run.body.id
 	Run.start_run(body_id)
+	await LoadingScreen.show_now(get_tree())
 	get_tree().reload_current_scene()
 
 func go_to_menu() -> void:
