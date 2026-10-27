@@ -9,11 +9,16 @@ extends Node
 ##   {"pool": "odin.run_start"} внутри сцены — подставить случайную реплику из пула; "$reaction" — реакцию на смерть.
 ## Выбор диалога: самая приоритетная непросмотренная сцена события с выполненными условиями,
 ## иначе — случайная реплика из пула.
+## Перевод (scripts/i18n.gd): data/dialogues/<язык>/<файл>.json — {"speakers": {id: {"en": имя}},
+##   "lines": {id реплики: {"ru": оригинал, "en": перевод}}}; ответ Тора — ключ «<id реплики>/<id выбора>».
+##   Нет перевода — русский. Подставляется при показе (pool_lines / expand / bark); шаблоны —
+##   tools/i18n_dialogues.py. Подписи выборов («Огрызнуться») — через tr (data/i18n/en.po).
 
 signal scene_started(scene_id: String)
 signal scene_finished(scene_id: String)
 
 const DIR := "res://data/dialogues/"
+## Куда смотреть за переводом: DIR + <язык> + "/" + <файл>.json
 const EMOTIONS := ["neutral", "happy", "angry", "shocked", "smug", "embarrassed"]
 const OPS := ["==", "!=", ">=", "<=", ">", "<"]
 ## Флаги без значения
@@ -46,6 +51,11 @@ var _bubble: BarkBubble
 var _last_pick: Dictionary = {}
 var _playing: bool = false
 var _extra_ctx: Dictionary = {}
+## Перевод текущего языка: id реплики → текст; id говорящего → имя. Русские имена — _ru_names.
+var _loc_lines: Dictionary = {}
+var _loc_names: Dictionary = {}
+var _ru_names: Dictionary = {}
+var _loc_locale: String = ""
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -53,6 +63,9 @@ func _ready() -> void:
 		if a.begins_with("res://tests/"):
 			in_run_scenes = false
 	load_all()
+	GameSettings.events.changed.connect(func(section: String, key: String) -> void:
+		if section == "text" and key == "language":
+			refresh_locale())
 
 # --- Загрузка ---
 
@@ -71,6 +84,92 @@ func load_all() -> void:
 	for f in files:
 		if str(f).get_extension() == "json":
 			_load_file(DIR + str(f))
+	_ru_names.clear()
+	for k in speakers:
+		_ru_names[k] = {"name": speakers[k].get("name", k), "initial": speakers[k].get("initial", "")}
+	_loc_locale = ""
+	refresh_locale()
+
+# --- Перевод ---
+
+## Перечитать перевод под текущий язык (смена языка в настройках, load_all). Имена говорящих
+## меняются прямо в speakers — портреты, пузыри и журнал берут def.name.
+func refresh_locale() -> void:
+	var loc := I18n.locale()
+	if loc == _loc_locale:
+		return
+	_loc_locale = loc
+	_loc_lines.clear()
+	_loc_names.clear()
+	if loc != I18n.DEFAULT:
+		var dir := DIR + loc + "/"
+		var files: Array = []
+		var d := DirAccess.open(dir)
+		if d:
+			files = Array(d.get_files())
+		if files.is_empty() and DirAccess.dir_exists_absolute(dir):
+			files = Array(ResourceLoader.list_directory(dir))
+		files.sort()
+		for f in files:
+			if str(f).get_extension() == "json":
+				_load_locale_file(dir + str(f), loc)
+	for k in speakers:
+		var ru: Dictionary = _ru_names.get(k, {})
+		var nm := str(_loc_names.get(k, ""))
+		speakers[k]["name"] = nm if nm != "" else str(ru.get("name", k))
+		var ini := str(ru.get("initial", ""))
+		if nm != "":
+			ini = nm.left(1)
+		if ini != "":
+			speakers[k]["initial"] = ini
+
+func _load_locale_file(p: String, loc: String) -> void:
+	var f := FileAccess.open(p, FileAccess.READ)
+	if f == null:
+		return
+	var json := JSON.new()
+	if json.parse(f.get_as_text()) != OK or not json.data is Dictionary:
+		load_errors.append("%s:%d: %s" % [p, json.get_error_line(), json.get_error_message()])
+		return
+	var d: Dictionary = json.data
+	var sp: Dictionary = d.get("speakers", {})
+	for k in sp:
+		var v: Variant = sp[k]
+		var nm := str((v as Dictionary).get(loc, "")) if v is Dictionary else str(v)
+		if nm != "":
+			_loc_names[k] = nm
+	var ls: Dictionary = d.get("lines", {})
+	for k in ls:
+		var v: Variant = ls[k]
+		var t := str((v as Dictionary).get(loc, "")) if v is Dictionary else str(v)
+		if t.strip_edges() != "":
+			_loc_lines[k] = t
+
+## Есть ли перевод реплики (id) на текущий язык
+func has_translation(line_id: String) -> bool:
+	refresh_locale()
+	return _loc_lines.has(line_id)
+
+## Реплика на текущем языке (копия не нужна — меняет переданный словарь): текст по id,
+## ответы Тора по «id/выбор», подписи выборов — tr. Нет перевода — как есть (русский).
+func localize_line(line: Dictionary) -> Dictionary:
+	refresh_locale()
+	if _loc_locale == I18n.DEFAULT:
+		return line
+	var lid := str(line.get("id", ""))
+	if lid != "" and _loc_lines.has(lid):
+		line["text"] = _loc_lines[lid]
+	for ch in line.get("choices", []):
+		if not ch is Dictionary:
+			continue
+		var key := lid + "/" + str(ch.get("id", ""))
+		if _loc_lines.has(key):
+			ch["text"] = _loc_lines[key]
+		ch["label"] = tr(str(ch.get("label", "")))
+		for sub in ch.get("lines", []):
+			if sub is Dictionary:
+				localize_line(sub)
+	return line
 
 func _load_file(p: String) -> void:
 	var f := FileAccess.open(p, FileAccess.READ)
@@ -268,7 +367,11 @@ func pool_lines(pool: String) -> Array:
 	if ok.size() > 1 and _last_pick.get(pool, -1) == items.find(ok[idx]):
 		idx = (idx + 1) % ok.size()
 	_last_pick[pool] = items.find(ok[idx])
-	return (ok[idx].lines as Array).duplicate(true)
+	var out: Array = (ok[idx].lines as Array).duplicate(true)
+	for l in out:
+		if l is Dictionary:
+			localize_line(l)
+	return out
 
 func has_pool(pool: String) -> bool:
 	return not pools.get(pool, []).is_empty()
@@ -352,7 +455,7 @@ func expand(lines: Array) -> Array:
 				pool = reaction_pool(bool(Save.data.get("last_run", {}).get("won", false)))
 			out.append_array(expand(pool_lines(pool)))
 			continue
-		var line: Dictionary = l.duplicate(true)
+		var line: Dictionary = localize_line(l.duplicate(true))
 		line["text"] = format_text(str(line.get("text", "")))
 		for ch in line.get("choices", []):
 			ch["text"] = format_text(str(ch.get("text", "")))
@@ -401,6 +504,7 @@ func run_trigger(trigger: String, fallback_pool: String = "", bubble_fallback: b
 	return false
 
 ## Реплика-пузырь без паузы. Один — через HUD (Odin.line_spoken), остальные — в углу экрана.
+## Реплику из pool_lines уже перевели — повторно не трогаем (обучение подставило в неё клавиши).
 func bark(line: Dictionary) -> void:
 	var text := format_text(str(line.get("text", "")))
 	if text == "":

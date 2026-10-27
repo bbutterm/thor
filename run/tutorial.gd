@@ -126,17 +126,17 @@ static func key_name(action: String) -> String:
 		if ev is InputEventMouseButton:
 			match (ev as InputEventMouseButton).button_index:
 				MOUSE_BUTTON_LEFT:
-					return "ЛКМ"
+					return I18n.t("ЛКМ")
 				MOUSE_BUTTON_RIGHT:
-					return "ПКМ"
+					return I18n.t("ПКМ")
 				MOUSE_BUTTON_MIDDLE:
-					return "СКМ"
+					return I18n.t("СКМ")
 	return action
 
 static func _ru_key(s: String) -> String:
 	match s:
 		"Space":
-			return "Пробел"
+			return I18n.t("Пробел")
 		"Shift":
 			return "Shift"
 		"Ctrl":

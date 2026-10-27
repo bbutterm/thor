@@ -2,7 +2,7 @@ extends RefCounted
 class_name GameSettings
 ## Настройки игрока (GDD 22) с сохранением в user://settings.cfg (ConfigFile).
 ## Секции: [audio] громкости шин, [controls] чувствительность/инверсия, [video] экран и камера,
-## [hud] прицел и индикаторы, [text] размер текста и скорость печати, [access] доступность,
+## [hud] прицел и индикаторы, [text] размер текста, скорость печати и язык (ru/en, scripts/i18n.gd), [access] доступность,
 ## [comic] комиксовые слова (enabled, scale), [input] переназначенные клавиши (действие → список событий).
 ## Чужие секции файла при сохранении не трогаем. Тесты (res://tests/*) и --selftest пишут в
 ## user://test_settings.cfg — настоящий файл игрока не портится.
@@ -38,12 +38,13 @@ const DEFAULTS := {
 	"controls": {"mouse_sensitivity": 1.0, "gamepad_sensitivity": 1.0, "invert_y": false},
 	"video": {"fullscreen": false, "vsync": true, "max_fps": 0, "fov": 85.0, "shake": 1.0, "head_bob": true, "ui_scale": 1.0},
 	"hud": {"crosshair": "dot", "crosshair_size": 1.0, "crosshair_alpha": 0.85, "crosshair_color": "white", "offscreen": true, "slam_meter": true},
-	"text": {"text_scale": 1.0, "typing_speed": 1.0},
+	"text": {"text_scale": 1.0, "typing_speed": 1.0, "language": "ru"},
 	"access": {"colorblind": "off", "aim_assist": false, "slam_slowmo": false},
 	"comic": {"enabled": true, "scale": 1.0},
 }
 
-## Действия, которые можно переназначить (пауза — нет: Esc всегда выводит из меню)
+## Действия, которые можно переназначить (пауза — нет: Esc всегда выводит из меню).
+## Подписи — ключи перевода (tr при показе, ui/settings_panel.gd)
 const REMAP_ACTIONS := [
 	["move_forward", "Вперёд"], ["move_back", "Назад"], ["move_left", "Влево"], ["move_right", "Вправо"],
 	["jump", "Прыжок"], ["dash", "Рывок"], ["slam", "Удар-приземление (в воздухе)"],
@@ -88,6 +89,9 @@ static func ensure_loaded() -> void:
 			values["input"] = {}
 			for action in cf.get_section_keys("input"):
 				values["input"][action] = cf.get_value("input", action, [])
+	# Тесты сравнивают русские строки: язык из тестового файла не берём (i18n_test включает его сам)
+	if _is_test():
+		values["text"]["language"] = DEFAULTS["text"]["language"]
 	_sync_fast()
 
 ## Перечитать файл (тесты, смена пути)
@@ -126,6 +130,8 @@ static func _sanitize(section: String, key: String, v: Variant) -> Variant:
 					return clampf(f, 0.4, 2.5)
 			return clampf(f, 0.0, 1.0)
 		TYPE_STRING:
+			if key == "language":
+				return I18n.sanitize(str(v))
 			return str(v)
 	return v
 
@@ -205,6 +211,7 @@ static func crosshair_color() -> Color:
 ## При старте игры: звук, окно, клавиши, фильтр цвета
 static func apply_startup() -> void:
 	ensure_loaded()
+	apply_language()
 	apply_audio()
 	apply_video()
 	apply_input()
@@ -220,11 +227,21 @@ static func _apply_one(section: String, key: String) -> void:
 		"access":
 			if key == "colorblind":
 				apply_colorblind()
+		"text":
+			if key == "language":
+				apply_language()
 	if section in ["controls", "video"]:
 		var tree := Engine.get_main_loop() as SceneTree
 		if tree:
 			for p in tree.get_nodes_in_group("player"):
 				apply_to_player(p)
+
+## Язык интерфейса и диалогов (TranslationServer)
+static func apply_language() -> void:
+	I18n.apply(str(get_value("text", "language")))
+
+static func language() -> String:
+	return str(get_value("text", "language"))
 
 ## Индекс шины по имени; SFX и Voice создаём, если их нет (посылают в Master)
 static func bus_index(bus_name: String) -> int:
@@ -435,24 +452,24 @@ static func binding_label(s: String) -> String:
 	if parts[0] == "mouse":
 		match int(parts[1]):
 			MOUSE_BUTTON_LEFT:
-				return "ЛКМ"
+				return I18n.t("ЛКМ")
 			MOUSE_BUTTON_RIGHT:
-				return "ПКМ"
+				return I18n.t("ПКМ")
 			MOUSE_BUTTON_MIDDLE:
-				return "СКМ"
+				return I18n.t("СКМ")
 			MOUSE_BUTTON_WHEEL_UP:
-				return "Колесо ↑"
+				return I18n.t("Колесо ↑")
 			MOUSE_BUTTON_WHEEL_DOWN:
-				return "Колесо ↓"
+				return I18n.t("Колесо ↓")
 			MOUSE_BUTTON_XBUTTON1:
-				return "Мышь 4"
+				return I18n.t("Мышь 4")
 			MOUSE_BUTTON_XBUTTON2:
-				return "Мышь 5"
-		return "Мышь %s" % parts[1]
+				return I18n.t("Мышь 5")
+		return I18n.t("Мышь %s") % parts[1]
 	var code := int(parts[1])
 	match code:
 		KEY_SPACE:
-			return "Пробел"
+			return I18n.t("Пробел")
 		KEY_SHIFT:
 			return "Shift"
 		KEY_CTRL:

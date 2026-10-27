@@ -44,17 +44,17 @@ func _ready() -> void:
 	vb.add_theme_constant_override("separation", 14)
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(vb)
-	var title := UIStyle.label("ᛗ  МЬЁЛЬНИР ЖАЖДЕТ СИЛЫ  ᛗ", 40, UIStyle.ICE, 10)
+	var title := UIStyle.label(tr("ᛗ  МЬЁЛЬНИР ЖАЖДЕТ СИЛЫ  ᛗ"), 40, UIStyle.ICE, 10)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(title)
-	var hint := UIStyle.label("Трейт молота меняет то, как ты им играешь. Кликни или нажми 1 / 2 / 3", 18, UIStyle.TEXT_DIM, 4)
+	var hint := UIStyle.label(tr("Трейт молота меняет то, как ты им играешь. Кликни или нажми 1 / 2 / 3"), 18, UIStyle.TEXT_DIM, 4)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(hint)
 	_cards = HBoxContainer.new()
 	_cards.add_theme_constant_override("separation", 30)
 	_cards.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_child(_cards)
-	_reroll_btn = UIStyle.button("ПЕРЕБРОС  [R]", 20)
+	_reroll_btn = UIStyle.button(tr("ПЕРЕБРОС  [R]"), 20)
 	_reroll_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_reroll_btn.visible = false
 	_reroll_btn.pressed.connect(func() -> void: reroll_requested.emit())
@@ -70,7 +70,7 @@ func open(choices: Array[MjolnirTrait]) -> void:
 	for i in choices.size():
 		_cards.add_child(_make_card(choices[i], i))
 	_reroll_btn.visible = Run.trait_rerolls > 0
-	_reroll_btn.text = "ПЕРЕБРОС ОТ ЭЙТРИ (%d)  [R]" % Run.trait_rerolls
+	_reroll_btn.text = tr("ПЕРЕБРОС ОТ ЭЙТРИ (%d)  [R]") % Run.trait_rerolls
 	visible = true
 	_open_time = Time.get_ticks_msec() / 1000.0
 	get_tree().paused = true
@@ -82,11 +82,11 @@ func open(choices: Array[MjolnirTrait]) -> void:
 func _status(t: MjolnirTrait) -> Array:
 	var lv := Run.mjolnir_trait_level(t.id)
 	if lv > 0:
-		return ["УРОВЕНЬ %d" % (lv + 1), UIStyle.GOLD]
+		return [tr("УРОВЕНЬ %d") % (lv + 1), UIStyle.GOLD]
 	var old := Run.mjolnir_trait_conflict(t)
 	if old:
-		return ["ЗАМЕНИТ: %s" % old.title, REPLACE]
-	return ["НОВЫЙ", NEW]
+		return [tr("ЗАМЕНИТ: %s") % tr(old.title), REPLACE]
+	return [tr("НОВЫЙ"), NEW]
 
 ## Карточка трейта — card_trait из UI-комплекта (SkinCard, золотые молнии — отличие от рун):
 ## иконка трейта в круге, название, группа, описание и статус (новый / уровень / заменит).
@@ -97,10 +97,10 @@ func _make_card(t: MjolnirTrait, index: int) -> Button:
 	b.set_icon(UISkin.trait_icon(str(t.id)), "", t.color)
 	if UISkin.trait_icon(str(t.id)) == null:
 		b.set_icon(null, t.glyph, t.color)
-	b.add_text(t.title, 19, t.color.lightened(0.45), 5)
+	b.add_text(tr(t.title), 19, t.color.lightened(0.45), 5)
 	if t.group != "":
-		b.add_text("группа: " + t.group, 13, Color(t.color, 0.85), 3)
-	b.add_text(t.description_lvl2 if lv > 0 and t.description_lvl2 != "" else t.description, 13, UIStyle.TEXT, 3)
+		b.add_text(tr("группа: %s") % tr(t.group), 13, Color(t.color, 0.85), 3)
+	b.add_text(tr(t.description_lvl2 if lv > 0 and t.description_lvl2 != "" else t.description), 13, UIStyle.TEXT, 3)
 	var st := _status(t)
 	var s := b.add_text(st[0], 15, st[1], 4)
 	_status_labels.append(s)
@@ -129,7 +129,7 @@ func choose(index: int, confirmed: bool = false) -> void:
 	if old and not confirmed and _confirm_index != index:
 		_confirm_index = index
 		var l := _status_labels[index]
-		l.text = "Ещё раз — заменить «%s»" % old.title
+		l.text = tr("Ещё раз — заменить «%s»") % tr(old.title)
 		l.label_settings.font_color = REPLACE
 		return
 	visible = false

@@ -28,7 +28,7 @@ func can_interact() -> bool:
 	return true
 
 func prompt_text(_holder: WeaponHolder) -> String:
-	return "[E] Ларёк Брокка и Эйтри"
+	return tr("[E] Ларёк Брокка и Эйтри")
 
 func interact(_holder: WeaponHolder) -> void:
 	var g := get_tree().current_scene as Game
@@ -139,7 +139,7 @@ func _box(parent: Node3D, pos: Vector3, size: Vector3, col: Color) -> MeshInstan
 static func make_sign_label() -> Label3D:
 	var l := Label3D.new()
 	l.name = "Sign"
-	l.text = SIGN_TEXT
+	l.text = I18n.t(SIGN_TEXT)
 	l.font_size = 64
 	l.pixel_size = 0.0055
 	l.outline_size = 10

@@ -78,30 +78,30 @@ static func unavailable_reason(game: Game, it: ShopItemDef) -> String:
 	match it.id:
 		"shawarma":
 			if p.health >= p.max_health - 0.5:
-				return "Ты и так сыт"
+				return I18n.t("Ты и так сыт")
 		"rune":
 			if Run.random_rune_choices(1).is_empty():
-				return "Руны кончились"
+				return I18n.t("Руны кончились")
 		"sharpen":
 			var w := sharpen_target(game)
 			if w == null:
-				return "Нечего точить"
+				return I18n.t("Нечего точить")
 			if w.level >= 3:
-				return "%s — уже уровень 3" % w.def.display_name
+				return I18n.t("%s — уже уровень 3") % I18n.t(w.def.display_name)
 		"ammo":
 			var h := _holder(game)
 			if h == null or h.ranged == null:
-				return "Нет ренжа"
+				return I18n.t("Нет ренжа")
 			if h.ranged.reserve >= h.ranged.def.reserve_max and h.ranged.mag >= h.ranged.def.mag_size:
-				return "Запас полный"
+				return I18n.t("Запас полный")
 		"mjolnir_service":
 			if not Run.mjolnir_traits.is_empty() and upgradable_traits().is_empty():
-				return "Трейты на максимуме"
+				return I18n.t("Трейты на максимуме")
 			if Run.mjolnir_traits.is_empty() and Run.trait_rerolls > 0:
-				return "Переброс уже заказан"
+				return I18n.t("Переброс уже заказан")
 		"sell_rune":
 			if Run.runes.is_empty():
-				return "Нет рун"
+				return I18n.t("Нет рун")
 	return ""
 
 ## Подробность для строки (что именно будет).
@@ -111,9 +111,9 @@ static func detail(game: Game, it: ShopItemDef) -> String:
 			return "+%d HP" % int(round(game.player.max_health * it.amount))
 		"sharpen":
 			var w := sharpen_target(game)
-			return ("%s: ур. %d → %d" % [w.def.display_name, w.level, w.level + 1]) if w and w.level < 3 else ""
+			return (I18n.t("%s: ур. %d → %d") % [I18n.t(w.def.display_name), w.level, w.level + 1]) if w and w.level < 3 else ""
 		"mjolnir_service":
-			return "Улучшить трейт" if not Run.mjolnir_traits.is_empty() else "Переброс у мини-босса"
+			return I18n.t("Улучшить трейт") if not Run.mjolnir_traits.is_empty() else I18n.t("Переброс у мини-босса")
 	return ""
 
 static func can_buy(game: Game, it: ShopItemDef) -> bool:
@@ -133,12 +133,12 @@ static func sub_choices(it: ShopItemDef) -> Array:
 	match it.id:
 		"mjolnir_service":
 			for t in upgradable_traits():
-				out.append({"id": str(t.id), "title": t.title, "desc": "Уровень %d → %d" % [Run.mjolnir_trait_level(t.id), Run.mjolnir_trait_level(t.id) + 1], "glyph": t.glyph, "color": t.color})
+				out.append({"id": str(t.id), "title": I18n.t(t.title), "desc": I18n.t("Уровень %d → %d") % [Run.mjolnir_trait_level(t.id), Run.mjolnir_trait_level(t.id) + 1], "glyph": t.glyph, "color": t.color})
 		"sell_rune":
 			var owned := owned_runes()
 			for i in range(owned.size() - 1, maxi(-1, owned.size() - 3), -1):
 				var r := owned[i]
-				out.append({"id": r.id, "title": r.title, "desc": "Уровень %d. Брокк даст +%d" % [Run.rune_level(r.id), it.price], "glyph": r.glyph, "color": r.color})
+				out.append({"id": r.id, "title": I18n.t(r.title), "desc": I18n.t("Уровень %d. Брокк даст +%d") % [Run.rune_level(r.id), it.price], "glyph": r.glyph, "color": r.color})
 	return out
 
 ## Купить. arg — выбор второго шага (id трейта / руны; для «Руны» — id руны без экрана выбора).
@@ -149,31 +149,31 @@ static func buy(game: Game, it: ShopItemDef, arg: String = "") -> Dictionary:
 	Perf.mark("shop_buy_" + it.id)
 	var cost := price(game, it)
 	var p := game.player
-	var res := {"ok": true, "text": it.title, "opened": false}
+	var res := {"ok": true, "text": I18n.t(it.title), "opened": false}
 	if it.pays_player:
 		if not Run.remove_rune(arg):
-			return {"ok": false, "text": "Нет такой руны"}
+			return {"ok": false, "text": I18n.t("Нет такой руны")}
 		while Run.remove_rune(arg):
 			pass
 		p.recalc_from_runes(Run)
 		Run.add_silver(cost)
-		res.text = "Руна сдана: +%d серебра" % cost
+		res.text = I18n.t("Руна сдана: +%d серебра") % cost
 		return res
 	Run.spend_silver(cost)
 	match it.id:
 		"shawarma":
 			p.heal(p.max_health * it.amount)
-			res.text = "Шаурма: +%d HP" % int(round(p.max_health * it.amount))
+			res.text = I18n.t("Шаурма: +%d HP") % int(round(p.max_health * it.amount))
 		"rune":
 			if arg != "":
 				for r in Run.all_runes:
 					if r.id == arg:
 						Run.add_rune(r)
 						p.recalc_from_runes(Run)
-						res.text = "Руна: " + r.title
+						res.text = I18n.t("Руна: %s") % I18n.t(r.title)
 			else:
 				game.rewards.rune_mode = "shop"
-				game.rune_pick.open(Run.random_rune_choices(3), "РУНА ИЗ ЛАРЬКА")
+				game.rune_pick.open(Run.random_rune_choices(3), I18n.t("РУНА ИЗ ЛАРЬКА"))
 				res.opened = true
 		"sharpen":
 			var w := sharpen_target(game)
@@ -184,7 +184,7 @@ static func buy(game: Game, it: ShopItemDef, arg: String = "") -> Dictionary:
 			else:
 				h.axe.apply_def(w.def, w.level)
 			h.slots_changed.emit()
-			res.text = "%s — уровень %d" % [w.def.display_name, w.level]
+			res.text = I18n.t("%s — уровень %d") % [I18n.t(w.def.display_name), w.level]
 		"ammo":
 			var h := _holder(game)
 			h.ranged.reserve = h.ranged.def.reserve_max
@@ -192,18 +192,18 @@ static func buy(game: Game, it: ShopItemDef, arg: String = "") -> Dictionary:
 			h.ammo_changed.emit(h.ranged.mag, h.ranged.reserve)
 			h.slots_changed.emit()
 			Audio.play("sounds/sfx/ammo_pickup.wav")
-			res.text = "Патроны: полный запас"
+			res.text = I18n.t("Патроны: полный запас")
 		"mjolnir_service":
 			if Run.mjolnir_traits.is_empty():
 				Run.trait_rerolls += 1
-				res.text = "Эйтри перебросит выбор трейта у мини-босса"
+				res.text = I18n.t("Эйтри перебросит выбор трейта у мини-босса")
 			else:
 				var t: MjolnirTrait = null
 				for o in upgradable_traits():
 					if str(o.id) == arg or (arg == "" and t == null):
 						t = o
 				Run.add_mjolnir_trait(t)
-				res.text = "%s — уровень %d" % [t.title, Run.mjolnir_trait_level(t.id)]
+				res.text = I18n.t("%s — уровень %d") % [I18n.t(t.title), Run.mjolnir_trait_level(t.id)]
 		"mystery_bag":
 			res.text = _open_bag(game)
 	if it.odin_pool != "":
@@ -231,23 +231,23 @@ static func _open_bag(game: Game, forced: String = "") -> String:
 			if not rs.is_empty():
 				Run.add_rune(rs[0])
 				p.recalc_from_runes(Run)
-				return "В мешке руна: %s!" % rs[0].title
+				return I18n.t("В мешке руна: %s!") % I18n.t(rs[0].title)
 		"weapon":
 			var d := Loot.random_def()
 			if d:
 				var at := p.global_position + p.get_aim_forward() * Vector3(1, 0, 1) * 1.8
 				Loot.spawn_weapon(game.room, at, WeaponItem.create(d, randi_range(2, 3)), at + Vector3(0, 1.5, 0))
-				return "В мешке %s! Острое." % d.display_name
+				return I18n.t("В мешке %s! Острое.") % I18n.t(d.display_name)
 		"heal":
 			p.heal(p.max_health * BAG_HEAL)
-			return "В мешке… вторая шаурма. +%d HP" % int(p.max_health * BAG_HEAL)
+			return I18n.t("В мешке… вторая шаурма. +%d HP") % int(p.max_health * BAG_HEAL)
 		"silver":
 			Run.add_silver(BAG_SILVER)
-			return "Брокк перепутал мешки: +%d серебра" % BAG_SILVER
+			return I18n.t("Брокк перепутал мешки: +%d серебра") % BAG_SILVER
 		"curse":
 			p.pay_health(p.health * BAG_CURSE)
-			return "В мешке был кот. Злой. Проклятый."
-	return "Пустой мешок. Почти: записка «Брака не бывает»."
+			return I18n.t("В мешке был кот. Злой. Проклятый.")
+	return I18n.t("Пустой мешок. Почти: записка «Брака не бывает».")
 
 ## Реакция Брокка на ситуацию (пул data/dialogues/dwarves.json).
 static func reaction_pool(game: Game) -> String:

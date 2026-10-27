@@ -1,12 +1,38 @@
 extends Control
 ## Главное меню: начать забег, выход, подсказка по управлению.
 
+## Всё меню (фон, кнопки, подсказка) — пересобирается при смене языка
+var _ui: Control
+
 func _ready() -> void:
 	FX.reset_time()
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	UIStyle.full_rect(self)
 	UISkin.apply(self)
+	_build()
+	GameSettings.events.changed.connect(_on_setting_changed)
+	if "--selftest" in OS.get_cmdline_user_args():
+		_selftest.call_deferred()
+
+func _on_setting_changed(section: String, key: String) -> void:
+	if section == "text" and key == "language":
+		_rebuild.call_deferred()
+
+## Смена языка (настройки поверх меню): меню собирается заново под открытой панелью настроек
+func _rebuild() -> void:
+	if _ui and is_instance_valid(_ui):
+		remove_child(_ui)
+		_ui.queue_free()
+	_build(false)
+	move_child(_ui, 0)
+
+func _build(focus: bool = true) -> void:
+	_ui = Control.new()
+	_ui.name = "UI"
+	_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UIStyle.full_rect(_ui)
+	add_child(_ui)
 	# Фон и эмблема из комплекта владельца (menu_background, logo_emblem); нет картинок — тёмный фон
 	var bg_tex := UISkin.texture("menu_background")
 	if bg_tex:
@@ -15,7 +41,7 @@ func _ready() -> void:
 		bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		UIStyle.full_rect(bg)
-		add_child(bg)
+		_ui.add_child(bg)
 		# Левая треть — под меню: мягкое затемнение, чтобы читались кнопки
 		var shade := TextureRect.new()
 		var g := Gradient.new()
@@ -32,12 +58,12 @@ func _ready() -> void:
 		shade.stretch_mode = TextureRect.STRETCH_SCALE
 		shade.set_anchors_preset(Control.PRESET_LEFT_WIDE)
 		shade.offset_right = 760
-		add_child(shade)
+		_ui.add_child(shade)
 	else:
 		var bgc := ColorRect.new()
 		UIStyle.full_rect(bgc)
 		bgc.color = Color(0.05, 0.05, 0.07)
-		add_child(bgc)
+		_ui.add_child(bgc)
 
 	var col := VBoxContainer.new()
 	col.set_anchors_preset(Control.PRESET_LEFT_WIDE)
@@ -47,7 +73,7 @@ func _ready() -> void:
 	col.offset_bottom = -16
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_theme_constant_override("separation", 6)
-	add_child(col)
+	_ui.add_child(col)
 	var vb := col
 
 	var logo_tex := UISkin.texture("logo_emblem")
@@ -58,13 +84,13 @@ func _ready() -> void:
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		logo.custom_minimum_size = Vector2(0, 150)
 		vb.add_child(logo)
-	var title := UIStyle.label("ТОР", 64, UIStyle.GOLD, 12)
+	var title := UIStyle.label(tr("ТОР"), 64, UIStyle.GOLD, 12)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(title)
-	var sub := UIStyle.label("ДОСТОЙНАЯ СМЕРТЬ", 30, UIStyle.TEXT, 8)
+	var sub := UIStyle.label(tr("ДОСТОЙНАЯ СМЕРТЬ"), 30, UIStyle.TEXT, 8)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(sub)
-	var tag := UIStyle.label("Тор скуфнулся. Один вселяет его в смертных воинов — возвращать форму.", 16, UIStyle.TEXT_DIM, 4)
+	var tag := UIStyle.label(tr("Тор скуфнулся. Один вселяет его в смертных воинов — возвращать форму."), 16, UIStyle.TEXT_DIM, 4)
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tag.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(tag)
@@ -73,19 +99,19 @@ func _ready() -> void:
 	spacer.custom_minimum_size = Vector2(0, 8)
 	vb.add_child(spacer)
 
-	var start := UIStyle.button("Начать забег", 28)
+	var start := UIStyle.button(tr("Начать забег"), 28)
 	start.custom_minimum_size = Vector2(360, 64)
 	start.pressed.connect(_on_start)
 	var start_box := CenterContainer.new()
 	start_box.add_child(start)
 	vb.add_child(start_box)
-	var plan := UIStyle.button("План тренировок", 22, "secondary")
+	var plan := UIStyle.button(tr("План тренировок"), 22, "secondary")
 	plan.custom_minimum_size = Vector2(320, 54)
 	plan.pressed.connect(_on_plan)
 	var plan_box := CenterContainer.new()
 	plan_box.add_child(plan)
 	vb.add_child(plan_box)
-	var settings := UIStyle.button("Настройки", 22, "secondary")
+	var settings := UIStyle.button(tr("Настройки"), 22, "secondary")
 	settings.custom_minimum_size = Vector2(320, 54)
 	settings.pressed.connect(func() -> void:
 		var sp := SettingsPanel.new()
@@ -94,7 +120,7 @@ func _ready() -> void:
 	var settings_box := CenterContainer.new()
 	settings_box.add_child(settings)
 	vb.add_child(settings_box)
-	var quit := UIStyle.button("Выход", 22, "danger")
+	var quit := UIStyle.button(tr("Выход"), 22, "danger")
 	quit.custom_minimum_size = Vector2(320, 54)
 	quit.pressed.connect(func() -> void: get_tree().quit())
 	var quit_box := CenterContainer.new()
@@ -110,22 +136,17 @@ func _ready() -> void:
 	controls.offset_bottom = -20
 	controls.modulate.a = 0.92
 	var cl := UIStyle.label(
-		"WASD — бег  ·  Пробел — прыжок / двойной\n" +
-		"Shift — рывок  ·  Ctrl или C в воздухе — удар-приземление\n" +
-		"Ctrl+Shift — подкат  ·  Пробел после приземления — СУПЕР-ПРЫЖОК\n" +
-		"ЛКМ — удар (комбо из 3)  ·  ПКМ — метнуть / вернуть Мьёльнир\n" +
-		"Q — сменить оружие  ·  E — подобрать  ·  Esc — пауза", 15, UIStyle.TEXT_DIM, 3)
+		tr("WASD — бег  ·  Пробел — прыжок / двойной\nShift — рывок  ·  Ctrl или C в воздухе — удар-приземление\nCtrl+Shift — подкат  ·  Пробел после приземления — СУПЕР-ПРЫЖОК\nЛКМ — удар (комбо из 3)  ·  ПКМ — метнуть / вернуть Мьёльнир\nQ — сменить оружие  ·  E — подобрать  ·  Esc — пауза"), 15, UIStyle.TEXT_DIM, 3)
 	controls.add_child(cl)
-	add_child(controls)
-	start.grab_focus()
-	if "--selftest" in OS.get_cmdline_user_args():
-		_selftest.call_deferred()
+	_ui.add_child(controls)
+	if focus:
+		start.grab_focus()
 
 ## «План тренировок Одина» из меню: «В бой» — сразу забег, «Назад» — в меню.
 func _on_plan() -> void:
 	var tp := TrainingPlan.new()
 	add_child(tp)
-	tp.open("Назад")
+	tp.open(tr("Назад"))
 	if await tp.closed:
 		tp.queue_free()
 		_on_start()
@@ -137,7 +158,7 @@ func _on_start() -> void:
 	var bs := BodySelect.new()
 	bs.name = "BodySelect"
 	add_child(bs)
-	bs.open("Назад", Run.body.id if Run.body else "")
+	bs.open(tr("Назад"), Run.body.id if Run.body else "")
 	var id: String = await bs.closed
 	bs.queue_free()
 	if id != "":

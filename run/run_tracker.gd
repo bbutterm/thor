@@ -194,10 +194,10 @@ static func describe_last_death() -> String:
 	var lr: Dictionary = Save.data.get("last_run", {})
 	var by := str(lr.get("killed_by", "unknown"))
 	var t := float(lr.get("time", 0.0))
-	var txt := "Убил: %s · продержался %d:%02d" % [SOURCE_NAMES.get(by, by), int(t) / 60, int(t) % 60]
+	var txt := I18n.t("Убил: %s · продержался %d:%02d") % [I18n.t(SOURCE_NAMES.get(by, by)), int(t) / 60, int(t) % 60]
 	var tags: Array = lr.get("tags", [])
 	if "quick" in tags:
-		txt += " (рекорд скорости, но не тот)"
+		txt += I18n.t(" (рекорд скорости, но не тот)")
 	if "ranged" in tags:
-		txt += " · со стрелялкой в руке"
+		txt += I18n.t(" · со стрелялкой в руке")
 	return txt

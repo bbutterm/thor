@@ -65,7 +65,7 @@ func _ready() -> void:
 	_eitri.custom_minimum_size = Vector2(140, 175)
 	_eitri.size_flags_vertical = Control.SIZE_SHRINK_END
 	faces.add_child(_eitri)
-	var names := UIStyle.label("БРОКК  И  ЭЙТРИ", 18, Color(0.95, 0.65, 0.3), 5)
+	var names := UIStyle.label(tr("БРОКК  И  ЭЙТРИ"), 18, Color(0.95, 0.65, 0.3), 5)
 	left.add_child(names)
 	var bubble := UIStyle.panel(Color(0.05, 0.04, 0.03, 0.9), Color(0.85, 0.55, 0.25, 0.6))
 	left.add_child(bubble)
@@ -77,14 +77,14 @@ func _ready() -> void:
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 8)
 	hb.add_child(right)
-	var title := UIStyle.label("РУНЫ • ШАУРМА • ЗАТОЧКА", 34, Color(1.0, 0.72, 0.3), 9)
+	var title := UIStyle.label(tr("РУНЫ • ШАУРМА • ЗАТОЧКА"), 34, Color(1.0, 0.72, 0.3), 9)
 	right.add_child(title)
 	_silver = UIStyle.label("", 24, SILVER, 6)
 	right.add_child(_silver)
 	_rows = VBoxContainer.new()
 	_rows.add_theme_constant_override("separation", 6)
 	right.add_child(_rows)
-	var leave := UIStyle.button("Уйти  [E / Esc]", 20)
+	var leave := UIStyle.button(tr("Уйти  [E / Esc]"), 20)
 	leave.custom_minimum_size = Vector2(260, 46)
 	leave.pressed.connect(close)
 	right.add_child(leave)
@@ -141,7 +141,7 @@ func _say_pool(pool: String) -> void:
 	say(Dialogue.format_text(str(l.get("text", ""))), str(l.get("emotion", "neutral")), str(l.get("speaker", "brokk")))
 
 func refresh() -> void:
-	_silver.text = "СЕРЕБРО: %d" % Run.silver
+	_silver.text = tr("СЕРЕБРО: %d") % Run.silver
 	for c in _rows.get_children():
 		c.queue_free()
 	_buttons.clear()
@@ -190,9 +190,9 @@ func _make_row(it: ShopItemDef) -> Button:
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_theme_constant_override("separation", 0)
 	row.add_child(vb)
-	vb.add_child(UIStyle.label(it.title, 19, UIStyle.TEXT if reason == "" else UIStyle.TEXT_DIM, 4))
+	vb.add_child(UIStyle.label(tr(it.title), 19, UIStyle.TEXT if reason == "" else UIStyle.TEXT_DIM, 4))
 	var extra := Shop.detail(game, it)
-	var desc := reason if reason != "" else (extra if extra != "" else it.description)
+	var desc := reason if reason != "" else (extra if extra != "" else tr(it.description))
 	var d := UIStyle.label(desc, 13, UIStyle.TEXT_DIM if reason == "" else Color(1.0, 0.5, 0.4), 2)
 	d.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	d.custom_minimum_size = Vector2(430, 0)
@@ -214,14 +214,14 @@ func try_buy(it: ShopItemDef, arg: String = "") -> Dictionary:
 		Audio.play("sounds/sfx/shop_broke.wav")
 		Save.bump_event("shop_broke")
 		_say_pool("dwarves.shop_broke")
-		return {"ok": false, "text": "Нет серебра"}
+		return {"ok": false, "text": tr("Нет серебра")}
 	var subs := Shop.sub_choices(it)
 	if arg == "" and not subs.is_empty() and Shop.can_buy(game, it):
 		_sub_item = it
-		subs.append({"id": "", "title": "Передумал", "desc": "Брокк сделает вид, что не обиделся", "glyph": "ᚾ", "color": Color(0.6, 0.6, 0.6)})
+		subs.append({"id": "", "title": tr("Передумал"), "desc": tr("Брокк сделает вид, что не обиделся"), "glyph": "ᚾ", "color": Color(0.6, 0.6, 0.6)})
 		# Второй шаг — поверх ларька (слой 10), ларёк не прячем: вложенный слой мог бы скрыться вместе с ним
-		_sub.open(it.title.to_upper(), "Выбери", subs, "eitri" if it.by_eitri else "brokk", "smug")
-		return {"ok": false, "text": "выбор"}
+		_sub.open(tr(it.title).to_upper(), tr("Выбери"), subs, "eitri" if it.by_eitri else "brokk", "smug")
+		return {"ok": false, "text": tr("выбор")}
 	var res := Shop.buy(game, it, arg)
 	if res.ok:
 		Save.bump_event("shop_buy")

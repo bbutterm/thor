@@ -53,4 +53,4 @@ func pool(which: String) -> String:
 	return p if p != "" else "%s.trial_%s" % [host, which]
 
 func reward_text() -> String:
-	return "особая руна" if reward_rune else "+%d Славы" % reward_glory
+	return tr("особая руна") if reward_rune else tr("+%d Славы") % reward_glory

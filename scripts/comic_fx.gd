@@ -432,8 +432,10 @@ func _burst_polygon(rx: float, ry: float, spikes: int) -> PackedVector2Array:
 		pts.append(Vector2(cos(a) * rx * r, sin(a) * ry * r))
 	return pts
 
+## Слова — на английском для всех языков (так задумано, шрифт Bangers — только латиница); для своего языка
+## можно добавить событию "words_<язык>" (например "words_ru") — возьмётся при этом языке (нужен шрифт с кириллицей).
 func _pick_word(ev: String, d: Dictionary) -> String:
-	var words: Array = d.get("words", ["POW!"])
+	var words: Array = d.get("words_" + I18n.locale(), d.get("words", ["POW!"]))
 	if words.is_empty():
 		return "POW!"
 	var s: String = words[randi() % words.size()]

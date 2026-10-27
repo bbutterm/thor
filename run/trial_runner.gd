@@ -127,13 +127,13 @@ func _physics_process(delta: float) -> void:
 		"no_ranged":
 			var h := player.weapons
 			if h and h.is_ranged_active() and h.gun.is_firing():
-				fail("Выстрелил из палки-стрелялки")
+				fail(tr("Выстрелил из палки-стрелялки"))
 		"time_limit":
 			if def.time_limit > 0.0 and elapsed > def.time_limit:
-				fail("Не уложился в %d с" % int(def.time_limit))
+				fail(tr("Не уложился в %d с") % int(def.time_limit))
 		"kill_count":
 			if elapsed > def.time_limit:
-				fail("%d из %d за %d с" % [kills, def.target, int(def.time_limit)])
+				fail(tr("%d из %d за %d с") % [kills, def.target, int(def.time_limit)])
 		"floor_lava":
 			_lava_tick(delta)
 	if hud:
@@ -155,7 +155,7 @@ func _lava_tick(delta: float) -> void:
 		player.take_damage(def.lava_tick_damage)
 		FX.sparks(get_parent(), player.global_position + Vector3(0, 0.1, 0), LAVA_COLOR, 8, 4.0, 10.0, 0.06, 0.35)
 	if burn > def.lava_max_burn:
-		fail("Слишком долго стоял в лаве")
+		fail(tr("Слишком долго стоял в лаве"))
 
 func _on_kill(source: String) -> void:
 	if state != "running":
@@ -165,10 +165,10 @@ func _on_kill(source: String) -> void:
 		"only_sources":
 			# Провал — только добивание запрещённым (огонь, шмяк об стену и т. п. — не считаются)
 			if source in def.forbidden_sources:
-				fail("Добил не тем: %s" % _source_name(source))
+				fail(tr("Добил не тем: %s") % _source_name(source))
 		"no_ranged":
 			if source == "ranged":
-				fail("Убийство из ренжа")
+				fail(tr("Убийство из ренжа"))
 		"kill_count":
 			if kills >= def.target and elapsed <= def.time_limit:
 				_record_best()
@@ -177,11 +177,11 @@ func _on_kill(source: String) -> void:
 func _source_name(s: String) -> String:
 	match s:
 		"melee", "melee_finisher", "melee_heavy":
-			return "оружием в руке"
+			return tr("оружием в руке")
 		"ranged":
-			return "ренжем"
+			return tr("ренжем")
 		"dash":
-			return "рывком"
+			return tr("рывком")
 	return s
 
 func _on_room_cleared() -> void:
@@ -190,12 +190,12 @@ func _on_room_cleared() -> void:
 	match def.kind:
 		"kill_count":
 			_record_best()
-			fail("%d из %d — рекорд устоял" % [kills, def.target])
+			fail(tr("%d из %d — рекорд устоял") % [kills, def.target])
 		"time_limit":
 			if elapsed <= def.time_limit:
 				pass_trial()
 			else:
-				fail("Не уложился в %d с" % int(def.time_limit))
+				fail(tr("Не уложился в %d с") % int(def.time_limit))
 		_:
 			pass_trial()
 

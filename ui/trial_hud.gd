@@ -48,11 +48,11 @@ func setup(d: TrialDef) -> void:
 	_def = d
 	var sp: Dictionary = Dialogue.speakers.get(d.host, {})
 	var col := Color.from_string(str(sp.get("color", "#e0b050")), UIStyle.GOLD).lightened(0.25)
-	_host.text = "ИСПЫТАНИЕ · %s" % HOST_NAMES.get(d.host, d.host.to_upper())
+	_host.text = tr("ИСПЫТАНИЕ · %s") % tr(HOST_NAMES.get(d.host, d.host.to_upper()))
 	_host.label_settings.font_color = col
 	_panel.add_theme_stylebox_override("panel", UIStyle.panel_style(Color(0.05, 0.05, 0.07, 0.82), Color(col, 0.75)))
-	_title.text = d.title
-	_cond.text = "%s · награда: %s" % [d.condition, d.reward_text()]
+	_title.text = tr(d.title)
+	_cond.text = tr("%s · награда: %s") % [tr(d.condition), d.reward_text()]
 	_status.text = ""
 	_panel.pivot_offset = Vector2(0, 0)
 	_panel.scale = Vector2(1.15, 1.15)
@@ -66,19 +66,19 @@ static func fmt(sec: float) -> String:
 func update_state(t: TrialRunner) -> void:
 	match _def.kind:
 		"time_limit":
-			_timer.text = "Осталось %s" % fmt(_def.time_limit - t.elapsed)
+			_timer.text = tr("Осталось %s") % fmt(_def.time_limit - t.elapsed)
 		"kill_count":
-			_timer.text = "Убийств: %d / %d · %s" % [t.kills, _def.target, fmt(_def.time_limit - t.elapsed)]
+			_timer.text = tr("Убийств: %d / %d · %s") % [t.kills, _def.target, fmt(_def.time_limit - t.elapsed)]
 		"floor_lava":
-			_timer.text = "Ожог: %.1f / %.0f с · %s" % [t.burn, _def.lava_max_burn, fmt(t.elapsed)]
+			_timer.text = tr("Ожог: %.1f / %.0f с · %s") % [t.burn, _def.lava_max_burn, fmt(t.elapsed)]
 		_:
 			_timer.text = fmt(t.elapsed)
 	match t.state:
 		"passed":
-			_status.text = "ПРОЙДЕНО! Награда после зачистки: %s" % _def.reward_text()
+			_status.text = tr("ПРОЙДЕНО! Награда после зачистки: %s") % _def.reward_text()
 			_status.label_settings.font_color = Color(0.55, 1.0, 0.6)
 		"failed":
-			_status.text = "ПРОВАЛ: %s" % t.fail_reason
+			_status.text = tr("ПРОВАЛ: %s") % t.fail_reason
 			_status.label_settings.font_color = Color(1.0, 0.45, 0.4)
 		_:
 			_status.text = ""

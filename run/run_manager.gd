@@ -293,13 +293,13 @@ func random_cursed_rune() -> RuneDef:
 
 func verdict() -> String:
 	if won:
-		return "Вальхалла ждёт"
+		return tr("Вальхалла ждёт")
 	# Экономика GDD 15.2: удачный забег по Мидгарду — 150–250 Славы
 	if glory >= 200:
-		return "Вальхалла ждёт"
+		return tr("Вальхалла ждёт")
 	if glory >= 80:
-		return "Сойдёт"
-	return "Недостоин"
+		return tr("Сойдёт")
+	return tr("Недостоин")
 
 # --- Мини-боссы и трейты Мьёльнира (GDD 10, 14.1) ---
 

@@ -99,7 +99,7 @@ func _build() -> void:
 		_slots.append(slot)
 		_names.append(n)
 		_subs.append(s)
-	_hint = UIStyle.label("Q / колесо — сменить · R — перезарядка", 13, UIStyle.TEXT_DIM, 3)
+	_hint = UIStyle.label(tr("Q / колесо — сменить · R — перезарядка"), 13, UIStyle.TEXT_DIM, 3)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	box.add_child(_hint)
 	_prompt = UIStyle.label("", 22, UIStyle.GOLD, 6)
@@ -139,16 +139,16 @@ func _refresh() -> void:
 		_subs[i].modulate.a = 1.0 if on else 0.7
 		if it == null:
 			_names[i].text = "—"
-			_subs[i].text = "пусто"
+			_subs[i].text = tr("пусто")
 			slot.empty = false
 			continue
 		_names[i].text = it.title()
 		slot.empty = it.is_ranged() and it.is_empty()
 		if it.is_ranged():
-			_subs[i].text = "%d / %d" % [it.mag, it.reserve] if not it.is_empty() else "ПУСТО"
+			_subs[i].text = "%d / %d" % [it.mag, it.reserve] if not it.is_empty() else tr("ПУСТО")
 			_subs[i].label_settings.font_color = UIStyle.BLOOD if it.is_empty() else UIStyle.TEXT_DIM
 		else:
-			_subs[i].text = "ур. %d" % it.level
+			_subs[i].text = tr("ур. %d") % it.level
 			_subs[i].label_settings.font_color = UIStyle.TEXT_DIM
 	var cur := holder.current()
 	if cur and cur.is_ranged():

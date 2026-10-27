@@ -32,10 +32,10 @@ func _ready() -> void:
 	vb.add_theme_constant_override("separation", 14)
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(vb)
-	_title = UIStyle.label(DEFAULT_TITLE, 40, UIStyle.GOLD, 10)
+	_title = UIStyle.label(tr(DEFAULT_TITLE), 40, UIStyle.GOLD, 10)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(_title)
-	var hint := UIStyle.label("Кликни по руне или нажми 1 / 2 / 3", 18, UIStyle.TEXT_DIM, 4)
+	var hint := UIStyle.label(tr("Кликни по руне или нажми 1 / 2 / 3"), 18, UIStyle.TEXT_DIM, 4)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(hint)
 	_cards = HBoxContainer.new()
@@ -47,7 +47,7 @@ func _ready() -> void:
 func open(choices: Array[RuneDef], title: String = "") -> void:
 	Perf.mark("rune_pick")
 	_choices = choices
-	_title.text = title if title != "" else DEFAULT_TITLE
+	_title.text = title if title != "" else tr(DEFAULT_TITLE)
 	for c in _cards.get_children():
 		c.queue_free()
 	for i in choices.size():
@@ -69,13 +69,13 @@ func _make_card(rune: RuneDef, index: int) -> Button:
 	b.key_label.text = "[%d]" % (index + 1)
 	b.set_icon(UISkin.rune_category_icon(rune.category), rune.glyph, rune.color.lightened(0.25))
 	# Уровень (GDD 11: повторная руна повышает уровень 1–3) и описание следующего уровня
-	var title_txt := rune.title + ("  %d → %d" % [lvl, lvl + 1] if lvl > 0 else "")
+	var title_txt := tr(rune.title) + ("  %d → %d" % [lvl, lvl + 1] if lvl > 0 else "")
 	b.add_text(title_txt, 19, rune.color.lightened(0.45), 5)
-	var desc := rune.description
+	var desc := tr(rune.description)
 	if lvl < rune.level_descriptions.size():
-		desc = rune.level_descriptions[lvl]
+		desc = tr(rune.level_descriptions[lvl])
 	if rune.cursed:
-		desc = "☠ Проклятие Локи\n" + desc
+		desc = tr("☠ Проклятие Локи\n") + desc
 	b.add_text(desc, 15, UIStyle.TEXT, 3)
 	b.pressed.connect(func() -> void: choose(index))
 	return b
