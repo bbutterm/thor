@@ -13,6 +13,7 @@ const DIRS := [
 	"res://assets/quaternius/weapons/",
 	"res://assets/painted/rpg_items/",
 	"res://assets/mjolnir/",
+	"res://assets/arms/drillimpact_psx/",
 	"res://assets/quaternius/guns/",
 	"res://assets/quaternius/props/",
 	"res://weapons/defs/",
