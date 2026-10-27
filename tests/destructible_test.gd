@@ -95,6 +95,8 @@ func clear_props() -> void:
 func _run() -> void:
 	print("=== DESTRUCTIBLE TEST ===")
 	Destructible.surprise_chance_override = 0.0
+	# Обычные слова комикса в игре — через раз; тест проверяет каждое
+	(get_tree().root.get_node("ComicFX") as Node).set("routine_chance", 1.0)
 	await _start(["res://rooms/room_09.tscn", Run.BOSS_SCENE])
 	await clear_props()
 	_test_data()

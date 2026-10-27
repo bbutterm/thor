@@ -78,6 +78,9 @@ func _load_room() -> void:
 		scene = load(path) as PackedScene
 	room = scene.instantiate() as Room
 	level.add_child(room)
+	# Новый зал — Мьёльнир сразу готов к броску
+	if player and player.mjolnir:
+		player.mjolnir.reset_cooldown()
 	# Атмосфера зала по миру: искры над факелами и очагом, пылинки, низкий туман (scripts/world_art.gd)
 	WorldArt.dress_room(room, Run.map)
 	var t := room.get_spawn_transform()

@@ -60,6 +60,9 @@ func _run() -> void:
 	var saved_enabled := GameSettings.comic_enabled
 	var saved_scale := GameSettings.comic_scale
 	GameSettings.comic_enabled = true
+	# Обычные слова в игре показываются через раз (routine_chance) — тест проверяет каждое
+	var saved_chance: float = CF.routine_chance
+	CF.routine_chance = 1.0
 	Run.start_run("berserker")
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 	await wait(0.3)
@@ -157,10 +160,11 @@ func _run() -> void:
 	check(events() == ["multikill"] and not bool(last().big), "3 убийства разом → мульти-килл (%s)" % [events()])
 	await wait(0.8)
 	await fresh()
-	for i in 5:
+	for i in CF.multikill_big_count:
 		_make_dummy(p, 3.0 + i).take_hit(9999, Vector3.ZERO, "test")
 	await frames(2)
-	check(events() == ["multikill"] and bool(last().big), "5 убийств → мульти-килл на весь экран")
+	check(events() == ["multikill"] and not bool(last().big) and not ("multikill" in CF.fullscreen_events),
+		"%d убийств → крупный мульти-килл у места, не на весь экран" % CF.multikill_big_count)
 	await wait(1.2)
 	await fresh()
 	_make_dummy(p, 2.0).take_hit(9999, Vector3.ZERO, "test")

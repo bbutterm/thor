@@ -541,3 +541,16 @@ HUD (`ui/style_hud.gd`): `bar_width` 340, `caption_height` 58, `burst_size` 210�
 | `CatchAssist.window_pulse_hz` | 9 Гц | пульс золотого кольца в окне хвата |
 | `CatchAssist.feedback_time` | 0.7 с | сколько висит «ИДЕАЛЬНО!/РАНО/ПОЗДНО» |
 | `MjolnirHand.catch_feedback_range` | 0.6 с | промах дальше этого — обычное нажатие, без «РАНО/ПОЗДНО» |
+
+## Плейтест владельца 27.10 (вечер)
+| Число | Было → стало | Зачем |
+|---|---|---|
+| `MjolnirHand.throw_cooldown` | — → 7 с | молот спамился; бросок — решение, а не кнопка «всегда» |
+| `MjolnirHand.perfect_cooldown_refund` | — → 5 с | идеальный хват — способ бросать чаще |
+| `ComicFX.cooldown` | 0.4 → 1.1 с | слова мельтешили |
+| `ComicFX.routine_chance` | — → 0.45 | обычные слова (priority < `important_priority` 50) — через раз |
+| `ComicFX.fullscreen_events` | любое big → boss_kill, slam (≥ 10 м), rank_4, combo | остальные «big» — крупное слово у места удара (`world_big_scale` 1.6) |
+| `ComicFX.multikill_big_count` | 5 → 8 | крупный мульти-килл реже |
+| `StyleTuning.rank_pop_delay`, приоритет `rank_1..3` | 0.45 с → 1.15 с; 5–8 → 50–54 | слово ранга — после паузы между словами, не отсекается |
+| `ComicFX.distance_ref` / `min_distance_scale` | — → 6 м / 0.45 | слово у далёкой цели мельче |
+| Кровь нежити (`sprites/vfx/vfx_ichor_*`, `assets/decals/ichor_splat_*`) | бирюзовая → тёмно-красная | по просьбе владельца |

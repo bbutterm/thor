@@ -223,7 +223,10 @@ func _test_hud() -> void:
 	check(hud._hammer_state in ["stuck", "return"], "Мьёльнир воткнулся / возвращается: %s" % hud._hammer_state)
 	p.mjolnir.force_return_instant()
 	await wait(0.05)
-	check(hud._hammer_state == "hand", "снова в руке")
+	check(hud._hammer_state == "cooldown" and hud._hammer_label.text.begins_with("ПЕРЕЗАРЯДКА"), "снова в руке, перезарядка броска: «%s»" % hud._hammer_label.text)
+	p.mjolnir.reset_cooldown()
+	await wait(0.05)
+	check(hud._hammer_state == "hand", "перезарядка кончилась — «В РУКЕ»")
 	var wh := hud.get_node_or_null("WeaponHUD") as WeaponHUD
 	check(wh != null and wh._slots[0].icon != null and wh._slots[0].active, "слот мили: иконка оружия, активный")
 	# Индикатор врага за спиной

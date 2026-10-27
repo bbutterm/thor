@@ -75,6 +75,10 @@ func bind_player(p: Player) -> void:
 	player.dash_charges_changed.connect(_on_dash_changed)
 	player.hurt.connect(_on_hurt)
 	player.mjolnir.state_changed.connect(_on_hammer_state)
+	# Бросок на перезарядке: подпись вспыхивает красным, иконка дёргается
+	player.mjolnir.throw_blocked.connect(func(_left: float) -> void:
+		_hammer_icon.pop()
+		_hammer_flash_until = Time.get_ticks_msec() + 400)
 	_on_health_changed(player.health, player.max_health)
 	_on_dash_changed(player.dash_charges, player.dash_charges_max, 0.0)
 	_on_hammer_state(true)
@@ -364,9 +368,18 @@ func _on_dash_changed(current: int, maximum: int, progress: float) -> void:
 			pip.fill = 0.0
 
 ## Мьёльнир: в руке / летит / воткнут / возвращается (иконки комплекта)
+## До какого момента (мс) подпись перезарядки красная — после попытки броска
+var _hammer_flash_until: int = 0
+
 func _update_hammer() -> void:
 	var m := player.mjolnir
 	var st := "hand"
+	if m.in_hand and m.cooldown_left > 0.0:
+		st = "cooldown"
+		# Секунды перезарядки обновляются каждый кадр
+		_hammer_label.text = tr("ПЕРЕЗАРЯДКА %.1f с · ПОЙМАЙ ИДЕАЛЬНО — БЫСТРЕЕ") % m.cooldown_left
+		if _hammer_state == "cooldown":
+			_hammer_label.label_settings.font_color = Color(1.0, 0.35, 0.3) if Time.get_ticks_msec() < _hammer_flash_until else Color(0.75, 0.75, 0.8)
 	if not m.in_hand and m.projectile and is_instance_valid(m.projectile):
 		match m.projectile.state:
 			MjolnirProjectile.State.STUCK:
@@ -381,6 +394,11 @@ func _update_hammer() -> void:
 		return
 	_hammer_state = st
 	match st:
+		"cooldown":
+			_hammer_icon.base = UISkin.texture("hud_mjolnir_ready")
+			_hammer_icon.tint = Color(0.45, 0.45, 0.5)
+			_hammer_label.text = tr("ПЕРЕЗАРЯДКА %.1f с · ПОЙМАЙ ИДЕАЛЬНО — БЫСТРЕЕ") % m.cooldown_left
+			_hammer_label.label_settings.font_color = Color(0.75, 0.75, 0.8)
 		"hand":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_ready")
 			_hammer_icon.tint = Color.WHITE

@@ -10,12 +10,19 @@ class_name MjolnirHand
 
 signal state_changed(in_hand: bool)
 signal perfect_catch
+## Нажал бросок, а молот на перезарядке (HUD мигает, звук осечки)
+signal throw_blocked(left: float)
 ## Итог попытки хвата для подсказки (ui/catch_assist.gd): &"perfect", &"early" (нажал раньше окна), &"late" (позже); offset — на сколько секунд
 signal catch_timing(result: StringName, offset: float)
 signal traits_changed
 
 @export_group("Бросок")
 @export var throw_speed: float = 32.0
+## Перезарядка броска (с): считается от броска, бросить снова можно, когда молот в руке и перезарядка 0.
+## Качается: трейт modify(&"throw_cooldown"), тело/перк — player.modify_stat("hammer_cooldown_mult")
+@export var throw_cooldown: float = 7.0
+## Идеальный хват снимает столько секунд перезарядки (трейт — modify(&"perfect_cooldown_refund"))
+@export var perfect_cooldown_refund: float = 5.0
 ## 1.5 У (GDD 10)
 @export var base_damage: float = 33.0
 ## Дальше этого молот не летит — начинает возврат
@@ -78,6 +85,10 @@ var _caught_time: float = -10.0
 var _recall_press_time: float = -10.0
 var _perfect_open: bool = false
 var _clock: float = 0.0
+## Осталось перезарядки броска, с
+var cooldown_left: float = 0.0
+## Полная длина текущей перезарядки (для полоски HUD)
+var cooldown_total: float = 0.0
 
 @export var player_path: NodePath = ^".."
 @export var pivot_path: NodePath
@@ -108,6 +119,8 @@ func set_hand_color(c: Color, sleeve: Color = Color(0, 0, 0, 0)) -> void:
 
 func _physics_process(delta: float) -> void:
 	_clock += delta
+	if cooldown_left > 0.0:
+		cooldown_left = maxf(cooldown_left - delta, 0.0)
 	if player == null or player.is_dead:
 		return
 	if not in_hand:
@@ -122,6 +135,8 @@ func _physics_process(delta: float) -> void:
 
 ## Нажата ПКМ: с приёмом удержания и молотом в руке — начать удержание, иначе бросок / возврат.
 func press_throw() -> void:
+	if in_hand and _blocked_by_cooldown():
+		return
 	if in_hand and bool(trait_modify(&"hold_throw", false)):
 		begin_hold()
 	else:
@@ -184,6 +199,8 @@ func request_throw_or_recall() -> void:
 		elif _perfect_open and now - _caught_time <= catch_feedback_range:
 			catch_timing.emit(&"late", now - _caught_time)
 		_perfect_open = false
+		if _blocked_by_cooldown():
+			return
 		throw_hammer()
 	elif projectile and is_instance_valid(projectile):
 		if projectile.state == MjolnirProjectile.State.RETURN:
@@ -192,11 +209,32 @@ func request_throw_or_recall() -> void:
 		else:
 			projectile.start_return(true)
 
+## Бросок на перезарядке — осечка (звук, сигнал для HUD); true — бросать нельзя.
+func _blocked_by_cooldown() -> bool:
+	if cooldown_left <= 0.0:
+		return false
+	Audio.play("sounds/sfx/gun_empty.wav")
+	throw_blocked.emit(cooldown_left)
+	return true
+
+## Длина перезарядки с учётом трейтов и тела
+func effective_cooldown() -> float:
+	var cd := float(trait_modify(&"throw_cooldown", throw_cooldown))
+	if player:
+		cd *= float(player.modify_stat(&"hammer_cooldown_mult", 1.0))
+	return maxf(cd, 0.0)
+
+## Сбросить перезарядку (смена зала, тесты)
+func reset_cooldown() -> void:
+	cooldown_left = 0.0
+
 func throw_hammer() -> void:
 	Perf.mark("hammer_throw")
 	if not in_hand:
 		return
 	in_hand = false
+	cooldown_total = effective_cooldown()
+	cooldown_left = cooldown_total
 	var proj := MjolnirProjectile.new()
 	player.get_parent().add_child(proj)
 	var origin := player.get_aim_origin() + player.get_aim_forward() * 0.8 + player.global_transform.basis.x * -0.35
@@ -354,6 +392,7 @@ func _twirl(arm: ViewmodelArm, t: ViewmodelMotionTuning) -> void:
 func _grant_perfect() -> void:
 	Perf.mark("hammer_perfect")
 	perfect_ready = true
+	cooldown_left = maxf(cooldown_left - float(trait_modify(&"perfect_cooldown_refund", perfect_cooldown_refund)), 0.0)
 	Audio.play("sounds/sfx/perfect_catch.wav")
 	var p := hand_point() + player.get_aim_forward() * 0.7
 	FX.burst(player.get_parent(), p, 0.3, Color(1.0, 0.85, 0.4, 0.8), 0.16)

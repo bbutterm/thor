@@ -32,7 +32,7 @@ const BIG_PRIORITY := 1000
 
 @export_group("Когда показывать")
 ## Минимум секунд между словами (реальное время)
-@export var cooldown: float = 0.4
+@export var cooldown: float = 1.1
 ## Не больше стольких слов на экране одновременно
 @export var max_on_screen: int = 3
 ## Окно мульти-килла, с
@@ -40,7 +40,17 @@ const BIG_PRIORITY := 1000
 ## Сколько убийств в окне дают слово
 @export var multikill_count: int = 3
 ## ...и сколько — крупное слово на весь экран
-@export var multikill_big_count: int = 5
+@export var multikill_big_count: int = 8
+## Обычные (не крупные) слова: шанс показать, если событие не «важное» (priority < important_priority) — реже, чтобы не мельтешили
+@export_range(0.0, 1.0) var routine_chance: float = 0.45
+@export var important_priority: int = 50
+## Крупно на весь экран — только эти события (босс, высокий удар-приземление, ДОСТОЙНЕЙШИЙ!); остальные «big» — крупное слово у места удара
+@export var fullscreen_events: PackedStringArray = PackedStringArray(["boss_kill", "slam", "rank_4", "combo"])
+## Крупное слово в мире (не на весь экран): масштаб относительно обычного
+@export var world_big_scale: float = 1.6
+## Слово в мире мельче вдали: на этом расстоянии (м) — обычный размер, дальше — меньше (не мельче min_distance_scale)
+@export var distance_ref: float = 6.0
+@export_range(0.1, 1.0) var min_distance_scale: float = 0.45
 ## Удар-приземление ниже этой высоты (м) слова не даёт
 @export var slam_min_height: float = 0.0
 ## С этой высоты (м) удар-приземление — крупное слово на весь экран (GDD 7.4)
@@ -273,6 +283,10 @@ func _request(event: String, pos: Vector3, big: bool, scale_mult: float = 1.0, p
 	if not _data.has(event):
 		push_warning("ComicFX: нет события '%s' в %s" % [event, WORDS_PATH])
 		return
+	if big and not (event in fullscreen_events):
+		big = false
+		scale_mult *= world_big_scale
+		prio_bonus += important_priority
 	var prio := int((_data[event] as Dictionary).get("priority", 0)) + prio_bonus + (BIG_PRIORITY if big else 0)
 	_pending.append({"event": event, "pos": pos, "big": big, "scale": scale_mult, "prio": prio, "screen": screen})
 
@@ -289,6 +303,9 @@ func _flush() -> void:
 		stats.disabled += 1
 		return
 	if not best.big and _clock - _last_pop < cooldown:
+		stats.cooldown += 1
+		return
+	if not best.big and not best.get("preview", false) and int(best.prio) < important_priority and randf() > routine_chance:
 		stats.cooldown += 1
 		return
 	var w := _take_word(best.big)
@@ -536,7 +553,10 @@ func _place(w: ComicWord, rise: float, off: Vector2, rot: float) -> void:
 			w.visible = false
 			return
 		w.visible = true
-		pos = cam.unproject_position(w.world_pos) + w.jitter + Vector2(0, -world_lift_px)
+		var dist := cam.global_position.distance_to(w.world_pos)
+		var dk := clampf(distance_ref / maxf(dist, 0.1), min_distance_scale, 1.0)
+		w.scale *= dk
+		pos = cam.unproject_position(w.world_pos) + (w.jitter + Vector2(0, -world_lift_px)) * dk
 	pos += off + Vector2(0, -rise)
 	# Не даём слову уехать за край экрана
 	var h := w.half * w.base_scale * GameSettings.comic_scale
