@@ -51,8 +51,8 @@ func _run() -> void:
 		var w: float = (game.room.get_node("Geometry/WallE") as Node3D).position.x
 		var dz: float = (game.room.get_node("Geometry/WallS") as Node3D).position.z
 		# Под крышей (Room.indoor — длинный дом) — ниже стропил
-		var oy := 5.2 if bool(game.room.get("indoor")) else 9.0
-		p.global_position = game.room.to_global(Vector3(-w * 0.55, oy, dz - 1.5))
+		var indoor := bool(game.room.get("indoor"))
+		p.global_position = game.room.to_global(Vector3(0.0 if indoor else -w * 0.55, 4.0 if indoor else 9.0, dz - 1.5))
 		var to := game.room.to_global(Vector3(0, 0, -2)) - p.get_aim_origin()
 		p.rotation_target = Vector2(atan2(to.y, Vector2(to.x, to.z).length()), atan2(-to.x, -to.z))
 		await wait(0.4)
