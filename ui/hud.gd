@@ -462,9 +462,7 @@ func _update_slam_meter() -> void:
 		return
 	var peak: float = player.get("_air_peak_y") if player.get("_air_peak_y") != null else player.global_position.y
 	var ground := player.global_position.y - 40.0
-	var space := player.get_world_3d().direct_space_state
-	var q := PhysicsRayQueryParameters3D.create(player.global_position, player.global_position + Vector3.DOWN * 40.0, 1)
-	var hit := space.intersect_ray(q)
+	var hit := player.slam_surface_hit(40.0)
 	if not hit.is_empty():
 		ground = (hit.position as Vector3).y
 	var fall := maxf(peak, player.global_position.y) - ground
