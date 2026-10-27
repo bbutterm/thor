@@ -145,6 +145,7 @@ func _build() -> void:
 	left.add_child(lp)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
 	lp.add_child(scroll)
 	_grid = GridContainer.new()
 	_grid.columns = columns
@@ -266,6 +267,11 @@ func close(body_id: String) -> void:
 	visible = false
 	get_tree().paused = _was_paused
 	closed.emit(body_id)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		close("")
 
 func _rebuild() -> void:
 	for c in _grid.get_children():

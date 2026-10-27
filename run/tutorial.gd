@@ -116,22 +116,7 @@ static func keys_in(text: String) -> String:
 	return text
 
 static func key_name(action: String) -> String:
-	if not InputMap.has_action(action):
-		return action
-	for ev in InputMap.action_get_events(action):
-		if ev is InputEventKey:
-			var k := ev as InputEventKey
-			var code := k.physical_keycode if k.physical_keycode != KEY_NONE else k.keycode
-			return _ru_key(OS.get_keycode_string(code))
-		if ev is InputEventMouseButton:
-			match (ev as InputEventMouseButton).button_index:
-				MOUSE_BUTTON_LEFT:
-					return I18n.t("ЛКМ")
-				MOUSE_BUTTON_RIGHT:
-					return I18n.t("ПКМ")
-				MOUSE_BUTTON_MIDDLE:
-					return I18n.t("СКМ")
-	return action
+	return GameSettings.current_binding(action)
 
 static func _ru_key(s: String) -> String:
 	match s:

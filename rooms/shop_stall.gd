@@ -31,7 +31,7 @@ func can_interact() -> bool:
 	return true
 
 func prompt_text(_holder: WeaponHolder) -> String:
-	return tr("[E] Ларёк Брокка и Эйтри")
+	return tr("[E] Ларёк Брокка и Эйтри").replace("[E]", "[%s]" % GameSettings.current_binding("interact"))
 
 func interact(_holder: WeaponHolder) -> void:
 	var g := get_tree().current_scene as Game
