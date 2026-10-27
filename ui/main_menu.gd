@@ -172,16 +172,29 @@ func _start_with(body_id: String) -> void:
 	await LoadingScreen.show_now(get_tree())
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
-## Проверка собранной игры: ./Thor.exe -- --selftest  (печатает, что ресурсы на месте, и выходит)
+## Проверка собранной игры: ./Thor.exe --headless -- --selftest.
 func _selftest() -> void:
-	print("SELFTEST bodies=%d runes=%d odin=%s" % [Run.all_bodies.size(), Run.all_runes.size(), Odin.pick("death") != ""])
+	var has_odin_line := Odin.pick("death") != ""
+	print("SELFTEST bodies=%d runes=%d odin=%s" % [Run.all_bodies.size(), Run.all_runes.size(), has_odin_line])
+	if Run.all_bodies.is_empty() or Run.all_runes.is_empty() or not has_odin_line:
+		printerr("SELFTEST FAIL: не загружены тела, руны или реплики Одина")
+		get_tree().quit(1)
+		return
+	# Новелла не должна останавливать физику, пока проверяем загрузку первой боевой волны.
+	Dialogue.in_run_scenes = false
 	get_tree().root.add_child(SelfTestRunner.new())
 	_start_with("")
 
 class SelfTestRunner extends Node:
 	func _ready() -> void:
-		for i in 240:
-			await get_tree().process_frame
-		var g := get_tree().current_scene
-		print("SELFTEST scene=%s room=%s enemies=%d" % [g.name, Run.current_room_path(), get_tree().get_nodes_in_group("enemies").size()])
-		get_tree().quit()
+		# Process-кадры в headless могут закончиться до первого тика физики и появления врагов.
+		for i in 600:
+			await get_tree().physics_frame
+			var g := get_tree().current_scene as Game
+			if g and is_instance_valid(g.room) and g.room._started and g.room.alive_enemies().size() > 0:
+				print("SELFTEST OK scene=%s room=%s enemies=%d" % [g.name, Run.current_room_path(), g.room.alive_enemies().size()])
+				get_tree().quit(0)
+				return
+		var current := get_tree().current_scene
+		printerr("SELFTEST FAIL: за 600 физических кадров не появилась боевая волна (сцена=%s, зал=%s)" % [current.name if current else "нет", Run.current_room_path()])
+		get_tree().quit(1)
