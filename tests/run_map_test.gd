@@ -95,6 +95,10 @@ func _test_offers() -> void:
 	check(disabled == 0, "без наград, которых ещё нет в игре")
 	check(m.roll_offers(Run.all_rewards, m.miniboss_index(), boss, {}, "combat", true) == ["miniboss"], "к мини-боссу — одна дверь")
 	check(m.roll_offers(Run.all_rewards, boss, boss, {}, "combat", true) == ["boss"], "к боссу — одна дверь")
+	# Финальная дверь использует иконку, а не запасной рунный глиф.
+	var boss_reward := Run.reward_def("boss")
+	var boss_icon := boss_reward.icon() if boss_reward else null
+	check(boss_icon != null, "для двери босса загружена иконка")
 	# Тихие залы не подряд
 	var peaceful_after_rest := 0
 	for i in 500:
@@ -276,6 +280,9 @@ func _test_run_through_doors() -> void:
 	await wait(0.3)
 	check(Run.rune_count(rune.id) >= maxi(2, had + 1), "руна %s сразу уровня %d" % [rune.id, Run.rune_count(rune.id)])
 	check(game.rewards.doors.size() == 1 and game.rewards.doors[0].reward_id == "boss", "к боссу — одна дверь")
+	var boss_door: RewardDoor = game.rewards.doors[0] if game.rewards.doors.size() == 1 else null
+	var sprite := boss_door.get_node_or_null("Icon/Sprite") as Sprite3D if boss_door else null
+	check(sprite != null and sprite.texture != null, "финальная дверь показывает иконку босса")
 	await DoorHelper.take_door(get_tree(), game, 0)
 
 	# 8. Босс
