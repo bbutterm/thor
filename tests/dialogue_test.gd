@@ -183,6 +183,13 @@ func _test_finale_gating() -> void:
 	print("-- Финал и сцена после титров")
 	Save.reset()
 	check(Dialogue.pick_scene("meet").is_empty(), "без финального события сцены не выбираются")
+	# Даже множество обычных смертей и побед не подменяет будущие события финала и титров.
+	Save.data.stats.runs = 100
+	Save.data.stats.deaths = 80
+	Save.data.stats.wins = 20
+	for sc in Dialogue.scenes:
+		if sc.get("id", "") in ["finale_a", "finale_post_credits_b"]:
+			check(not Dialogue.check(sc._conds, Dialogue.context("victory")), "%s не открывается обычными победами" % sc.id)
 	Save.bump_event("odin_finale_unlocked")
 	check(Dialogue.pick_scene("meet").get("id", "") == "finale_a", "победа над Одином открывает финал A")
 	Save.mark_seen("finale_a")
