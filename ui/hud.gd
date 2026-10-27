@@ -40,6 +40,12 @@ var _runes_box: HFlowContainer
 var _odin_panel: PanelContainer
 var _odin_label: Label
 var _odin_tween: Tween
+var _odin_compact_text := ""
+var _odin_compact_width := -1.0
+var _odin_compact_font: Font
+var _odin_compact_font_size := -1
+var _odin_compact_outline := -1
+var _odin_compact_height := 0.0
 var _toast_label: Label
 var _speed_rect: ColorRect
 var _speed_mat: ShaderMaterial
@@ -350,22 +356,49 @@ func _position_odin_notice() -> void:
 		return
 	var top := 104.0
 	var left := -340.0
+	var notice_width := 680.0
+	var text_min_width := 560.0
+	var compact_notice := false
 	var announce := get_parent().get_node_or_null("ComboAnnounce") as ComboAnnounce
 	if announce and announce.is_showing():
 		var bounds := announce.visual_rect()
 		var style := _odin_panel.get_theme_stylebox("panel") as SkinStyleBox
 		var frame_top := style.grow.y if style else 0.0
 		top = maxf(top, bounds.end.y + frame_top + 12.0)
+		var vp_width := get_viewport().get_visible_rect().size.x
+		# Во время крупного слова — узкая реплика слева, слово в правой части.
+		# Сохраняем озвучку и текст синхронными, не закрывая молот и руны внизу.
+		if ComicFX.combo_word_active():
+			compact_notice = true
+			var text_factor := clampf((GameSettings.text_scale() - 1.0) / 0.6, 0.0, 1.0)
+			notice_width = minf(lerpf(455.0, 560.0, text_factor), vp_width * lerpf(0.36, 0.45, text_factor))
+			text_min_width = maxf(notice_width - 120.0, 120.0)
+			left = -vp_width * 0.5 + (style.grow.x if style else 0.0) + 6.0
 		# Если ворон тоже говорит, размещаем подписи рядом, чтобы их можно было читать.
 		var bubble := Dialogue.get("_bubble") as BarkBubble
 		if is_instance_valid(bubble) and is_instance_valid(bubble._panel) and bubble._panel.modulate.a > 0.01:
-			var vp_width := get_viewport().get_visible_rect().size.x
 			var frame_right := style.grow.z if style else 0.0
 			var right_limit := bubble.visual_rect().position.x - frame_right - 12.0
-			left = minf(left, right_limit - 680.0 - vp_width * 0.5)
+			left = minf(left, right_limit - notice_width - vp_width * 0.5)
 			left = maxf(left, -vp_width * 0.5 + (style.grow.x if style else 0.0) + 6.0)
+	var text_min_height := 0.0
+	if compact_notice:
+		# При переносе длинной реплики Label иначе может обрезать последнюю
+		# строку: рассчитываем высоту по шрифту на минимальной ширине и оставляем
+		# место для обводки. При фактической ширине больше эта оценка безопасна.
+		var ls := _odin_label.label_settings
+		if _odin_compact_text != _odin_label.text or not is_equal_approx(_odin_compact_width, text_min_width) or _odin_compact_font != ls.font or _odin_compact_font_size != ls.font_size or _odin_compact_outline != ls.outline_size:
+			_odin_compact_text = _odin_label.text
+			_odin_compact_width = text_min_width
+			_odin_compact_font = ls.font
+			_odin_compact_font_size = ls.font_size
+			_odin_compact_outline = ls.outline_size
+			var extent := ls.font.get_multiline_string_size(_odin_label.text, HORIZONTAL_ALIGNMENT_LEFT, text_min_width, ls.font_size)
+			_odin_compact_height = extent.y + ls.outline_size * 2.0 + 6.0
+		text_min_height = _odin_compact_height
+	_odin_label.custom_minimum_size = Vector2(text_min_width, text_min_height)
 	_odin_panel.offset_left = left
-	_odin_panel.offset_right = left + 680.0
+	_odin_panel.offset_right = left + notice_width
 	_odin_panel.offset_top = top
 	_odin_panel.offset_bottom = top + 60.0
 
