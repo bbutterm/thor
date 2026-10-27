@@ -1,19 +1,21 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://props/destructible.gd" id="1_1nefx"]
 [ext_resource type="PackedScene" path="res://assets/quaternius/props/Barrel.gltf" id="1_27cr2"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1nefx"]
 height = 1.0
 radius = 0.4
 
-[node name="Barrel" type="RigidBody3D" unique_id=662548241 groups=["props"]]
+[node name="Barrel" type="RigidBody3D" unique_id=1472643364 groups=["props"]]
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
+script = ExtResource("1_1nefx")
 
-[node name="Shape" type="CollisionShape3D" parent="." unique_id=1433118669]
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=540659187]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("CylinderShape3D_1nefx")
 
-[node name="Model" type="Node3D" parent="." unique_id=917105538 instance=ExtResource("1_27cr2")]
+[node name="Model" type="Node3D" parent="." unique_id=924907182 instance=ExtResource("1_27cr2")]
 transform = Transform3D(1.15, 0, 0, 0, 1.12, 0, 0, 0, 1.15, 0, 0, 0)

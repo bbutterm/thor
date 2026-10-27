@@ -4,6 +4,9 @@ class_name Balcony
 ## столбы. break_apart() — телеграф (тряска, пыль) и обломки: доски-физтела на слое debris (7),
 ## с тем же мешем/материалом, что у настила (без новых материалов), живут debris_lifetime секунд.
 ## Ярл ломает балконы в фазе 3 (enemies/bosses/jarl.gd); кто стоял сверху — падает.
+## Мосты и настилы обычных залов (генератор: блок "wood" над полом → Balcony со slam_breakable) ломает
+## удар-приземление Тора сверху (Player._do_slam_impact → on_slam). Балконы длинного дома Ярла — нет
+## (slam_breakable = false по умолчанию: фазе 2 они нужны целыми до фазы 3).
 
 signal broken(balcony: Balcony)
 
@@ -12,6 +15,9 @@ signal broken(balcony: Balcony)
 @export var debris_lifetime: float = 4.0
 ## Тряска перед обрушением (с)
 @export var shake_time: float = 0.45
+## Ломается ударом-приземлением Тора сверху (мосты деревни, Биврёст); с какой высоты падения (м)
+@export var slam_breakable: bool = false
+@export var slam_break_height: float = 1.0
 
 var is_broken: bool = false
 var _breaking: bool = false
@@ -34,6 +40,14 @@ func has_point_on_top(p: Vector3, margin: float = 0.3) -> bool:
 	var size := (deck.shape as BoxShape3D).size
 	var local := deck.global_transform.affine_inverse() * p
 	return absf(local.x) <= size.x * 0.5 + margin and absf(local.z) <= size.z * 0.5 + margin and local.y > 0.0 and local.y < size.y * 0.5 + 2.5
+
+## Удар-приземление Тора по настилу сверху (player.gd). true — ломается.
+func on_slam(height: float) -> bool:
+	if not slam_breakable or is_broken or _breaking or height < slam_break_height:
+		return false
+	Perf.mark("deck_slam_break")
+	break_apart()
+	return true
 
 ## Сломать (с тряской shake_time). instant — сразу (тесты).
 func break_apart(instant: bool = false) -> void:

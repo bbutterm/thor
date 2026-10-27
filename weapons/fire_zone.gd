@@ -44,6 +44,7 @@ func _physics_process(delta: float) -> void:
 		_mi.transparency = 1.0 - (0.35 + 0.2 * sin(_time * 18.0))
 	if _tick >= 0.25 and hostile:
 		_tick = 0.0
+		Destructible.ignite_area(self, global_position, radius)
 		var p := get_tree().get_first_node_in_group("player") as Player
 		if p and not p.is_dead and p.is_on_floor() and absf(p.global_position.y - global_position.y) < 1.0 \
 				and Vector2(p.global_position.x - global_position.x, p.global_position.z - global_position.z).length() <= radius:
@@ -51,6 +52,8 @@ func _physics_process(delta: float) -> void:
 			p.take_damage(dps * 0.25)
 	elif _tick >= 0.25:
 		_tick = 0.0
+		# Бочки и ящики в огне — горят и разваливаются (props/destructible.gd)
+		Destructible.ignite_area(self, global_position, radius)
 		for e in get_tree().get_nodes_in_group("enemies"):
 			var en := e as Node3D
 			if en and not e.get("is_dead") and en.global_position.distance_to(global_position) <= radius:

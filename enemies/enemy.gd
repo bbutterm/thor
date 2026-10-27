@@ -481,10 +481,8 @@ func _do_boss_slam() -> void:
 		d.y = 0
 		if d.length() <= boss_slam_radius and player.is_on_floor():
 			_hit_player(boss_slam_damage, d.normalized() * 10.0 + Vector3.UP * 6.0)
-	for c in get_tree().get_nodes_in_group("props"):
-		var rb := c as RigidBody3D
-		if rb and rb.global_position.distance_to(global_position) < boss_slam_radius:
-			rb.apply_central_impulse((rb.global_position - global_position).normalized() * 6.0 * rb.mass + Vector3.UP * 4.0 * rb.mass)
+	# Удар по площади ломает бочки и ящики (props/destructible.gd)
+	Destructible.hit_area(self, global_position, boss_slam_radius, boss_slam_damage, 6.0, 4.0, "enemy_slam", 1.0)
 
 func _show_slam_telegraph() -> void:
 	Perf.mark("boss_telegraph")

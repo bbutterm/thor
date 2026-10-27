@@ -87,6 +87,23 @@ func _play_room() -> void:
 			p.global_position = (pad as Node3D).global_position + Vector3(0, 0.2, 0)
 			p.velocity = Vector3.ZERO
 			await wait(1.2)
+	# Разрушаемое: первое разрушение бочки, ящика, взрывной бочки в зале — перед глазами Тора
+	# (обломки, пыль, щепки, слово; пайплайны кусков прогреты ShaderWarmup)
+	var kinds := {}
+	for n in get_tree().get_nodes_in_group("destructibles"):
+		# Взрыв прошлой бочки мог разбить соседей
+		if not is_instance_valid(n) or (n as Node).is_queued_for_deletion():
+			continue
+		var d := n as Destructible
+		if d == null or d.is_broken or not room.is_ancestor_of(d) or kinds.has(d.scene_file_path):
+			continue
+		kinds[d.scene_file_path] = true
+		var to_d := d.global_position - p.global_position
+		p.rotation_target.y = atan2(-to_d.x, -to_d.z)
+		await wait(0.2)
+		p.heal(999)
+		d.take_hit(999.0, Vector3(0, 2, -6), "ranged")
+		await wait(0.5)
 	while not room._is_cleared and safety < 120:
 		safety += 1
 		step += 1

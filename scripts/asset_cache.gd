@@ -38,6 +38,11 @@ const FILES := [
 	"res://enemies/merc.tscn",
 	"res://enemies/sven.tscn",
 	"res://enemies/jarl.tscn",
+	# Разрушаемые пропсы (props/destructible.gd)
+	"res://props/barrel.tscn",
+	"res://props/crate.tscn",
+	"res://props/barrel_explosive.tscn",
+	"res://props/destruct_tuning.tres",
 ]
 const EXTS := ["gltf", "glb", "fbx", "wav", "ogg", "tscn", "tres", "webp"]
 

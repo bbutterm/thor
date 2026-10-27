@@ -192,6 +192,15 @@ func _ray(origin: Vector3, dir: Vector3, dmg: float, pierce: int) -> Vector3:
 			return to
 		var c: Object = hit.collider
 		var pos: Vector3 = hit.position
+		if c is Destructible:
+			# Бочка/ящик: урон по пропсу (DestructTuning.source_mult["ranged"]) и толчок пулей; пробивает дальше
+			(c as Destructible).take_hit(dmg, dir * holder.prop_bullet_impulse, "ranged")
+			FX.sparks(player.get_parent(), pos, Color(0.7, 0.5, 0.3), 4, 3.0, 12.0, 0.05, 0.25)
+			if left > 0:
+				left -= 1
+				exclude.append((c as CollisionObject3D).get_rid())
+				continue
+			return pos
 		if c and c.has_method("take_hit"):
 			player.deal_damage(c, dmg, Vector3.ZERO, "ranged")
 			# Гвоздомёт: прибивает корм к полу

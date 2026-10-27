@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" path="res://props/crate.tscn" id="15_apjnd"]
 [ext_resource type="PackedScene" path="res://assets/quaternius/props/Torch_Metal.gltf" id="16_v4eyg"]
 [ext_resource type="PackedScene" path="res://assets/quaternius/props/Banner_2.gltf" id="17_7dnnj"]
+[ext_resource type="Script" path="res://rooms/balcony.gd" id="99_deck"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bnk3f"]
 size = Vector3(32, 1, 24)
@@ -739,8 +740,10 @@ mesh = SubResource("BoxMesh_gvt3v")
 [node name="Block2" type="StaticBody3D" parent="Geometry" unique_id=508609663]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, -2)
 collision_mask = 0
+script = ExtResource("99_deck")
+slam_breakable = true
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Block2" unique_id=1603251368]
+[node name="Deck" type="CollisionShape3D" parent="Geometry/Block2" unique_id=1603251368]
 shape = SubResource("BoxShape3D_p5q5q")
 
 [node name="Mesh" type="MeshInstance3D" parent="Geometry/Block2" unique_id=1618877239]

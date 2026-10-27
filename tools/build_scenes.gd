@@ -205,10 +205,13 @@ func _box(parent: Node, name: String, center: Vector3, size: Vector3, mat: Mater
 	return root
 
 ## Разрушаемый балкон (rooms/balcony.gd): StaticBody3D — настил «Deck»/«Mesh» и столбы до пола по переднему краю.
-func _balcony(parent: Node, name: String, center: Vector3, size: Vector3, mat: Material) -> Node3D:
+## posts = false — без столбов (мост/настил между опорами); slam = true — ломается ударом-приземлением сверху.
+func _balcony(parent: Node, name: String, center: Vector3, size: Vector3, mat: Material, posts: bool = true, slam: bool = false) -> Node3D:
 	var sb := StaticBody3D.new()
 	sb.name = name
 	sb.set_script(load("res://rooms/balcony.gd"))
+	if slam:
+		sb.set("slam_breakable", true)
 	sb.collision_layer = WORLD
 	sb.collision_mask = 0
 	sb.position = center
@@ -224,6 +227,8 @@ func _balcony(parent: Node, name: String, center: Vector3, size: Vector3, mat: M
 	mi.mesh = _boxmesh(size)
 	mi.material_override = mat
 	sb.add_child(mi)
+	if not posts:
+		return sb
 	# Столбы — по краю, обращённому в зал (по X к центру), через каждые ~5 м
 	var post_h := center.y - size.y * 0.5
 	var edge_x := -signf(center.x) * (size.x * 0.5 - 0.25)
@@ -345,16 +350,19 @@ func build_resources() -> void:
 
 func build_props() -> void:
 	print("Бочки и ящики…")
-	for kind in ["barrel", "crate"]:
+	# Разрушаемые (props/destructible.gd): прочность и содержимое — поля Destructible на сцене
+	var destructible := load("res://props/destructible.gd")
+	for kind in ["barrel", "crate", "barrel_explosive"]:
 		var rb := RigidBody3D.new()
-		rb.name = kind.capitalize()
+		rb.name = kind.capitalize().replace(" ", "")
 		rb.collision_layer = PROPS_L
 		rb.collision_mask = WORLD | PLAYER_L | ENEMY_L | PROPS_L | DEBRIS_L
 		rb.add_to_group("props", true)
+		rb.set_script(destructible)
 		var shape := CollisionShape3D.new()
 		shape.name = "Shape"
 		rb.add_child(shape)
-		if kind == "barrel":
+		if kind != "crate":
 			# Quaternius Fantasy Props: Barrel (0.7 × 0.9 м), чуть увеличен
 			rb.mass = 1.2
 			var cs := CylinderShape3D.new()
@@ -363,6 +371,11 @@ func build_props() -> void:
 			shape.shape = cs
 			shape.position.y = 0.5
 			_model(rb, "Model", QP + "Barrel.gltf", Vector3.ZERO, Vector3.ZERO, Vector3(1.15, 1.12, 1.15))
+			# Бочка — 1 удар топором (22), клёпки по 6 секторам + крышка и дно, серебро
+			rb.set("max_health", 15.0)
+			rb.set("debris_mode", "radial")
+			rb.set("debris_sectors", 6)
+			rb.set("loot", "barrel")
 		else:
 			# Quaternius Medieval Village: Prop_Crate (1.08 м) → 0.9 м
 			rb.mass = 1.6
@@ -371,6 +384,52 @@ func build_props() -> void:
 			shape.shape = bs
 			shape.position.y = 0.44
 			_model(rb, "Model", QV + "Prop_Crate.gltf", Vector3.ZERO, Vector3.ZERO, Vector3.ONE * 0.83)
+			# Ящик — 2 обычных удара (финишер, сильный, молот, рывок — один), шесть стенок, серебро/патроны/лечение
+			rb.set("max_health", 30.0)
+			rb.set("debris_mode", "box")
+			rb.set("wood_color", Color(0.62, 0.45, 0.28))
+			rb.set("break_sound", "sounds/sfx/crate_break.wav")
+			rb.set("loot", "crate")
+		if kind == "barrel_explosive":
+			# Взрывная бочка: красный пояс и крышка (светятся — читается издалека), взрыв Blast, цепная реакция
+			rb.set("max_health", 10.0)
+			rb.set("loot", "none")
+			rb.set("explosive", true)
+			rb.set("burn_time", 1.2)
+			rb.set("comic_event", "")
+			var mark := StandardMaterial3D.new()
+			mark.resource_name = "ExplosiveMark"
+			mark.albedo_color = Color(0.78, 0.08, 0.05)
+			mark.roughness = 0.7
+			mark.emission_enabled = true
+			mark.emission = Color(1.0, 0.18, 0.06)
+			mark.emission_energy_multiplier = 1.3
+			var band := MeshInstance3D.new()
+			band.name = "Mark"
+			var bm := CylinderMesh.new()
+			bm.top_radius = 0.412
+			bm.bottom_radius = 0.412
+			bm.height = 0.17
+			bm.radial_segments = 20
+			bm.rings = 1
+			bm.cap_top = false
+			bm.cap_bottom = false
+			band.mesh = bm
+			band.material_override = mark
+			band.position.y = 0.52
+			rb.add_child(band)
+			var cap := MeshInstance3D.new()
+			cap.name = "MarkTop"
+			var cm := CylinderMesh.new()
+			cm.top_radius = 0.24
+			cm.bottom_radius = 0.24
+			cm.height = 0.02
+			cm.radial_segments = 16
+			cm.rings = 1
+			cap.mesh = cm
+			cap.material_override = mark
+			cap.position.y = 1.01
+			rb.add_child(cap)
 		_save(rb, "res://props/%s.tscn" % kind)
 
 # ---------------- Враги ----------------
@@ -843,6 +902,12 @@ func room_defs() -> Array:
 	})
 	return r
 
+## Блок — деревянный настил над полом: материал "wood", толщина ≤ 0.5 м, низ выше 1 м (мост деревни, Биврёст).
+func _is_wood_deck(b: Array) -> bool:
+	var c: Vector3 = b[0]
+	var sz: Vector3 = b[1]
+	return b[2] == "wood" and sz.y <= 0.5 and c.y - sz.y * 0.5 > 1.0
+
 func _ring_points(c: Vector3, radius: float, n: int) -> Array:
 	var out: Array = []
 	for i in n:
@@ -917,6 +982,11 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 
 	for i in d.blocks.size():
 		var b: Array = d.blocks[i]
+		if _is_wood_deck(b):
+			# Деревянный мост/настил над полом (GDD 16): ломается ударом-приземлением сверху (rooms/balcony.gd),
+			# при новом заходе в зал — снова целый (зал собирается из сцены заново)
+			_balcony(geo, "Block%d" % i, b[0], b[1], mats.wood, false, true)
+			continue
 		# "none" — только коллизия (вид даёт декоративная модель из "models", например корпус корабля)
 		_box(geo, "Block%d" % i, b[0], b[1], null if b[2] == "none" else mats.get(b[2], mats.stone_dark))
 	for i in d.pillars.size():
@@ -1040,11 +1110,13 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	var props := Node3D.new()
 	props.name = "Props"
 	root.add_child(props)
-	var barrel := load("res://props/barrel.tscn") as PackedScene
-	var crate := load("res://props/crate.tscn") as PackedScene
+	var prop_scenes := {}
 	for i in d.props.size():
 		var pr: Array = d.props[i]
-		var inst := (barrel if pr[0] == "barrel" else crate).instantiate() as Node3D
+		# "barrel", "crate", "barrel_explosive" → props/<вид>.tscn
+		if not prop_scenes.has(pr[0]):
+			prop_scenes[pr[0]] = load("res://props/%s.tscn" % pr[0]) as PackedScene
+		var inst := (prop_scenes[pr[0]] as PackedScene).instantiate() as Node3D
 		inst.name = "%s_%d" % [pr[0], i]
 		inst.position = pr[1] + Vector3(0, 0.02, 0)
 		inst.rotation.y = randf() * TAU

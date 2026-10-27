@@ -150,6 +150,9 @@ func charge_step(delta: float, speed: float, max_dist: float, damage: float, kno
 			_hit_player(damage, (_charge_dir * 0.7 + away * 0.5).normalized() * knock + Vector3.UP * 5.0)
 			if player:
 				player.camera_fx.add_trauma(0.5)
+	# Бочки и ящики на пути — вдребезги (props/destructible.gd)
+	Destructible.hit_area(self, global_position + Vector3(0, 0.5, 0), 1.0 * model_scale + 0.7, PropDebris.cfg().boss_charge_damage,
+		speed * 0.5, 3.0, "boss_charge", 1.0)
 	# Своих — расталкивает
 	for e in _enemies_now():
 		var en := e as Enemy

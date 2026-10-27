@@ -314,6 +314,11 @@ func _sweep_hits(from: Vector3, to: Vector3) -> void:
 ## Попадание по врагу или физтелу.
 func _on_hit(c: Object, dir: Vector3) -> void:
 	var knock := Vector3(dir.x, 0, dir.z).normalized() * 9.0 + Vector3.UP * 3.0
+	if c is Destructible:
+		# Бочка/ящик: ломается и летит, без трейтов «по врагу», цепной молнии и слова комикса
+		(c as Destructible).take_hit(damage(), knock, "hammer")
+		Audio.play("sounds/sfx/hammer_hit.wav")
+		return
 	if c.has_method("take_hit"):
 		var dmg := damage()
 		hand.player.deal_damage(c, dmg, knock, "hammer")
