@@ -27,6 +27,7 @@ func setup(pos: Vector3, radius_: float, duration_: float, dps_: float, with_lig
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(mi)
 	FX.fire_sprites(self, radius, duration)  # языки пламени vfx_fire
+	FX.scorch(get_parent(), pos, radius, duration)  # подпалина на полу (assets/decals/scorch, пул с лимитом)
 	if not with_light:
 		return
 	var light := OmniLight3D.new()

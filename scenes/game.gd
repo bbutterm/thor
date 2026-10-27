@@ -47,6 +47,8 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Дожидаемся фоновой загрузки моделей (обычно уже готово, пока игрок был в меню)
 	AssetCache.finish()
+	# Небо и дымка мира (панорама из run/maps/<мир>.tres; Мидгард — закат)
+	WorldArt.apply_world(self, Run.map)
 	_load_room()
 	Dialogue.on_run_start(Run.body.id if Run.body else "")
 
@@ -75,6 +77,8 @@ func _load_room() -> void:
 		scene = load(path) as PackedScene
 	room = scene.instantiate() as Room
 	level.add_child(room)
+	# Атмосфера зала по миру: искры над факелами и очагом, пылинки, низкий туман (scripts/world_art.gd)
+	WorldArt.dress_room(room, Run.map)
 	var t := room.get_spawn_transform()
 	player.global_position = t.origin
 	player.velocity = Vector3.ZERO

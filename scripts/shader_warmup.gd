@@ -133,6 +133,9 @@ func _build() -> void:
 	FX.warmup_sprites(self, p, right)
 	FX.hit_flash(game, p, 0.4)
 	FX.smoke(game, p, 0.4)
+	FX.scorch(game, center, 0.8)
+	# Графика мира: декор на стенах, рунные круги, частицы атмосферы (искры, огонь очага, туман) — все материалы
+	WorldArt.warmup(self, p, right)
 	if VfxScreen.instance and is_instance_valid(VfxScreen.instance):
 		VfxScreen.instance.warmup(FRAMES)
 	ComicFX.warmup()

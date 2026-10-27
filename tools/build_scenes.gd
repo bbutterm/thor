@@ -116,6 +116,27 @@ func _tex_mat(key: String, tex: String, tint: Color = Color.WHITE, uv: float = 0
 	_mats[key] = m
 	return m
 
+## Рисованные текстуры Мидгарда (assets/textures/midgard/, комплект владельца) вместо текстур Quaternius — только там,
+## где по кадрам стало лучше (PROGRESS.md «Графика мира»): каменные блоки — stone_wall (те же рисованные камни,
+## что у стен MegaKit, но подробнее RockTrim). Пол зала — ключ "floor_tex" (деревня — dirt_straw). Доски wood_floor
+## на блоках и полу хуже WoodTrim/Brick (плоские ящики без кромок, рыжий пол двора) — не применены; thatch — некуда (крыш нет).
+const MIDGARD_BLOCKS := {"stone_dark": "stone_wall"}
+const MT := "res://assets/textures/midgard/"
+
+## Материал из рисованной текстуры мира (только цвет, без карт нормалей), трипланарный по миру.
+func _world_tex_mat(key: String, tex: String, tint: Color = Color.WHITE, uv: float = 0.25, rough: float = 0.92) -> StandardMaterial3D:
+	if _mats.has(key):
+		return _mats[key]
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load(MT + tex + ".webp")
+	m.albedo_color = tint
+	m.roughness = rough
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3(uv, uv, uv)
+	_mats[key] = m
+	return m
+
 ## Экземпляр модели (gltf) как обычный узел сцены.
 func _model(parent: Node, name: String, path: String, pos: Vector3, rot_deg: Vector3 = Vector3.ZERO, scl: Vector3 = Vector3.ONE) -> Node3D:
 	var n := (load(path) as PackedScene).instantiate() as Node3D
@@ -686,6 +707,9 @@ func build_player() -> void:
 ## Описание залов. Координаты в метрах; y — высота центра блока.
 ## Блоки: [центр, размер, материал]; врагов: [kind, позиция, волна, (сколько, разброс м)]; пропсы: [тип, позиция].
 ## Волны по GDD 12.5: корм толпой (60–70 %), бойцы, 1–2 особых на волну.
+## Графика мира (комплект владельца): "decor" — картинки на стенах [ключ assets/decor/, позиция, поворот Y, высота м],
+## "decals" — декали на полу [ключ assets/decals/, позиция, поворот Y, размер м, (glow)], "no_auto" — без авто-знамён/щитов
+## на стенах "north"/"south"/"side", "floor_tex" — рисованная текстура пола (assets/textures/midgard/<ключ>).
 func room_defs() -> Array:
 	var r: Array = []
 	# 1. Зал Бочек — разминка, много физики
@@ -778,6 +802,10 @@ func room_defs() -> Array:
 			["bloated", Vector3(-4, 0, -9), 1], ["fodder", Vector3(6, 0, -9), 1, 5, 1.5],
 			["shaman", Vector3(-7.5, 2.1, -5.5), 2], ["merc", Vector3(8, 0, -9), 2], ["shieldbearer", Vector3(0, 0, -9), 2], ["fodder", Vector3(-6, 0, 7), 2, 6, 1.2]],
 		"props": _stack_props(Vector3(-3, 0, 3)) + _stack_props(Vector3(3, 0, -8)) + _stack_props(Vector3(-9, 0, 5)) + [["barrel", Vector3(9, 0, 8)], ["barrel", Vector3(10, 0, 7)], ["barrel", Vector3(-10, 0, -10)]],
+		# Плакат «Разыскивается» (Локи) на западной стене склада, у входа
+		"decor": [["wanted_poster", Vector3(-13 + WALL_INSET, 1.9, 1.0), 90.0, 1.5]],
+		# Разлитая медовуха у штабелей и бочек
+		"decals": [["puddle_mead", Vector3(9.5, 0, 6.5), 40.0, 2.6], ["puddle_mead", Vector3(-1.5, 0, 5.0), 200.0, 1.8]],
 	})
 	# 7. Причал с драккаром (GDD 16) — корабль (модель Quaternius Pirate Kit поверх невидимой коллизии: палуба 2.2 м,
 	# нос 3.2 м), склад на берегу 3 м. Наверх: сходни-ящики 1.1 м → палуба (залезание), прыжковая руна у склада.
@@ -813,6 +841,8 @@ func room_defs() -> Array:
 		],
 		"pillars": [Vector3(-4, 0, -8), Vector3(4, 0, 8)],
 		"jump_pads": [[Vector3(0, 0, 0), 10.0]],
+		# Следы прошлых боёв в яме: подпалины и засохший ихор
+		"decals": [["scorch", Vector3(-4.5, 0, 3.5), 15.0, 3.2], ["scorch", Vector3(4, 0, -9), 120.0, 2.6], ["ichor_splat_02", Vector3(3, 0, 4.5), 70.0, 1.8]],
 		"enemies": [["fodder", Vector3(0, 0, -4), 0, 6, 2.0], ["grunt", Vector3(-4, 0, -2), 0], ["grunt", Vector3(4, 0, -4), 0], ["thrower", Vector3(-11, 2.1, -3), 0], ["thrower", Vector3(11, 2.1, 3), 0],
 			["shaman", Vector3(-11, 4.1, -9), 1], ["shaman", Vector3(11, 4.1, 9), 1], ["bloated", Vector3(0, 0, -8), 1], ["merc", Vector3(11, 2.1, -6), 1], ["fodder", Vector3(-3, 0, 3), 1, 6, 1.8],
 			["shieldbearer", Vector3(0, 0, -6), 2], ["fodder", Vector3(3, 0, -2), 2, 6, 1.8], ["fodder", Vector3(-3, 0, -8), 2, 5, 1.6], ["grunt", Vector3(-11, 2.1, 6), 2]],
@@ -834,12 +864,16 @@ func room_defs() -> Array:
 		],
 		"pillars": [],
 		"houses": [[0, "s", "Plaster"], [1, "s", "UnevenBrick"], [2, "e", "UnevenBrick"], [3, "w", "Plaster"]],
+		# Улица деревни — утоптанная земля с соломой (assets/textures/midgard/dirt_straw)
+		"floor_tex": "dirt_straw",
 		"jump_pads": [[Vector3(0, 0, 3), 8.0]],
 		"enemies": [["grunt", Vector3(-3, 0, -9), 0], ["grunt", Vector3(3, 0, -9), 0], ["thrower", Vector3(-9, 3.1, -5), 0], ["fodder", Vector3(0, 0, -1), 0, 6, 1.8],
 			["thrower", Vector3(9, 3.1, -5), 1], ["shaman", Vector3(0, 3.1, -5), 1], ["merc", Vector3(9, 2.6, 6), 1], ["bloated", Vector3(-12, 0, 0), 1], ["fodder", Vector3(4, 0, -1), 1, 6, 1.8],
 			["shieldbearer", Vector3(0, 0, -8), 2], ["thrower", Vector3(-9, 3.1, 6), 2], ["fodder", Vector3(-3, 0, 1), 2, 6, 1.6], ["grunt", Vector3(12, 0, 0), 2]],
 		"props": [["barrel", Vector3(-12, 0, -10)], ["barrel", Vector3(12, 0, -10)], ["crate", Vector3(-13, 0, 1)], ["crate", Vector3(13, 0, 1)], ["barrel", Vector3(2, 0, 7)],
 			["barrel", Vector3(-2, 0, 8)], ["crate", Vector3(-9, 3.0, -5.5)], ["barrel", Vector3(9, 3.0, -4)], ["crate", Vector3(9, 2.5, 7)]],
+		# Плакаты на южных стенах домов (лицевая сторона модулей — z = −2.31): «Разыскивается» и Один «Качайся!»
+		"decor": [["wanted_poster", Vector3(-11, 1.75, -2.31 + WALL_INSET), 0.0, 1.4], ["odin_poster", Vector3(11, 1.75, -2.31 + WALL_INSET), 0.0, 1.4]],
 	})
 	return r
 
@@ -868,6 +902,8 @@ func build_rooms() -> void:
 	# Арены боссов (Длинный дом Ярла, погреб Свена) — ручные сцены, см. MANUAL_SCENES
 
 func _build_room(d: Dictionary, boss: bool) -> void:
+	# Случайные повороты пропсов — одни и те же при каждом запуске генератора (меньше шума в .tscn)
+	seed(hash(d.file))
 	var root := Node3D.new()
 	root.name = d.file.capitalize().replace(" ", "")
 	root.set_script(load("res://rooms/room.gd"))
@@ -882,6 +918,10 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		"stone_dark": _tex_mat("q_rock", "RockTrim", Color(0.7, 0.7, 0.74), 0.4),
 	}
 	var pillar_mat := _tex_mat("q_pillar", "UnevenBrick", Color(0.8, 0.78, 0.75), 0.45)
+	for kind in MIDGARD_BLOCKS:
+		mats[kind] = _world_tex_mat("m_" + kind, MIDGARD_BLOCKS[kind], Color(0.9, 0.9, 0.92), 0.3)
+	if d.has("floor_tex"):
+		floor_mat = _world_tex_mat("m_floor_" + d.floor_tex, d.floor_tex, Color(0.92, 0.9, 0.88), 0.3)
 
 	var geo := Node3D.new()
 	geo.name = "Geometry"
@@ -1080,14 +1120,26 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		l.position = Vector3(0, 0.3, 0)
 		t.add_child(l)
 
-	# Знамёна на боковых стенах
-	var banners := Node3D.new()
-	banners.name = "Banners"
-	root.add_child(banners)
-	var bz := [0.0] if dep < 26 else [-dep / 8, dep / 8 + 2]
-	for z in bz:
-		_model(banners, "BannerW%d" % int(z), QP + "Banner_2.gltf", Vector3(-w / 2 + 0.05, 4.6, z + 0.8), Vector3(0, 90, 0), Vector3.ONE * 1.3)
-		_model(banners, "BannerE%d" % int(z), QP + "Banner_2.gltf", Vector3(w / 2 - 0.05, 4.6, z - 0.8), Vector3(0, -90, 0), Vector3.ONE * 1.3)
+	# Знамёна, щиты и плакаты на стенах (комплект владельца assets/decor/, rooms/wall_decor.gd): авто-расстановка
+	# по стенам + ключ "decor" зала. Квады собираются при запуске из общего материала WorldArt.
+	_build_wall_art(root, d, w, dep, gap)
+	# Статичные декали на полу (assets/decals/, rooms/floor_decal.gd): [декаль, позиция, поворот Y, размер м, (glow)]
+	var decals: Array = d.get("decals", [])
+	if not decals.is_empty():
+		var dn := Node3D.new()
+		dn.name = "Decals"
+		root.add_child(dn)
+		for i in decals.size():
+			var dc: Array = decals[i]
+			var fd := Node3D.new()
+			fd.name = "%s_%d" % [(dc[0] as String).to_pascal_case(), i]
+			fd.set_script(load("res://rooms/floor_decal.gd"))
+			fd.set("art", dc[0])
+			fd.set("size", dc[3])
+			fd.set("glow", dc.size() > 4 and bool(dc[4]))
+			fd.position = dc[1]
+			fd.rotation_degrees.y = dc[2]
+			dn.add_child(fd)
 
 	# Портал-свет у выхода
 	var pl := OmniLight3D.new()
@@ -1108,6 +1160,62 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 
 	_save(root, "res://rooms/%s.tscn" % d.file)
 
+## Графика стен зала (assets/decor/*): знамёна по центру боковых стен (там, где были знамёна-модели), щиты
+## в простенках между факелами, знамёна по бокам выхода, щиты на южной стене; плюс ключ "decor" зала —
+## [картинка, позиция, поворот Y (град), высота м]. "no_auto": ["north", "south", "side"] — без авто на этих стенах.
+## Выбор картинок детерминированный (по имени зала): перезапуск генератора их не меняет.
+## Отступ от плоскости стены (лицевая сторона модулей Quaternius — +0.09 м от их начала); ещё WorldArt.cfg().wall_offset — у квада
+const WALL_INSET := 0.03
+
+func _build_wall_art(root: Node, d: Dictionary, w: float, dep: float, gap: float) -> void:
+	var art := Node3D.new()
+	art.name = "Banners"
+	root.add_child(art)
+	var ri := absi(hash(d.file)) % 97
+	var no_auto: Array = d.get("no_auto", [])
+	var k := 0
+	var bz: Array = [0.0] if dep < 26 else [-dep / 8, dep / 8 + 2]
+	if not "side" in no_auto:
+		for z in bz:
+			_wall_decor(art, "BannerW%d" % int(z), WorldArt.BANNERS[(ri + k) % 8], Vector3(-w / 2 + WALL_INSET, 4.35, z), 90.0, 2.3)
+			_wall_decor(art, "BannerE%d" % int(z), WorldArt.BANNERS[(ri + k + 3) % 8], Vector3(w / 2 - WALL_INSET, 4.35, z), -90.0, 2.3)
+			k += 1
+		# Щиты: у углов и между факелами и знамёнами
+		var sz: Array = [-dep * 3 / 8, dep * 3 / 8]
+		if dep < 26:
+			sz += [-dep / 8, dep / 8]
+		else:
+			sz.append((float(bz[0]) + float(bz[1])) / 2.0)
+		for z in sz:
+			_wall_decor(art, "ShieldW%d" % int(z), WorldArt.SHIELDS[(ri + k) % 8], Vector3(-w / 2 + WALL_INSET, 4.55, z), 90.0, 1.05)
+			_wall_decor(art, "ShieldE%d" % int(z), WorldArt.SHIELDS[(ri + k + 4) % 8], Vector3(w / 2 - WALL_INSET, 4.55, z), -90.0, 1.05)
+			k += 1
+	if not "north" in no_auto:
+		# Знамёна по бокам выхода (дальше факелов у проёма)
+		var nx := gap / 2 + minf(3.6, (w - gap) / 4)
+		for sx in [-1.0, 1.0]:
+			_wall_decor(art, "BannerN%d" % int(sx), WorldArt.BANNERS[(ri + k) % 8], Vector3(sx * nx, 4.2, -dep / 2 + WALL_INSET), 0.0, 2.1)
+			k += 1
+	if not "south" in no_auto:
+		for sx in [-1.0, 1.0]:
+			_wall_decor(art, "ShieldS%d" % int(sx), WorldArt.SHIELDS[(ri + k) % 8], Vector3(sx * w / 4, 4.3, dep / 2 - WALL_INSET), 180.0, 1.15)
+			k += 1
+	var extra: Array = d.get("decor", [])
+	for i in extra.size():
+		var e: Array = extra[i]
+		_wall_decor(art, "%s_%d" % [(e[0] as String).to_pascal_case(), i], e[0], e[1], e[2], e[3])
+
+func _wall_decor(parent: Node, name: String, art: String, pos: Vector3, yaw: float, height: float) -> Node3D:
+	var n := Node3D.new()
+	n.name = name
+	n.set_script(load("res://rooms/wall_decor.gd"))
+	n.set("art", art)
+	n.set("height", height)
+	n.position = pos
+	n.rotation_degrees.y = yaw
+	parent.add_child(n)
+	return n
+
 ## Зал-ларёк (блок К, GDD 13): тихий зал без волн, ларёк посередине, ящики по углам.
 func shop_room_def() -> Dictionary:
 	return {
@@ -1117,6 +1225,9 @@ func shop_room_def() -> Dictionary:
 		"enemies": [],
 		"props": _stack_props(Vector3(-9.5, 0, 6.5)) + _stack_props(Vector3(8.5, 0, 6.5)) + [["crate", Vector3(-9.5, 0, -8.5)], ["crate", Vector3(9.5, 0, -8.5)]],
 		"stall": Vector3(0, 0, 0.5),
+		# За ларьком, на северной стене: гобелен и плакат Одина «Качайся!» (вместо авто-знамён у выхода)
+		"no_auto": ["north"],
+		"decor": [["tapestry", Vector3(-6.5, 3.0, -10 + WALL_INSET), 0.0, 3.0], ["odin_poster", Vector3(6.5, 2.4, -10 + WALL_INSET), 0.0, 1.9]],
 	}
 
 # ---------------- UI ----------------

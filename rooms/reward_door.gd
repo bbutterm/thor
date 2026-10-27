@@ -3,6 +3,7 @@ class_name RewardDoor
 ## Дверь с наградой (GDD 15.1): каменная арка Quaternius, светящийся проём цвета награды и иконка над ней.
 ## Появляется после выдачи награды зала (RewardFlow), вход в проём — выбор следующего зала.
 ## Иконка — sprites/ui/icons/door_<icon>.png, если владелец её положил; иначе руна-глиф и подпись.
+## Под аркой — рунный круг цвета награды (assets/decals/rune_circle_blue/gold/green/red, WorldArt.circle_for_color).
 
 signal entered(door: RewardDoor)
 
@@ -22,6 +23,7 @@ var reward_id: String = ""
 var used: bool = false
 var _icon: Node3D
 var _portal: MeshInstance3D
+var _circle: MeshInstance3D
 var _light: OmniLight3D
 var _area: Area3D
 
@@ -50,6 +52,11 @@ func _ready() -> void:
 	_portal.position = Vector3(0, 1.38, 0)
 	_portal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_portal)
+	# Рунный круг на полу под аркой: общий материал на цвет, без instance uniform
+	_circle = WorldArt.floor_circle(self, WorldArt.circle_for_color(col), WorldArt.cfg().door_circle_size)
+	if _circle:
+		_circle.name = "RuneCircle"
+		_circle.position.z = WorldArt.cfg().door_circle_forward
 	_light = OmniLight3D.new()
 	_light.name = "Light"
 	_light.light_color = col
@@ -154,3 +161,6 @@ func dim() -> void:
 		_portal.transparency = 0.8
 	if _light:
 		_light.light_energy = 0.3
+	# Материал круга общий (прозрачность на экземпляре в GL Compatibility не работает) — гасим целиком
+	if _circle:
+		_circle.visible = false

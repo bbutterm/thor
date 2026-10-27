@@ -1,7 +1,8 @@
 extends Node3D
 class_name ShopStall
 ## Ларёк Брокка и Эйтри (GDD 13) в зале-ларьке: прилавок из ящиков, навес на столбах, телега на колёсах,
-## вывеска «РУНЫ • ШАУРМА • ЗАТОЧКА», два гнома (HumanoidModel, маленький масштаб, бороды, без боя).
+## рисованная вывеска assets/decor/shop_sign (молот и шампур — на кронштейне у столба) и надпись
+## «РУНЫ • ШАУРМА • ЗАТОЧКА» по краю навеса, два гнома (HumanoidModel, маленький масштаб, бороды, без боя).
 ## Подойти к прилавку и нажать E — экран покупки (RewardFlow.open_shop). Узел ставит генератор
 ## (tools/build_scenes.gd → зал shop_room), всё остальное собирается здесь при запуске.
 ## Начало координат — перед прилавком (там стоит игрок), ларёк — в сторону −Z.
@@ -12,6 +13,8 @@ const FONT := "res://fonts/RussoOne-Regular.ttf"
 const SIGN_TEXT := "РУНЫ • ШАУРМА • ЗАТОЧКА"
 ## Масштаб гномов (человек Quaternius ≈ 1.8 м)
 const DWARF_SCALE := 0.62
+## Высота рисованной вывески (assets/decor/shop_sign), м
+const SIGN_HEIGHT := 1.7
 const POST := Color(0.36, 0.22, 0.12)
 const CLOTH_A := Color(0.72, 0.16, 0.12)
 const CLOTH_B := Color(0.92, 0.82, 0.62)
@@ -84,16 +87,17 @@ func _build() -> void:
 	light.omni_range = 8.0
 	light.position = Vector3(0, 2.4, 0.8)
 	body.add_child(light)
-	# Вывеска: доска и надпись
-	var board := MeshInstance3D.new()
+	# Вывеска: рисованная доска на кронштейне (крепление — у правого переднего столба, доска — наружу)
+	# и надпись по краю навеса. Картинка — общий материал WorldArt (без instance uniform)
+	var board := Node3D.new()
 	board.name = "SignBoard"
-	board.mesh = FX.shared_mesh("box")
-	FX.fx_apply(board, "glow", Color(0.32, 0.18, 0.08), 0.35)
-	board.scale = Vector3(4.4, 0.62, 0.08)
-	board.position = Vector3(0, 3.35, 0.45)
+	# Пластина кронштейна — у левого края картинки (≈ 9 % ширины, 10 % сверху): совмещаем её со столбом
+	var side := SIGN_HEIGHT / WorldArt.content_fraction("shop_sign")
+	board.position = Vector3(2.3 + side * 0.41, 2.9 - side * 0.4, 0.5)
 	body.add_child(board)
+	WorldArt.decor_quad(board, "shop_sign", SIGN_HEIGHT)
 	var sign := make_sign_label()
-	sign.position = Vector3(0, 3.35, 0.51)
+	sign.position = Vector3(0, 2.3, 0.72)
 	body.add_child(sign)
 	# Твёрдый прилавок (ящики-модели без коллизии)
 	var sb := StaticBody3D.new()
@@ -141,7 +145,7 @@ static func make_sign_label() -> Label3D:
 	l.name = "Sign"
 	l.text = I18n.t(SIGN_TEXT)
 	l.font_size = 64
-	l.pixel_size = 0.0055
+	l.pixel_size = 0.0042
 	l.outline_size = 10
 	l.modulate = Color(1.0, 0.78, 0.35)
 	l.outline_modulate = Color(0.1, 0.05, 0.0, 0.9)
