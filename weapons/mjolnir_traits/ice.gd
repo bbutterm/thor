@@ -94,3 +94,7 @@ func slam_combo(power: float, center: Vector3) -> void:
 	StyleMeter.event(&"shatter")
 	FX.hitstop(0.06)
 	Audio.sfx("ice_shatter", "sounds/sfx/hammer_bounce.wav")
+
+## Лёд: ледяные кристаллы на месте попадания
+func hit_signature(enemy: Enemy, proj: MjolnirProjectile, _chest: Vector3) -> void:
+	FX.ice_hit(proj.fx_parent(), enemy.global_position, 0.5)

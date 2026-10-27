@@ -161,3 +161,9 @@ func _wave(parent: Node, center: Vector3, radius: float, damage: float, knock: f
 	if hand and is_instance_valid(hand) and hand.player:
 		hand.player.camera_fx.add_trauma(0.35)
 	Audio.play("sounds/sfx/slam.wav")
+
+## Земля: трещина и пыль под целью
+func hit_signature(enemy: Enemy, proj: MjolnirProjectile, _chest: Vector3) -> void:
+	var parent := proj.fx_parent()
+	FX.crack(parent, enemy.global_position, 0.0)
+	FX.smoke(parent, enemy.global_position + Vector3(0, 0.3, 0), 1.4, Color(0.55, 0.42, 0.3, 0.8))

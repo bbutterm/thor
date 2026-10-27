@@ -98,6 +98,12 @@ func _build_visual() -> void:
 	_light.light_color = Color(1.0, 0.85, 0.45) if damage_mult > 1.0 else Color(0.5, 0.8, 1.0)
 	_light.light_energy = 1.5
 	_light.omni_range = 4.0
+	# Молот со стихией светится её цветом — ярче и дальше, видно издалека, какая стихия
+	var el := hand.element_handler() if hand else null
+	if el and damage_mult <= 1.0:
+		_light.light_color = el.element_color()
+		_light.light_energy = 2.6
+		_light.omni_range = 5.5
 	add_child(_light)
 
 ## Усиление броска от приёмов (рука после launch): hand.next_throw — damage_mult, range_mult, pierce, stun

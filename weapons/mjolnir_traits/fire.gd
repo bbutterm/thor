@@ -118,3 +118,10 @@ func slam_combo(power: float, center: Vector3) -> void:
 	StyleMeter.event(&"element_slam")
 	FX.hitstop(0.05)
 	Audio.play("sounds/sfx/slam.wav")
+
+## Огонь: подпалина на полу и столб искр вверх
+func hit_signature(enemy: Enemy, proj: MjolnirProjectile, chest: Vector3) -> void:
+	var parent := proj.fx_parent()
+	FX.scorch(parent, enemy.global_position, 1.4, 0.6)
+	FX.sparks(parent, chest, Color(1.0, 0.75, 0.2), 18, 6.0, -6.0, 0.12, 0.7)
+	FX.smoke(parent, chest + Vector3(0, 0.5, 0), 1.2, Color(0.35, 0.22, 0.15, 0.7))

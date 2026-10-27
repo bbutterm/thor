@@ -192,6 +192,8 @@ const DEBUG_KILL_DAMAGE := 9999.0
 ## Элита (GDD 12.4): обработчики модификаторов (EliteHandler, enemies/elite/) и цвет постоянного свечения
 var elite_handlers: Array[Node] = []
 var elite_glow: Color = Color(0, 0, 0, 0)
+## Подсветка состояния стихии (ElementStatus ставит каждый кадр; сила — в альфе, уже с пульсом)
+var status_glow: Color = Color(0, 0, 0, 0)
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -1045,8 +1047,13 @@ const FLASH_MATERIAL := preload("res://shaders/hit_flash.tres")
 ## Элита светится постоянно (цвет модификатора, мягкая пульсация) — тот же материал, параметр "elite".
 func _set_overlay(flash: float, glow: float) -> void:
 	var el := 0.0
+	var el_color := Color(elite_glow.r, elite_glow.g, elite_glow.b)
 	if elite_glow.a > 0.0 and not is_dead:
 		el = elite_glow.a * (0.75 + 0.25 * sin(Time.get_ticks_msec() * 0.004))
+	# Состояние стихии (горит, заморожен, под током…) важнее свечения элиты — тот же параметр, без нового материала
+	if status_glow.a > 0.001 and not is_dead:
+		el = status_glow.a
+		el_color = Color(status_glow.r, status_glow.g, status_glow.b)
 	var on := flash > 0.001 or glow > 0.001 or el > 0.001
 	if not on and not _overlay_on:
 		return
@@ -1058,7 +1065,7 @@ func _set_overlay(flash: float, glow: float) -> void:
 		if on:
 			g.set_instance_shader_parameter("flash", flash)
 			g.set_instance_shader_parameter("glow", glow)
-			g.set_instance_shader_parameter("elite", Color(elite_glow.r, elite_glow.g, elite_glow.b, el))
+			g.set_instance_shader_parameter("elite", Color(el_color.r, el_color.g, el_color.b, el))
 	_overlay_on = on
 
 func _collect_meshes(root: Node) -> void:

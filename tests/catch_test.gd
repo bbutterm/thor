@@ -125,9 +125,16 @@ func _run() -> void:
 	hand.perfect_ready = false
 	check(await _wait_eta(proj, 0.3) and proj.catch_eta() > hand.perfect_window + 0.05, "за 0.3 с до поимки")
 	hand.request_throw_or_recall()
+	await get_tree().physics_frame
+	check(not _results.is_empty() and _results[-1][0] == &"early", "нажал рано — «РАНО» сразу при нажатии")
+	# Попытка одна: второе нажатие в окне уже не спасает
+	await _wait_eta(proj, hand.perfect_window * 0.5)
+	hand.request_throw_or_recall()
 	await _wait_caught(hand)
 	await get_tree().process_frame
-	check(not _results.is_empty() and _results[-1][0] == &"early" and not hand.perfect_ready, "нажал рано — «РАНО», без усиления")
+	check(not hand.perfect_ready and _results.count(_results[0]) >= 1 and _results.filter(func(r: Array) -> bool: return r[0] == &"perfect").is_empty(),
+		"после «РАНО» повтор в окне не даёт идеального хвата")
+	check(assist._failed or not assist._window, "кольцо провала (без золотого окна)")
 	check(assist._feedback.visible and assist._feedback.text.begins_with(tr("РАНО · %d мс").split(" ")[0]), "подпись «РАНО · … мс»: %s" % assist._feedback.text)
 	await grab("04_early")
 	await wait(1.0)

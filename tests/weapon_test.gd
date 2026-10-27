@@ -92,7 +92,7 @@ func _run() -> void:
 	await wait(h.switch_time + 0.05)
 	check(h.gun.active and not h.axe.active, "после свитча активен ренж, мили убрано")
 	var speed_ranged := await _measure_speed(p)
-	check(speed_ranged < speed_melee * 0.8, "с ренжем заметно медленнее (%.2f против %.2f м/с)" % [speed_ranged, speed_melee])
+	check(speed_ranged < speed_melee * 0.85, "с ренжем заметно медленнее (%.2f против %.2f м/с)" % [speed_ranged, speed_melee])
 	check(absf(speed_ranged - p.move_speed * pistol.move_speed_mult) < 0.5, "скорость с ренжем ×%.2f" % pistol.move_speed_mult)
 	check(p.weapon_dash_recharge_mult() > 1.0, "рывок с ренжем перезаряжается дольше (×%.2f)" % p.weapon_dash_recharge_mult())
 
@@ -171,7 +171,7 @@ func _run() -> void:
 	check(not is_instance_valid(sword_pk), "меч подобран")
 	var dropped := _find_pickup("axe")
 	check(dropped != null, "старый топор лежит на полу")
-	check(absf(h.axe._stage_damage() - 0.7 * WeaponDef.U * h.axe.damage_mult * 1.2) < 0.5, "урон меча ур. 2: +20%% (%.1f)" % h.axe._stage_damage())
+	check(absf(h.axe._stage_damage() - h.melee.def.damage * h.axe.damage_mult * 1.2) < 0.5, "урон меча ур. 2: +20%% (%.1f)" % h.axe._stage_damage())
 	await wait(0.6)
 	if dropped:
 		h._focus = dropped

@@ -119,3 +119,9 @@ func slam_combo(power: float, center: Vector3) -> void:
 		ComicFX.pop("gust", center + Vector3(0, 1.2, 0), true)
 		StyleMeter.event(&"element_slam")
 	Audio.sfx("wind_gust", "sounds/sfx/dash.wav")
+
+## Ветер: вихрь дыма и кольцо порыва
+func hit_signature(enemy: Enemy, proj: MjolnirProjectile, chest: Vector3) -> void:
+	var parent := proj.fx_parent()
+	FX.smoke(parent, chest, 1.6, Color(element_color(), 0.75))
+	FX.shockwave(parent, enemy.global_position + Vector3(0, 0.1, 0), 2.2, element_color())

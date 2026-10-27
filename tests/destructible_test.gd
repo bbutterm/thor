@@ -158,7 +158,11 @@ func _test_melee() -> void:
 	await wait(0.3)
 	p.axe.request_attack()
 	await wait(0.35)
-	check(not broken(c) and c.health < c.max_health, "ящик после обычного удара цел (HP %.0f/%.0f)" % [c.health if is_instance_valid(c) else 0.0, 30.0])
+	# Тяжёлое оружие (урон обычного удара ≥ HP ящика — топор) разбивает ящик с одного удара, лёгкое — нет
+	if p.axe._stage_damage() >= 30.0:
+		check(broken(c), "тяжёлый топор (%.0f) разбил ящик с одного удара" % p.axe._stage_damage())
+	else:
+		check(not broken(c) and c.health < c.max_health, "ящик после обычного удара цел (HP %.0f/30)" % [c.health if is_instance_valid(c) else 0.0])
 	check(p.axe._enemies_hit == 0, "удар по пропсу не тратит цели оружия")
 	if is_instance_valid(c):
 		c.queue_free()

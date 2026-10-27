@@ -39,6 +39,9 @@ var _feedback: Label
 var _feedback_left: float = 0.0
 var _hand: MjolnirHand
 var _enabled: bool = true
+## Нажал раньше окна — на этот возврат хват провален: кольцо красное до поимки
+var _failed: bool = false
+@export var fail_color: Color = Color(1.0, 0.3, 0.25, 0.9)
 
 static func attach(parent: Node, p: Player) -> CatchAssist:
 	var c := CatchAssist.new()
@@ -86,6 +89,7 @@ func _on_timing(result: StringName, offset: float) -> void:
 			_feedback.text = tr("ИДЕАЛЬНО!")
 			_feedback.label_settings.font_color = perfect_text_color
 		&"early":
+			_failed = true
 			_feedback.text = tr("РАНО · %d мс") % int(round(absf(offset) * 1000.0))
 			_feedback.label_settings.font_color = miss_text_color
 		_:
@@ -100,6 +104,8 @@ func _process(delta: float) -> void:
 	_eta = -1.0
 	_window = false
 	_arrow_on = false
+	if _hand and _hand.in_hand and _hand.perfect_window_left() < 0.0:
+		_failed = false
 	if _enabled and _hand and not player.is_dead:
 		var proj := _hand.projectile
 		if proj and is_instance_valid(proj):
@@ -107,9 +113,9 @@ func _process(delta: float) -> void:
 			if _eta > lead_time:
 				_eta = -1.0
 			if _eta >= 0.0:
-				_window = _eta <= _hand.perfect_window
+				_window = _eta <= _hand.perfect_window and not _failed
 				_aim_arrow(proj.global_position)
-		elif _hand.perfect_window_left() >= 0.0:
+		elif _hand.perfect_window_left() >= 0.0 and not _failed:
 			_eta = 0.0
 			_window = true
 	_key.visible = _eta >= 0.0
@@ -160,7 +166,7 @@ func _draw() -> void:
 	else:
 		draw_arc(c, r0, 0.0, TAU, 48, target_color, ring_width * k, true)
 		var r := r0 + _eta * px_per_second * k
-		var col := ring_color
+		var col := fail_color if _failed else ring_color
 		col.a *= clampf(1.0 - _eta / lead_time + 0.25, 0.0, 1.0)
 		draw_arc(c, r, 0.0, TAU, 64, col, ring_width * k, true)
 	if _arrow_on:

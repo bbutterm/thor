@@ -50,6 +50,22 @@ func element_color() -> Color:
 func player() -> Player:
 	return hand.player if hand and is_instance_valid(hand) else null
 
+## Вспышка попадания молота со стихией — крупно и своим цветом, чтобы стихию было видно с первого удара.
+## Стихия добавляет свою «подпись» в hit_signature. Только общие пулы FX (без своих материалов).
+func hit_fx(enemy: Enemy, proj: MjolnirProjectile) -> void:
+	var parent := proj.fx_parent()
+	var c := element_color()
+	var chest := enemy.global_position + Vector3(0, 1.0 * enemy.model_scale, 0)
+	FX.burst(parent, chest, 0.9, Color(c, 0.75), 0.28)
+	FX.spark_star(parent, chest, c.lightened(0.2), 1.3)
+	FX.sparks(parent, chest, c.lightened(0.3), 22, 8.0, 6.0, 0.1, 0.5)
+	FX.ring(parent, enemy.global_position + Vector3(0, 0.08, 0), 1.6, Color(c, 0.85), 0.35)
+	hit_signature(enemy, proj, chest)
+
+## «Подпись» стихии на попадании (огонь — подпалина, лёд — кристаллы, молния — разряд…)
+func hit_signature(_enemy: Enemy, _proj: MjolnirProjectile, _chest: Vector3) -> void:
+	pass
+
 # --- Что переопределяет стихия ---
 
 ## Эффект стихии на враге. power — 1 у попадания молота, меньше у следа/ауры; from — откуда пришёл удар;
@@ -123,6 +139,7 @@ func on_hit_enemy(proj: MjolnirProjectile, enemy: Node3D, _damage: float) -> voi
 	var en := enemy as Enemy
 	if en == null or en.is_dead:
 		return
+	hit_fx(en, proj)
 	apply_element(en, 1.0, proj.global_position, proj)
 	world_effect(en.global_position, world_radius)
 	mark("hit")

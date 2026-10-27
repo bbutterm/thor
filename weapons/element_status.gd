@@ -162,14 +162,48 @@ func _physics_process(delta: float) -> void:
 			_apply_speed()
 	if burn_left > 0.0:
 		_burn(delta)
+	if enemy == null or not is_instance_valid(enemy) or enemy.is_dead:
+		return
+	_update_glow(delta)
+
+## Цвета состояний на теле врага (пульс), по важности: заморожен > под током > горит > прибит > промёрз
+const GLOW_FROZEN := Color(0.55, 0.9, 1.0)
+const GLOW_SHOCK := Color(1.0, 0.95, 0.45)
+const GLOW_BURN := Color(1.0, 0.42, 0.08)
+const GLOW_PIN := Color(0.85, 0.55, 0.25)
+const GLOW_CHILL := Color(0.5, 0.75, 1.0)
+var _glow_t: float = 0.0
+var _arc_t: float = 0.0
+
+func _update_glow(delta: float) -> void:
+	_glow_t += delta
+	var c := Color(0, 0, 0, 0)
+	if frozen_left > 0.0:
+		c = Color(GLOW_FROZEN, 0.75 + 0.1 * sin(_glow_t * 6.0))
+	elif shocked_left > 0.0:
+		# Под током — рваное мигание и искры-дуги по телу
+		c = Color(GLOW_SHOCK, 0.35 + 0.6 * float(randf() < 0.5))
+		_arc_t -= delta
+		if _arc_t <= 0.0 and _fx_budget():
+			_arc_t = 0.22
+			var ch := _chest()
+			FX.lightning(enemy.get_parent(), ch + Vector3(randf_range(-0.4, 0.4), 0.5, randf_range(-0.4, 0.4)),
+				ch + Vector3(randf_range(-0.4, 0.4), -0.6, randf_range(-0.4, 0.4)), 0.1, GLOW_SHOCK)
+	elif burn_left > 0.0:
+		c = Color(GLOW_BURN, 0.55 + 0.3 * sin(_glow_t * 14.0))
+	elif pinned_left > 0.0:
+		c = Color(GLOW_PIN, 0.45 + 0.15 * sin(_glow_t * 5.0))
+	elif chill_stacks > 0 and chill_left > 0.0:
+		c = Color(GLOW_CHILL, 0.25 + 0.12 * chill_stacks)
+	enemy.status_glow = c
 
 func _burn(delta: float) -> void:
 	burn_left -= delta
 	_burn_tick += delta
 	_fx_t -= delta
 	if _fx_t <= 0.0 and _fx_budget():
-		_fx_t = 0.45
-		FX.sparks(enemy.get_parent(), _chest() + Vector3(randf_range(-0.2, 0.2), 0, randf_range(-0.2, 0.2)), Color(1.0, 0.5, 0.12), 5, 2.5, -3.0, 0.06, 0.5)
+		_fx_t = 0.3
+		FX.sparks(enemy.get_parent(), _chest() + Vector3(randf_range(-0.2, 0.2), 0, randf_range(-0.2, 0.2)), Color(1.0, 0.5, 0.12), 9, 3.0, -4.0, 0.1, 0.6)
 	if _burn_tick >= 0.5:
 		var p := _player()
 		var dmg := burn_dps * _burn_tick

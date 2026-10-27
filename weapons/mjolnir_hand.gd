@@ -85,6 +85,8 @@ var _caught_time: float = -10.0
 var _recall_press_time: float = -10.0
 var _perfect_open: bool = false
 var _clock: float = 0.0
+## Попытка хвата на этот возврат уже была (одна попытка: нажал раньше окна — провал, повтор не спасает)
+var _catch_attempted: bool = false
 ## Осталось перезарядки броска, с
 var cooldown_left: float = 0.0
 ## Полная длина текущей перезарядки (для полоски HUD)
@@ -204,8 +206,16 @@ func request_throw_or_recall() -> void:
 		throw_hammer()
 	elif projectile and is_instance_valid(projectile):
 		if projectile.state == MjolnirProjectile.State.RETURN:
-			# Уже летит обратно — нажатие засчитывается для идеального хвата
-			_recall_press_time = now
+			# Уже летит обратно — нажатие засчитывается для идеального хвата. Попытка одна:
+			# раньше окна — сразу «РАНО», на этот возврат хват провален
+			if _catch_attempted:
+				return
+			_catch_attempted = true
+			var eta := projectile.catch_eta()
+			if eta > perfect_window:
+				catch_timing.emit(&"early", -eta)
+			else:
+				_recall_press_time = now
 		else:
 			projectile.start_return(true)
 
@@ -235,6 +245,7 @@ func throw_hammer() -> void:
 	in_hand = false
 	cooldown_total = effective_cooldown()
 	cooldown_left = cooldown_total
+	_catch_attempted = false
 	var proj := MjolnirProjectile.new()
 	player.get_parent().add_child(proj)
 	var origin := player.get_aim_origin() + player.get_aim_forward() * 0.8 + player.global_transform.basis.x * -0.35
@@ -259,14 +270,13 @@ func on_caught() -> void:
 	projectile = null
 	var now := _now()
 	_caught_time = now
-	_perfect_open = true
+	# Нажал раньше окна — «поздний» хват после поимки тоже не засчитывается
+	_perfect_open = not _catch_attempted
 	var perfect := now - _recall_press_time <= perfect_window
 	if perfect:
 		_perfect_open = false
 		_grant_perfect()
 		catch_timing.emit(&"perfect", _recall_press_time - now)
-	elif now - _recall_press_time <= catch_feedback_range:
-		catch_timing.emit(&"early", _recall_press_time - now)
 	_recall_press_time = -10.0
 	_anim_catch(perfect)
 	player.camera_fx.add_trauma(catch_shake)

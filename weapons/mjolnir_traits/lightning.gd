@@ -76,7 +76,7 @@ func chain(source: Node3D, dmg: float, count: int, radius: float) -> int:
 			break
 		chained[best.get_instance_id()] = true
 		var to := best.global_position + Vector3(0, 1, 0)
-		FX.lightning(parent, from, to)
+		FX.lightning(parent, from, to, 0.25, element_color())
 		var s := ElementStatus.of(best, true)
 		if s:
 			s.shock(shock_time)
@@ -102,7 +102,7 @@ func make_trail_zone(parent: Node, pos: Vector3, _proj: MjolnirProjectile) -> No
 	return z
 
 func _trail_shock(enemy: Enemy, zone: ElementZone) -> void:
-	FX.lightning(zone.get_parent(), zone.global_position + Vector3(0, 0.1, 0), enemy.global_position + Vector3(0, 1.0, 0), 0.12)
+	FX.lightning(zone.get_parent(), zone.global_position + Vector3(0, 0.1, 0), enemy.global_position + Vector3(0, 1.0, 0), 0.12, element_color())
 	hurt(enemy, trail_damage, Vector3.UP * 0.5, "lightning")
 	var s := ElementStatus.of(enemy, true)
 	if s:
@@ -112,11 +112,11 @@ func _trail_shock(enemy: Enemy, zone: ElementZone) -> void:
 func aura_pulse(proj: MjolnirProjectile) -> void:
 	var top := proj.global_position + proj.stuck_normal * 0.4
 	var parent := proj.fx_parent()
-	FX.lightning(parent, top + Vector3(0, 7.0, 0), top, 0.2)
-	FX.ring(parent, proj.global_position - Vector3(0, 0.3, 0), aura_radius, Color(0.6, 0.85, 1.0, 0.7), 0.25)
+	FX.lightning(parent, top + Vector3(0, 7.0, 0), top, 0.2, element_color())
+	FX.ring(parent, proj.global_position - Vector3(0, 0.3, 0), aura_radius, Color(element_color(), 0.7), 0.25)
 	for e in enemies_near(proj.get_tree(), proj.global_position, aura_radius):
 		var chest := e.global_position + Vector3(0, 1.0, 0)
-		FX.lightning(parent, top, chest, 0.18)
+		FX.lightning(parent, top, chest, 0.18, element_color())
 		var dir := e.global_position - proj.global_position
 		dir.y = 0
 		var s := ElementStatus.of(e, true)
@@ -130,9 +130,9 @@ func aura_pulse(proj: MjolnirProjectile) -> void:
 func sky_strike(point: Vector3) -> void:
 	var p := player()
 	var parent := p.get_parent()
-	FX.lightning(parent, point + Vector3(randf_range(-1, 1), 14.0, randf_range(-1, 1)), point, 0.3, Color(0.85, 0.95, 1.0))
-	FX.ring(parent, point, sky_radius, Color(0.7, 0.9, 1.0, 0.9), 0.35)
-	FX.burst(parent, point + Vector3(0, 0.5, 0), sky_radius * 0.4, Color(0.8, 0.95, 1.0, 0.6), 0.2)
+	FX.lightning(parent, point + Vector3(randf_range(-1, 1), 14.0, randf_range(-1, 1)), point, 0.3, element_color().lightened(0.3))
+	FX.ring(parent, point, sky_radius, Color(element_color(), 0.9), 0.35)
+	FX.burst(parent, point + Vector3(0, 0.5, 0), sky_radius * 0.4, Color(element_color(), 0.6), 0.2)
 	for e in enemies_near(p.get_tree(), point, sky_radius + 0.9):
 		hurt(e, sky_damage, Vector3.UP * 4.0, "lightning")
 		if is_instance_valid(e) and not e.is_dead:
@@ -158,7 +158,7 @@ func slam_combo(_power: float, center: Vector3) -> void:
 		if not is_instance_valid(e) or e.is_dead:
 			continue
 		var chest := e.global_position + Vector3(0, 1.0, 0)
-		FX.lightning(parent, chest + Vector3(randf_range(-1, 1), 10.0, randf_range(-1, 1)), chest, 0.25, Color(0.85, 0.95, 1.0))
+		FX.lightning(parent, chest + Vector3(randf_range(-1, 1), 10.0, randf_range(-1, 1)), chest, 0.25, element_color().lightened(0.3))
 		ElementStatus.of(e).shocked_left = 0.0
 		hurt(e, discharge_damage, Vector3.UP * 2.5, "lightning")
 		if is_instance_valid(e) and not e.is_dead:
@@ -166,3 +166,9 @@ func slam_combo(_power: float, center: Vector3) -> void:
 		ComicFX.on_lightning(e)
 	StyleMeter.event(&"element_slam")
 	Audio.play("sounds/sfx/lightning.wav")
+
+## Молния: разряд с неба в цель и вспышка
+func hit_signature(_enemy: Enemy, proj: MjolnirProjectile, chest: Vector3) -> void:
+	var parent := proj.fx_parent()
+	FX.lightning(parent, chest + Vector3(randf_range(-0.8, 0.8), 6.0, randf_range(-0.8, 0.8)), chest, 0.22, element_color())
+	FX.hit_flash(parent, chest, 1.6, element_color().lightened(0.4))
