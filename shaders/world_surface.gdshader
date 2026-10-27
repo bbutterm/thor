@@ -4,7 +4,7 @@ shader_type spatial;
 // поверх — крупные пятна яркости/оттенка и второй слой (мох, грязь, сажа) по шуму; у основания вертикальных
 // граней — грязь; цвет вершин — запечённое затемнение (углы, стыки стены с полом; GL Compatibility без SSAO).
 // ОДИН шейдер на все поверхности: материалы (rooms/materials/surface_*.tres) различаются только параметрами —
-// новых пайплайнов нет (правило фризов в CLAUDE.md). Без instance uniform: буфер GL Compatibility не занимает.
+// новых пайплайнов нет (правило фризов в CLAUDE.md). Без переменных экземпляра: буфер GL Compatibility не занимает (FX._has_iu считает узлы по тексту шейдера — этих слов здесь не писать).
 // Прогрев — RoomDress.warmup (ShaderWarmup).
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
 
@@ -81,7 +81,12 @@ void fragment() {
 	// Шум смешения двух отсчётов и пятен: по полу — XZ, по стенам — вдоль грани
 	vec2 nuv = w_pos.xz * bw.y + w_pos.zy * bw.x + w_pos.xy * bw.z;
 	float k = smoothstep(0.35, 0.65, texture(noise_tex, nuv * antitile_scale).r);
-	vec3 col = sample_plane(w_pos.zy, k) * bw.x + sample_plane(w_pos.xz, k) * bw.y + sample_plane(w_pos.xy, k) * bw.z;
+	// Проекции с почти нулевым весом не считаем: у пола и стен работает одна (ветвление согласованное — дёшево)
+	vec3 col = vec3(0.0);
+	if (bw.x > 0.02) { col += sample_plane(w_pos.zy, k) * bw.x; }
+	if (bw.y > 0.02) { col += sample_plane(w_pos.xz, k) * bw.y; }
+	if (bw.z > 0.02) { col += sample_plane(w_pos.xy, k) * bw.z; }
+	col /= max(dot(step(vec3(0.02), bw), bw), 0.0001);
 	col *= tint.rgb;
 	// Крупные пятна: яркость и оттенок
 	float m = texture(noise_tex, nuv * macro_scale + vec2(0.13, 0.29)).r;
@@ -89,7 +94,6 @@ void fragment() {
 	col *= 1.0 + (m - 0.5) * macro_strength;
 	// Второй слой (мох / грязь / сажа): по шуму, гуще на верхних гранях
 	float o = texture(noise_tex, nuv * overlay_scale + vec2(0.51, 0.07)).r;
-	o = o * 0.75 + texture(noise_tex, nuv * overlay_scale * 3.1 + vec2(0.2, 0.6)).r * 0.25;
 	float up = clamp(n.y, 0.0, 1.0);
 	float thr = 1.0 - overlay_amount * mix(1.0 - overlay_top, 1.0 + overlay_top, up);
 	float ov = smoothstep(thr - overlay_softness, thr + overlay_softness, o);
@@ -108,9 +112,9 @@ void fragment() {
 	SPECULAR = 0.35;
 	if (normal_strength > 0.0) {
 		// Нормали трипланара (whiteout), в мировых осях → в осях камеры
-		vec3 tx = tangent_normal(w_pos.zy);
-		vec3 ty = tangent_normal(w_pos.xz);
-		vec3 tz = tangent_normal(w_pos.xy);
+		vec3 tx = bw.x > 0.02 ? tangent_normal(w_pos.zy) : vec3(0.0, 0.0, 1.0);
+		vec3 ty = bw.y > 0.02 ? tangent_normal(w_pos.xz) : vec3(0.0, 0.0, 1.0);
+		vec3 tz = bw.z > 0.02 ? tangent_normal(w_pos.xy) : vec3(0.0, 0.0, 1.0);
 		tx = vec3(tx.xy + n.zy, abs(tx.z) * n.x);
 		ty = vec3(ty.xy + n.xz, abs(ty.z) * n.y);
 		tz = vec3(tz.xy + n.xy, abs(tz.z) * n.z);

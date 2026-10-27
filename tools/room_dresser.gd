@@ -421,7 +421,8 @@ func _flush() -> void:
 		mmi.xforms = DressScatter.pack(list)
 		mmi.material_override = _mat(MESHES[key][1])
 		mmi.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
-		if key in ["grime", "brick_1", "brick_2", "brick_3", "brick_4", "tile"]:
+		# Мелочь без теней (тени — 4 прохода каскадов на каждый вид)
+		if key in ["grime", "brick_1", "brick_2", "brick_3", "brick_4", "tile", "rock_1", "rock_2", "rock_3", "rock_4", "rock_5"]:
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		node.add_child(mmi)
 	_mm.clear()
@@ -705,7 +706,7 @@ func _rubble_cluster(p: Vector3, outn: Vector3, scale: float) -> void:
 		var sc := rng.randf_range(0.45, 1.0) * scale
 		var b := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.RIGHT, rng.randf_range(-0.25, 0.25)) * Basis.from_scale(Vector3(sc, sc * rng.randf_range(0.6, 1.0), sc))
 		q.y = -0.08 * sc
-		_add("rock_%d" % rng.randi_range(1, 5), Transform3D(b, q))
+		_add("rock_%d" % [1, 3, 4, 5][rng.randi() % 4], Transform3D(b, q))
 	for i in rng.randi_range(2, 4):
 		var q2 := p + outn * rng.randf_range(0.1, 0.9) + side * rng.randf_range(-0.9, 0.9)
 		if not _free_wall(q2, 0.1):
@@ -1099,19 +1100,20 @@ static func build_backdrop() -> Node3D:
 		var sc := d.rng.randf_range(0.55, 1.15)
 		var b := Basis(Vector3.UP, d.rng.randf() * TAU) * Basis.from_scale(Vector3(sc * d.rng.randf_range(0.85, 1.15), sc, sc))
 		d._add("pine", Transform3D(b, Vector3(cos(a) * r, -0.4, sin(a) * r)))
-	# Скалы-берег (край земли) и скалы-острова в воде
-	for i in 26:
-		var a2 := TAU * i / 26.0 + d.rng.randf_range(-0.1, 0.1)
-		var r2 := d.rng.randf_range(72.0, 80.0)
-		var sc2 := d.rng.randf_range(1.8, 3.0)
-		var b2 := Basis(Vector3.UP, d.rng.randf() * TAU) * Basis.from_scale(Vector3(sc2, sc2 * d.rng.randf_range(0.6, 1.2), sc2))
-		d._add("cliff_%d" % d.rng.randi_range(1, 4), Transform3D(b2, Vector3(cos(a2) * r2, -1.5, sin(a2) * r2)))
-	for i in 12:
-		var a3 := d.rng.randf() * TAU
-		var r3 := d.rng.randf_range(110.0, 220.0)
-		var sc3 := d.rng.randf_range(2.5, 4.5)
+	# Берег (край земли) — валуны-глыбы (лёгкие меши ~750 треугольников), острова в воде — скала Cliff1.
+	# Тяжёлые Cliff2–4 (19–24 тыс. треугольников) не берём: 38 скал давали 600 тыс. треугольников на кадр
+	for i in 28:
+		var a2 := TAU * i / 28.0 + d.rng.randf_range(-0.08, 0.08)
+		var r2 := d.rng.randf_range(73.0, 79.0)
+		var sc2 := d.rng.randf_range(9.0, 16.0)
+		var b2 := Basis(Vector3.UP, d.rng.randf() * TAU) * Basis.from_scale(Vector3(sc2 * 1.3, sc2 * d.rng.randf_range(0.6, 1.0), sc2))
+		d._add("rock_%d" % [1, 3, 4, 5][d.rng.randi() % 4], Transform3D(b2, Vector3(cos(a2) * r2, -1.2, sin(a2) * r2)))
+	for i in 6:
+		var a3 := TAU * i / 6.0 + d.rng.randf_range(-0.4, 0.4)
+		var r3 := d.rng.randf_range(120.0, 200.0)
+		var sc3 := d.rng.randf_range(2.5, 4.0)
 		var b3 := Basis(Vector3.UP, d.rng.randf() * TAU) * Basis.from_scale(Vector3(sc3 * 1.4, sc3 * d.rng.randf_range(0.6, 1.0), sc3 * 1.4))
-		d._add("cliff_%d" % d.rng.randi_range(1, 4), Transform3D(b3, Vector3(cos(a3) * r3, -2.0, sin(a3) * r3)))
+		d._add("cliff_1", Transform3D(b3, Vector3(cos(a3) * r3, -2.0, sin(a3) * r3)))
 	d._flush()
 	for mmi in root_.get_node("Scatter").get_children():
 		(mmi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
