@@ -7,6 +7,8 @@ extends Node
 ## Сам себя не запускает: им управляет tests/bot/balance_runner.gd (или bot_test).
 ## const BotPlayer := preload("res://tests/bot/bot_player.gd")
 
+const BalanceTelemetry := preload("res://tests/bot/balance_telemetry.gd")
+
 ## Навыки бота (0..1): насколько часто уворачивается от телеграфа, ловит молот идеально и т. п.
 var skill := {
 	"dodge": 0.45,          # шанс увернуться рывком от замаха/тарана/фитиля (решение один раз на телеграф)
@@ -39,6 +41,9 @@ func set_profile(name: String) -> void:
 var game: Game
 var rng := RandomNumberGenerator.new()
 var active: bool = false
+## По умолчанию выключено; живёт только в tests/bot и не влияет на релиз.
+var telemetry_enabled := false
+var telemetry: Node
 
 # --- Статистика (читает раннер) ---
 var stats: Dictionary = {}
@@ -92,6 +97,9 @@ func _ready() -> void:
 ## Начать забег: game — свежая сцена игры.
 func begin(g: Game, seed_value: int) -> void:
 	release_all()
+	if is_instance_valid(telemetry):
+		telemetry.queue_free()
+		telemetry = null
 	game = g
 	rng.seed = seed_value
 	seed(seed_value)
@@ -126,14 +134,20 @@ func begin(g: Game, seed_value: int) -> void:
 	game.player.mjolnir.perfect_catch.connect(func() -> void: stats.perfect += 1)
 	game.player.mjolnir.state_changed.connect(func(in_hand: bool) -> void:
 		if active and not in_hand:
-			stats.throws += 1)
+			stats.throws += 1
+			_trace("hammer_throw"))
 	game.player.slammed.connect(func(_p: float) -> void: stats.slams += 1)
 	game.player.axe.swung.connect(func(_stage: int) -> void:
 		if active and game.player.axe.heavy:
 			stats.heavy += 1)
-	game.player.weapons.gun.fired.connect(func(_item: WeaponItem) -> void:
+	game.player.weapons.gun.fired.connect(func(item: WeaponItem) -> void:
 		if active:
-			stats.shots += 1)
+			stats.shots += 1
+			_trace("ranged_shot", {"weapon": item.def.id if item and item.def else ""}))
+	if telemetry_enabled:
+		telemetry = BalanceTelemetry.new()
+		add_child(telemetry)
+		telemetry.begin(game)
 	glory_src = {}
 	_glory_prev = Run.glory
 	if not Run.glory_changed.is_connected(_on_glory):
@@ -190,6 +204,12 @@ func stop() -> void:
 	active = false
 	release_all()
 	_close_room()
+	if is_instance_valid(telemetry):
+		telemetry.finish()
+
+func _trace(kind: String, fields: Dictionary = {}) -> void:
+	if is_instance_valid(telemetry):
+		telemetry.record(kind, fields)
 
 func release_all() -> void:
 	for a in ["move_forward", "move_back", "move_left", "move_right", "jump", "dash", "slam", "attack", "throw", "interact"]:
@@ -202,6 +222,8 @@ func release_all() -> void:
 func tap(action: String, frames: int = 1) -> void:
 	if _held.has(action):
 		return
+	if action in ["attack", "slam", "jump", "dash"]:
+		_trace("input", {"action": action})
 	Input.action_press(action)
 	# Минимум два сигнала physics_frame: ввод может отправляться после очередного сигнала,
 	# иначе его отпустят до того, как Player._physics_process увидит нажатие.
@@ -209,6 +231,8 @@ func tap(action: String, frames: int = 1) -> void:
 
 func hold(action: String, on: bool, strength: float = 1.0) -> void:
 	if on:
+		if action == "attack" and _held.get(action, 0) != -1:
+			_trace("input", {"action": action, "mode": "hold"})
 		Input.action_press(action, strength)
 		_held[action] = -1
 	elif _held.get(action, 0) == -1:
@@ -242,6 +266,7 @@ func _tick() -> void:
 	var dashing := p.is_dashing() or p.is_sliding
 	if dashing and not _was_dashing:
 		stats.dashes += 1
+		_trace("dash_started", {"mode": "dash" if p.is_dashing() else "slide", "runes": p.dash_charges})
 	_was_dashing = dashing
 	_track_room(p)
 	if _handle_ui(dt):
@@ -285,6 +310,7 @@ func _track_room(p: Player) -> void:
 			"reward": Run.current_reward(), "t_start": _run_time(), "hp_start": p.health, "hp_max": p.max_health,
 			"dmg": 0.0, "hits": 0, "src": {}, "kills0": Run.kills, "glory0": Run.glory, "silver0": Run.silver_earned,
 			"fight_time": 0.0, "cleared": false, "assists": 0}
+		_trace("room_start", {"scene": cur_room.scene, "hp": p.health, "hp_max": p.max_health})
 		if _room_obj:
 			_room_obj.cleared.connect(func() -> void:
 				cur_room.cleared = true
@@ -924,14 +950,20 @@ func _dodge_check(p: Player, enemies: Array) -> void:
 		_dodged[key] = true
 		if _dodged.size() > 200:
 			_dodged.clear()
-		if rng.randf() >= float(skill.dodge):
+		var chose_dodge := rng.randf() < float(skill.dodge)
+		if is_instance_valid(telemetry):
+			_trace("telegraph", {"threat": key, "enemy": RunTracker.source_id_of(e), "kind": kind,
+				"distance": dist, "chose_dodge": chose_dodge, "runes": p.dash_charges})
+		if not chose_dodge:
 			continue
 		stats.dodge_attempts += 1
 		match kind:
 			"jump":
+				_trace("dodge_input", {"threat": key, "action": "jump", "submitted": not _held.has("jump")})
 				tap("jump", 2)
 			_:
 				if p.dash_charges <= 0:
+					_trace("dodge_input", {"threat": key, "action": "jump", "reason": "no_runes", "submitted": not _held.has("jump")})
 					tap("jump", 2)
 					continue
 				# Рывок вбок (перпендикулярно направлению на врага) — относительно взгляда игрока: влево/вправо
@@ -943,10 +975,12 @@ func _dodge_check(p: Player, enemies: Array) -> void:
 				if not _floor_ahead(p, dirs[side] * dash_distance):
 					side = "move_right" if side == "move_left" else "move_left"
 					if not _floor_ahead(p, dirs[side] * dash_distance):
+						_trace("dodge_input", {"threat": key, "action": "jump", "reason": "unsafe_dash", "submitted": not _held.has("jump")})
 						tap("jump", 2)  # с обеих сторон обрыв — подпрыгнуть
 						continue
 				for action in ["move_forward", "move_back", "move_left", "move_right"]:
 					hold(action, false)
 				Input.action_press(side)
 				_held[side] = 6
+				_trace("dodge_input", {"threat": key, "action": "dash", "direction": side, "submitted": not _held.has("dash")})
 				tap("dash", 2)

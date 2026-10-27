@@ -3,12 +3,13 @@ extends Node
 ## Запуск (не входит в обычный набор *_test):
 ##   godot --headless --path . --fixed-fps 60 res://tests/balance_run.tscn -- bodies=berserker,hunter runs=5 seed=1 out=/tmp/b.jsonl
 ## Аргументы: bodies (через запятую; пусто — все тела), runs, seed, out (JSON Lines — строка на забег),
-## time_cap (с игрового времени на забег), room_cap (с на зал), max_rooms (остановиться после стольких залов — bot_test).
+## time_cap (с игрового времени на забег), room_cap (с на зал), max_rooms (остановиться после стольких залов — bot_test),
+## trace=1 (событийная телеметрия в JSONL, по умолчанию выключена).
 ## Отчёт по файлам: python3 tests/bot/balance_report.py <out.jsonl> … (docs/balance_<дата>.md).
 
 const BotPlayer := preload("res://tests/bot/bot_player.gd")
 
-var args := {"bodies": "", "runs": "5", "seed": "1", "out": "", "time_cap": "1800", "room_cap": "300", "max_rooms": "0", "profile": "skilled"}
+var args := {"bodies": "", "runs": "5", "seed": "1", "out": "", "time_cap": "1800", "room_cap": "300", "max_rooms": "0", "profile": "skilled", "trace": "0"}
 var bot: Node
 var results: Array = []
 var errors: int = 0
@@ -58,11 +59,12 @@ func _run() -> void:
 	bot.name = "Bot"
 	add_child(bot)
 	bot.set_profile(str(args.profile))
+	bot.telemetry_enabled = str(args.trace) == "1"
 	var runs := int(args.runs)
 	var base_seed := int(args.seed)
 	var bodies := _bodies()
 	var known: Array = Run.all_bodies.map(func(b: BodyDef) -> String: return b.id)
-	if runs <= 0 or bodies.is_empty() or not str(args.profile) in BotPlayer.PROFILES or bodies.any(func(b: String) -> bool: return not b in known):
+	if runs <= 0 or bodies.is_empty() or not str(args.profile) in BotPlayer.PROFILES or not str(args.trace) in ["0", "1"] or bodies.any(func(b: String) -> bool: return not b in known):
 		push_error("balance: неверный профиль, число забегов или тело")
 		errors += 1
 		if on_done.is_valid():
@@ -170,6 +172,8 @@ func play_one(body: String, run_no: int, seed_value: int) -> Dictionary:
 		"traits": Run.mjolnir_traits.map(func(t: MjolnirTrait) -> String: return str(t.id)),
 		"rooms": rooms,
 	}
+	if bot.telemetry_enabled and is_instance_valid(bot.telemetry):
+		res["telemetry"] = bot.telemetry.result()
 	return res
 
 func _append(res: Dictionary) -> void:

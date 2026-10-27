@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # Все тела × RUNS забегов, PROFILE, не более JOBS независимых процессов.
 # tests/bot/run_balance.sh <папка> [RUNS=5] [PROFILE=skilled] [SEED=11] [JOBS=3]
+# Необязательный THOR_BOT_TRACE=1 добавляет ограниченную событийную телеметрию в JSONL.
 set -euo pipefail
 OUT=$(realpath -m "${1:?папка для результатов}")
 RUNS=${2:-5}
 PROFILE=${3:-skilled}
 SEED=${4:-11}
 JOBS=${5:-3}
-if ! [[ "$RUNS" =~ ^[1-9][0-9]*$ && "$JOBS" =~ ^[1-9][0-9]*$ && "$SEED" =~ ^[0-9]+$ && "$PROFILE" =~ ^(skilled|average|novice)$ ]]; then
-    printf 'Неверные аргументы: runs и jobs > 0, seed >= 0, профиль skilled/average/novice\n' >&2
+TRACE=${THOR_BOT_TRACE:-0}
+if ! [[ "$RUNS" =~ ^[1-9][0-9]*$ && "$JOBS" =~ ^[1-9][0-9]*$ && "$SEED" =~ ^[0-9]+$ && "$PROFILE" =~ ^(skilled|average|novice)$ && "$TRACE" =~ ^[01]$ ]]; then
+    printf 'Неверные аргументы: runs и jobs > 0, seed >= 0, профиль skilled/average/novice, THOR_BOT_TRACE 0 или 1\n' >&2
     exit 2
 fi
 cd "$(dirname "$0")/../.."
@@ -34,7 +36,7 @@ for ((g=0; g<JOBS; g++)); do
     (
         set -o pipefail
         XDG_DATA_HOME="$OUT/user_$g" timeout "${THOR_BOT_TIMEOUT:-3600}" godot --headless --path . --fixed-fps 60 res://tests/balance_run.tscn -- \
-            bodies="${groups[$g]}" runs="$RUNS" seed="$SEED" profile="$PROFILE" out="${files[$g]}" \
+            bodies="${groups[$g]}" runs="$RUNS" seed="$SEED" profile="$PROFILE" trace="$TRACE" out="${files[$g]}" \
             2>&1 | head -c 50000000 > "$OUT/${PROFILE}_$g.log"
     ) &
     pids+=("$!")
