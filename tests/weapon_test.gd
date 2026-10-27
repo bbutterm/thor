@@ -152,10 +152,13 @@ func _run() -> void:
 	await wait(0.5)
 	dummy.global_position = p.global_position + _fwd(p) * 1.6
 	var hp2 := dummy.health
+	var crit0 := p.crit_chance_base
+	p.crit_chance_base = 0.0  # случайный крит (5 %) удваивал урон — проверка нестабильна
 	h.axe.request_heavy()
 	check(h.axe.heavy, "начат сильный удар")
 	await wait(0.75)
 	var heavy_dmg := hp2 - dummy.health
+	p.crit_chance_base = crit0
 	check(absf(heavy_dmg - h.melee.def.damage * h.axe.damage_mult * h.melee.def.heavy_damage_mult) < 0.6, "сильный удар ×%.1f (%.1f урона)" % [h.melee.def.heavy_damage_mult, heavy_dmg])
 
 	print("-- Подбор мили: старое падает на пол")
