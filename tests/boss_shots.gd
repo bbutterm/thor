@@ -63,8 +63,9 @@ func _kill_all_but(keep: Enemy) -> void:
 
 func _run() -> void:
 	await _doors()
-	await _sven()
-	await _jarl()
+	if not "doors_only" in OS.get_cmdline_user_args():
+		await _sven()
+		await _jarl()
 	print("boss shots: done")
 	get_tree().paused = false
 	FX.reset_time()
@@ -77,21 +78,30 @@ func _doors() -> void:
 	await _start([Run.ROOM_SCENES[1], Run.ROOM_SCENES[2]], 0)
 	Run.forced_offers.assign([["elite", "shop", "freya"]])
 	await wait(1.0)
-	for i in 40:
-		game.room._spawn_queue.clear()
+	for i in 200:
 		_kill_all_but(null)
 		if game.room._is_cleared:
 			break
 		await wait(0.3)
 	await wait(1.0)
 	await DoorHelper.resolve_reward(get_tree(), game)
+	for i in 40:
+		if not game.rewards.doors.is_empty():
+			break
+		await DoorHelper.resolve_reward(get_tree(), game)
+		await wait(0.3)
 	await wait(1.5)
 	if game.rewards.doors.is_empty():
 		print("дверей нет")
 		return
+	# Без берсерка (зачистка набила серию) — виньетка не закрывает арки
+	if game.player.rage:
+		game.player.rage.reset()
+	await wait(1.2)
 	var mid := game.rewards.doors[game.rewards.doors.size() / 2]
 	var dz := mid.global_position
-	_look(Vector3(dz.x, dz.y + 0.1, dz.z + 9.0), dz + Vector3(0, 2.6, 0), 0.12)
+	# С центральной платформы зала (2.6 м) — все три арки сверху
+	_look(Vector3(dz.x, dz.y + 2.7, dz.z + 10.0), dz + Vector3(0, 2.4, 0), 0.0)
 	await wait(0.6)
 	await shot("doors_01")
 

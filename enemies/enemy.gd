@@ -1055,7 +1055,9 @@ func _set_overlay(flash: float, glow: float) -> void:
 func _collect_meshes(root: Node) -> void:
 	_flash_meshes.clear()
 	for mi in root.find_children("*", "GeometryInstance3D", true, false):
-		if mi is MeshInstance3D:
+		# Глаза и брови (Eyes, Eyebrows*) вспышку не показывают — светятся сами и крошечные, а каждый узел
+		# с оверлеем занимает 16 ячеек буфера instance-переменных (в GL — 256 узлов на сцену, FX.INSTANCE_SLOTS_GL)
+		if mi is MeshInstance3D and not mi.name.begins_with("Eye"):
 			_flash_meshes.append(mi as GeometryInstance3D)
 
 ## Оружие в правую руку (процедурное, в текстурах Quaternius).
