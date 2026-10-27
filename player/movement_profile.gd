@@ -7,7 +7,7 @@ class_name MovementProfile
 
 @export var id: String = "base"
 @export var title: String = "Базовый"
-## Коротко для экрана выбора тела
+## Коротко для экрана выбора тела. Если есть %s, вместо него подставляется dash_recharge.
 @export_multiline var description: String = ""
 
 @export_group("Рывок")
@@ -57,6 +57,11 @@ class_name MovementProfile
 @export var keep_air_momentum: bool = false
 
 const DIR := "res://run/movement/"
+
+## Время в описании берём из профиля, чтобы текст не устаревал при настройке чисел.
+func description_text() -> String:
+	var text := tr(description)
+	return text % ("%.2f" % dash_recharge) if description.contains("%s") else text
 
 static func for_style(style: String) -> MovementProfile:
 	var path := DIR + style + ".tres"
