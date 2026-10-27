@@ -406,7 +406,7 @@ const MODEL_LOOKS := {
 		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Peasant.gltf", "model_hair": "",
 		"skin_tint": Color(0.45, 0.58, 0.66), "cloth_tint": Color(0.55, 0.55, 0.52), "eye_glow": Color(0.4, 0.85, 1.0, 1.0),
 		"hand_weapon": "q_axe", "randomize_look": true, "shield_chance": 0.3,
-		"weapon_pool": ["q_axe", "q_sword", "q_spear", "club", "q_pickaxe", "q_scythe", "pitchfork"],
+		"weapon_pool": ["q_axe", "q_sword"],
 		"anim_spawn": "LayToIdle", "anim_idle": "Zombie_Idle_Loop", "anim_move": "Zombie_Walk_Fwd_Loop", "anim_move_ref_speed": 1.6,
 		"anim_attack": "Zombie_Scratch", "anim_attack_hit_at": 0.45, "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
 	},

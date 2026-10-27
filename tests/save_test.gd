@@ -128,14 +128,14 @@ func _test_buy() -> void:
 func _test_pools() -> void:
 	print("-- Пулы: закрытое не выпадает")
 	Save.reset()
-	check(not Save.is_in_pool("weapon", "spear"), "копьё закрыто на старте")
+	check(not Save.is_in_pool("weapon", "rocket_launcher"), "ракетница закрыта на старте")
 	check(not Save.is_in_pool("weapon", "smg"), "ПП закрыт (доп. цель открытия)")
 	check(Save.is_in_pool("weapon", "axe") and Save.is_in_pool("weapon", "pistol"), "стартовое оружие открыто")
 	check(not Save.is_in_pool("trait", "boomerang"), "трейт «Бумеранг» закрыт")
 	check(Save.is_in_pool("trait", "chain_lightning"), "трейт без открытия — в пуле")
-	Save.data.unlocks["spear"] = 1
+	Save.data.unlocks["dwarf_lab"] = 1
 	Save.data.unlocks["loki_chest"] = 1
-	check(Save.is_in_pool("weapon", "spear") and Save.is_in_pool("weapon", "smg"), "после покупки — в пуле")
+	check(Save.is_in_pool("weapon", "rocket_launcher") and Save.is_in_pool("weapon", "smg"), "после покупки — в пуле")
 	Save.reset()
 	var locked_seen := false
 	for i in 300:
