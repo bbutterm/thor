@@ -104,5 +104,39 @@ func _run() -> void:
 	Input.action_release("jump")
 	check(jumped and stuck and hit_height < p.slam_min_height, "молот попал после нового одинарного прыжка (%.2f м)" % hit_height)
 	check(not followed, "посадка отменила прежнее разрешение пике")
+	stage.queue_free()
+	await frames(3)
+	# Новое разрешение на удар от двойного прыжка не должно включать пике у старого снаряда.
+	# Скорость броска настраивается в данных; здесь она ниже, чтобы оба нажатия успели пройти.
+	stage = make_world()
+	p = await make_airborne(stage, -30.0)
+	p.mjolnir.throw_speed = 15.0
+	p.mjolnir.throw_hammer()
+	proj = p.mjolnir.projectile
+	landed = false
+	for i in 30:
+		await get_tree().physics_frame
+		if p.is_on_floor():
+			landed = true
+			break
+	check(landed and is_instance_valid(proj) and not proj.is_stuck(), "старый молот ещё летит после посадки")
+	p.input_enabled = true
+	Input.action_press("jump")
+	await frames(3)
+	Input.action_release("jump")
+	await frames(2)
+	Input.action_press("jump")
+	await frames(3)
+	Input.action_release("jump")
+	check(p._slam_ready and is_instance_valid(proj) and not proj.is_stuck(), "двойной прыжок разрешил новый удар до попадания старого молота")
+	stuck = false
+	followed = false
+	for i in 30:
+		await get_tree().physics_frame
+		if is_instance_valid(proj) and proj.is_stuck():
+			stuck = true
+			followed = p.is_slamming
+			break
+	check(stuck and not followed, "новый двойной прыжок не запускает старое пике")
 	print("ИТОГ: %d PASS, %d FAIL" % [passes, fails.size()])
 	get_tree().quit(1 if fails.size() else 0)
