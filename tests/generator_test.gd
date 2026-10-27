@@ -45,6 +45,20 @@ func _run() -> void:
 		var inst := ps.instantiate() if ps else null
 		check(inst != null and inst.get_node_or_null("Spawns") != null and inst.get_node("Spawns").get_child_count() >= 8 and inst.get_node_or_null("PlayerSpawn") != null, "%s: маркеры волн и точка появления" % p.get_file())
 		if inst:
+			# Открытый периметр: физическая граница остаётся, непрерывные видимые стены удалены.
+			var geo := inst.get_node_or_null("Geometry")
+			var edges_ok := geo != null
+			for wall_name in ["WallN_L", "WallN_R", "WallS", "WallW", "WallE"]:
+				var wall := geo.get_node_or_null(wall_name) as StaticBody3D if geo else null
+				var shape := wall.get_node_or_null("Shape") as CollisionShape3D if wall else null
+				edges_ok = edges_ok and shape != null and shape.shape is BoxShape3D and (shape.shape as BoxShape3D).size.y >= 24.0 and not shape.disabled and wall.get_node_or_null("Mesh") == null
+			var models := geo.get_node_or_null("WallModels") if geo else null
+			if models:
+				for model in models.get_children():
+					var nm := String(model.name)
+					if nm.begins_with("N_L_") or nm.begins_with("N_R_") or nm.begins_with("S_") or nm.begins_with("W_") or nm.begins_with("E_"):
+						edges_ok = false
+			check(edges_ok and inst.get_node_or_null("Dress/Backdrop") != null, "%s: невидимые границы и даль" % p.get_file())
 			inst.free()
 	# Попытка сохранить ручную сцену — отказ, файл не меняется
 	var path: String = manual[0]

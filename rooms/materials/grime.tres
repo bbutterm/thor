@@ -1,0 +1,18 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[sub_resource type="Gradient" id="Gradient_fvo7m"]
+offsets = PackedFloat32Array(0, 1, 0.6)
+colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 0.62, 1, 1, 1, 0.22)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_jkduw"]
+gradient = SubResource("Gradient_fvo7m")
+width = 4
+fill_to = Vector2(0, 1)
+
+[resource]
+resource_name = "grime"
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.05, 0.035, 0.03, 1)
+albedo_texture = SubResource("GradientTexture2D_jkduw")

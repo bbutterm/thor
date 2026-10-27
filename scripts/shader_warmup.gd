@@ -151,6 +151,8 @@ func _build() -> void:
 	FX.scorch(game, center, 0.8)
 	# Графика мира: декор на стенах, рунные круги, частицы атмосферы (искры, огонь очага, туман) — все материалы
 	WorldArt.warmup(self, p, right)
+	# Одевание залов (блок Б0): общий шейдер поверхностей и все меши MultiMesh со своими материалами
+	RoomDress.warmup(self, center, right)
 	if VfxScreen.instance and is_instance_valid(VfxScreen.instance):
 		VfxScreen.instance.warmup(FRAMES)
 	ComicFX.warmup()

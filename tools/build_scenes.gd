@@ -28,6 +28,7 @@ func _ready() -> void:
 	build_props()
 	build_enemies()
 	build_player()
+	build_dress()
 	build_rooms()
 	build_ui_scenes()
 	build_game()
@@ -793,6 +794,9 @@ func room_defs() -> Array:
 			[Vector3(6, 0.75, 2), Vector3(4, 1.5, 4), "wood"],
 		],
 		"pillars": [Vector3(-6, 0, 6), Vector3(6, 0, -6), Vector3(0, 0, 0)],
+		# Открытая вышка: ступени с севера, площадка для удара-приземления.
+		"watchtowers": [Vector3(9, 0, -2.5)],
+		"jump_pads": [[Vector3(9.5, 0, 4.8), 8.0]],
 		"enemies": [["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(4, 0, -7), 0], ["grunt", Vector3(0, 0, -9), 0], ["fodder", Vector3(0, 0, -7), 0, 5, 2.0],
 			["grunt", Vector3(-8, 0, -8), 1], ["grunt", Vector3(8, 0, -8), 1], ["thrower", Vector3(-6, 1.6, -3), 1], ["fodder", Vector3(-3, 0, -9), 1, 6, 2.0], ["bloated", Vector3(7, 0, -9), 1],
 			["shieldbearer", Vector3(0, 0, -9), 2], ["fodder", Vector3(5, 0, -6), 2, 6, 2.0]],
@@ -824,6 +828,8 @@ func room_defs() -> Array:
 		],
 		"pillars": _ring_points(Vector3(0, 0, -2), 9.0, 8),
 		"jump_pads": [[Vector3(-3.5, 0, 6.5), 9.0], [Vector3(3.5, 0, 6.5), 9.0]],
+		# Башня — круглая (каменный барабан и деревянная площадка по коллизии 4 × 4)
+		"dress": {"styles": {0: "tower"}},
 		"enemies": [["grunt", Vector3(-6, 0, -8), 0], ["grunt", Vector3(6, 0, -8), 0], ["grunt", Vector3(-8, 0, 0), 0], ["grunt", Vector3(8, 0, 0), 0], ["fodder", Vector3(0, 0, -10), 0, 6, 1.5],
 			["thrower", Vector3(0, 5.1, -2), 1], ["thrower", Vector3(-10, 0, -10), 1], ["grunt", Vector3(10, 0, -10), 1], ["grunt", Vector3(0, 0, -11), 1],
 			["bloated", Vector3(-10, 0, -6), 1], ["fodder", Vector3(7, 0, -6), 1, 5, 1.5],
@@ -870,6 +876,7 @@ func room_defs() -> Array:
 			[Vector3(7, 1.0, 1), Vector3(5, 2, 3), "wood"],
 		],
 		"pillars": [Vector3(0, 0, -4)],
+		"watchtowers": [Vector3(10, 0, -4)],
 		"enemies": [["grunt", Vector3(-4, 0, -9), 0], ["grunt", Vector3(4, 0, -9), 0], ["grunt", Vector3(0, 0, -10), 0], ["fodder", Vector3(0, 0, -7), 0, 6, 1.5],
 			["thrower", Vector3(-7, 2.1, -5), 1], ["thrower", Vector3(7, 2.1, 1), 1], ["grunt", Vector3(-6, 0, 4), 1], ["grunt", Vector3(6, 0, -6), 1],
 			["bloated", Vector3(-4, 0, -9), 1], ["fodder", Vector3(6, 0, -9), 1, 5, 1.5],
@@ -972,6 +979,53 @@ func _ring_props(c: Vector3, radius: float, n: int, kind: String) -> Array:
 func _stack_props(base: Vector3) -> Array:
 	return [["crate", base], ["crate", base + Vector3(0.95, 0, 0)], ["crate", base + Vector3(0.45, 0.92, 0)], ["crate", base + Vector3(0, 0, 0.95)]]
 
+## Блок Б0 «Одеть залы»: общие меши и материалы одевания (rooms/meshes, rooms/materials) и даль за стенами.
+func build_dress() -> void:
+	print("Одевание залов: меши, материалы, даль…")
+	RoomDresser.build_assets()
+	_save(RoomDresser.build_backdrop(), RoomDresser.BACKDROP_SCENE)
+
+## Стиль одевания блока зала (RoomDresser): дом, мост/настил, только коллизия, дерево, камень;
+## ключ "dress": {"styles": {индекс: стиль}} зала перекрывает (например, "tower" — круглая башня).
+func _block_style(d: Dictionary, i: int) -> String:
+	var over: Dictionary = (d.get("dress", {}) as Dictionary).get("styles", {})
+	if over.has(i):
+		return over[i]
+	for h in d.get("houses", []):
+		if h[0] == i:
+			return "house"
+	var b: Array = d.blocks[i]
+	if _is_wood_deck(b):
+		return "deck"
+	if b[2] == "none":
+		return "none"
+	return "wood" if b[2] == "wood" else "stone"
+
+## Бочка и ящик в свободных углах зала (не больше двух): углы не пустые, а пропсы — разрушаемые.
+func _corner_props(d: Dictionary) -> Array:
+	var out: Array = []
+	var hw: float = d.w * 0.5 - 1.1
+	var hd: float = d.d * 0.5 - 1.1
+	var kinds := ["barrel", "crate"]
+	for c in [Vector3(-hw, 0, -hd), Vector3(hw, 0, hd), Vector3(hw, 0, -hd), Vector3(-hw, 0, hd)]:
+		if out.size() >= 2:
+			break
+		var ok := true
+		for b in d.blocks:
+			var bc: Vector3 = b[0]
+			var bs: Vector3 = b[1]
+			if absf(c.x - bc.x) < bs.x * 0.5 + 1.2 and absf(c.z - bc.z) < bs.z * 0.5 + 1.2:
+				ok = false
+		for pr in d.props:
+			if (pr[1] as Vector3).distance_to(c) < 2.0:
+				ok = false
+		for jp in d.get("jump_pads", []):
+			if (jp[0] as Vector3).distance_to(c) < 2.5:
+				ok = false
+		if ok:
+			out.append([kinds[out.size() % 2], c])
+	return out
+
 func build_rooms() -> void:
 	print("Залы…")
 	for d in room_defs():
@@ -979,6 +1033,28 @@ func build_rooms() -> void:
 	# Зал-ларёк Брокка и Эйтри (блок К): без врагов, сам ларёк собирает rooms/shop_stall.gd
 	_build_room(shop_room_def(), false)
 	# Арены боссов (Длинный дом Ярла, погреб Свена) — ручные сцены, см. MANUAL_SCENES
+
+## Открытая вышка 3.75 м. Четыре ступени с северной стороны дают пройти наверх
+## обычными прыжками; видимые опоры/перила не меняют физику и не закрывают обзора.
+func _watchtower(parent: Node, name: String, center: Vector3, mat: Material) -> void:
+	var tower := Node3D.new()
+	tower.name = name
+	tower.position = center
+	parent.add_child(tower)
+	_box(tower, "Deck", Vector3(0, 3.61, 0), Vector3(2.8, 0.28, 2.8), mat)
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			_box(tower, "Post_%d_%d" % [int(sx), int(sz)], Vector3(sx * 1.18, 1.7, sz * 1.18), Vector3(0.22, 3.4, 0.22), mat, false)
+	for i in 4:
+		var top := 0.75 * (i + 1)
+		var z := -4.8 + i
+		_box(tower, "Step%d" % i, Vector3(0, top - 0.09, z), Vector3(1.5, 0.18, 0.95), mat)
+		for sx in [-1.0, 1.0]:
+			_box(tower, "StepPost%d_%d" % [i, int(sx)], Vector3(sx * 0.62, top * 0.5, z), Vector3(0.14, top, 0.14), mat, false)
+	# Перила — только вид; северная сторона открыта для выхода со ступеней.
+	for sx in [-1.0, 1.0]:
+		_box(tower, "Rail_%d" % int(sx), Vector3(sx * 1.32, 4.35, 0), Vector3(0.12, 0.12, 2.5), mat, false)
+	_box(tower, "RailSouth", Vector3(0, 4.35, 1.32), Vector3(2.5, 0.12, 0.12), mat, false)
 
 func _build_room(d: Dictionary, boss: bool) -> void:
 	# Случайные повороты пропсов — одни и те же при каждом запуске генератора (меньше шума в .tscn)
@@ -1043,6 +1119,10 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 			continue
 		# "none" — только коллизия (вид даёт декоративная модель из "models", например корпус корабля)
 		_box(geo, "Block%d" % i, b[0], b[1], null if b[2] == "none" else mats.get(b[2], mats.stone_dark))
+	# Небольшие наблюдательные вышки: реальные ступени и настил, декоративные опоры.
+	var towers: Array = d.get("watchtowers", [])
+	for i in towers.size():
+		_watchtower(geo, "Watchtower%d" % i, towers[i], mats.wood)
 	for i in d.pillars.size():
 		var pp: Vector3 = d.pillars[i]
 		_cyl(geo, "Pillar%d" % i, pp + Vector3(0, h / 2, 0), 0.8, h, pillar_mat)
@@ -1165,8 +1245,9 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	props.name = "Props"
 	root.add_child(props)
 	var prop_scenes := {}
-	for i in d.props.size():
-		var pr: Array = d.props[i]
+	var all_props: Array = d.props + (_corner_props(d) if (d.get("dress", {}) as Dictionary).get("corner_props", true) else [])
+	for i in all_props.size():
+		var pr: Array = all_props[i]
 		# "barrel", "crate", "barrel_explosive" → props/<вид>.tscn
 		if not prop_scenes.has(pr[0]):
 			prop_scenes[pr[0]] = load("res://props/%s.tscn" % pr[0]) as PackedScene
@@ -1244,6 +1325,15 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		stall.position = d.stall
 		root.add_child(stall)
 
+	# Одевание (блок Б0): коллизия та же, вид — модели, MultiMesh и общий шейдер поверхностей
+	var opts: Dictionary = (d.get("dress", {}) as Dictionary).duplicate()
+	var styles := {}
+	for i in d.blocks.size():
+		styles["Block%d" % i] = _block_style(d, i)
+	opts["styles"] = styles
+	if d.get("floor_tex", "") == "dirt_straw":
+		opts["floor"] = "dirt"
+	RoomDresser.new(hash(d.file)).dress_room(root, opts)
 	_save(root, "res://rooms/%s.tscn" % d.file)
 
 ## Графика стен зала (assets/decor/*): знамёна по центру боковых стен (там, где были знамёна-модели), щиты

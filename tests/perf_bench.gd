@@ -4,7 +4,7 @@ extends Node
 ##   2) «Ярл, фаза 3»: балконы сломаны (обломки на полу), Ярл бодается и прыгает, корм рядом.
 ## Headless (CPU):  godot --headless --path . --fixed-fps 60 res://tests/perf_bench.tscn
 ## С рендером:      xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 320x180 res://tests/perf_bench.tscn
-## Аргумент после «--» — секунд замера на сцену (по умолчанию 8).
+## Аргумент после «--» — секунд замера на сцену (по умолчанию 8); «crowd=40» — размер толпы (по умолчанию 20).
 ## Пишет: среднее/медиану/95-й перцентиль кадра (мс, по часам; в headless это вся CPU-часть кадра),
 ## число узлов и draw calls.
 
@@ -12,6 +12,10 @@ var game: Game
 var seconds: float = 8.0
 ## «-- 8 ablate»: в толпе ещё и замеры с выключенными частями (где тратится CPU)
 var ablate: bool = false
+## Сколько врагов в толпе (2 элиты + корм); «-- 8 crowd=40» — проверка на 40+ врагах (блок Б0)
+var crowd: int = 20
+## «hide=Dress,Dress/Backdrop» — спрятать эти узлы зала (во сколько обходится одевание, блок Б0)
+var hide_paths: PackedStringArray = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -26,6 +30,11 @@ func _ready() -> void:
 	if args.size() > 0 and args[0].is_valid_float():
 		seconds = args[0].to_float()
 	ablate = "ablate" in args
+	for a in args:
+		if a.begins_with("crowd="):
+			crowd = maxi(2, a.trim_prefix("crowd=").to_int())
+		if a.begins_with("hide="):
+			hide_paths = a.trim_prefix("hide=").split(",")
 	_run.call_deferred()
 
 func wait(sec: float) -> void:
@@ -95,6 +104,11 @@ func _measure(label: String) -> void:
 func _bench_crowd() -> void:
 	await _start([Run.ROOM_SCENES[0]], 0)
 	await wait(1.0)
+	for hp in hide_paths:
+		var hn := game.room.get_node_or_null(hp) as Node3D
+		if hn:
+			hn.visible = false
+			print("  спрятан узел зала: ", hp)
 	# Свои волны зала убираем — толпа своя
 	game.room._spawn_queue.clear()
 	for e in game.room.alive_enemies().duplicate():
@@ -102,9 +116,9 @@ func _bench_crowd() -> void:
 			e.take_hit(9999, Vector3.ZERO, "test")
 	await wait(1.5)
 	var c := game.player.global_position
-	for i in 20:
-		var a := TAU * i / 20.0
-		var r := 5.0 + (i % 3) * 1.5
+	for i in crowd:
+		var a := TAU * i / float(crowd)
+		var r := 5.0 + (i % 3) * 1.5 + (i % 2) * float(crowd > 20) * 1.5
 		var kind := "grunt" if i < 2 else "fodder"
 		var e := game.room.spawn_extra(kind, c + Vector3(cos(a) * r, 0.05, sin(a) * r))
 		if e:
@@ -115,7 +129,7 @@ func _bench_crowd() -> void:
 			e.health = 1e6
 		await get_tree().physics_frame
 	await wait(2.5)
-	await _measure("Толпа (18 корма + 2 элиты)")
+	await _measure("Толпа (%d корма + 2 элиты)" % (crowd - 2))
 	_iu_breakdown()
 	if ablate:
 		await _ablations()

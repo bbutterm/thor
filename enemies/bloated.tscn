@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" path="res://enemies/enemy.gd" id="1_8ydsn"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_yvyfl"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8ydsn"]
 radius = 0.4725
 height = 1.89
 
-[node name="Bloated" type="CharacterBody3D" unique_id=1520613346]
+[node name="Bloated" type="CharacterBody3D" unique_id=703042604]
 collision_layer = 4
 collision_mask = 15
 floor_snap_length = 0.3
@@ -36,6 +36,6 @@ anim_attack = "Zombie_Scratch"
 anim_attack_hit_at = 0.9
 anim_slam = "Zombie_Scratch"
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=60531761]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=1735727980]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.945, 0)
-shape = SubResource("CapsuleShape3D_yvyfl")
+shape = SubResource("CapsuleShape3D_8ydsn")

@@ -60,6 +60,21 @@ class_name VfxTuning
 ## Пыль разбитой бочки, м
 @export var barrel_dust_size: float = 1.3
 
+@export_group("Взрыв (enemies/blast.gd → FX.explosion)")
+## Вспышка-ядро vfx_hit_flash: размер на 1 м радиуса взрыва
+@export var explosion_flash: float = 1.15
+## Огненный шар из языков vfx_fire: радиус шара на 1 м радиуса взрыва, масштаб языков, сколько горит, с
+@export var explosion_fire: float = 0.45
+@export var explosion_fire_scale: float = 1.5
+@export var explosion_fire_time: float = 0.55
+## Клубы дыма vfx_smoke: сколько, размер на 1 м радиуса, цвет
+@export var explosion_smoke: int = 3
+@export var explosion_smoke_size: float = 0.85
+@export var explosion_smoke_color: Color = Color(0.36, 0.32, 0.3)
+## Звёзды-искры vfx_sparks поверх частиц: сколько и размер, м
+@export var explosion_stars: int = 3
+@export var explosion_star_size: float = 1.1
+
 @export_group("Серебро")
 ## Блеск-звёздочка при вылете монеты: размер, м (0 — нет), и не чаще раза в столько секунд
 @export var coin_glint_size: float = 0.3

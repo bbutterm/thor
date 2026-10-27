@@ -276,9 +276,152 @@ static func apply_world(game: Node, map: RunMap) -> bool:
 	env.fog_density = map.fog_density
 	env.fog_sky_affect = map.fog_sky_affect
 	env.tonemap_exposure = map.exposure
+	_apply_post(env, map, false)
 	we.environment = env
 	game.set_meta("world_sky", map.sky)
+	game.set_meta("env_outdoor", env)
+	if game.has_meta("env_indoor"):
+		game.remove_meta("env_indoor")
+	_apply_sun(game.get_node_or_null("Sun") as DirectionalLight3D, map)
 	return true
+
+# ---------------- Свет и цвет мира (блок Б0) ----------------
+
+static var _grades: Dictionary = {}
+
+## Направление на точку панорамы (u, v) с учётом поворота неба. Середина панорамы (u = 0.5) — это +Z
+## (проверено кадром tests: диск солнца midgard.webp — за спиной у входа в зал), v = acos(y) / π;
+## поворот неба — вокруг вертикали.
+static func sky_direction(uv: Vector2, rotation_deg: float) -> Vector3:
+	var a := uv.x * TAU - PI
+	var polar := uv.y * PI
+	var d := Vector3(-sin(a) * sin(polar), cos(polar), cos(a) * sin(polar))
+	return d.rotated(Vector3.UP, deg_to_rad(rotation_deg))
+
+## Куда смотрит солнце (на солнце): азимут — по диску на панораме, высота — sun_elevation_deg карты.
+static func sun_direction(map: RunMap) -> Vector3:
+	var e := deg_to_rad(map.sun_elevation_deg)
+	if map.sky_sun_uv.x < 0.0:
+		return Vector3.ZERO
+	var d := sky_direction(map.sky_sun_uv, map.sky_rotation_deg)
+	var flat := Vector3(d.x, 0.0, d.z)
+	if flat.length() < 0.01:
+		flat = Vector3.FORWARD
+	return (flat.normalized() * cos(e) + Vector3.UP * sin(e)).normalized()
+
+## Солнце сцены — с той стороны, где диск на панораме (тени совпадают с небом), цвет и сила — из карты.
+static func _apply_sun(sun: DirectionalLight3D, map: RunMap) -> void:
+	if sun == null or map == null:
+		return
+	var to_sun := sun_direction(map)
+	if to_sun != Vector3.ZERO:
+		sun.global_transform.basis = Basis.looking_at(-to_sun, Vector3.UP if absf(to_sun.y) < 0.99 else Vector3.FORWARD)
+	sun.light_color = map.sun_color
+	sun.light_energy = map.sun_energy
+	sun.set_meta("energy", map.sun_energy)
+
+## Кривая цветокоррекции по палитре мира: тени → середина → света, по каналам (кешируется).
+static func grade_texture(map: RunMap) -> GradientTexture1D:
+	var id := "%s|%s|%s" % [map.grade_shadows, map.grade_midtones, map.grade_highlights]
+	if _grades.has(id):
+		return _grades[id]
+	var g := Gradient.new()
+	g.set_color(0, map.grade_shadows)
+	g.set_color(1, map.grade_highlights)
+	g.add_point(0.5, map.grade_midtones)
+	var t := GradientTexture1D.new()
+	t.gradient = g
+	t.width = 256
+	_grades[id] = t
+	return t
+
+## Пост-обработка мира: ACES, SSAO/SSIL, glow, объёмный туман, цветокоррекция. В GL Compatibility SSAO, SSIL
+## и объёмного тумана нет (движок их пропускает) — там затемнение запечено в залы (блок Б0, цвет вершин пола).
+static func _apply_post(env: Environment, map: RunMap, indoor: bool) -> void:
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_white = map.tonemap_white
+	env.ssao_enabled = true
+	env.ssao_intensity = map.ssao_intensity
+	env.ssao_radius = map.ssao_radius
+	env.ssil_enabled = map.ssil_enabled
+	env.ssil_intensity = map.ssil_intensity
+	env.glow_enabled = true
+	env.glow_intensity = map.glow_intensity
+	env.glow_bloom = map.glow_bloom
+	var vd := map.indoor_volumetric_fog_density if indoor else map.volumetric_fog_density
+	env.volumetric_fog_enabled = vd > 0.0
+	env.volumetric_fog_density = vd
+	env.volumetric_fog_albedo = map.volumetric_fog_albedo
+	env.volumetric_fog_emission = map.volumetric_fog_emission
+	env.volumetric_fog_length = map.volumetric_fog_length
+	env.volumetric_fog_sky_affect = 0.0
+	env.adjustment_enabled = true
+	env.adjustment_brightness = map.adjust_brightness
+	env.adjustment_contrast = map.adjust_contrast
+	env.adjustment_saturation = map.adjust_saturation
+	env.adjustment_color_correction = grade_texture(map)
+
+## Окружение зала (Game._load_room): под крышей (Room.indoor — длинный дом Ярла) — без неба и солнца,
+## тёплый полумрак; иначе — небо мира. Тени факелов (только Forward+, map.torch_shadows штук).
+static func apply_room(game: Node, room: Node, map: RunMap) -> void:
+	if game == null or map == null:
+		return
+	var we := game.get_node_or_null("WorldEnvironment") as WorldEnvironment
+	var sun := game.get_node_or_null("Sun") as DirectionalLight3D
+	if we == null or we.environment == null:
+		return
+	if not game.has_meta("env_outdoor"):
+		game.set_meta("env_outdoor", we.environment)
+	var indoor := room != null and bool(room.get("indoor"))
+	var env := game.get_meta("env_outdoor") as Environment
+	if indoor:
+		if not game.has_meta("env_indoor"):
+			var ie := env.duplicate() as Environment
+			ie.background_mode = Environment.BG_COLOR
+			ie.background_color = map.indoor_background
+			ie.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+			ie.ambient_light_color = map.indoor_ambient_color
+			ie.ambient_light_energy = map.indoor_ambient_energy
+			ie.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
+			ie.fog_light_color = map.indoor_fog_color
+			ie.fog_density = map.indoor_fog_density
+			ie.fog_sky_affect = 1.0
+			ie.tonemap_exposure = map.indoor_exposure
+			_apply_post(ie, map, true)
+			game.set_meta("env_indoor", ie)
+		env = game.get_meta("env_indoor") as Environment
+	if we.environment != env:
+		we.environment = env
+	if sun:
+		# Свет не прячем (в GL Compatibility число направленных источников — вариант шейдера: перекомпиляция)
+		sun.light_energy = 0.0 if indoor else float(sun.get_meta("energy", sun.light_energy if sun.light_energy > 0.0 else map.sun_energy))
+		sun.shadow_enabled = not indoor
+	_torch_shadows(room, map)
+
+## Тени от факелов: дорогие (омни-тени — 2 прохода на свет), поэтому только map.torch_shadows факелов зала
+## (сначала у выхода — Torch4/Torch5 генератора) и только в Forward+.
+static func _torch_shadows(room: Node, map: RunMap) -> void:
+	var torches := room.get_node_or_null("Torches") if room else null
+	if torches == null:
+		return
+	var n := map.torch_shadows if RenderingServer.get_current_rendering_method() == "forward_plus" else 0
+	var order: Array = []
+	for nm in ["Torch4", "Torch5"]:
+		if torches.has_node(nm):
+			order.append(torches.get_node(nm))
+	for t in torches.get_children():
+		if not t in order:
+			order.append(t)
+	var k := 0
+	for t in order:
+		var l := (t as Node).get_node_or_null("Light") as OmniLight3D
+		if l == null:
+			continue
+		l.shadow_enabled = k < n
+		if l.shadow_enabled:
+			l.omni_shadow_mode = OmniLight3D.SHADOW_DUAL_PARABOLOID
+			l.shadow_bias = 0.08
+		k += 1
 
 # ---------------- Атмосфера зала ----------------
 
