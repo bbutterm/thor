@@ -20,6 +20,8 @@ const MANUAL_SCENES: Array[String] = [
 ]
 
 var _mats := {}
+## Высота опоры корабля в «Причале с драккаром»: палуба модели на уровне палубы-коллизии (2.2 м)
+const SHIP_Y := 1.0
 
 func _ready() -> void:
 	build_resources()
@@ -738,23 +740,23 @@ func room_defs() -> Array:
 			["shaman", Vector3(-7.5, 2.1, -5.5), 2], ["merc", Vector3(8, 0, -9), 2], ["shieldbearer", Vector3(0, 0, -9), 2], ["fodder", Vector3(-6, 0, 7), 2, 6, 1.2]],
 		"props": _stack_props(Vector3(-3, 0, 3)) + _stack_props(Vector3(3, 0, -8)) + _stack_props(Vector3(-9, 0, 5)) + [["barrel", Vector3(9, 0, 8)], ["barrel", Vector3(10, 0, 7)], ["barrel", Vector3(-10, 0, -10)]],
 	})
-	# 7. Причал с драккаром (GDD 16) — палуба корабля 2.2 м, нос 3.2 м, мачта, склад на берегу 3 м.
-	# Наверх: сходни-ящики 1.1 м → палуба (залезание), прыжковая руна у склада, супер-прыжок.
+	# 7. Причал с драккаром (GDD 16) — корабль (модель Quaternius Pirate Kit поверх невидимой коллизии: палуба 2.2 м,
+	# нос 3.2 м), склад на берегу 3 м. Наверх: сходни-ящики 1.1 м → палуба (залезание), прыжковая руна у склада.
 	r.append({
 		"file": "room_07", "title": "Причал с драккаром", "w": 26.0, "d": 30.0,
 		"blocks": [
-			[Vector3(6, 1.1, 0), Vector3(6, 2.2, 16), "wood"],
-			[Vector3(6, 1.6, -9.5), Vector3(4, 3.2, 3), "wood"],
-			[Vector3(1.5, 0.55, 2), Vector3(3, 1.1, 2), "wood"],
-			[Vector3(1.5, 0.55, -5), Vector3(3, 1.1, 2), "wood"],
+			[Vector3(6, 1.1, 0), Vector3(5, 2.2, 15), "none"],
+			[Vector3(6, 1.6, -9.0), Vector3(3, 3.2, 2), "none"],
+			[Vector3(2.0, 0.55, 2), Vector3(3, 1.1, 2), "wood"],
+			[Vector3(2.0, 0.55, -5), Vector3(3, 1.1, 2), "wood"],
 			[Vector3(-8, 1.5, 4), Vector3(8, 3, 6), "stone_dark"],
-			[Vector3(6, 5.0, 0), Vector3(3, 0.4, 3), "wood"],
 		],
-		"pillars": [Vector3(6, 0, 0)],
+		"pillars": [],
+		"models": [["res://assets/quaternius/pirate/Ship_Large.gltf", Vector3(6, SHIP_Y, 0), 90.0, 1.0]],
 		"jump_pads": [[Vector3(-3, 0, 9), 8.0]],
 		"enemies": [["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(-8, 0, -6), 0], ["thrower", Vector3(6, 2.3, 5), 0], ["fodder", Vector3(-4, 0, -2), 0, 6, 1.8],
 			["shaman", Vector3(-8, 3.1, 4), 1], ["merc", Vector3(6, 3.3, -9.5), 1], ["grunt", Vector3(6, 2.3, -4), 1], ["bloated", Vector3(-9, 0, -9), 1], ["fodder", Vector3(-6, 0, 0), 1, 6, 1.8],
-			["shieldbearer", Vector3(-2, 0, -8), 2], ["thrower", Vector3(6, 5.3, 0.8), 2], ["fodder", Vector3(0, 0, -9), 2, 6, 1.6], ["grunt", Vector3(6, 2.3, 6), 2]],
+			["shieldbearer", Vector3(-2, 0, -8), 2], ["thrower", Vector3(6, 2.3, -6), 2], ["fodder", Vector3(0, 0, -9), 2, 6, 1.6], ["grunt", Vector3(6, 2.3, 6), 2]],
 		"props": [["barrel", Vector3(-11, 0, -2)], ["barrel", Vector3(-10, 0, -1)], ["barrel", Vector3(-11, 0, 0)], ["crate", Vector3(-4, 0, 6)], ["crate", Vector3(-4, 0.92, 6)],
 			["barrel", Vector3(5, 2.2, 6)], ["barrel", Vector3(7, 2.2, -3)], ["crate", Vector3(-11, 3.0, 6)], ["barrel", Vector3(-1, 0, -11)]],
 	})
@@ -875,7 +877,8 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 
 	for i in d.blocks.size():
 		var b: Array = d.blocks[i]
-		_box(geo, "Block%d" % i, b[0], b[1], mats.get(b[2], mats.stone_dark))
+		# "none" — только коллизия (вид даёт декоративная модель из "models", например корпус корабля)
+		_box(geo, "Block%d" % i, b[0], b[1], null if b[2] == "none" else mats.get(b[2], mats.stone_dark))
 	for i in d.pillars.size():
 		var pp: Vector3 = d.pillars[i]
 		_cyl(geo, "Pillar%d" % i, pp + Vector3(0, h / 2, 0), 0.8, h, pillar_mat)
@@ -953,6 +956,21 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 				mk2.name = "%s%d" % [mname.trim_suffix("s"), k]
 				mk2.position = (v as Array)[k] + Vector3(0, 0.05, 0)
 				grp.add_child(mk2)
+
+	# Декоративные модели (без коллизии): [путь к сцене, позиция, поворот по Y (град), масштаб]
+	var models: Array = d.get("models", [])
+	if not models.is_empty():
+		var dnode := Node3D.new()
+		dnode.name = "Decor"
+		root.add_child(dnode)
+		for i in models.size():
+			var md: Array = models[i]
+			var inst := (load(md[0]) as PackedScene).instantiate() as Node3D
+			inst.name = "%s_%d" % [(md[0] as String).get_file().get_basename(), i]
+			inst.position = md[1]
+			inst.rotation_degrees.y = md[2]
+			inst.scale = Vector3.ONE * float(md[3])
+			dnode.add_child(inst)
 
 	# Прыжковые руны (GDD 7.2): [позиция на полу, высота подброса]
 	var pads: Array = d.get("jump_pads", [])

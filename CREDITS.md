@@ -17,6 +17,10 @@
 | Оружие: топор, меч, копьё, коса, кинжал, круглый щит, лук, посох (Medieval Weapons Pack, RPG Pack), кирка (Kenney Survival Kit) | Quaternius / Kenney (копия: github.com/nrknithin/html-anime, `models/library`) — распакованы из meshopt, материалы заменены на наши | CC0 |
 | Мьёльнир, дубина, вилы, факел, посох шамана | Собраны кодом (`scripts/weapon_meshes.gd`) в текстурах Quaternius | — |
 | Огнестрел: пистолет, пистолет-пулемёт, автомат, обрез (Ultimate Gun Pack, FBX) | Quaternius — https://opengameart.org/content/low-poly-guns-pack (`assets/quaternius/guns/`), материалы заменены на наши | CC0 (`assets/quaternius/guns/LICENSE.txt`) |
+| Корабль, причал, дома, скалы, кости (Pirate Kit, glTF) — корабль в «Причале с драккаром» | Quaternius — https://quaternius.com/packs/piratekit.html (`assets/quaternius/pirate/`) | CC0 (`assets/quaternius/pirate/LICENSE.txt`) |
+| Волк, орёл (Animal Pack Vol.2, FBX) — запас для Йотунхейма и воронов, в игре пока не используются | Quaternius — https://opengameart.org/content/animated-animales-low-poly (`assets/quaternius/animals/`) | CC0 (`assets/quaternius/animals/LICENSE.txt`) |
+| Скелеты Warrior/Rogue/Mage/Minion + оружие (Character Pack: Skeletons 1.1, бесплатный тир) и анимации Rig_Medium (Character Animations 1.1) — запас для Хельхейма, пока не используются | KayKit / Kay Lousberg — https://kaylousberg.itch.io/kaykit-skeletons, https://kaylousberg.itch.io/kaykit-character-animations (`assets/kaykit/`) | CC0 (`assets/kaykit/*/LICENSE.txt`) |
+| Кладбище, склепы, надгробия, ограды, призрак, скелет (Graveyard Kit 5.0, GLB) — запас для Хельхейма, пока не используются | Kenney — https://kenney.nl/assets/graveyard-kit (`assets/kenney/graveyard/`) | CC0 (`assets/kenney/graveyard/LICENSE.txt`) |
 | Арбалет и болт | Собраны кодом (`scripts/weapon_meshes.gd`) | — |
 | Звуки оружия (выстрелы, перезарядка, арбалет, свитч, подбор, сундук) | Синтезированы `tools/make_sfx.py` | свои, CC0 |
 

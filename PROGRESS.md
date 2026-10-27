@@ -495,3 +495,5 @@ CPU-часть кадра не изменилась — горячих мест 
 - Арены боссов (`boss_arena`, `sven_arena`) выведены из генератора: `MANUAL_SCENES`, `_save` их не перезаписывает, `tests/generator_test.tscn`.
 - `reach_test` проверяет 6 новых маршрутов наверх; `ai_test` проходит все 9 залов; кадры — `tests/room_shots.tscn`.
 - Пока как остальные залы — блоки с текстурами: моделей корабля и домов нет (кандидаты — Quaternius village/props).
+
+- 27.10: корабль Pirate Kit (Quaternius) в «Причале с драккаром» — генератор умеет декор `models` и блоки-коллизии `"none"`. В `assets/` добавлен запас под новые миры: скелеты KayKit, кладбище Kenney, волк и орёл Quaternius (`ASSET_CANDIDATES.md`).
