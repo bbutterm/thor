@@ -262,6 +262,8 @@ func _enter_active() -> void:
 	var p: Array = _pose()
 	_animate_to(p[2], p[3], _active_time() * 1.15, Tween.TRANS_EXPO, Tween.EASE_OUT)
 	Audio.play("sounds/sfx/axe_swing_%d.wav" % (3 if heavy else _slot(stage) + 1))
+	if heavy:
+		Audio.thor_grunt()
 	player.camera_fx.add_trauma(0.12 if heavy else 0.05)
 
 func _enter_recovery() -> void:

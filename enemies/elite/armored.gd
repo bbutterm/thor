@@ -18,7 +18,7 @@ func filter_damage(damage: float, _knockback: Vector3, source: String) -> float:
 	Perf.mark("elite_armor_hit")
 	if source != "fire":
 		FX.sparks(enemy.get_parent(), enemy.global_position + Vector3(0, 1.1 * enemy.model_scale, 0), Color(0.75, 0.78, 0.85), 10, 5.0)
-		Audio.play("sounds/sfx/hammer_bounce.wav")
+		Audio.sfx("helmet_bonk", "sounds/sfx/hammer_bounce.wav")
 	if armor <= 0.0:
 		_break()
 	else:

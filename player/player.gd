@@ -472,7 +472,7 @@ func _process_jump(on_floor: bool) -> void:
 		# Крылья валькирии ур. 2+: прыжки в воздухе выше
 		velocity.y = jump_velocity * 0.92 * (Run.rune_value("valkyrie_wings", true) if Run.rune_level("valkyrie_wings") > 0 else 1.0)
 		camera_fx.kick_fov(3.0)
-		Audio.play("sounds/jump_b.ogg, sounds/jump_c.ogg")
+		Audio.sfx("double_jump", "sounds/jump_b.ogg, sounds/jump_c.ogg")
 	elif _wall_jumps_left > 0 and _try_wall_jump():
 		# Отскок от стены — когда прыжки в воздухе кончились (иначе у стены платформы съедал бы двойной прыжок)
 		_jump_buffer_left = 0.0
@@ -667,6 +667,7 @@ func _start_slam() -> void:
 	is_sliding = false
 	camera_fx.kick_fov(-6.0)
 	Audio.play("sounds/jump_c.ogg")
+	Audio.thor_grunt()
 
 ## Отмена удара-приземления (GDD 7.2): рывок во время падения — дальше обычное падение
 func _cancel_slam() -> void:
@@ -782,7 +783,7 @@ func _check_stomp(pre_velocity: Vector3) -> void:
 		_stomp_cooldown = 0.2
 		camera_fx.add_trauma(0.12)
 		FX.ring(get_parent(), e.global_position + Vector3(0, 1.8 * e.model_scale, 0), 0.8, Color(1, 0.95, 0.7, 0.8), 0.2)
-		Audio.play("sounds/jump_b.ogg")
+		Audio.sfx("helmet_bonk", "sounds/jump_b.ogg")
 		Perf.mark("stomp")
 		return
 
@@ -945,6 +946,7 @@ func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln
 	hurt.emit(amount)
 	health_changed.emit(maxf(health, 0.0), max_health)
 	Audio.play("sounds/sfx/player_hurt.wav")
+	Audio.thor_pain()
 	if health <= 0.0 and not _rune_second_wind():
 		_die()
 
@@ -1188,6 +1190,7 @@ func _roll_crit(source: String) -> bool:
 func _on_crit(target: Object) -> void:
 	Perf.mark("crit")
 	FX.hitstop(crit_hitstop)
+	Audio.sfx("critical_hit")
 	var t3 := target as Node3D
 	if t3:
 		FX.sparks(get_parent(), t3.global_position + Vector3(0, 1.4, 0), Color(1, 0.9, 0.2), 12, 6.0)

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Синтез звуков прототипа (свои, CC0). Запуск: python3 tools/make_sfx.py [префикс ...]
 Пишет WAV в sounds/sfx/. Всё процедурно: шум + фильтры + огибающие.
-С префиксами пишет только звуки, чьи имена с них начинаются (например: python3 tools/make_sfx.py gun_ crossbow_)."""
+С префиксами пишет только звуки, чьи имена с них начинаются (например: python3 tools/make_sfx.py gun_ crossbow_).
+Звук владельца (ElevenLabs, блок Б6) лежит отдельно — sounds/owner/, sounds/voice/ (tools/import_owner_audio.py)
+и в игре важнее синтеза (карта data/owner_audio.json); этот скрипт его не трогает, синтез остаётся запасным."""
 import os
 import sys
 import numpy as np

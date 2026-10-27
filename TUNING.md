@@ -261,6 +261,17 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 | Dialogue | `heimdall_chance` | 0.35 | Шанс реплики Хеймдалля на старте забега (после знакомства) |
 | Odin | `combat_cooldown` | 12 | Реплика Одина в бою не чаще (GDD 17) |
 
+## Звук и голос владельца — `scripts/audio.gd` (`Audio`), `data/owner_audio.json`, `tools/import_owner_audio.py`
+
+| Где | Параметр | По умолчанию | Что делает |
+|---|---|---|---|
+| Audio | `voice_volume_db` | 0 | Громкость голоса (клипы ≈ −16 LUFS, шина Voice) |
+| Audio | `grunt_chance` / `grunt_cooldown` | 0.3 / 6 с | «Хха!» Тора на сильном ударе и ударе-приземлении |
+| Audio | `pain_chance` / `pain_cooldown` | 0.6 / 4 с | «Ух!» Тора при уроне |
+| owner_audio.json | `sfx.<звук>.pitch` / `db` / `min_interval` | 1 / 0 / 0 | Высота (поверх случайных 0.9–1.1), поправка громкости, «не чаще» для звука владельца |
+
+Один голос за раз: реплика пузыря/`Odin.say` не перебивает звучащий голос (остаётся без озвучки), реплика окна новеллы перебивает, кряхтение никого не перебивает. Громкость файлов (`import_owner_audio.py`): эффекты — пик ≤ −1 дБTP и не громче синтеза, который заменяют (потолок громкости 300 мс — таблица `SFX`), голос ≈ −16 LUFS (пик −1.5 дБTP), музыка ≈ −14 LUFS.
+
 ## Бой-реплики и причина смерти — `run/run_tracker.gd`
 
 `idle_time` 4 с / `idle_speed` 0.6 («ДВИГАЙСЯ!»), `multikill_count` 3 за `multikill_window` 0.8 с («Хоть что-то»), `big_damage_fraction` 0.35 HP за `big_damage_window` 3 с («Скуф…»), `quick_death_time` 45 с («быстро сдох»), `long_life_time` 420 с («долго жил»), `fall_death_y` −15 (ниже — смерть от падения).
@@ -322,6 +333,7 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 `bpm` 120, `beats_per_bar` 4 (переходы слоёв — на доле, треков — на такте), `volume_db` −6, `layer_fade` 0.6 с, `track_fade` 1.2 с, `muffle_cutoff_hz` 650 (пауза, диалог, смерть), `stinger_min_power` 0.6 (удар-приземление с такой силой — стингер), `stinger_duck_db` −18 / `stinger_duck_time` 0.18 с (провал музыки под стингер; во время hit-stop длится дольше).
 Слои: `base` (фон: бас и пэды) → `drums` (бой: есть живые враги) → `full` (Ярость: у игрока `is_berserk()`). Треки: `menu`, `plan` («План тренировок»), `midgard`, `miniboss`, `boss`, `shop` (включается `Music.play_track("shop")`).
 Заглушки синтезирует `python3 tools/make_sfx.py music` (нужен ffmpeg). Настоящие треки — положить файлы с теми же именами (.ogg или .wav), все слои трека одной длины.
+**Треки владельца (блок Б6)** — `sounds/owner/music/<трек>/` (`midgard`, `jarl`, `shop`; `jotunheim`, `helheim` — на будущее, не в экспорте), важнее синтеза. Слои — одна петля 30 с через НЧ-фильтр: `base` 1000 Гц (−2.5 дБ), `drums` 3800 Гц (−1 дБ), `full` — оригинал ≈ −14 LUFS (`tools/import_owner_audio.py`, `LAYERS`, `MUSIC_LUFS`). Они **сменяют** друг друга (перекрёстно за `layer_fade`, линейно по амплитуде), а не складываются. Темп — `data/owner_audio.json` → `music.<трек>.bpm` (Мидгард 120, Ярл 125, ларёк 100).
 
 ## Портреты — `sprites/portraits/<speaker>_<emotion>.webp|png`, `ui/portrait.gd`, `ui/dialogue_box.gd`
 
