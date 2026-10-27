@@ -126,6 +126,10 @@ if (( rc == 0 )) && { ! grep -Fq 'Удары-приземления с реал�
     echo 'В журнале нет полного итога сценария.' >&2
     rc=1
 fi
+if (( rc == 0 )) && grep -Eq 'SCRIPT ERROR|Parse Error' "$out/godot.log"; then
+    echo 'В журнале есть ошибка скрипта или разбора.' >&2
+    rc=1
+fi
 printf 'finished_utc=%s\nexit_code=%d\n' "$(date -u +%FT%TZ)" "$rc" | tee -a "$out/metadata.txt"
 printf 'Результат: %s/godot.log\n' "$out"
 exit "$rc"
