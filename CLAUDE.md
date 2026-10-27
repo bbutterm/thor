@@ -44,7 +44,7 @@
 
 ## Важно
 - **Фризы.** Не создавай материал на каждый эффект/удар: новый материал = компиляция пайплайна (Forward+), а когда последний материал вида умирает, его пайплайны выкидываются. Бери общий (`FX.fx_apply`, `WeaponMeshes.mat`, `HumanoidModel._tinted`), меняй вид через per-instance (`set_instance_shader_parameter`, `GeometryInstance3D.transparency`, оверлей `shaders/hit_flash.tres` у врагов). Новый вид эффекта — добавь его в `ShaderWarmup`. Новые ассеты персонажей/оружия/звуков — в папки из `AssetCache.DIRS`. В шейдерах эффектов альфу **умножать** (`ALPHA *= …`), а не присваивать — иначе не работает `GeometryInstance3D.transparency`; в GL Compatibility прозрачность идёт через instance uniform `fade` (`FX.sync_fades`). В GL Compatibility на сцену не больше **256 узлов с instance uniform** (16 ячеек из 4096 на узел) — счётчик в F3 и `tests/perf_bench.tscn`; свободные узлы пулов отдают материал.
-- Сцены игрока, врагов, бочек, залов, UI и `scenes/game.tscn` **генерирует** `tools/build_scenes.gd`. Меняешь структуру сцены — правь генератор и перезапускай его. ⚠️ Если владелец правил залы руками в редакторе, генератор их перезапишет — спроси сначала.
+- Сцены игрока, врагов, бочек, **обычных боевых залов** (`room_defs()`: `rooms/room_01…09.tscn`), зала-ларька, UI и `scenes/game.tscn` **генерирует** `tools/build_scenes.gd` — меняешь их структуру, правь генератор и перезапускай его (коммить только намеренно изменённые .tscn). **Арены боссов и сюжетные залы — ручные сцены** (`MANUAL_SCENES` в генераторе: `rooms/boss_arena.tscn`, `rooms/sven_arena.tscn`; новые арены — добавлять туда же): правятся в редакторе, генератор их не создаёт и не перезаписывает (`_save` отказывается, проверка — `tests/generator_test.tscn`). Новый боевой зал — новый словарь в `room_defs()` (`blocks`, `pillars`, `jump_pads`, `enemies`, `props`, `balconies`, `markers`) + путь в `Run.ROOM_SCENES` + маршрут наверх в `reach_test`; кадры — `tests/room_shots.tscn -- <папка> room_07 …`.
 - Блоки уровней — StaticBody3D, не CSG (CSG давал провалы сквозь пол в первые кадры).
 - Слои физики: 1 world, 2 player, 3 enemies, 4 props, 5 projectiles, 6 triggers, 7 debris.
 - Вьюмодель рук — слой отображения 2, отдельный SubViewport (`Head/Camera/ViewmodelContainer`).
@@ -57,7 +57,8 @@
 godot --headless --path . --import
 godot --headless --path . res://tools/build_scenes.tscn              # если менялись генерируемые сцены
 godot --headless --path . --fixed-fps 60 res://tests/smoke_test.tscn # полный забег, ожидается 0 FAIL
-godot --headless --path . --fixed-fps 60 res://tests/reach_test.tscn # достижимость платформ
+godot --headless --path . --fixed-fps 60 res://tests/reach_test.tscn # достижимость платформ (в т. ч. ярусы залов 7–9)
+godot --headless --path . --fixed-fps 60 res://tests/generator_test.tscn # генератор не трогает ручные арены, все залы забега собраны
 godot --headless --path . --fixed-fps 60 res://tests/ai_test.tscn    # враги доходят и бьют во всех залах
 godot --headless --path . --fixed-fps 60 res://tests/enemy_test.tscn # враги Мидгарда, щит, взрыв, шаман, волны
 godot --headless --path . --fixed-fps 60 res://tests/elite_test.tscn # элита: все виды × 7 модификаторов

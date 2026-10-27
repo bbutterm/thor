@@ -19,6 +19,9 @@ const ROOM_SCENES := [
 	"res://rooms/room_04.tscn",
 	"res://rooms/room_05.tscn",
 	"res://rooms/room_06.tscn",
+	"res://rooms/room_07.tscn",
+	"res://rooms/room_08.tscn",
+	"res://rooms/room_09.tscn",
 ]
 const BOSS_SCENE := "res://rooms/boss_arena.tscn"
 const MJOLNIR_TRAITS_DIR := "res://weapons/mjolnir_traits/"

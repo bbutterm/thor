@@ -1,9 +1,9 @@
 extends Node
 ## Генератор сцен и ресурсов прототипа.
 ## Запуск: godot --headless --path . res://tools/build_scenes.tscn
-## Создаёт: игрока, врагов, бочки/ящики, 6 залов + арену босса, тела, руны, сцену игры и UI-сцены.
-## ВНИМАНИЕ: перезаписывает файлы. Если правил залы руками в редакторе — не запускай повторно
-## (или закомментируй build_rooms() ниже).
+## Создаёт: игрока, врагов, бочки/ящики, обычные боевые залы (room_defs) + зал-ларёк, тела, руны, сцену игры и UI-сцены.
+## Перезаписывает только свои файлы. Арены боссов и сюжетные залы (MANUAL_SCENES) — ручные сцены:
+## правятся в редакторе, генератор их не создаёт и не перезаписывает (_save отказывается).
 
 const WORLD := 1
 const PLAYER_L := 1 << 1
@@ -12,6 +12,12 @@ const PROPS_L := 1 << 3
 const PROJ_L := 1 << 4
 const TRIGGER_L := 1 << 5
 const DEBRIS_L := 1 << 6
+
+## Ручные сцены: арены боссов и сюжетные залы. Генератор их не трогает (проверка в _save и в tests/generator_test).
+const MANUAL_SCENES: Array[String] = [
+	"res://rooms/boss_arena.tscn",
+	"res://rooms/sven_arena.tscn",
+]
 
 var _mats := {}
 
@@ -38,6 +44,10 @@ func _own(node: Node, owner: Node) -> void:
 			_own(c, owner)
 
 func _save(root: Node, path: String) -> void:
+	if path in MANUAL_SCENES:
+		push_error("build_scenes: %s — ручная сцена (MANUAL_SCENES), не перезаписываю" % path)
+		root.free()
+		return
 	_own(root, root)
 	var ps := PackedScene.new()
 	var err := ps.pack(root)
@@ -728,6 +738,67 @@ func room_defs() -> Array:
 			["shaman", Vector3(-7.5, 2.1, -5.5), 2], ["merc", Vector3(8, 0, -9), 2], ["shieldbearer", Vector3(0, 0, -9), 2], ["fodder", Vector3(-6, 0, 7), 2, 6, 1.2]],
 		"props": _stack_props(Vector3(-3, 0, 3)) + _stack_props(Vector3(3, 0, -8)) + _stack_props(Vector3(-9, 0, 5)) + [["barrel", Vector3(9, 0, 8)], ["barrel", Vector3(10, 0, 7)], ["barrel", Vector3(-10, 0, -10)]],
 	})
+	# 7. Причал с драккаром (GDD 16) — палуба корабля 2.2 м, нос 3.2 м, мачта, склад на берегу 3 м.
+	# Наверх: сходни-ящики 1.1 м → палуба (залезание), прыжковая руна у склада, супер-прыжок.
+	r.append({
+		"file": "room_07", "title": "Причал с драккаром", "w": 26.0, "d": 30.0,
+		"blocks": [
+			[Vector3(6, 1.1, 0), Vector3(6, 2.2, 16), "wood"],
+			[Vector3(6, 1.6, -9.5), Vector3(4, 3.2, 3), "wood"],
+			[Vector3(1.5, 0.55, 2), Vector3(3, 1.1, 2), "wood"],
+			[Vector3(1.5, 0.55, -5), Vector3(3, 1.1, 2), "wood"],
+			[Vector3(-8, 1.5, 4), Vector3(8, 3, 6), "stone_dark"],
+			[Vector3(6, 5.0, 0), Vector3(3, 0.4, 3), "wood"],
+		],
+		"pillars": [Vector3(6, 0, 0)],
+		"jump_pads": [[Vector3(-3, 0, 9), 8.0]],
+		"enemies": [["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(-8, 0, -6), 0], ["thrower", Vector3(6, 2.3, 5), 0], ["fodder", Vector3(-4, 0, -2), 0, 6, 1.8],
+			["shaman", Vector3(-8, 3.1, 4), 1], ["merc", Vector3(6, 3.3, -9.5), 1], ["grunt", Vector3(6, 2.3, -4), 1], ["bloated", Vector3(-9, 0, -9), 1], ["fodder", Vector3(-6, 0, 0), 1, 6, 1.8],
+			["shieldbearer", Vector3(-2, 0, -8), 2], ["thrower", Vector3(6, 5.3, 0.8), 2], ["fodder", Vector3(0, 0, -9), 2, 6, 1.6], ["grunt", Vector3(6, 2.3, 6), 2]],
+		"props": [["barrel", Vector3(-11, 0, -2)], ["barrel", Vector3(-10, 0, -1)], ["barrel", Vector3(-11, 0, 0)], ["crate", Vector3(-4, 0, 6)], ["crate", Vector3(-4, 0.92, 6)],
+			["barrel", Vector3(5, 2.2, 6)], ["barrel", Vector3(7, 2.2, -3)], ["crate", Vector3(-11, 3.0, 6)], ["barrel", Vector3(-1, 0, -11)]],
+	})
+	# 8. Яма-колизей (GDD 16) — яма с кормом посередине, трибуны-террасы 2 м по бокам, ложи 4 м в углах.
+	# Наверх: ступени 1 м → террасы → ложи (залезание), прыжковая руна в центре ямы — 10 м над ареной.
+	r.append({
+		"file": "room_08", "title": "Яма-колизей", "w": 28.0, "d": 28.0,
+		"blocks": [
+			[Vector3(-11, 1.0, 0), Vector3(6, 2, 20), "stone_dark"],
+			[Vector3(11, 1.0, 0), Vector3(6, 2, 20), "stone_dark"],
+			[Vector3(-11, 2.0, -9), Vector3(6, 4, 4), "stone_dark"],
+			[Vector3(11, 2.0, 9), Vector3(6, 4, 4), "stone_dark"],
+			[Vector3(-6.5, 0.5, 6), Vector3(3, 1, 3), "wood"],
+			[Vector3(6.5, 0.5, -6), Vector3(3, 1, 3), "wood"],
+		],
+		"pillars": [Vector3(-4, 0, -8), Vector3(4, 0, 8)],
+		"jump_pads": [[Vector3(0, 0, 0), 10.0]],
+		"enemies": [["fodder", Vector3(0, 0, -4), 0, 6, 2.0], ["grunt", Vector3(-4, 0, -2), 0], ["grunt", Vector3(4, 0, -4), 0], ["thrower", Vector3(-11, 2.1, -3), 0], ["thrower", Vector3(11, 2.1, 3), 0],
+			["shaman", Vector3(-11, 4.1, -9), 1], ["shaman", Vector3(11, 4.1, 9), 1], ["bloated", Vector3(0, 0, -8), 1], ["merc", Vector3(11, 2.1, -6), 1], ["fodder", Vector3(-3, 0, 3), 1, 6, 1.8],
+			["shieldbearer", Vector3(0, 0, -6), 2], ["fodder", Vector3(3, 0, -2), 2, 6, 1.8], ["fodder", Vector3(-3, 0, -8), 2, 5, 1.6], ["grunt", Vector3(-11, 2.1, 6), 2]],
+		"props": _ring_props(Vector3(0, 0, 0), 6.5, 8, "barrel") + [["crate", Vector3(-13, 2.0, 8)], ["crate", Vector3(13, 2.0, -8)], ["crate", Vector3(-12, 4.0, -10)]],
+	})
+	# 9. Деревня (GDD 16) — дома с плоскими крышами 2.5–3 м, мост между домами над улицей, площадь.
+	# Наверх: ящики-ступени 1 м → крыши (залезание), прыжковая руна на площади, мост.
+	r.append({
+		"file": "room_09", "title": "Деревня у фьорда", "w": 30.0, "d": 28.0,
+		"blocks": [
+			[Vector3(-9, 1.5, -5), Vector3(6, 3, 5), "wood"],
+			[Vector3(9, 1.5, -5), Vector3(6, 3, 5), "wood"],
+			[Vector3(-9, 1.5, 6), Vector3(5, 3, 5), "wood"],
+			[Vector3(9, 1.25, 6), Vector3(5, 2.5, 5), "wood"],
+			[Vector3(0, 2.85, -5), Vector3(12, 0.3, 2), "wood"],
+			[Vector3(-5.5, 0.5, 6), Vector3(2, 1, 2), "wood"],
+			[Vector3(6, 0.5, 2.5), Vector3(2, 1, 2), "wood"],
+			[Vector3(-5, 0.5, -1.5), Vector3(2, 1, 2), "wood"],
+		],
+		"pillars": [],
+		"jump_pads": [[Vector3(0, 0, 3), 8.0]],
+		"enemies": [["grunt", Vector3(-3, 0, -9), 0], ["grunt", Vector3(3, 0, -9), 0], ["thrower", Vector3(-9, 3.1, -5), 0], ["fodder", Vector3(0, 0, -1), 0, 6, 1.8],
+			["thrower", Vector3(9, 3.1, -5), 1], ["shaman", Vector3(0, 3.1, -5), 1], ["merc", Vector3(9, 2.6, 6), 1], ["bloated", Vector3(-12, 0, 0), 1], ["fodder", Vector3(4, 0, -1), 1, 6, 1.8],
+			["shieldbearer", Vector3(0, 0, -8), 2], ["thrower", Vector3(-9, 3.1, 6), 2], ["fodder", Vector3(-3, 0, 1), 2, 6, 1.6], ["grunt", Vector3(12, 0, 0), 2]],
+		"props": [["barrel", Vector3(-12, 0, -10)], ["barrel", Vector3(12, 0, -10)], ["crate", Vector3(-13, 0, 1)], ["crate", Vector3(13, 0, 1)], ["barrel", Vector3(2, 0, 7)],
+			["barrel", Vector3(-2, 0, 8)], ["crate", Vector3(-9, 3.0, -5.5)], ["barrel", Vector3(9, 3.0, -4)], ["crate", Vector3(9, 2.5, 7)]],
+	})
 	return r
 
 func _ring_points(c: Vector3, radius: float, n: int) -> Array:
@@ -752,44 +823,7 @@ func build_rooms() -> void:
 		_build_room(d, false)
 	# Зал-ларёк Брокка и Эйтри (блок К): без врагов, сам ларёк собирает rooms/shop_stall.gd
 	_build_room(shop_room_def(), false)
-	# Длинный дом Ярла Бьорна (GDD 14.2): длинный зал, по длинным стенам — 4 разрушаемых балкона (Balcony,
-	# настил на 3 м, StaticBody3D), к каждому — ступень-ящик 1.5 м со стороны середины зала. Маркеры: JarlPerches —
-	# куда Ярл прыгает пришивать руку (фаза 2), FodderGates — откуда лезет корм.
-	_build_room({
-		"file": "boss_arena", "title": "Длинный дом ярла", "w": 22.0, "d": 44.0, "torch_y": 4.4,
-		"blocks": [
-			[Vector3(-9.5, 0.75, -3.6), Vector3(3, 1.5, 2), "wood"],
-			[Vector3(9.5, 0.75, -3.6), Vector3(3, 1.5, 2), "wood"],
-			[Vector3(-9.5, 0.75, 3.6), Vector3(3, 1.5, 2), "wood"],
-			[Vector3(9.5, 0.75, 3.6), Vector3(3, 1.5, 2), "wood"],
-		],
-		"balconies": [[Vector3(-9.5, 2.825, -11), Vector3(3, 0.35, 12)], [Vector3(9.5, 2.825, -11), Vector3(3, 0.35, 12)],
-			[Vector3(-9.5, 2.825, 11), Vector3(3, 0.35, 12)], [Vector3(9.5, 2.825, 11), Vector3(3, 0.35, 12)]],
-		"pillars": [Vector3(-4.5, 0, -9), Vector3(4.5, 0, -9), Vector3(-4.5, 0, 9), Vector3(4.5, 0, 9)],
-		"enemies": [["jarl", Vector3(0, 0, -12), 0], ["fodder", Vector3(0, 0, -16), 0, 4, 2.0],
-			["thrower", Vector3(-9.5, 3.05, -13), 1], ["thrower", Vector3(9.5, 3.05, 13), 1], ["fodder", Vector3(0, 0, -18), 1, 6, 2.0]],
-		"markers": {"JarlPerches": [Vector3(-9.5, 3.0, -11), Vector3(9.5, 3.0, -11), Vector3(-9.5, 3.0, 11), Vector3(9.5, 3.0, 11)],
-			"FodderGates": [Vector3(-7, 0, -19), Vector3(7, 0, -19), Vector3(-7.5, 0, 0), Vector3(7.5, 0, 0)]},
-		"props": [["barrel", Vector3(-10.2, 0, -7.5)], ["barrel", Vector3(10.2, 0, 14.5)], ["barrel", Vector3(-10.2, 0, 15)], ["barrel", Vector3(10.2, 0, -15)],
-			["barrel", Vector3(-2, 0, 0)], ["barrel", Vector3(2.5, 0, -4)], ["crate", Vector3(-10, 0, 19)], ["crate", Vector3(10, 0, -19.5)]],
-	}, true)
-	# Арена Толстого Свена (GDD 14.1) — пивной погреб: открытый пол для таранов на бочке, две низкие
-	# площадки (1.4 м) — уйти с пути тарана, колонны — о них Свен оглушается. Сам Свен выходит
-	# последней волной (MinibossDef) из маркера MinibossSpot; первая волна — собутыльники.
-	_build_room({
-		"file": "sven_arena", "title": "Пивной погреб Свена", "w": 22.0, "d": 22.0,
-		"blocks": [
-			[Vector3(-7, 0.7, -3), Vector3(4, 1.4, 3), "wood"],
-			[Vector3(7, 0.7, 3), Vector3(4, 1.4, 3), "wood"],
-		],
-		"pillars": [Vector3(-4.5, 0, 5), Vector3(4.5, 0, -6)],
-		"enemies": [["fodder", Vector3(0, 0, -6), 0, 5, 2.0], ["grunt", Vector3(-6, 0, -8), 0], ["grunt", Vector3(6, 0, -8), 0]],
-		"markers": {"MinibossSpot": Vector3(0, 0, -5)},
-		"props": [["barrel", Vector3(-9.5, 0, -9.5)], ["barrel", Vector3(-8.6, 0, -9.6)], ["barrel", Vector3(-9.4, 0, -8.6)], ["barrel", Vector3(-9.5, 1.0, -9.4)],
-			["barrel", Vector3(9.5, 0, 9.0)], ["barrel", Vector3(8.6, 0, 9.4)], ["barrel", Vector3(9.5, 0, 8.0)],
-			["barrel", Vector3(-9.5, 0, 6)], ["barrel", Vector3(9.5, 0, -4)], ["barrel", Vector3(0, 0, 2)], ["barrel", Vector3(-2, 0, -2)], ["barrel", Vector3(3, 0, 6)],
-			["crate", Vector3(9.3, 0, -9.3)], ["crate", Vector3(8.3, 0, -9.3)], ["crate", Vector3(9.3, 0.92, -9.3)], ["crate", Vector3(-9.3, 0, 9.3)]],
-	}, false)
+	# Арены боссов (Длинный дом Ярла, погреб Свена) — ручные сцены, см. MANUAL_SCENES
 
 func _build_room(d: Dictionary, boss: bool) -> void:
 	var root := Node3D.new()

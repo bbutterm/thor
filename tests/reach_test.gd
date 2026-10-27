@@ -178,5 +178,46 @@ func _run() -> void:
 	print("[%s] балконы длинного дома ярла: залез на %d из %d" % ["OK" if ok4 else "FAIL", reached, balconies.size()])
 	if not ok4:
 		fails += 1
+
+	# Новые планировки Мидгарда (GDD 16): от пола на верхний ярус — бегом вперёд с прыжками (залезание на уступ)
+	await _climb("res://rooms/room_07.tscn", Vector3(-1.5, 0.1, 2), -PI / 2, 2.1, "причал: сходни → палуба драккара 2.2 м")
+	await _climb("res://rooms/room_07.tscn", Vector3(-8, 0.1, 9.5), 0.0, 2.9, "причал: склад на берегу 3 м")
+	await _climb("res://rooms/room_08.tscn", Vector3(-3, 0.1, 6), PI / 2, 1.9, "колизей: ступень → терраса 2 м")
+	await _climb("res://rooms/room_08.tscn", Vector3(-11, 2.1, -3), 0.0, 3.9, "колизей: терраса → ложа 4 м")
+	await _climb("res://rooms/room_09.tscn", Vector3(-3, 0.1, 6), PI / 2, 2.9, "деревня: ящик → крыша дома 3 м")
+	await _climb("res://rooms/room_09.tscn", Vector3(-5, 0.1, 1.5), 0.0, 2.9, "деревня: ящик → крыша дома с мостом 3 м")
 	FX.reset_time()
 	get_tree().quit(1 if fails > 0 else 0)
+
+## Встать в точку зала (локальные координаты), смотреть по yaw и бежать вперёд с прыжками, пока не окажемся
+## на высоте >= min_y на земле (залезание на уступ, двойной прыжок).
+func _climb(room: String, local: Vector3, yaw: float, min_y: float, what: String) -> void:
+	var g := await _start(room)
+	g.room.set_physics_process(false)
+	var p := g.player
+	p.global_position = g.room.to_global(local)
+	p.velocity = Vector3.ZERO
+	p.rotation_target = Vector2(0, yaw)
+	await frames(10)
+	var y0 := g.room.global_position.y
+	Input.action_press("move_forward")
+	var top := 0.0
+	var ok := false
+	for i in 240:
+		await get_tree().physics_frame
+		var y := p.global_position.y - y0
+		top = maxf(top, y)
+		if p.is_on_floor() and y >= min_y:
+			ok = true
+			break
+		# Прыжок у стенки: на земле — первый, в воздухе на спаде — второй
+		if i % 20 == 0:
+			Input.action_press("jump")
+		elif i % 20 == 2:
+			Input.action_release("jump")
+	Input.action_release("move_forward")
+	Input.action_release("jump")
+	await frames(5)
+	print("[%s] %s: макс. y=%.2f" % ["OK" if ok else "FAIL", what, top])
+	if not ok:
+		fails += 1
