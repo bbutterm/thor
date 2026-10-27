@@ -17,6 +17,7 @@ var game: Game
 var threshold_ms: float = 50.0
 var _load_frames: Array[int] = []
 var _slam_impacts: int = 0
+var _rooms_completed: int = 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -66,10 +67,22 @@ func _run() -> void:
 	Perf.record_all = true
 	var total := Run.total_rooms()
 	for i in total:
+		if Run.room_index != i:
+			printerr("HITCH FAIL: ожидался зал %d, текущий индекс %d" % [i, Run.room_index])
+			get_tree().quit(1)
+			return
 		await _play_room()
+		if not Run.is_peaceful_room() and not game.room._is_cleared:
+			printerr("HITCH FAIL: зал %d не зачищен за отведённое время" % (i + 1))
+			get_tree().quit(1)
+			return
+		_rooms_completed += 1
 		if i == total - 1:
 			break
-		await _go_next()
+		if not await _go_next():
+			printerr("HITCH FAIL: не удалось перейти из зала %d" % (i + 1))
+			get_tree().quit(1)
+			return
 	await wait(1.0)
 	Perf.record_all = false
 	_report()
@@ -147,7 +160,8 @@ func _play_room() -> void:
 				e.take_hit(e.max_health * 0.12, Vector3(0, 1, -2), "slam")
 			else:
 				e.take_hit(9999, Vector3(0, 3, -5), "melee_finisher")
-	print("  зал зачищен: %s" % room.room_title)
+	if room._is_cleared:
+		print("  зал зачищен: %s" % room.room_title)
 
 ## Страхуем запас рун в тестовой сцене, чтобы независимо от исхода предыдущих действий
 ## увидеть эффекты удара в каждом прогоне. Прыжок и Ctrl отправляются через обычный ввод.
@@ -173,8 +187,9 @@ func _jump_and_slam(p: Player) -> void:
 				break
 			await get_tree().physics_frame
 
-func _go_next() -> void:
+func _go_next() -> bool:
 	var room := game.room
+	var previous_index := Run.room_index
 	await wait(1.2)
 	# Награда зала (трейт, руна, отдых, Локи…) → двери-награды (блок И) → входим в дверь по кругу
 	await DoorHelper.resolve_reward(get_tree(), game)
@@ -191,6 +206,7 @@ func _go_next() -> void:
 		if game.room != room:
 			break
 	_load_frames.append(_now())
+	return game.room != room and Run.room_index == previous_index + 1
 
 func _in_load_window(f: int) -> bool:
 	for lf in _load_frames:
@@ -239,6 +255,7 @@ func _report() -> void:
 	if noise > 0:
 		print("Всплесков без событий > +%d мс: %d (не считаются)" % [int(threshold_ms), noise])
 	_report_pipelines(fr)
+	print("Пройдено залов: %d из %d" % [_rooms_completed, Run.total_rooms()])
 	print("Удары-приземления с реальным приземлением: %d" % _slam_impacts)
 	if _slam_impacts == 0:
 		printerr("HITCH FAIL: удар-приземление ни разу не выполнился")

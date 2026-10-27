@@ -122,7 +122,12 @@ if [[ "$method" == forward_plus ]]; then
 fi
 printf 'method=%s\ndisplay=%s\nproject=%s\ntimeout=%s\nthreshold_ms=%s\nasset_load=%s\nstarted_utc=%s\n' \
     "$method" "$DISPLAY" "$root" "$limit" "$threshold" "$asset_load" "$(date -u +%FT%TZ)" | tee "$out/metadata.txt"
-timeout --signal=TERM --kill-after=30s "$limit" godot --path "$root" --fixed-fps 60 --audio-driver Dummy \
+# Flush progress as it is produced, so an interrupted long run still has a useful log.
+line_buffer=()
+if command -v stdbuf >/dev/null 2>&1; then
+    line_buffer=(stdbuf -oL -eL)
+fi
+timeout --signal=TERM --kill-after=30s "$limit" "${line_buffer[@]}" godot --path "$root" --fixed-fps 60 --audio-driver Dummy \
     --rendering-method "$method" --resolution 320x180 res://tests/hitch_test.tscn -- "${test_args[@]}" \
     2>&1 | head -c 50000000 > "$out/godot.log"
 rc=$?
@@ -130,12 +135,12 @@ if (( rc == 0 )) && ! grep -Fq "медиане, $method)" "$out/godot.log"; then
     echo 'Тест не подтвердил запрошенный метод рендеринга.' >&2
     rc=1
 fi
-if (( rc == 0 )) && { ! grep -Fq 'Удары-приземления с реальным приземлением:' "$out/godot.log" || ! grep -Fq '=== ИТОГ HITCH:' "$out/godot.log"; }; then
+if (( rc == 0 )) && { ! grep -Eq '^Пройдено залов: ([1-9][0-9]*) из \1$' "$out/godot.log" || ! grep -Eq '^Удары-приземления с реальным приземлением: [1-9][0-9]*$' "$out/godot.log" || ! grep -Fq '=== ИТОГ HITCH:' "$out/godot.log"; }; then
     echo 'В журнале нет полного итога сценария.' >&2
     rc=1
 fi
-if (( rc == 0 )) && grep -Eq 'SCRIPT ERROR|Parse Error' "$out/godot.log"; then
-    echo 'В журнале есть ошибка скрипта или разбора.' >&2
+if (( rc == 0 )) && grep -Eq '^ERROR:|SCRIPT ERROR|Parse Error|HITCH FAIL' "$out/godot.log"; then
+    echo 'В журнале есть ошибка Godot, сценария или разбора.' >&2
     rc=1
 fi
 printf 'finished_utc=%s\nexit_code=%d\n' "$(date -u +%FT%TZ)" "$rc" | tee -a "$out/metadata.txt"
