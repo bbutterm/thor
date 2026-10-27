@@ -24,6 +24,8 @@ const U := 22.0
 @export_group("Выпадение")
 ## Есть ли в пуле выпадения с самого начала (остальное — после открытий, см. WeaponHolder.drop_all_weapons)
 @export var in_drop_pool: bool = true
+## Убрано из игры (владелец 27.10: нет хорошей модели) — не выпадает, не продаётся, не стартовое. Вернуть — снять флаг.
+@export var retired: bool = false
 @export var drop_weight: float = 1.0
 
 @export_group("Модель")

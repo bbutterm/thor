@@ -273,7 +273,7 @@ func _run() -> void:
 	if hunter:
 		h.apply_body(hunter)
 		await wait(0.1)
-		check(h.melee.def.id == "knife" and h.ranged and h.ranged.def.id == "crossbow", "Охотник: нож + арбалет")
+		check(h.melee.def.id == "sword" and h.ranged and h.ranged.def.id == "crossbow", "Охотник: меч + арбалет")
 		check(h.active_slot == WeaponHolder.MELEE, "после смены тела в руке мили")
 		h.switch_to(WeaponHolder.RANGED, true)
 		var bolt_mag := h.ranged.mag

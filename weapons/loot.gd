@@ -53,6 +53,8 @@ static func random_def(cls: String = "", exclude: Array = []) -> WeaponDef:
 
 ## В пуле выпадения: стартовое (in_drop_pool) или купленное в «Плане тренировок»; закрытое — нет.
 static func in_run_pool(d: WeaponDef) -> bool:
+	if d.retired:
+		return false
 	var tree := Engine.get_main_loop() as SceneTree
 	var save: Node = tree.root.get_node_or_null("Save") if tree else null
 	if save == null:
