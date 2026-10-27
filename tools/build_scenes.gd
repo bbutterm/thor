@@ -138,6 +138,45 @@ func _wall_row(parent: Node, prefix: String, start: Vector3, length: float, yaw:
 			c.y = start.y + row * 3.12
 			_model(parent, "%s_%d_%d" % [prefix, row, i], QV + piece + ".gltf", c, Vector3(0, yaw, 0), Vector3(sx, 1, 1))
 
+## Дом из модулей Medieval Village MegaKit вокруг блока-дома (коллизию и плоскую крышу даёт сам блок):
+## стены с окнами (высота — по блоку), дверь посередине стороны door ("s"/"n"/"e"/"w"), угловые столбы, труба.
+## style: "Plaster" | "UnevenBrick".
+func _house(parent: Node, name: String, center: Vector3, size: Vector3, door: String, style: String = "Plaster") -> void:
+	const OUT := 0.1
+	var root := Node3D.new()
+	root.name = name
+	parent.add_child(root)
+	var base := center.y - size.y / 2.0
+	var sy := size.y / 3.12
+	var hx := size.x / 2.0
+	var hz := size.z / 2.0
+	# [имя стороны, начало, длина, yaw] — yaw как у _wall_row (0 — лицом к +Z, 90 — к +X …)
+	var sides := [
+		["s", Vector3(center.x - hx, base, center.z + hz + OUT), size.x, 0.0],
+		["n", Vector3(center.x + hx, base, center.z - hz - OUT), size.x, 180.0],
+		["e", Vector3(center.x + hx + OUT, base, center.z + hz), size.z, 90.0],
+		["w", Vector3(center.x - hx - OUT, base, center.z - hz), size.z, -90.0],
+	]
+	for sd in sides:
+		var length: float = sd[2]
+		var yaw: float = sd[3]
+		var n := maxi(1, int(round(length / 2.0)))
+		var sx := length / (2.0 * n)
+		var dir := Vector3(cos(deg_to_rad(yaw)), 0, -sin(deg_to_rad(yaw)))
+		for i in n:
+			var piece := "Wall_%s_Straight" % style
+			if sd[0] == door and i == n / 2:
+				piece = "Wall_%s_Door_Flat" % style
+			elif i % 2 == 1 or n == 1:
+				piece = "Wall_%s_Window_Wide_Flat" % style
+			var c: Vector3 = sd[1] + dir * (2.0 * sx * (i + 0.5))
+			_model(root, "%s_%s_%d" % [name, sd[0], i], QV + piece + ".gltf", c, Vector3(0, yaw, 0), Vector3(sx, sy, 1))
+	for cx in [-1.0, 1.0]:
+		for cz in [-1.0, 1.0]:
+			_model(root, "%s_corner_%d_%d" % [name, int(cx), int(cz)], QV + "Corner_Exterior_Wood.gltf",
+				Vector3(center.x + cx * (hx + OUT), base, center.z + cz * (hz + OUT)), Vector3.ZERO, Vector3(1.4, size.y / 3.0, 1.4))
+	_model(root, name + "_chimney", QV + "Prop_Chimney.gltf", Vector3(center.x + hx - 0.8, base + size.y, center.z - hz + 0.8), Vector3.ZERO, Vector3.ONE * 0.55)
+
 func _box(parent: Node, name: String, center: Vector3, size: Vector3, mat: Material, collide: bool = true) -> Node3D:
 	var root: Node3D
 	if collide:
@@ -794,6 +833,7 @@ func room_defs() -> Array:
 			[Vector3(-5, 0.5, -1.5), Vector3(2, 1, 2), "wood"],
 		],
 		"pillars": [],
+		"houses": [[0, "s", "Plaster"], [1, "s", "UnevenBrick"], [2, "e", "UnevenBrick"], [3, "w", "Plaster"]],
 		"jump_pads": [[Vector3(0, 0, 3), 8.0]],
 		"enemies": [["grunt", Vector3(-3, 0, -9), 0], ["grunt", Vector3(3, 0, -9), 0], ["thrower", Vector3(-9, 3.1, -5), 0], ["fodder", Vector3(0, 0, -1), 0, 6, 1.8],
 			["thrower", Vector3(9, 3.1, -5), 1], ["shaman", Vector3(0, 3.1, -5), 1], ["merc", Vector3(9, 2.6, 6), 1], ["bloated", Vector3(-12, 0, 0), 1], ["fodder", Vector3(4, 0, -1), 1, 6, 1.8],
@@ -956,6 +996,16 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 				mk2.name = "%s%d" % [mname.trim_suffix("s"), k]
 				mk2.position = (v as Array)[k] + Vector3(0, 0.05, 0)
 				grp.add_child(mk2)
+
+	# Дома из модулей MegaKit вокруг блоков: [индекс блока в "blocks", сторона двери, стиль]
+	var houses: Array = d.get("houses", [])
+	if not houses.is_empty():
+		var hnode := Node3D.new()
+		hnode.name = "Houses"
+		root.add_child(hnode)
+		for i in houses.size():
+			var hb: Array = d.blocks[houses[i][0]]
+			_house(hnode, "House%d" % i, hb[0], hb[1], houses[i][1], houses[i][2] if (houses[i] as Array).size() > 2 else "Plaster")
 
 	# Декоративные модели (без коллизии): [путь к сцене, позиция, поворот по Y (град), масштаб]
 	var models: Array = d.get("models", [])

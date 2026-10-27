@@ -16,6 +16,13 @@
 [ext_resource type="PackedScene" path="res://props/crate.tscn" id="14_kg22k"]
 [ext_resource type="PackedScene" path="res://assets/quaternius/props/Torch_Metal.gltf" id="15_1pfuc"]
 [ext_resource type="PackedScene" path="res://assets/quaternius/props/Banner_2.gltf" id="16_bsjnd"]
+[ext_resource type="PackedScene" path="res://assets/quaternius/village/Roof_Log.gltf" id="17_f8j7m"]
+[ext_resource type="PackedScene" path="res://assets/quaternius/props/Chandelier.gltf" id="18_c0xxr"]
+[ext_resource type="PackedScene" path="res://assets/quaternius/village/Prop_Brick1.gltf" id="19_5tywm"]
+[ext_resource type="PackedScene" path="res://assets/quaternius/village/Prop_Brick2.gltf" id="20_hiqls"]
+[ext_resource type="PackedScene" path="res://assets/quaternius/village/Prop_Brick3.gltf" id="21_m7p67"]
+[ext_resource type="PackedScene" path="res://assets/quaternius/village/Prop_Brick4.gltf" id="22_rliy7"]
+[ext_resource type="PackedScene" path="res://assets/quaternius/props/Table_Large.gltf" id="23_kg22k"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_akjbv"]
 size = Vector3(24, 1, 46)
@@ -1551,3 +1558,145 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -26.5)
 light_color = Color(0.45, 0.8, 1, 1)
 light_energy = 2.5
 omni_range = 7.0
+
+[node name="Decor" type="Node3D" parent="." unique_id=1727161941]
+
+[node name="Rafter0" type="Node3D" parent="Decor" unique_id=1918657397 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(-4.371139e-08, 0, 2.15, 0, 1, 0, -1, 0, -9.397949e-08, 0, 1.9, -20)
+
+[node name="Rafter1" type="Node3D" parent="Decor" unique_id=1681547859 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(-4.371139e-08, 0, 2.15, 0, 1, 0, -1, 0, -9.397949e-08, 0, 1.9, -16)
+
+[node name="Rafter2" type="Node3D" parent="Decor" unique_id=914577387 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(-4.371139e-08, 0, 2.15, 0, 1, 0, -1, 0, -9.397949e-08, 0, 1.9, -12)
+
+[node name="Rafter3" type="Node3D" parent="Decor" unique_id=1063468882 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(-4.371139e-08, 0, 2.15, 0, 1, 0, -1, 0, -9.397949e-08, 0, 1.9, -8)
+
+[node name="Rafter4" type="Node3D" parent="Decor" unique_id=1680860638 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(-4.371139e-08, 0, 2.15, 0, 1, 0, -1, 0, -9.397949e-08, 0, 1.9, -4)
+
+[node name="Rafter5" type="Node3D" parent="Decor" unique_id=228189671 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(-4.371139e-08, 0, 2.15, 0, 1, 0, -1, 0, -9.397949e-08, 0, 1.9, 0)
+
+[node name="Rafter6" type="Node3D" parent="Decor" unique_id=632641976 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(-4.371139e-08, 0, 2.15, 0, 1, 0, -1, 0, -9.397949e-08, 0, 1.9, 4)
+
+[node name="Rafter7" type="Node3D" parent="Decor" unique_id=1659635563 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(-4.371139e-08, 0, 2.15, 0, 1, 0, -1, 0, -9.397949e-08, 0, 1.9, 8)
+
+[node name="Rafter8" type="Node3D" parent="Decor" unique_id=1763989555 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(-4.371139e-08, 0, 2.15, 0, 1, 0, -1, 0, -9.397949e-08, 0, 1.9, 12)
+
+[node name="Rafter9" type="Node3D" parent="Decor" unique_id=1542822274 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(-4.371139e-08, 0, 2.15, 0, 1, 0, -1, 0, -9.397949e-08, 0, 1.9, 16)
+
+[node name="Rafter10" type="Node3D" parent="Decor" unique_id=2054570602 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(-4.371139e-08, 0, 2.15, 0, 1, 0, -1, 0, -9.397949e-08, 0, 1.9, 20)
+
+[node name="Ridge" type="Node3D" parent="Decor" unique_id=1666735335 instance=ExtResource("17_f8j7m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 4.15, 0, 2.8, 0)
+
+[node name="Chandelier_-14" type="Node3D" parent="Decor" unique_id=1090998537 instance=ExtResource("18_c0xxr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.4, -14)
+
+[node name="Chandelier_-6" type="Node3D" parent="Decor" unique_id=183082831 instance=ExtResource("18_c0xxr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.4, -6)
+
+[node name="Chandelier_6" type="Node3D" parent="Decor" unique_id=487768379 instance=ExtResource("18_c0xxr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.4, 6)
+
+[node name="Chandelier_14" type="Node3D" parent="Decor" unique_id=948141245 instance=ExtResource("18_c0xxr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.4, 14)
+
+[node name="Hearth" type="Node3D" parent="Decor" unique_id=352749670]
+
+[node name="Stone0" type="Node3D" parent="Decor/Hearth" unique_id=306189566 instance=ExtResource("19_5tywm")]
+transform = Transform3D(0.8790757, 0, -1.3368717, 0, 1.6, 0, 1.3368717, 0, 0.8790757, -1.1, 0.08, -2.4)
+
+[node name="Stone1" type="Node3D" parent="Decor/Hearth" unique_id=1753086591 instance=ExtResource("20_hiqls")]
+transform = Transform3D(0.4406514, 0, -1.5381243, 0, 1.6, 0, 1.5381243, 0, 0.4406514, -1.1, 0.08, -1.8)
+
+[node name="Stone2" type="Node3D" parent="Decor/Hearth" unique_id=1403098866 instance=ExtResource("21_m7p67")]
+transform = Transform3D(-0.5761034, 0, -1.4926838, 0, 1.6, 0, 1.4926838, 0, -0.5761034, -1.1, 0.08, -1.2)
+
+[node name="Stone3" type="Node3D" parent="Decor/Hearth" unique_id=1651132773 instance=ExtResource("22_rliy7")]
+transform = Transform3D(0.7469526, 0, -1.4149424, 0, 1.6, 0, 1.4149424, 0, 0.7469526, -1.1, 0.08, -0.6)
+
+[node name="Stone4" type="Node3D" parent="Decor/Hearth" unique_id=1956687625 instance=ExtResource("19_5tywm")]
+transform = Transform3D(-1.4539, 0, -0.6679632, 0, 1.6, 0, 0.6679632, 0, -1.4539, -1.1, 0.08, 0)
+
+[node name="Stone5" type="Node3D" parent="Decor/Hearth" unique_id=1609653344 instance=ExtResource("20_hiqls")]
+transform = Transform3D(1.5876373, 0, 0.19851434, 0, 1.6, 0, -0.19851434, 0, 1.5876373, -1.1, 0.08, 0.6)
+
+[node name="Stone6" type="Node3D" parent="Decor/Hearth" unique_id=2006757223 instance=ExtResource("21_m7p67")]
+transform = Transform3D(1.5234674, 0, 0.4889247, 0, 1.6, 0, -0.4889247, 0, 1.5234674, -1.1, 0.08, 1.2)
+
+[node name="Stone7" type="Node3D" parent="Decor/Hearth" unique_id=1900975103 instance=ExtResource("22_rliy7")]
+transform = Transform3D(-0.98168576, 0, -1.2634449, 0, 1.6, 0, 1.2634449, 0, -0.98168576, -1.1, 0.08, 1.8)
+
+[node name="Stone8" type="Node3D" parent="Decor/Hearth" unique_id=1581435010 instance=ExtResource("19_5tywm")]
+transform = Transform3D(1.5806328, 0, 0.2481936, 0, 1.6, 0, -0.2481936, 0, 1.5806328, -1.1, 0.08, 2.4)
+
+[node name="Stone9" type="Node3D" parent="Decor/Hearth" unique_id=473177633 instance=ExtResource("20_hiqls")]
+transform = Transform3D(1.3900546, 0, -0.79230577, 0, 1.6, 0, 0.79230577, 0, 1.3900546, 1.1, 0.08, -2.4)
+
+[node name="Stone10" type="Node3D" parent="Decor/Hearth" unique_id=1155531089 instance=ExtResource("21_m7p67")]
+transform = Transform3D(1.5944436, 0, -0.13322847, 0, 1.6, 0, 0.13322847, 0, 1.5944436, 1.1, 0.08, -1.8)
+
+[node name="Stone11" type="Node3D" parent="Decor/Hearth" unique_id=312792096 instance=ExtResource("22_rliy7")]
+transform = Transform3D(-1.1849121, 0, 1.0751667, 0, 1.6, 0, -1.0751667, 0, -1.1849121, 1.1, 0.08, -1.2)
+
+[node name="Stone12" type="Node3D" parent="Decor/Hearth" unique_id=459306366 instance=ExtResource("19_5tywm")]
+transform = Transform3D(-1.4915041, 0, -0.57915086, 0, 1.6, 0, 0.57915086, 0, -1.4915041, 1.1, 0.08, -0.6)
+
+[node name="Stone13" type="Node3D" parent="Decor/Hearth" unique_id=1288790529 instance=ExtResource("20_hiqls")]
+transform = Transform3D(0.7149882, 0, 1.4313601, 0, 1.6, 0, -1.4313601, 0, 0.7149882, 1.1, 0.08, 0)
+
+[node name="Stone14" type="Node3D" parent="Decor/Hearth" unique_id=1300482209 instance=ExtResource("21_m7p67")]
+transform = Transform3D(0.45058823, 0, -1.5352428, 0, 1.6, 0, 1.5352428, 0, 0.45058823, 1.1, 0.08, 0.6)
+
+[node name="Stone15" type="Node3D" parent="Decor/Hearth" unique_id=1666418764 instance=ExtResource("22_rliy7")]
+transform = Transform3D(-1.4289881, 0, -0.71971744, 0, 1.6, 0, 0.71971744, 0, -1.4289881, 1.1, 0.08, 1.2)
+
+[node name="Stone16" type="Node3D" parent="Decor/Hearth" unique_id=2039706858 instance=ExtResource("19_5tywm")]
+transform = Transform3D(-1.5932766, 0, -0.14652537, 0, 1.6, 0, 0.14652537, 0, -1.5932766, 1.1, 0.08, 1.8)
+
+[node name="Stone17" type="Node3D" parent="Decor/Hearth" unique_id=1459742739 instance=ExtResource("20_hiqls")]
+transform = Transform3D(1.3137095, 0, -0.9133277, 0, 1.6, 0, 0.9133277, 0, 1.3137095, 1.1, 0.08, 2.4)
+
+[node name="Stone18" type="Node3D" parent="Decor/Hearth" unique_id=640075314 instance=ExtResource("21_m7p67")]
+transform = Transform3D(-1.5804608, 0, 0.24928644, 0, 1.6, 0, -0.24928644, 0, -1.5804608, -0.9, 0.08, -2.7)
+
+[node name="Stone19" type="Node3D" parent="Decor/Hearth" unique_id=1387398676 instance=ExtResource("22_rliy7")]
+transform = Transform3D(-1.2896355, 0, 0.9470164, 0, 1.6, 0, -0.9470164, 0, -1.2896355, -0.3, 0.08, -2.7)
+
+[node name="Stone20" type="Node3D" parent="Decor/Hearth" unique_id=1742178212 instance=ExtResource("19_5tywm")]
+transform = Transform3D(1.5683941, 0, -0.31644955, 0, 1.6, 0, 0.31644955, 0, 1.5683941, 0.3, 0.08, -2.7)
+
+[node name="Stone21" type="Node3D" parent="Decor/Hearth" unique_id=340491625 instance=ExtResource("20_hiqls")]
+transform = Transform3D(-1.2242198, 0, -1.0301874, 0, 1.6, 0, 1.0301874, 0, -1.2242198, 0.9, 0.08, -2.7)
+
+[node name="Stone22" type="Node3D" parent="Decor/Hearth" unique_id=1833797229 instance=ExtResource("21_m7p67")]
+transform = Transform3D(0.7078952, 0, 1.4348813, 0, 1.6, 0, -1.4348813, 0, 0.7078952, -0.9, 0.08, 2.7)
+
+[node name="Stone23" type="Node3D" parent="Decor/Hearth" unique_id=2125888536 instance=ExtResource("22_rliy7")]
+transform = Transform3D(1.5989164, 0, 0.058878075, 0, 1.6, 0, -0.058878075, 0, 1.5989164, -0.3, 0.08, 2.7)
+
+[node name="Stone24" type="Node3D" parent="Decor/Hearth" unique_id=1635819731 instance=ExtResource("19_5tywm")]
+transform = Transform3D(-0.9545515, 0, -1.2840683, 0, 1.6, 0, 1.2840683, 0, -0.9545515, 0.3, 0.08, 2.7)
+
+[node name="Stone25" type="Node3D" parent="Decor/Hearth" unique_id=901509226 instance=ExtResource("20_hiqls")]
+transform = Transform3D(-0.3424465, 0, -1.5629237, 0, 1.6, 0, 1.5629237, 0, -0.3424465, 0.9, 0.08, 2.7)
+
+[node name="HearthLight" type="OmniLight3D" parent="Decor/Hearth" unique_id=1346130372]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+light_color = Color(1, 0.6, 0.3, 1)
+light_energy = 1.6
+omni_range = 9.0
+
+[node name="Table_-6" type="Node3D" parent="Decor" unique_id=1069360808 instance=ExtResource("23_kg22k")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 19.6)
+
+[node name="Table_6" type="Node3D" parent="Decor" unique_id=1698200725 instance=ExtResource("23_kg22k")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 19.6)
