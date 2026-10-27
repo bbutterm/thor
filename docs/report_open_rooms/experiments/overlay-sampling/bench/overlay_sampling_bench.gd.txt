@@ -1,0 +1,254 @@
+extends Node
+## Старый зал/Н3 и включённое/выключенное чтение белого overlay в одном процессе.
+## 44 анимированных врага, ИИ и физика выключены; это не замер реального боя.
+
+var game: Game
+var baseline: Room
+var animations: Array[AnimationPlayer] = []
+var flat_materials: Array[ShaderMaterial] = []
+var textured_materials: Array[ShaderMaterial] = []
+var material_ids: Dictionary = {}
+var out_dir := "user://overlay_sampling_bench"
+var failed := false
+
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	if not has_meta("runner"):
+		var runner := Node.new()
+		runner.set_script(get_script())
+		runner.set_meta("runner", true)
+		get_tree().root.add_child.call_deferred(runner)
+		return
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		out_dir = args[0]
+	var err := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
+	if err != OK:
+		push_error("Cannot create screenshots directory (%d)" % err)
+		get_tree().quit(1)
+		return
+	_run.call_deferred()
+
+
+func frames(n: int) -> void:
+	for i in n:
+		await get_tree().process_frame
+
+
+func _run() -> void:
+	Run.start_run("berserker")
+	Run.room_order.assign(["res://rooms/room_01.tscn", Run.BOSS_SCENE])
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await frames(40)
+	game = get_tree().current_scene as Game
+	if game == null or game.room == null:
+		push_error("Could not start game and room")
+		get_tree().quit(1)
+		return
+	game.room.set_physics_process(false)
+	game.room._spawn_queue.clear()
+	for e in game.room.alive_enemies().duplicate():
+		e.queue_free()
+	game.room._alive.clear()
+	game.player.input_enabled = false
+	game.player.set_physics_process(false)
+	await frames(5)
+	baseline = (load("res://tests/fixtures/room_01_before_b0.tscn") as PackedScene).instantiate() as Room
+	game.level.add_child(baseline)
+	baseline.visible = false
+	baseline.set_physics_process(false)
+	WorldArt.dress_room(baseline, Run.map)
+	var c := game.player.global_position
+	for i in 44:
+		var a := TAU * i / 44.0
+		var radius := 5.0 + (i % 4) * 1.5
+		var kind := "grunt" if i % 4 == 0 else "fodder"
+		var enemy := game.room.spawn_extra(kind, c + Vector3(cos(a) * radius, 0.05, sin(a) * radius))
+		if enemy == null or enemy._humanoid == null:
+			push_error("Expected a humanoid model on every enemy")
+			get_tree().quit(1)
+			return
+		enemy.health = 1e6
+		enemy.max_health = 1e6
+		enemy.set_physics_process(false)
+		enemy.reparent(game, true)
+		if not enemy._humanoid.play("Zombie_Walk_Fwd_Loop", 0.0, 1.0):
+			push_error("Walking animation missing")
+			get_tree().quit(1)
+			return
+		var ap: AnimationPlayer = enemy._humanoid.anim
+		ap.get_animation(ap.current_animation).loop_mode = Animation.LOOP_LINEAR
+		animations.append(ap)
+		await get_tree().process_frame
+	await frames(25)
+	if get_tree().get_nodes_in_group("enemies").size() != 44:
+		push_error("Expected exactly 44 enemies")
+		get_tree().quit(1)
+		return
+	_collect_materials(game.room)
+	if flat_materials.is_empty() or textured_materials.is_empty():
+		push_error("Expected both textured and non-textured overlay materials")
+		get_tree().quit(1)
+		return
+	print("OVERLAY MATERIALS: white=%d textured=%d; animated enemies=%d" % [flat_materials.size(), textured_materials.size(), animations.size()])
+	await _measure(true, false, "OLD ORIGINAL WARMUP", 15)
+	await _measure(false, false, "N3 ORIGINAL WARMUP", 15)
+	await _measure(false, true, "N3 OMIT WHITE WARMUP", 15)
+	for iteration in 3:
+		await _measure(true, false, "OLD ORIGINAL %d" % (iteration + 1), 45)
+		await _measure(false, false, "N3 ORIGINAL %dA" % (iteration + 1), 45)
+		await _measure(false, true, "N3 OMIT WHITE %d" % (iteration + 1), 45)
+		await _measure(false, false, "N3 ORIGINAL %dB" % (iteration + 1), 45)
+	await _capture_views()
+	await _capture_material_gallery()
+	_select(false)
+	if failed:
+		get_tree().quit(1)
+		return
+	print("OVERLAY SAMPLING BENCH COMPLETE")
+	get_tree().paused = false
+	get_tree().quit(0)
+
+
+func _remember(material: Material) -> void:
+	if not (material is ShaderMaterial):
+		return
+	var m := material as ShaderMaterial
+	if m.shader == null or m.shader.resource_path != "res://shaders/world_surface.gdshader":
+		return
+	if material_ids.has(m.get_instance_id()):
+		return
+	material_ids[m.get_instance_id()] = true
+	if m.get_shader_parameter("overlay_tex") == null:
+		flat_materials.append(m)
+	else:
+		textured_materials.append(m)
+
+
+func _collect_materials(node: Node) -> void:
+	if node is GeometryInstance3D:
+		var geometry := node as GeometryInstance3D
+		_remember(geometry.material_override)
+		_remember(geometry.material_overlay)
+		if geometry.material_override == null and node is MeshInstance3D:
+			var mesh_instance := node as MeshInstance3D
+			if mesh_instance.mesh != null:
+				for i in mesh_instance.mesh.get_surface_count():
+					_remember(mesh_instance.get_active_material(i))
+		elif geometry.material_override == null and node is MultiMeshInstance3D:
+			var multi := (node as MultiMeshInstance3D).multimesh
+			if multi != null and multi.mesh != null:
+				for i in multi.mesh.get_surface_count():
+					_remember(multi.mesh.surface_get_material(i))
+	for child in node.get_children():
+		_collect_materials(child)
+
+
+func _select(optimized: bool) -> void:
+	for m in flat_materials:
+		m.set_shader_parameter("sample_overlay_texture", not optimized)
+	for m in textured_materials:
+		m.set_shader_parameter("sample_overlay_texture", true)
+
+
+func _measure(old: bool, optimized: bool, label: String, count: int) -> void:
+	_select(optimized)
+	game.room.visible = not old
+	baseline.visible = old
+	for ap in animations:
+		ap.seek(0.15, true)
+	await frames(10)
+	var values := PackedFloat32Array()
+	var before := Time.get_ticks_usec()
+	for i in count:
+		await get_tree().process_frame
+		var now := Time.get_ticks_usec()
+		values.append((now - before) / 1000.0)
+		before = now
+	values.sort()
+	var total := 0.0
+	for x in values:
+		total += x
+	print("%s: avg %.2f ms, median %.2f ms, p95 %.2f ms, draw calls %d, enemies %d" % [label, total / count, values[count / 2], values[int(count * 0.95)], int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)), get_tree().get_nodes_in_group("enemies").size()])
+
+
+func _capture_views() -> void:
+	if DisplayServer.get_name() == "headless":
+		push_error("Renderer required for screenshot comparison")
+		failed = true
+		return
+	get_tree().paused = true
+	game.room.visible = true
+	baseline.visible = false
+	var old_yaw := game.player.rotation.y
+	for sample in [0.15, 0.50]:
+		for ap in animations:
+			ap.seek(sample, true)
+		for view in 4:
+			game.player.rotation.y = old_yaw + TAU * float(view) / 4.0
+			for optimized in [false, true]:
+				_select(optimized)
+				await frames(5)
+				await RenderingServer.frame_post_draw
+				var img := get_viewport().get_texture().get_image()
+				var err := img.save_png(out_dir.path_join("pose_%d_view_%d_optimized_%d.png" % [int(sample * 100), view, int(optimized)]))
+				if err != OK:
+					push_error("Could not save scene screenshot (%d)" % err)
+					failed = true
+	game.player.rotation.y = old_yaw
+
+
+func _capture_material_gallery() -> void:
+	# Дополнительно показываем все 9 материалов, а не только попавшие в кадры зала.
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(960, 540)
+	viewport.own_world_3d = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(viewport)
+	var stage := Node3D.new()
+	viewport.add_child(stage)
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.08, 0.09, 0.1)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color.WHITE
+	env.ambient_light_energy = 0.8
+	var world := WorldEnvironment.new()
+	world.environment = env
+	stage.add_child(world)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-45, -30, 0)
+	sun.light_energy = 1.0
+	stage.add_child(sun)
+	var camera := Camera3D.new()
+	camera.position = Vector3(0, 0, 18)
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	camera.size = 12.0
+	stage.add_child(camera)
+	camera.current = true
+	for i in RoomDress.SURFACES.size():
+		var material := RoomDress.material(RoomDress.SURFACES[i]) as ShaderMaterial
+		if material == null:
+			push_error("Missing gallery material %s" % RoomDress.SURFACES[i])
+			failed = true
+			continue
+		_remember(material)
+		var mi := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = Vector3(3.0, 3.0, 1.0)
+		mi.mesh = box
+		mi.material_override = material
+		mi.position = Vector3(float(i % 3 - 1) * 4.2, float(1 - floori(float(i) / 3.0)) * 3.8, 0)
+		mi.rotation_degrees = Vector3(-12, 20, 0)
+		stage.add_child(mi)
+	for optimized in [false, true]:
+		_select(optimized)
+		await frames(8)
+		await RenderingServer.frame_post_draw
+		var image := viewport.get_texture().get_image()
+		var err := image.save_png(out_dir.path_join("gallery_optimized_%d.png" % int(optimized)))
+		if err != OK:
+			push_error("Could not save gallery (%d)" % err)
+			failed = true
+	viewport.queue_free()
