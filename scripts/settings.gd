@@ -39,7 +39,7 @@ const DEFAULTS := {
 	"video": {"fullscreen": false, "vsync": true, "max_fps": 0, "fov": 85.0, "shake": 1.0, "head_bob": true, "ui_scale": 1.0},
 	"hud": {"crosshair": "dot", "crosshair_size": 1.0, "crosshair_alpha": 0.85, "crosshair_color": "white", "offscreen": true, "slam_meter": true},
 	"text": {"text_scale": 1.0, "typing_speed": 1.0, "language": "ru"},
-	"access": {"colorblind": "off", "aim_assist": false, "slam_slowmo": false},
+	"access": {"colorblind": "off", "aim_assist": false, "slam_slowmo": false, "catch_assist": true},
 	"comic": {"enabled": true, "scale": 1.0, "page": true, "boss_card": true},
 }
 
@@ -200,6 +200,10 @@ static func aim_assist() -> bool:
 
 static func slam_slowmo() -> bool:
 	return bool(get_value("access", "slam_slowmo"))
+
+## Подсказка идеального хвата Мьёльнира — кольца у прицела (ui/catch_assist.gd)
+static func catch_assist() -> bool:
+	return bool(get_value("access", "catch_assist"))
 
 static func crosshair_color() -> Color:
 	var c: Color = CROSSHAIR_COLORS.get(str(get_value("hud", "crosshair_color")), Color.WHITE)

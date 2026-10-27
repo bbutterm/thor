@@ -511,3 +511,13 @@ HUD (`ui/style_hud.gd`): `bar_width` 340, `caption_height` 58, `burst_size` 210�
 - **Ренж:** `fire_kick_per_deg` 0.55 и `fire_tilt_per_deg` 75 на 1° `recoil_kick_deg` оружия (пределы `fire_kick_max` 2.2, `fire_tilt_max` 300; тяжёлое ещё и возвращается медленнее), перезарядка `reload_low_pos` (−0.1, −0.07, 0.02) / `reload_low_rot` (8, 22, 48) + толчок «магазин» `reload_slap` 0.7, `gun_view_scale` 1.4 (огнестрел крупнее в кулаке Тора).
 - **Свитч:** `switch_down_pos` (0.05, −0.55, 0.2), `switch_down_rot` (−45, 0, 0); время — `WeaponHolder.switch_time`.
 - **Берсерк:** `berserk_tremor` 0.9°, `tremor_freq` 22.
+
+## Подсказка идеального хвата (`ui/catch_assist.gd`, `MjolnirHand`)
+| Число | Значение | Что делает |
+|---|---|---|
+| `CatchAssist.lead_time` | 0.8 с | за сколько до поимки появляется сходящееся кольцо |
+| `CatchAssist.target_radius` | 34 px | целевое кольцо вокруг прицела (при 720p) |
+| `CatchAssist.px_per_second` | 150 px | насколько шире кольцо за каждую секунду до поимки |
+| `CatchAssist.window_pulse_hz` | 9 Гц | пульс золотого кольца в окне хвата |
+| `CatchAssist.feedback_time` | 0.7 с | сколько висит «ИДЕАЛЬНО!/РАНО/ПОЗДНО» |
+| `MjolnirHand.catch_feedback_range` | 0.6 с | промах дальше этого — обычное нажатие, без «РАНО/ПОЗДНО» |

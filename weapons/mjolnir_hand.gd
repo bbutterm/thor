@@ -7,6 +7,8 @@ class_name MjolnirHand
 
 signal state_changed(in_hand: bool)
 signal perfect_catch
+## Итог попытки хвата для подсказки (ui/catch_assist.gd): &"perfect", &"early" (нажал раньше окна), &"late" (позже); offset — на сколько секунд
+signal catch_timing(result: StringName, offset: float)
 signal traits_changed
 
 @export_group("Бросок")
@@ -35,6 +37,8 @@ signal traits_changed
 ## Окно (с) до и после поимки, в которое надо нажать ПКМ
 @export var perfect_window: float = 0.15
 @export var perfect_damage_mult: float = 2.0
+## Промах по окну хвата не дальше этого (с) — подсказка покажет «РАНО»/«ПОЗДНО»; дальше нажатие считается обычным
+@export var catch_feedback_range: float = 0.6
 
 @export_group("Цепная молния")
 ## Сколько врагов задевает молния от попадания без трейтов (0 — нет; трейт «Цепная молния» добавляет)
@@ -111,6 +115,9 @@ func request_throw_or_recall() -> void:
 		# ПКМ сразу после поимки — тоже идеальный хват (и сразу усиленный бросок)
 		if _perfect_open and now - _caught_time <= perfect_window:
 			_grant_perfect()
+			catch_timing.emit(&"perfect", now - _caught_time)
+		elif _perfect_open and now - _caught_time <= catch_feedback_range:
+			catch_timing.emit(&"late", now - _caught_time)
 		_perfect_open = false
 		throw_hammer()
 	elif projectile and is_instance_valid(projectile):
@@ -151,6 +158,9 @@ func on_caught() -> void:
 	if perfect:
 		_perfect_open = false
 		_grant_perfect()
+		catch_timing.emit(&"perfect", _recall_press_time - now)
+	elif now - _recall_press_time <= catch_feedback_range:
+		catch_timing.emit(&"early", _recall_press_time - now)
 	_recall_press_time = -10.0
 	_anim_catch(perfect)
 	player.camera_fx.add_trauma(catch_shake)
@@ -287,6 +297,13 @@ func _grant_perfect() -> void:
 
 func current_damage() -> float:
 	return base_damage * damage_mult
+
+## Сколько ещё открыто окно хвата после поимки (с), −1 — закрыто. Для подсказки хвата.
+func perfect_window_left() -> float:
+	if not in_hand or not _perfect_open:
+		return -1.0
+	var left := perfect_window - (_now() - _caught_time)
+	return left if left >= 0.0 else -1.0
 
 func hand_point() -> Vector3:
 	return player.get_aim_origin() + player.global_transform.basis.x * -0.4 + Vector3(0, -0.3, 0)

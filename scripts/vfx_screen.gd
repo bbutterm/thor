@@ -99,6 +99,8 @@ func _ready() -> void:
 		sp.visible = false
 		add_child(sp)
 		_catch.append(sp)
+	if player:
+		CatchAssist.attach(self, player)
 	if player and player.style:
 		_rage = player.style
 		_rage.berserk_started.connect(func() -> void: _rage_flash = rage_start_flash)

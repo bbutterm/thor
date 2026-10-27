@@ -349,6 +349,7 @@ func _build_access(page: Control) -> void:
 	_header(page, tr("ПОМОЩЬ (облегчённый режим, без штрафа к Славе)"))
 	_check(page, tr("Помощь в прицеливании (ренж)"), "access", "aim_assist")
 	_check(page, tr("Замедление времени при ударе-приземлении"), "access", "slam_slowmo")
+	_check(page, tr("Подсказка идеального хвата (кольца у прицела)"), "access", "catch_assist")
 
 # --- Переназначение клавиш ---
 

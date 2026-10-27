@@ -272,6 +272,34 @@ func _step_return(delta: float) -> void:
 	_sweep_hits(from, to)
 	global_position = to
 
+## Сколько секунд до поимки (−1 — молот не летит к руке). Для подсказки хвата (ui/catch_assist.gd).
+## Обычный возврат прокручивается вперёд теми же шагами, что _step_return (дуга разворота учтена, рука — на месте);
+## если возвратом управляет трейт — оценка по прямой с текущей скоростью.
+func catch_eta() -> float:
+	if state != State.RETURN or _caught or hand == null or not is_instance_valid(hand):
+		return -1.0
+	var target := hand.hand_point()
+	var speed := hand.return_speed * hand.return_speed_mult
+	if _recall_controller != null:
+		var v := maxf(vel.length(), 0.1)
+		return maxf((target - global_position).length() - 1.3, 0.0) / v
+	var dt := 1.0 / 60.0
+	var pos := global_position
+	var v2 := vel
+	var t := return_time
+	var eta := 0.0
+	for i in 240:
+		var to_t := target - pos
+		var dist := to_t.length()
+		if dist < maxf(1.3, speed * dt * 1.5) or t > 4.0:
+			return eta
+		var steer := hand.return_turn_accel / speed * (1.0 + t * 4.0)
+		v2 = v2.lerp(to_t / dist * speed, clampf(1.0 - exp(-steer * dt), 0.0, 1.0)).normalized() * speed
+		pos += v2 * dt
+		t += dt
+		eta += dt
+	return eta
+
 ## Молот в руке. Вызывать один раз (обработчики, взявшие возврат, — тоже через него).
 func catch() -> void:
 	if _caught:
