@@ -11,6 +11,7 @@ const DIRS := [
 	"res://assets/quaternius/characters/outfits/",
 	"res://assets/quaternius/characters/parts/",
 	"res://assets/quaternius/weapons/",
+	"res://assets/painted/rpg_items/",
 	"res://assets/quaternius/guns/",
 	"res://assets/quaternius/props/",
 	"res://weapons/defs/",
