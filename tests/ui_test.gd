@@ -85,6 +85,23 @@ func _test_skin() -> void:
 	check(UISkin.weapon_icon("rifle") != null and UISkin.weapon_icon("axe") != null and UISkin.trait_icon("fire_trail") != null
 		and UISkin.rune_category_icon("defense") != null and UISkin.rune_category_icon("mjolnir") != null,
 		"иконки оружия, трейтов и категорий рун находятся по id")
+	check(UISkin.trait_icon("sling") != null and UISkin.trait_icon("wind") != null
+		and UISkin.path("trait_sling") == "res://sprites/ui/icons/trait_sling.webp"
+		and UISkin.path("trait_wind") == "res://sprites/ui/icons/trait_wind.webp",
+		"у Пращи и Ветра есть иконки для карточки и HUD")
+	var sling := load("res://weapons/mjolnir_traits/sling.tres") as MjolnirTrait
+	var traits_hud := MjolnirTraitsHud.new()
+	var hud_icon := traits_hud._icon(sling, 1)
+	check(hud_icon is HudIcon and (hud_icon as HudIcon).base == UISkin.trait_icon("sling"),
+		"Праща показана картинкой на HUD")
+	hud_icon.free()
+	traits_hud.free()
+	var sling_card := SkinCard.make("card_trait", 300.0, sling.color)
+	sling_card.set_icon(UISkin.trait_icon("sling"), "", sling.color)
+	check(sling_card.icon_box.get_child_count() == 1 and sling_card.icon_box.get_child(0) is TextureRect
+		and (sling_card.icon_box.get_child(0) as TextureRect).texture == UISkin.trait_icon("sling"),
+		"Праща показана картинкой на карточке")
+	sling_card.free()
 	var b := UIStyle.button("Тест")
 	check(b.get_theme_stylebox("normal") is SkinStyleBox and b.get_theme_stylebox("disabled") is SkinStyleBox, "UIStyle.button — на скине")
 	b.free()
