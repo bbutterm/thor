@@ -35,8 +35,27 @@ def load(paths):
             for line in f:
                 line = line.strip()
                 if line:
-                    out.append(json.loads(line))
+                    out.append(_fix_falls(json.loads(line)))
     return out
+
+
+def _fix_falls(r):
+    """Падение в пропасть — урон 9999: в таблицах считаем его как потерю оставшегося HP."""
+    for rm in r.get("rooms", []):
+        src = rm.get("src", {})
+        for k, v in list(src.items()):
+            if v >= 9000:
+                real = max(0.0, min(rm.get("hp_max", 100.0), v - 9999 + rm.get("hp_max", 100.0)))
+                real = min(real, rm.get("hp_start", real))
+                src["fall"] = src.get("fall", 0.0) + real
+                if k != "fall":
+                    del src[k]
+                else:
+                    src["fall"] = real
+                rm["dmg"] = rm["dmg"] - v + real
+    if r.get("dmg_total", 0) >= 9000:
+        r["dmg_total"] = sum(rm.get("dmg", 0) for rm in r.get("rooms", []))
+    return r
 
 
 def mean(xs):

@@ -40,13 +40,13 @@ const TRIALS_DIR := "res://run/trials/"
 @export var rooms_per_run: int = 7
 @export var glory_per_kill: int = 3
 @export var glory_combo_finisher_bonus: int = 0
-@export var glory_multikill_bonus: int = 1
+@export var glory_multikill_bonus: int = 0
 @export var glory_wall_splat_bonus: int = 1
-@export var glory_room_clear: int = 5
+@export var glory_room_clear: int = 2
 @export var glory_boss_kill: int = 150
 ## Слава за элиту и бонус за серию из 10 убийств (GDD 15.2)
-@export var glory_elite_kill: int = 15
-@export var glory_streak_bonus: int = 10
+@export var glory_elite_kill: int = 4
+@export var glory_streak_bonus: int = 2
 @export var multikill_window: float = 0.6
 @export_group("Мини-боссы и трейты Мьёльнира")
 ## После каких залов (индекс с 0) в зале появляется мини-босс — последней волной; за него выбор трейта
@@ -58,7 +58,7 @@ const TRIALS_DIR := "res://run/trials/"
 ## выходит последней волной обычного зала
 @export var miniboss_arena: String = "res://rooms/sven_arena.tscn"
 ## Множители Славы за убийство: добил мили / ренжем (GDD 15.2: ×1.5 / ×0.5)
-@export var glory_melee_kill_mult: float = 1.5
+@export var glory_melee_kill_mult: float = 1.4
 @export var glory_ranged_kill_mult: float = 0.5
 
 var body: BodyDef

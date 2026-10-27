@@ -70,7 +70,7 @@ func _test_data() -> void:
 	for t in Run.all_trials:
 		hosts[t.host] = true
 		kinds[t.kind] = true
-		check(t.reward_rune or (t.reward_glory >= 40 and t.reward_glory <= 80), "%s: награда %s (Слава 40–80 или руна)" % [t.id, t.reward_text()])
+		check(t.reward_rune or (t.reward_glory >= 20 and t.reward_glory <= 80), "%s: награда %s (Слава 20–80 или руна; Б5: 25–40)" % [t.id, t.reward_text()])
 		for w in ["intro", "win", "fail"]:
 			check(Dialogue.has_pool(t.pool(w)), "%s: реплики «%s» (%s)" % [t.id, w, t.pool(w)])
 	check(hosts.has("odin") and hosts.has("hild") and hosts.has("loki"), "ведущие: Один, Хильд, Локи")

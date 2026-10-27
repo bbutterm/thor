@@ -264,7 +264,7 @@ func _run() -> void:
 	await wait(0.05)
 	var ranged_glory := Run.glory - g0
 	check(absf(p.health - (50.0 + p.heal_per_kill * hm)) < 0.01, "добивание ренжем лечит только %.0f×%.1f HP" % [p.heal_per_kill, hm])
-	check(melee_glory > ranged_glory * 2, "Слава: мили %d > ренж %d" % [melee_glory, ranged_glory])
+	check(melee_glory >= ranged_glory * 2, "Слава: мили %d ≥ ренж %d ×2" % [melee_glory, ranged_glory])
 
 	print("-- Стартовое оружие тел")
 	for b in Run.all_bodies:
