@@ -107,13 +107,69 @@ static func axe(layer: int = 1) -> Node3D:
 	_add(r, _box(Vector3(0.06, 0.08, 0.08)), Vector3(0, 0.78, 0.05), mat("iron"), Vector3.ZERO, layer)
 	return r
 
-## Мьёльнир: короткая рукоять в обмотке, восьмигранный боёк с бандажами и рунной полосой.
+## Мьёльнир: модель владельца (assets/mjolnir/, FBX + PBR-текстуры), иначе рисованный p_hammer, иначе процедурный.
 static func hammer(layer: int = 1) -> Node3D:
+	if ResourceLoader.exists(MJOLNIR_FBX):
+		return mjolnir(layer)
 	if ResourceLoader.exists(PW + str(PAINTED["p_hammer"][0])):
 		var p := painted("p_hammer", layer)
 		p.name = "Mjolnir"
 		return p
 	return hammer_procedural(layer)
+
+const MJOLNIR_DIR := "res://assets/mjolnir/"
+const MJOLNIR_FBX := MJOLNIR_DIR + "Mjolnir_LP.fbx"
+## Длина в игре (м) и доля длины от низа рукояти до точки хвата. В файле рукоять вдоль -Y, боёк вверху, вдоль X.
+const MJOLNIR_LENGTH := 0.62
+const MJOLNIR_GRIP := 0.27
+static var _mjolnir_mat: StandardMaterial3D
+
+## Общий материал Мьёльнира (правило фризов: один на все копии — в руке, в полёте, у клонов «Двух молотов»).
+static func mjolnir_material() -> StandardMaterial3D:
+	if _mjolnir_mat:
+		return _mjolnir_mat
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load(MJOLNIR_DIR + "mjolnir_albedo.png")
+	m.normal_enabled = true
+	m.normal_texture = load(MJOLNIR_DIR + "mjolnir_normal.png")
+	m.roughness_texture = load(MJOLNIR_DIR + "mjolnir_roughness.png")
+	m.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
+	m.roughness = 1.0
+	m.metallic_texture = load(MJOLNIR_DIR + "mjolnir_metallic.png")
+	m.metallic_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
+	# Отражать нечего (у рук свой мир без неба) — полный металл выходит чёрным, поэтому металл приглушён
+	m.metallic = 0.55
+	m.metallic_specular = 0.6
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	_mjolnir_mat = m
+	return m
+
+## Мьёльнир по соглашению пивота: хват в (0,0,0), рукоять вдоль +Y, боёк вытянут вдоль Z.
+static func mjolnir(layer: int = 1) -> Node3D:
+	var r := Node3D.new()
+	r.name = "Mjolnir"
+	var inst := (load(MJOLNIR_FBX) as PackedScene).instantiate() as Node3D
+	r.add_child(inst)
+	var ab := AABB()
+	var first := true
+	for mi in inst.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		m.layers = layer
+		if layer == 2:
+			m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		for sidx in m.mesh.get_surface_count():
+			m.set_surface_override_material(sidx, mjolnir_material())
+		var a := m.transform * m.get_aabb()
+		ab = a if first else ab.merge(a)
+		first = false
+	if first:
+		return r
+	# X (длина бойка) → Z, Y (рукоять) остаётся вверх
+	var b := Basis(Vector3.UP, deg_to_rad(90.0))
+	var s: float = MJOLNIR_LENGTH / ab.size.y
+	var grip := Vector3(ab.get_center().x, ab.position.y + MJOLNIR_GRIP * ab.size.y, ab.get_center().z)
+	inst.transform = Transform3D(b.scaled(Vector3.ONE * s), -(b * grip) * s)
+	return r
 
 static func hammer_procedural(layer: int = 1) -> Node3D:
 	var r := Node3D.new()
