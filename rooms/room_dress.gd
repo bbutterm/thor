@@ -24,7 +24,7 @@ const MESHES := {
 	"brick_4": [QV + "Prop_Brick4.gltf", "surface_rock"],
 	"kerb_1": [QV + "Prop_ExteriorBorder_Straight1.gltf", "rocktrim"],
 	"kerb_2": [QV + "Prop_ExteriorBorder_Straight2.gltf", "rocktrim"],
-	"column": [QV + "Corner_ExteriorWide_Brick.gltf", "rocktrim"],
+	"pilaster": ["", "surface_pillar"],
 	"post": [QV + "Corner_Exterior_Wood.gltf", "woodtrim"],
 	"beam": [QV + "HoleCover_Straight.gltf", "woodtrim"],
 	"support": [QV + "Prop_Support.gltf", "woodtrim"],

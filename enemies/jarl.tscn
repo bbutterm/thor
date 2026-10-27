@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" path="res://enemies/bosses/jarl.gd" id="1_u8pk0"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_76ela"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_u8pk0"]
 radius = 0.945
 height = 3.78
 
-[node name="Jarl" type="CharacterBody3D" unique_id=348306364]
+[node name="Jarl" type="CharacterBody3D" unique_id=40353211]
 collision_layer = 4
 collision_mask = 15
 floor_snap_length = 0.3
@@ -39,6 +39,6 @@ anim_attack = "Sword_Regular_C"
 anim_attack_hit_at = 0.35
 anim_slam = "Sword_Regular_C"
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=578018397]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=99130756]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.89, 0)
-shape = SubResource("CapsuleShape3D_76ela")
+shape = SubResource("CapsuleShape3D_u8pk0")

@@ -21,27 +21,27 @@ ambient_light_color = Color(0.85, 0.78, 0.7, 1)
 ambient_light_energy = 0.9
 tonemap_mode = 2
 
-[node name="Player" type="CharacterBody3D" unique_id=971422199]
+[node name="Player" type="CharacterBody3D" unique_id=1613954107]
 collision_layer = 2
 collision_mask = 13
 floor_max_angle = 0.87266463
 floor_snap_length = 0.35
 script = ExtResource("1_boad6")
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=1476598012]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=1747717031]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_kb6p2")
 
-[node name="Head" type="Node3D" parent="." unique_id=766395826]
+[node name="Head" type="Node3D" parent="." unique_id=565023484]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 
-[node name="Camera" type="Camera3D" parent="Head" unique_id=1443286509]
+[node name="Camera" type="Camera3D" parent="Head" unique_id=109623357]
 cull_mask = 1048573
 current = true
 fov = 85.0
 script = ExtResource("2_rgyib")
 
-[node name="AxeHitbox" type="ShapeCast3D" parent="Head/Camera" unique_id=1220932549]
+[node name="AxeHitbox" type="ShapeCast3D" parent="Head/Camera" unique_id=551482429]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, -0.9)
 enabled = false
 shape = SubResource("BoxShape3D_wodsf")
@@ -50,14 +50,14 @@ max_results = 16
 collision_mask = 92
 collide_with_areas = true
 
-[node name="ViewmodelContainer" type="SubViewportContainer" parent="Head/Camera" unique_id=1550183179]
+[node name="ViewmodelContainer" type="SubViewportContainer" parent="Head/Camera" unique_id=1936469854]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="Head/Camera/ViewmodelContainer" unique_id=1413369117]
+[node name="SubViewport" type="SubViewport" parent="Head/Camera/ViewmodelContainer" unique_id=28639484]
 own_world_3d = true
 transparent_bg = true
 handle_input_locally = false
@@ -65,28 +65,28 @@ msaa_3d = 1
 size = Vector2i(1280, 720)
 render_target_update_mode = 4
 
-[node name="ViewmodelEnvironment" type="WorldEnvironment" parent="Head/Camera/ViewmodelContainer/SubViewport" unique_id=608939612]
+[node name="ViewmodelEnvironment" type="WorldEnvironment" parent="Head/Camera/ViewmodelContainer/SubViewport" unique_id=1894343093]
 environment = SubResource("Environment_32hag")
 
-[node name="ViewmodelKeyLight" type="DirectionalLight3D" parent="Head/Camera/ViewmodelContainer/SubViewport" unique_id=1583837051]
+[node name="ViewmodelKeyLight" type="DirectionalLight3D" parent="Head/Camera/ViewmodelContainer/SubViewport" unique_id=960631380]
 transform = Transform3D(0.8660254, -0.28678823, 0.40957603, 0, 0.81915206, 0.57357645, -0.5, -0.49673176, 0.7094065, 0, 0, 0)
 light_color = Color(1, 0.9, 0.8, 1)
 light_energy = 1.1
 
-[node name="ViewCam" type="Camera3D" parent="Head/Camera/ViewmodelContainer/SubViewport" unique_id=459018091]
+[node name="ViewCam" type="Camera3D" parent="Head/Camera/ViewmodelContainer/SubViewport" unique_id=425964393]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -500, 0)
 cull_mask = 2
 fov = 60.0
 
-[node name="HandLight" type="OmniLight3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=640418140]
+[node name="HandLight" type="OmniLight3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=76112998]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.6, 0.6)
 light_energy = 1.6
 light_cull_mask = 2
 
-[node name="AxePivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=1049609364]
+[node name="AxePivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=2124697764]
 transform = Transform3D(0.68, 0, 0, 0, 0.68, 0, 0, 0, 0.68, 0, 0, 0)
 
-[node name="Hand" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=466422913]
+[node name="Hand" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot" unique_id=1168409967]
 script = ExtResource("3_hg6s5")
 parts = PackedStringArray("parts/Male_Ranger_Arms.gltf")
 weapon_kind = "q_axe"
@@ -94,31 +94,31 @@ weapon_offset = Vector3(0, -0.22, 0)
 weapon_rotation = Vector3(0, 90, 0)
 weapon_scale = 1.25
 
-[node name="HammerPivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=116370348]
+[node name="HammerPivot" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam" unique_id=633894648]
 transform = Transform3D(0.68, 0, 0, 0, 0.68, 0, 0, 0, 0.68, 0, 0, 0)
 
-[node name="Hand" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=886658585]
+[node name="Hand" type="Node3D" parent="Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot" unique_id=433391047]
 script = ExtResource("3_hg6s5")
 side = "left"
 parts = PackedStringArray("parts/Male_Ranger_Arms.gltf")
 weapon_kind = "hammer"
 weapon_offset = Vector3(0, -0.06, 0)
 
-[node name="Axe" type="Node" parent="." unique_id=929802207]
+[node name="Axe" type="Node" parent="." unique_id=167947400]
 script = ExtResource("4_8t03j")
 pivot_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot")
 hitbox_path = NodePath("../Head/Camera/AxeHitbox")
 hand_mesh_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/AxePivot/Hand")
 
-[node name="Mjolnir" type="Node" parent="." unique_id=1568205281]
+[node name="Mjolnir" type="Node" parent="." unique_id=301996149]
 script = ExtResource("5_2ieo8")
 pivot_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot")
 hand_mesh_path = NodePath("../Head/Camera/ViewmodelContainer/SubViewport/ViewCam/HammerPivot/Hand")
 
-[node name="Weapons" type="Node" parent="." unique_id=367762953]
+[node name="Weapons" type="Node" parent="." unique_id=116561162]
 script = ExtResource("6_ebec5")
 
-[node name="Footsteps" type="AudioStreamPlayer" parent="." unique_id=201975019]
+[node name="Footsteps" type="AudioStreamPlayer" parent="." unique_id=719538467]
 stream = ExtResource("7_yllr7")
 volume_db = -8.0
 autoplay = true

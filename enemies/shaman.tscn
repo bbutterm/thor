@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" path="res://enemies/enemy.gd" id="1_hlytg"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8gspe"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hlytg"]
 radius = 0.45
 height = 1.8
 
-[node name="Shaman" type="CharacterBody3D" unique_id=1526498310]
+[node name="Shaman" type="CharacterBody3D" unique_id=155258490]
 collision_layer = 4
 collision_mask = 15
 floor_snap_length = 0.3
@@ -34,6 +34,6 @@ anim_attack = "Spell_Simple_Shoot"
 anim_attack_hit_at = 0.6
 anim_hit = "Hit_Head"
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=742888984]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=2142058692]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-shape = SubResource("CapsuleShape3D_8gspe")
+shape = SubResource("CapsuleShape3D_hlytg")

@@ -31,7 +31,7 @@ height = 0.02
 radial_segments = 16
 rings = 1
 
-[node name="BarrelExplosive" type="RigidBody3D" unique_id=201916205 groups=["props"]]
+[node name="BarrelExplosive" type="RigidBody3D" unique_id=1428823424 groups=["props"]]
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
@@ -42,19 +42,19 @@ burn_time = 1.2
 loot = "none"
 explosive = true
 
-[node name="Shape" type="CollisionShape3D" parent="." unique_id=2031956064]
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1466039549]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("CylinderShape3D_qg2xe")
 
-[node name="Model" type="Node3D" parent="." unique_id=924907182 instance=ExtResource("2_t6yuf")]
+[node name="Model" type="Node3D" parent="." unique_id=1212862872 instance=ExtResource("2_t6yuf")]
 transform = Transform3D(1.15, 0, 0, 0, 1.12, 0, 0, 0, 1.15, 0, 0, 0)
 
-[node name="Mark" type="MeshInstance3D" parent="." unique_id=1124903060]
+[node name="Mark" type="MeshInstance3D" parent="." unique_id=1050917971]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
 material_override = SubResource("StandardMaterial3D_t6yuf")
 mesh = SubResource("CylinderMesh_8eocm")
 
-[node name="MarkTop" type="MeshInstance3D" parent="." unique_id=1923098237]
+[node name="MarkTop" type="MeshInstance3D" parent="." unique_id=1104342945]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.01, 0)
 material_override = SubResource("StandardMaterial3D_t6yuf")
 mesh = SubResource("CylinderMesh_377l6")

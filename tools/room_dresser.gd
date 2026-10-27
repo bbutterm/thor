@@ -188,6 +188,18 @@ static func _procedural(key: String) -> Mesh:
 			_cyl_band(st, 0.0, 1.0, 1.0, 1.0, 7, Color(0.8, 0.8, 0.8), Color.WHITE)
 			_cyl_band(st, 1.0, 1.3, 1.0, 0.05, 7, Color.WHITE, Color.WHITE)
 			return st.commit()
+		"pilaster":
+			# Колонна у стены/в углу: 12 граней, база и капитель шире (≈ 150 треугольников вместо 2.9 тыс.
+			# у Corner_ExteriorWide_Brick — та дорого стоила на каждом факеле в GL Compatibility)
+			var st := _new_st()
+			var dark := Color(0.6, 0.6, 0.6)
+			_cyl_band(st, 0.0, 0.25, 0.56, 0.56, 12, dark, dark)
+			_cyl_band(st, 0.25, 0.32, 0.56, 0.47, 12, dark, Color(0.8, 0.8, 0.8))
+			_cyl_band(st, 0.32, 0.9, 0.47, 0.44, 12, Color(0.8, 0.8, 0.8), Color.WHITE)
+			_cyl_band(st, 0.9, 0.95, 0.44, 0.52, 12, Color.WHITE, Color.WHITE)
+			_cyl_band(st, 0.95, 1.0, 0.52, 0.52, 12, Color.WHITE, Color.WHITE)
+			_disc(st, 1.0, 0.52, 12, Color.WHITE)
+			return st.commit()
 		"log":
 			# Бревно вдоль X: r = 1, длина 1 (от −0.5 до 0.5)
 			var st := _new_st()
@@ -277,6 +289,8 @@ var _pillars: Array = []
 ## Точки, рядом с которыми не кладём обломки и декали: [точка, радиус]
 var _avoid: Array = []
 var _mats: Dictionary = {}
+## Сторона клетки, на которые режутся MultiMesh деталей, м (даль — крупнее)
+var chunk_size: float = 9.0
 
 func _init(seed_: int) -> void:
 	rng.seed = seed_
@@ -412,21 +426,35 @@ func _flush() -> void:
 	node.name = "Scatter"
 	dress.add_child(node)
 	for key in _mm:
-		var list: Array = _mm[key]
-		if list.is_empty():
+		var all: Array = _mm[key]
+		if all.is_empty():
 			continue
-		# Буфер MultiMesh в headless не сохраняется — DressScatter собирает его при загрузке из xforms
-		var mmi := DressScatter.new()
-		mmi.name = key.to_pascal_case()
-		mmi.mesh = load(MESH_DIR + key + ".res") as Mesh
-		mmi.xforms = DressScatter.pack(list)
-		mmi.material_override = _mat(MESHES[key][1])
-		mmi.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
-		# Мелочь без теней (тени — 4 прохода каскадов на каждый вид)
-		if key in ["grime", "brick_1", "brick_2", "brick_3", "brick_4", "tile", "rock_1", "rock_2", "rock_3", "rock_4", "rock_5"]:
-			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		node.add_child(mmi)
+		# Куски по клеткам chunk_size: MultiMesh на весь зал задевает все факелы (в GL Compatibility каждый
+		# свет — ещё проход по всему MultiMesh) и не отсекается камерой; клетка — 1–3 факела и честное отсечение
+		var cells := {}
+		for t in all:
+			var o: Vector3 = (t as Transform3D).origin
+			var cell := Vector2i(floori(o.x / chunk_size), floori(o.z / chunk_size))
+			if not cells.has(cell):
+				cells[cell] = []
+			(cells[cell] as Array).append(t)
+		for cell in cells:
+			var list: Array = cells[cell]
+			_scatter_node(node, key, list, "%s_%d_%d" % [key.to_pascal_case(), cell.x, cell.y] if cells.size() > 1 else key.to_pascal_case())
 	_mm.clear()
+
+func _scatter_node(node: Node3D, key: String, list: Array, nm: String) -> void:
+	# Буфер MultiMesh в headless не сохраняется — DressScatter собирает его при загрузке из xforms
+	var mmi := DressScatter.new()
+	mmi.name = nm
+	mmi.mesh = load(MESH_DIR + key + ".res") as Mesh
+	mmi.xforms = DressScatter.pack(list)
+	mmi.material_override = _mat(MESHES[key][1])
+	mmi.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	# Мелочь без теней (тени — 4 прохода каскадов на каждый вид)
+	if key in ["grime", "brick_1", "brick_2", "brick_3", "brick_4", "tile", "rock_1", "rock_2", "rock_3", "rock_4", "rock_5"]:
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.add_child(mmi)
 
 # ---------------- Пол ----------------
 
@@ -668,7 +696,7 @@ func _corner_columns(c: Vector3, s: Vector3) -> void:
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
 			var p := Vector3(c.x + sx * (s.x * 0.5 - 0.12), c.y - s.y * 0.5 + h * 0.5, c.z + sz * (s.z * 0.5 - 0.12))
-			_add("column", _fit("column", p, Vector3(0.62, h, 0.62), rng.randf_range(0, 360)))
+			_add("pilaster", _fit("pilaster", p, Vector3(0.62, h, 0.62), rng.randf_range(0, 360)))
 
 ## Обломки и валуны у основания блока (density — доля мест, где кладём кучку).
 func _base_rubble(c: Vector3, s: Vector3, density: float) -> void:
@@ -860,9 +888,7 @@ func _walls(geo: Node) -> void:
 		var corners := [Vector3(-hx, 0, -hz), Vector3(hx, 0, -hz), Vector3(-hx, 0, hz), Vector3(hx, 0, hz),
 			Vector3(-gap * 0.5 - 0.22, 0, -hz), Vector3(gap * 0.5 + 0.22, 0, -hz)]
 		for p in corners:
-			for row in 2:
-				var yaw := float(rng.randi_range(0, 3)) * 90.0
-				_add("column", _fit("column", p + Vector3(0, 1.56 + row * 3.12, 0), Vector3(0.78, 3.14, 0.78), yaw))
+			_add("pilaster", _fit("pilaster", p + Vector3(0, WALL_TOP * 0.5 + 0.05, 0), Vector3(0.9, WALL_TOP + 0.1, 0.9), rng.randf_range(0, 360)))
 	# Частокол по верху стен (и коридора) и бревно-перемычка над воротами
 	if opts.get("palisade", true):
 		for nm in ["WallN_L", "WallN_R", "WallS", "WallW", "WallE", "CorridorL", "CorridorR", "CorridorEnd"]:
@@ -1116,6 +1142,7 @@ func _ground_skirt() -> void:
 ## вне игровой зоны (от 30 м), тени не бросает. Одна на все залы мира — экземпляр в каждом открытом зале.
 static func build_backdrop() -> Node3D:
 	var d := RoomDresser.new(hash("backdrop_midgard"))
+	d.chunk_size = 40.0
 	var root_ := Node3D.new()
 	root_.name = "Backdrop"
 	d.dress = root_

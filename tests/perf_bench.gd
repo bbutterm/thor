@@ -14,6 +14,8 @@ var seconds: float = 8.0
 var ablate: bool = false
 ## Сколько врагов в толпе (2 элиты + корм); «-- 8 crowd=40» — проверка на 40+ врагах (блок Б0)
 var crowd: int = 20
+## «hide=Dress,Dress/Backdrop» — спрятать эти узлы зала (во сколько обходится одевание, блок Б0)
+var hide_paths: PackedStringArray = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -31,6 +33,8 @@ func _ready() -> void:
 	for a in args:
 		if a.begins_with("crowd="):
 			crowd = maxi(2, a.trim_prefix("crowd=").to_int())
+		if a.begins_with("hide="):
+			hide_paths = a.trim_prefix("hide=").split(",")
 	_run.call_deferred()
 
 func wait(sec: float) -> void:
@@ -100,6 +104,11 @@ func _measure(label: String) -> void:
 func _bench_crowd() -> void:
 	await _start([Run.ROOM_SCENES[0]], 0)
 	await wait(1.0)
+	for hp in hide_paths:
+		var hn := game.room.get_node_or_null(hp) as Node3D
+		if hn:
+			hn.visible = false
+			print("  спрятан узел зала: ", hp)
 	# Свои волны зала убираем — толпа своя
 	game.room._spawn_queue.clear()
 	for e in game.room.alive_enemies().duplicate():
