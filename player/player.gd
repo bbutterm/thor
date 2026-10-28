@@ -6,6 +6,8 @@ class_name Player
 ## Слои поверхностей: мир (1) и предметы (4), на которые игрок тоже может приземлиться.
 ## Врагов намеренно не учитываем: высота удара считается относительно земли/предметов, а не головы.
 const SLAM_SURFACE_MASK := 1 | (1 << 3)
+const SKILL_FLOOR_ENEMY := 1
+const SKILL_FLOOR_OTHER := 2
 
 signal health_changed(current: float, maximum: float)
 signal dash_charges_changed(current: int, maximum: int, recharge_progress: float)
@@ -13,6 +15,8 @@ signal died
 signal hurt(amount: float)
 signal slammed(power: float)
 signal slam_unavailable
+signal weapon_skill_landed(skill_id: String)
+signal weapon_skill_lunge_step(from: Vector3, to: Vector3)
 
 @export_group("Бег")
 @export var move_speed: float = 8.0
@@ -208,6 +212,18 @@ var _slide_left: float = 0.0
 var _slide_dir: Vector3 = Vector3.ZERO
 var _slide_speed: float = 0.0
 
+## Временное замедление от приёма оружия (например, во время вертушки).
+var weapon_skill_speed_mult: float = 1.0
+var _weapon_skill_lunge_left: float = 0.0
+var _weapon_skill_lunge_speed: float = 0.0
+var _weapon_skill_lunge_dir: Vector3 = Vector3.ZERO
+var _weapon_skill_lunge_mask: int = -1
+var _weapon_skill_lunge_completed: bool = false
+var _weapon_skill_dive_speed: float = 0.0
+var _weapon_skill_landing_id: String = ""
+## Приём с ударом при посадке можно начать один раз за полёт, даже если его отменили.
+var _weapon_skill_landing_used: bool = false
+
 ## Стиль движения тела (GDD 7.3) и обработчики пассивки/изъяна (копии на забег)
 var movement_profile: MovementProfile
 var body_handlers: Array[BodyTraitHandler] = []
@@ -331,6 +347,7 @@ func _process(delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
+		weapon_skill_cancel_motion()
 		velocity.x = move_toward(velocity.x, 0, ground_decel * delta)
 		velocity.z = move_toward(velocity.z, 0, ground_decel * delta)
 		velocity.y -= gravity * delta
@@ -351,17 +368,21 @@ func _physics_process(delta: float) -> void:
 		_process_climb(delta)
 		camera_fx.update_motion(self, input_dir, false, delta)
 		return
-	var on_floor := is_on_floor()
+	var on_floor := is_on_floor() and not _weapon_skill_enemy_only_floor()
 
 	if on_floor:
 		_coyote_left = coyote_time
 		_jumps_left = extra_jumps
 		_wall_jumps_left = wall_jumps
 	if input_enabled and Input.is_action_just_pressed("jump"):
+		if weapon_skill_lunge_active() or _weapon_skill_dive_speed > 0.0:
+			weapon_skill_cancel_motion()
 		_jump_buffer_left = jump_buffer
 
 	# Рывок (на земле с зажатым Ctrl — подкат)
 	if input_enabled and Input.is_action_just_pressed("dash") and dash_charges > 0:
+		if (weapon_skill_lunge_active() or not _weapon_skill_landing_id.is_empty()) and can_dash(on_floor):
+			weapon_skill_cancel_motion()
 		if is_slamming and slam_cancel_by_dash and not on_floor:
 			_cancel_slam()
 		if not is_slamming:
@@ -372,7 +393,17 @@ func _physics_process(delta: float) -> void:
 	if input_enabled and Input.is_action_just_pressed("slam") and not on_floor and not is_slamming:
 		_start_slam()
 
-	if _dash_time_left > 0.0:
+	var lunge_step := weapon_skill_lunge_active()
+	if lunge_step:
+		_process_weapon_skill_lunge(on_floor, delta)
+	elif _weapon_skill_dive_speed > 0.0:
+		_process_walk(wish, on_floor, delta)
+		# После отскока от головы сначала завершаем подъём, потом продолжаем пике.
+		if velocity.y > 0.0:
+			_process_gravity(false, delta)
+		else:
+			velocity.y = -_weapon_skill_dive_speed
+	elif _dash_time_left > 0.0:
 		_process_dash(delta)
 	elif is_slamming:
 		velocity = _slam_velocity
@@ -386,12 +417,25 @@ func _physics_process(delta: float) -> void:
 		_process_gravity(on_floor, delta)
 
 	var pre_velocity := velocity
+	var lunge_from := global_position
 	move_and_slide()
+	if lunge_step:
+		weapon_skill_lunge_step.emit(lunge_from, global_position)
 	_push_rigid_bodies(pre_velocity)
-	_check_stomp(pre_velocity)
-	_check_ledge(wish)
+	var skill_floor := _weapon_skill_floor_contact_flags() if _weapon_skill_waiting_for_ground() and is_on_floor() else 0
+	var enemy_only_floor := skill_floor == SKILL_FLOOR_ENEMY
+	var peak_before_stomp := _air_peak_y
+	# Одновременная опора на мир/предмет — посадка, даже если рядом есть голова врага.
+	if (skill_floor & SKILL_FLOOR_OTHER) == 0:
+		_check_stomp(pre_velocity)
+	if enemy_only_floor:
+		_air_peak_y = maxf(_air_peak_y, peak_before_stomp)
+	if lunge_step:
+		_finish_weapon_skill_lunge_step(delta)
+	elif _weapon_skill_dive_speed <= 0.0:
+		_check_ledge(wish)
 
-	var now_on_floor := is_on_floor()
+	var now_on_floor := is_on_floor() and not enemy_only_floor
 	if not now_on_floor:
 		_air_peak_y = maxf(_air_peak_y, global_position.y)
 	if now_on_floor and not _was_on_floor:
@@ -416,7 +460,7 @@ func _update_timers(delta: float) -> void:
 	_stomp_cooldown = maxf(0.0, _stomp_cooldown - delta)
 	_slam_hint_left = maxf(0.0, _slam_hint_left - delta)
 	_climb_check_cooldown = maxf(0.0, _climb_check_cooldown - delta)
-	if dash_charges < dash_charges_max and is_on_floor() and not is_climbing:
+	if dash_charges < dash_charges_max and is_on_floor() and not _weapon_skill_enemy_only_floor() and not is_climbing:
 		_dash_recharge_timer += delta
 		if _dash_recharge_timer >= dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult:
 			_dash_recharge_timer = 0.0
@@ -520,6 +564,132 @@ func can_dash(on_floor: bool) -> bool:
 	if on_floor:
 		return dash_on_ground
 	return dash_in_air and bool(modify_stat(&"air_dash", true))
+
+## Движение приёмов оружия не расходует руны и использует обычный move_and_slide игрока.
+func weapon_skill_start_lunge(direction: Vector3, distance: float, duration: float) -> bool:
+	var horizontal := Vector3(direction.x, 0.0, direction.z)
+	if is_dead or is_climbing or is_slamming or weapon_skill_lunge_active() \
+			or horizontal.length_squared() < 0.0001 or distance <= 0.0 or duration <= 0.0:
+		return false
+	weapon_skill_cancel_motion()
+	_dash_time_left = 0.0
+	_end_ram()
+	is_sliding = false
+	_weapon_skill_lunge_dir = horizontal.normalized()
+	_weapon_skill_lunge_speed = distance / duration
+	_weapon_skill_lunge_left = duration
+	_weapon_skill_lunge_mask = collision_mask
+	# Враги — слой 3; стены и предметы остаются физическими препятствиями.
+	collision_mask &= ~(1 << 2)
+	return true
+
+func weapon_skill_lunge_active() -> bool:
+	return _weapon_skill_lunge_left > 0.0
+
+## Второй выпад разрешён только после естественного завершения первого.
+func weapon_skill_lunge_completed() -> bool:
+	return not is_dead and _weapon_skill_lunge_completed
+
+func _weapon_skill_waiting_for_ground() -> bool:
+	return _weapon_skill_landing_id in ["axe_dive", "staff_wave"]
+
+## Учитываем только нормали, которые движок признаёт полом, включая все контакты одного столкновения.
+func _weapon_skill_floor_contact_flags() -> int:
+	var flags := 0
+	var min_floor_dot := cos(floor_max_angle + 0.01)
+	for i in get_slide_collision_count():
+		var collision := get_slide_collision(i)
+		for j in collision.get_collision_count():
+			if collision.get_normal(j).dot(up_direction) < min_floor_dot:
+				continue
+			if collision.get_collider(j) is Enemy:
+				flags |= SKILL_FLOOR_ENEMY
+			else:
+				flags |= SKILL_FLOOR_OTHER
+	return flags
+
+func _weapon_skill_enemy_only_floor() -> bool:
+	return _weapon_skill_waiting_for_ground() and is_on_floor() \
+		and _weapon_skill_floor_contact_flags() == SKILL_FLOOR_ENEMY
+
+func _process_weapon_skill_lunge(on_floor: bool, delta: float) -> void:
+	# Последний короткий шаг не должен добавлять расстояние сверх заданного.
+	var fraction := minf(1.0, _weapon_skill_lunge_left / maxf(delta, 0.000001))
+	velocity.x = _weapon_skill_lunge_dir.x * _weapon_skill_lunge_speed * fraction
+	velocity.z = _weapon_skill_lunge_dir.z * _weapon_skill_lunge_speed * fraction
+	_process_gravity(on_floor, delta)
+
+func _finish_weapon_skill_lunge_step(delta: float) -> void:
+	_weapon_skill_lunge_left = maxf(0.0, _weapon_skill_lunge_left - delta)
+	var blocked := false
+	for i in get_slide_collision_count():
+		var normal := get_slide_collision(i).get_normal()
+		if absf(normal.y) < 0.7 and normal.dot(_weapon_skill_lunge_dir) < -0.4:
+			blocked = true
+			break
+	if blocked:
+		_end_weapon_skill_lunge()
+	elif _weapon_skill_lunge_left <= 0.0:
+		_end_weapon_skill_lunge(true)
+
+func _end_weapon_skill_lunge(completed: bool = false) -> void:
+	_weapon_skill_lunge_completed = completed and _weapon_skill_lunge_mask >= 0
+	if _weapon_skill_lunge_mask >= 0:
+		collision_mask = _weapon_skill_lunge_mask
+		_weapon_skill_lunge_mask = -1
+		velocity.x = 0.0
+		velocity.z = 0.0
+	_weapon_skill_lunge_left = 0.0
+	_weapon_skill_lunge_speed = 0.0
+	_weapon_skill_lunge_dir = Vector3.ZERO
+
+## Рубка топором вниз — отдельное пике, не удар-приземление и без расхода руны.
+func weapon_skill_start_dive(speed: float) -> bool:
+	if speed <= 0.0 or not weapon_skill_arm_landing("axe_dive"):
+		return false
+	_end_weapon_skill_lunge()
+	_dash_time_left = 0.0
+	_end_ram()
+	is_sliding = false
+	_weapon_skill_dive_speed = speed
+	velocity.y = -speed
+	return true
+
+## Зарегистрировать один удар при следующей настоящей посадке.
+func weapon_skill_arm_landing(skill_id: String) -> bool:
+	if skill_id.is_empty() or is_dead or is_on_floor() or is_climbing or is_slamming \
+			or _weapon_skill_landing_used:
+		return false
+	_weapon_skill_landing_id = skill_id
+	_weapon_skill_landing_used = true
+	return true
+
+## Оружие может обнаружить отмену ожидания до касания земли.
+func weapon_skill_landing_pending(skill_id: String) -> bool:
+	return not is_dead and not skill_id.is_empty() and _weapon_skill_landing_id == skill_id
+
+## Прыжок с посохом: множитель задан по высоте, поэтому скорость растёт на sqrt(mult).
+func weapon_skill_start_vault(height_mult: float) -> bool:
+	if height_mult <= 0.0 or is_dead or not is_on_floor() or is_climbing or is_slamming \
+			or (_weapon_skill_landing_used and _weapon_skill_floor_contact_flags() == SKILL_FLOOR_ENEMY):
+		return false
+	weapon_skill_cancel_motion()
+	_dash_time_left = 0.0
+	_end_ram()
+	is_sliding = false
+	_weapon_skill_landing_used = false
+	_jump_buffer_left = 0.0
+	_coyote_left = 0.0
+	velocity.y = jump_velocity * sqrt(height_mult)
+	_slam_ready = true
+	return true
+
+## Отмена не меняет накопленную высоту полёта и не возвращает право на удар в этом полёте.
+func weapon_skill_cancel_motion() -> void:
+	_end_weapon_skill_lunge()
+	_weapon_skill_dive_speed = 0.0
+	_weapon_skill_landing_id = ""
+	weapon_skill_speed_mult = 1.0
 
 ## Shift: на земле с зажатым Ctrl — подкат (GDD 5), иначе рывок (если стиль/изъян позволяют).
 func _try_dash(wish: Vector3, on_floor: bool) -> void:
@@ -715,6 +885,7 @@ func _start_slam(allow_latched: bool = false) -> bool:
 				_slam_hint_left = slam_hint_cooldown
 				slam_unavailable.emit()
 			return false
+	weapon_skill_cancel_motion()
 	# Пике (GDD 7.2): сразу после рывка в воздухе — наклонно по направлению взгляда
 	is_diving = (_dash_time_left > 0.0 and _dash_in_air) or _dive_window_left > 0.0
 	_dive_window_left = 0.0
@@ -746,6 +917,10 @@ func _on_landed() -> void:
 	# Контакт с головой врага может считаться полом в тот же кадр: это отскок, а не посадка.
 	if _stomp_cooldown > 0.0 and velocity.y > 0.0:
 		return
+	var skill_id := _weapon_skill_landing_id
+	_weapon_skill_landing_id = ""
+	_weapon_skill_dive_speed = 0.0
+	_weapon_skill_landing_used = false
 	_slam_ground_contacts += 1
 	_slam_ready = false
 	var fall := maxf(0.0, _air_peak_y - global_position.y)
@@ -763,6 +938,8 @@ func _on_landed() -> void:
 		if fall > 1.5:
 			camera_fx.land_dip(clampf(fall / 10.0, 0.05, 0.35))
 			Audio.play("sounds/land.ogg")
+	if not skill_id.is_empty() and not is_dead:
+		weapon_skill_landed.emit(skill_id)
 
 func _do_slam_impact(height: float) -> void:
 	# Тяжёлый стиль: ×1.5 по радиусу и урону (slam_radius_mult / slam_damage_mult)
@@ -955,6 +1132,7 @@ func _try_wall_jump() -> bool:
 	return true
 
 func _start_climb(dest: Vector3) -> void:
+	weapon_skill_cancel_motion()
 	is_climbing = true
 	_climb_t = 0.0
 	_climb_time = ledge_climb_time * (ledge_climb_ranged_mult if (has_method("is_ranged_active") and call("is_ranged_active")) else 1.0)
@@ -977,6 +1155,7 @@ func _process_climb(delta: float) -> void:
 	if k >= 1.0:
 		is_climbing = false
 		_slam_ground_contacts += 1
+		_weapon_skill_landing_used = false
 		_climb_check_cooldown = 0.3
 		var fwd := -global_transform.basis.z
 		fwd.y = 0
@@ -1048,9 +1227,11 @@ func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln
 
 ## Подброс прыжковой руной (rooms/jump_pad.gd): на height метров, прыжки в воздухе восстановлены, удар-приземление прерван.
 func launch_up(height: float) -> void:
+	weapon_skill_cancel_motion()
 	if is_slamming:
 		_cancel_slam()
 	_dash_time_left = 0.0
+	_end_ram()
 	velocity.y = sqrt(2.0 * gravity * maxf(height, 0.5))
 	_slam_ready = true
 	_jumps_left = extra_jumps
@@ -1078,6 +1259,7 @@ func heal(amount: float) -> void:
 func _die() -> void:
 	is_dead = true
 	input_enabled = false
+	weapon_skill_cancel_motion()
 	_end_ram()
 	is_sliding = false
 	footsteps.stream_paused = true
@@ -1106,10 +1288,15 @@ func _setup_weapons() -> void:
 		weapons = WeaponHolder.new()
 		weapons.name = "Weapons"
 		add_child(weapons)
+	if not weapons.active_changed.is_connected(_on_weapon_skill_slot_changed):
+		weapons.active_changed.connect(_on_weapon_skill_slot_changed)
+
+func _on_weapon_skill_slot_changed(_slot: int) -> void:
+	weapon_skill_cancel_motion()
 
 ## Скорость бега с учётом оружия в руке.
 func effective_move_speed() -> float:
-	return move_speed * weapon_move_mult() * (style.current_speed_mult() if style else 1.0) * (1.0 + Run.rune_value("njord_wind"))
+	return move_speed * weapon_move_mult() * (style.current_speed_mult() if style else 1.0) * (1.0 + Run.rune_value("njord_wind")) * maxf(weapon_skill_speed_mult, 0.0)
 
 func weapon_move_mult() -> float:
 	var m := weapons.move_speed_mult() if weapons else 1.0
@@ -1240,6 +1427,8 @@ func deal_damage(target: Object, amount: float, knock: Vector3, source: String) 
 
 ## Начало зала (Game._load_room): скальд снова «не чувствует» первый удар.
 func on_room_start() -> void:
+	weapon_skill_cancel_motion()
+	_weapon_skill_landing_used = false
 	for h in body_handlers:
 		h.on_room_start(self)
 

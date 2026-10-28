@@ -311,8 +311,9 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 | Оружие | Урон | Скорость | Бег | Особое | В пуле |
 |---|---|---|---|---|---|
-| Топор `axe` | 22 (1 У), комбо 3: ×1 ×1 ×2.2 | 1.0 | ×1.1 | — | да |
-| Меч `sword` | 15.4 (0.7 У), комбо 4: ×1 ×1 ×1 ×1.8 | 1.3 | ×1.1 | `special = parry` (пока не сделано) | да |
+| Топор `axe` | 30, комбо 3: ×1 ×1 ×2.2 | 0.7 | ×1.0 | вертушка и воздушная рубка | да |
+| Меч `sword` | 14, комбо 4: ×1 ×1 ×1 ×1.8 | 1.5 | ×1.1 | выпад и парирование | да |
+| Посох `staff` | 16, комбо 3: ×1 ×1 ×1.8 | 1.0 | ×1.0 | шест и волна | нет |
 | Дубина `club` | 28.6 (1.3 У) | 0.75 | ×1.0 | `stun_on_hit` 1.5 с, `knockback_mult` 1.6 | да |
 | Копьё `spear` | 19.8 (0.9 У), тычки | 1.0 | ×1.05 | `reach` 1.8 (≈3.5 м), `max_targets` 3 | нет |
 | Коса `scythe` | 17.6 (0.8 У) | 0.8 | ×1.0 | `arc` 1.8 (широкая дуга) | нет |
@@ -324,7 +325,14 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 | Автомат `rifle` | 5.5 (0.25 У) | 30 / 60, 0.1 с | ×0.8 | `recoil_climb_deg` 0.35 — прицел уходит вверх | нет |
 | Обрез `shotgun` | 6 × 2.64 (0.12 У) | 2 / 16, перезарядка 1.6 с | ×0.8 | дробь, `spread_deg` 6 | нет |
 
-Поля мили: `attack_speed` (делитель базовых таймингов топора), `reach` (ход хитбокса вперёд), `arc` (ширина хитбокса), `combo_count`, `stage_damage_mult`, `swing_set` (slash/thrust), `knockback_mult`, `max_targets`, `stun_on_hit`, `backstab_mult` (в спину, по умолчанию 1.5), `stunned_mult`, `heavy_damage_mult` 2 / `heavy_windup` 0.4 (сильный удар — зажать ЛКМ), `hitstop_mult`.
+Поля мили: `attack_speed` (делитель базовых таймингов топора), `reach` (ход хитбокса вперёд), `arc` (ширина хитбокса), `combo_count`, `stage_damage_mult`, `swing_set` (slash/thrust), `knockback_mult`, `max_targets`, `stun_on_hit`, `backstab_mult` (в спину, по умолчанию 1.5), `stunned_mult`, `heavy_damage_mult` 2 / `heavy_windup` 0.4 (для оружия без приёма), `hitstop_mult`.
+
+**Приёмы Д2** — поля группы «Приём» в `WeaponDef`; удержание ЛКМ `skill_hold_time` 0.35 с. Базовый урон каждого оружия масштабируется по уровню через `level_mult`: ×1 / ×1.2 / ×1.4.
+
+- **Топор, вертушка:** `skill_duration` 0.6 с, `skill_radius` 2.5 м, `skill_damage_mult` 1.0, `skill_knockback` 3, скорость передвижения `skill_move_mult` ×0.45. На ур. 3 радиус `skill_lvl3_radius_mult` ×1.4 и `skill_lvl3_turns` 2 оборота. Воздушная рубка: `skill_dive_speed` 18 м/с, `skill_dive_radius` 2 м, `skill_dive_damage_mult` 0.4 — 12 урона на ур. 1 и 16.8 на ур. 3.
+- **Меч, выпад:** `skill_lunge_distance` 5 м за `skill_lunge_duration` 0.3 с, радиус линии `skill_lunge_hit_radius` 0.8 м. На ур. 3 длина `skill_lunge_lvl3_distance_mult` ×1.3 и `skill_lunge_lvl3_count` 2 выпада. Парирование: `skill_parry_window` 0.2 с, `skill_parry_lvl3_window_mult` ×1.5, оглушение `skill_parry_stun` 1.5 с.
+- **Посох, шест:** `skill_vault_height_mult` ×1.6 высоты обычного прыжка, волна радиусом `skill_wave_radius` 2.5 м и отбрасывание `skill_wave_knockback` 5. На ур. 3 отбрасывание `skill_wave_lvl3_knockback_mult` ×1.6 и урон `skill_wave_lvl3_damage_mult` ×0.8 базового.
+- Очки стиля: `melee_whirl` 6, `melee_lunge` 6, `melee_vault` 5, `melee_dive` 7, `melee_wave` 5; парирование использует существующий `reflect` 8.
 Поля ренжа: `fire_interval`, `automatic`, `pellets`, `spread_deg` / `spread_per_shot_deg` / `spread_max_deg` / `spread_recover`, `recoil_kick_deg` (отдача камеры), `recoil_climb_deg`, `mag_size`, `reserve_start` / `reserve_max`, `reload_time`, `pierce`, `max_range`, `fire_move_mult` 0.65 (бег во время стрельбы), `tracer` / `tracer_speed`, `shell_casing`, `muzzle_offset`.
 Общие: `move_speed_mult` (мили ≥ 1, ренж 0.8), `dash_recharge_mult` (ренж 1.3 — рывок на 30 % дольше), вид в руке `view_*`, на полу `pickup_scale`.
 **Уровень оружия 1–3:** +20 % урона за уровень (`WeaponDef.level_mult`).

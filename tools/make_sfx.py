@@ -511,4 +511,24 @@ for i in range(14):
     hiss[p0:p0 + m] += rng.standard_normal(m) * 0.9
 save("barrel_fuse", hiss * env(n, 0.02, 0.4), 0.45)
 
+# --- Приёмы мили (Д2): отдельный seed не меняет существующие звуки ---
+skill_names = ("skill_whirl", "skill_lunge", "skill_parry", "skill_vault", "skill_land")
+if not ONLY or any(name.startswith(prefix) for name in skill_names for prefix in ONLY):
+    rng = np.random.default_rng(281028)
+    # Два широких взмаха на одной огибающей.
+    save("skill_whirl", mix(whoosh(0.55, 450, 2200), whoosh(0.55, 1700, 650) * 0.5), 0.65)
+    # Короткий резкий выпад с низким импульсом.
+    save("skill_lunge", mix(whoosh(0.28, 1200, 3500), thump(0.19, 180, 75) * 0.45), 0.65)
+    # Металлический звон для отражения удара или снаряда.
+    save("skill_parry", mix(metal(0.42, 760), thump(0.1, 300, 120) * 0.25), 0.6)
+    # Восходящий воздушный свист для прыжка с опорой.
+    tt = t(0.36)
+    rise = np.sin(2 * np.pi * np.cumsum(np.linspace(210, 720, len(tt))) / SR)
+    rise *= np.sin(np.pi * np.linspace(0, 1, len(tt)))
+    save("skill_vault", mix(whoosh(0.36, 650, 3000), rise * 0.22), 0.6)
+    # Волна посоха и приземление пике — удар с коротким пылевым хвостом.
+    n = int(SR * 0.38)
+    dust = lp(rng.standard_normal(n), 900) * env(n, 0.002, 3.0)
+    save("skill_land", mix(thump(0.38, 130, 42), dust * 0.6, metal(0.16, 290) * 0.18), 0.75)
+
 print("Готово:", OUT)

@@ -15,7 +15,7 @@ var skill := {
 	"perfect": 0.35,        # шанс идеального хвата (ПКМ сразу после поимки, в окне)
 	"aim_jitter_deg": 4.0,  # разброс прицела
 	"turn_speed": 9.0,      # рад/с — как быстро поворачивает камеру
-	"heavy": 0.2,           # доля сильных ударов по крепким целям
+	"heavy": 0.2,           # шанс приёма по крепкой цели; по обычной — вдвое меньше
 	"slam_jump": 0.35,      # шанс прыгнуть и ударить-приземлиться в толпу (за решение)
 	"think": 0.12,          # период решений, с
 	"reaction": 0.22,       # с: от смены цели до первого удара/броска
@@ -59,6 +59,8 @@ var _think_t: float = 0.0
 var _strafe: float = 1.0
 var _strafe_t: float = 0.0
 var _attack_t: float = 0.0
+## Время удержания атаки в игровом времени, чтобы хит-стоп не оборвал приём раньше порога.
+var _skill_hold_left: float = 0.0
 var _throw_t: float = 0.0
 var _hammer_out_t: float = 0.0
 var _hold_throw_t: float = 0.0
@@ -104,7 +106,7 @@ func begin(g: Game, seed_value: int) -> void:
 	rng.seed = seed_value
 	seed(seed_value)
 	active = true
-	stats = {"assists": 0, "perfect": 0, "slams": 0, "throws": 0, "dodge_attempts": 0, "heavy": 0, "shots": 0, "dashes": 0}
+	stats = {"assists": 0, "perfect": 0, "slams": 0, "throws": 0, "dodge_attempts": 0, "heavy": 0, "weapon_skills": {}, "shots": 0, "dashes": 0}
 	rooms.clear()
 	cur_room = {}
 	rank_time = PackedFloat32Array([0, 0, 0, 0, 0])
@@ -115,6 +117,7 @@ func begin(g: Game, seed_value: int) -> void:
 	_target = null
 	_think_t = 0.0
 	_attack_t = 0.0
+	_skill_hold_left = 0.0
 	_throw_t = 0.0
 	_hammer_out_t = 0.0
 	_hold_throw_t = 0.0
@@ -140,6 +143,12 @@ func begin(g: Game, seed_value: int) -> void:
 	game.player.axe.swung.connect(func(_stage: int) -> void:
 		if active and game.player.axe.heavy:
 			stats.heavy += 1)
+	game.player.axe.weapon_skill_started.connect(func(kind: String) -> void:
+		if active:
+			var counts: Dictionary = stats.weapon_skills
+			counts[kind] = int(counts.get(kind, 0)) + 1
+			stats.weapon_skills = counts
+			_trace("weapon_skill", {"skill": kind}))
 	game.player.weapons.gun.fired.connect(func(item: WeaponItem) -> void:
 		if active:
 			stats.shots += 1
@@ -215,6 +224,7 @@ func release_all() -> void:
 	for a in ["move_forward", "move_back", "move_left", "move_right", "jump", "dash", "slam", "attack", "throw", "interact"]:
 		Input.action_release(a)
 	_held.clear()
+	_skill_hold_left = 0.0
 
 # --- Ввод ---
 
@@ -263,6 +273,14 @@ func _tick() -> void:
 		return
 	# Тайминги бота и рангов в игровом времени, с учётом хит-стопа.
 	var dt := get_physics_process_delta_time()
+	if _skill_hold_left > 0.0:
+		if p.axe == null or not p.axe.active:
+			_skill_hold_left = 0.0
+			hold("attack", false)
+		elif not get_tree().paused:
+			_skill_hold_left = maxf(0.0, _skill_hold_left - dt)
+			if _skill_hold_left <= 0.0:
+				hold("attack", false)
 	var dashing := p.is_dashing() or p.is_sliding
 	if dashing and not _was_dashing:
 		stats.dashes += 1
@@ -568,6 +586,7 @@ func _take_door(p: Player) -> void:
 # --- Бой ---
 
 func _stop_moving() -> void:
+	_skill_hold_left = 0.0
 	for a in ["move_forward", "move_back", "move_left", "move_right", "attack"]:
 		hold(a, false)
 
@@ -607,10 +626,13 @@ func _fight(p: Player, room: Room, dt: float) -> void:
 	var reach := 2.3 * (holder.melee.def.reach if holder and holder.melee and holder.melee.def else 1.0)
 	_move(p, flat, dist, dy, reach, dt)
 	if holder and holder.is_ranged_active():
+		if _skill_hold_left > 0.0:
+			_skill_hold_left = 0.0
+			hold("attack", false)
 		_shoot(p, holder, dist)
 	elif dist < reach + 0.4 and absf(dy) < 2.0 and _react_t <= 0.0 and _aimed(p, 0.85):
 		_melee(p, dt)
-	else:
+	elif _skill_hold_left <= 0.0:
 		hold("attack", false)
 	_slam_logic(p, enemies, dist, dy, dt)
 
@@ -787,15 +809,40 @@ func _melee(p: Player, _dt: float) -> void:
 	var axe := p.axe
 	if axe == null or not axe.active:
 		return
-	if _attack_t > 0.0:
+	if _attack_t > 0.0 or _held.has("attack"):
 		return
 	var tough := _target.kind in [Enemy.Kind.BOSS, Enemy.Kind.SHIELD] or _target.has_meta("elite")
-	if tough and rng.randf() < float(skill.heavy) and not axe.is_busy():
-		tap("attack", int(ceil(axe.heavy_hold_time * 60.0)) + 3)
-		_attack_t = 0.7
+	var d := axe.def
+	var has_skill := d != null and d.skill_kind in ["whirl", "lunge", "vault"]
+	var chance := float(skill.heavy) * (1.0 if tough else 0.5)
+	var can_hold := not axe.is_busy() and (tough or has_skill)
+	if has_skill:
+		can_hold = can_hold and p.is_on_floor()
+		if can_hold and d.skill_kind == "lunge":
+			can_hold = _safe_weapon_lunge(p, axe)
+	if can_hold and rng.randf() < chance:
+		_skill_hold_left = (d.skill_hold_time if has_skill else axe.heavy_hold_time) + 0.1
+		hold("attack", true)
+		_attack_t = maxf(0.7, _skill_hold_left + 0.35)
 	else:
 		tap("attack", 1)
 		_attack_t = rng.randf_range(0.12, 0.24)
+
+## Выпад нельзя планировать через обрыв: проверяем землю по всей траектории, включая второй выпад.
+func _safe_weapon_lunge(p: Player, axe: Axe) -> bool:
+	var forward := p.get_aim_forward()
+	forward.y = 0.0
+	if forward.length_squared() < 0.001:
+		return false
+	forward = forward.normalized()
+	var distance := axe.def.skill_lunge_distance
+	if axe.level >= 3:
+		distance *= axe.def.skill_lunge_lvl3_distance_mult * float(maxi(1, axe.def.skill_lunge_lvl3_count))
+	var steps := maxi(1, int(ceil(distance / 1.25)))
+	for i in range(1, steps + 1):
+		if not _floor_ahead(p, forward * (distance * float(i) / steps)):
+			return false
+	return true
 
 func _shoot(p: Player, holder: WeaponHolder, dist: float) -> void:
 	var it := holder.ranged

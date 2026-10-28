@@ -93,6 +93,8 @@ func _physics_process(delta: float) -> void:
 		if player and not player.is_dead:
 			var center := player.global_position + Vector3(0, 0.9, 0)
 			if center.distance_to(global_position) < RADIUS + 0.55:
+				if player.axe and player.axe.weapon_skill_try_parry_projectile(self):
+					return
 				RunTracker.note_hit(shooter)
 				var h0 := player.health
 				player.take_damage(damage, vel.normalized() * 4.0)

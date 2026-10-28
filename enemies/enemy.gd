@@ -462,7 +462,9 @@ func _execute_attack() -> void:
 			else:
 				_do_melee()
 	_doing_slam = false
-	_set_state(State.RECOVER)
+	# Парирование во время удара уже могло оглушить атакующего.
+	if state != State.STUNNED:
+		_set_state(State.RECOVER)
 
 func _do_melee() -> void:
 	var fwd := global_transform.basis.z
@@ -473,7 +475,7 @@ func _do_melee() -> void:
 	to_p.y = 0
 	var reach := attack_range * 1.35 + 0.3
 	if to_p.length() <= reach and fwd.dot(to_p.normalized()) > 0.25:
-		_hit_player(attack_damage, to_p.normalized() * 6.0 + Vector3.UP * 2.5)
+		_hit_player(attack_damage, to_p.normalized() * 6.0 + Vector3.UP * 2.5, true)
 	FX.burst(get_parent(), global_position + fwd * attack_range * 0.8 + Vector3(0, 1, 0), 0.5 * model_scale, Color(1, 0.3, 0.2, 0.5), 0.15)
 	Audio.play("sounds/enemy_attack.ogg")
 
@@ -573,8 +575,10 @@ func _room() -> Node:
 	return p if p and p.has_method("spawn_extra") else null
 
 ## Удар по Тору от этого врага; возвращает, сколько HP на самом деле снято (неуязвимость — 0).
-func _hit_player(amount: float, knock: Vector3) -> float:
+func _hit_player(amount: float, knock: Vector3, parryable: bool = false) -> float:
 	if player == null or not is_instance_valid(player) or player.is_dead:
+		return 0.0
+	if parryable and player.axe and player.axe.weapon_skill_try_parry_melee(self):
 		return 0.0
 	var h0 := player.health
 	RunTracker.note_hit(self)
@@ -644,7 +648,7 @@ func _do_shield_bash() -> void:
 		var to_p := player.global_position - global_position
 		to_p.y = 0
 		if to_p.length() <= attack_range * 1.35 + 0.3 and fwd.dot(to_p.normalized()) > 0.25:
-			_hit_player(attack_damage, to_p.normalized() * shove_force + Vector3.UP * shove_up)
+			_hit_player(attack_damage, to_p.normalized() * shove_force + Vector3.UP * shove_up, true)
 	FX.burst(get_parent(), global_position + fwd * attack_range * 0.8 + Vector3(0, 1, 0), 0.6 * model_scale, Color(0.8, 0.85, 1.0, 0.5), 0.15)
 	Audio.play("sounds/sfx/wall_splat.wav")
 
@@ -799,12 +803,7 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	FX.enemy_hit(self, damage, source, big)  # вспышка, у нежити — ихор (VFX-комплект)
 	FX.damage_number(get_parent(), global_position + Vector3(0, 1.8 * model_scale, 0), damage,
 		Color(1, 0.55, 0.2) if big else (Color(0.6, 0.85, 1.0) if source in ["hammer", "lightning"] else Color(1, 0.92, 0.4)), big)
-	var k := knockback * (1.0 - knock_resist)
-	knockback_velocity += k
-	# Скорость = база + отбрасывание (_apply_movement вычитает knockback_velocity из velocity, чтобы найти базу):
-	# толчок кладём и в velocity — иначе база «съедала» его и враг ехал к Тору, а не от него (до блока Б3)
-	velocity.x += k.x
-	velocity.z += k.z
+	var k := apply_knockback_only(knockback)
 	# Реакция на удар (не сбиваем анимацию атаки и оглушения)
 	if _humanoid and health > 0.0 and state in [State.CHASE, State.RECOVER] and k.length() > 1.0:
 		_humanoid.play(anim_hit, 0.03, 1.3)
@@ -822,6 +821,20 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 		_set_state(State.RECOVER)
 	if health <= 0.0:
 		_die(source)
+
+## Толчок без урона: волна посоха на первых двух уровнях использует ту же физику, что и попадание.
+func apply_knockback_only(knockback: Vector3) -> Vector3:
+	if is_dead:
+		return Vector3.ZERO
+	var k := knockback * (1.0 - knock_resist)
+	if k.length_squared() > 0.0001:
+		# Толчок без урона тоже может сбросить врага с уступа.
+		_last_hit_time = Run.combat_clock
+	knockback_velocity += k
+	# _apply_movement вычитает накопленный толчок из velocity при вычислении базовой скорости.
+	velocity.x += k.x
+	velocity.z += k.z
+	return k
 
 ## Оглушить на time секунд (трейты, эффекты, Мьёльнир — сильное оглушение: элиту тоже). Босса — нет.
 ## HP, скорость, урон и Слава из описания GDD (вызывается залом до add_child).

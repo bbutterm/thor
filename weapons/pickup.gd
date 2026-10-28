@@ -81,6 +81,8 @@ func prompt_text(holder: WeaponHolder) -> String:
 		txt = tr("[E] Забрать патроны: %s") % tr(item.def.display_name)
 	elif cur:
 		txt += tr(" — бросить %s") % cur.title()
+	if not item.is_ranged() and item.def.skill_kind != "none" and item.def.skill_title != "":
+		txt += "\n" + (tr("Зажмите %s: %s") % [GameSettings.current_binding("attack"), tr(item.def.skill_title)])
 	return txt.replace("[E]", "[%s]" % GameSettings.current_binding("interact"))
 
 func interact(holder: WeaponHolder) -> void:

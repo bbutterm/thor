@@ -2,12 +2,13 @@ extends Node
 class_name Axe
 ## Мили-оружие правой руки (исторически — топор; теперь любое мили из WeaponDef: топор, меч, копьё, дубина…).
 ## Комбо из combo_count ударов, хитбокс ShapeCast3D в активные кадры, процедурная анимация вьюмодели твинами,
-## hit-stop, отбивание снарядов. Зажатая ЛКМ — сильный удар (долгий замах, ×2 урона, сбивает даже особых).
+## hit-stop, отбивание снарядов. Зажатая ЛКМ — приём текущего оружия из WeaponDef.
 ## Тайминги/отдача ниже — базовые (топор); оружие масштабирует их своим attack_speed и т. п.
 ## Источник урона: "melee", "melee_finisher" (последний удар комбо), "melee_heavy" (сильный удар).
 
 signal swung(stage: int)
 signal hit_landed(count: int, stage: int)
+signal weapon_skill_started(kind: String)
 
 @export_group("Урон и отбрасывание")
 @export var base_damage: float = 22.0
@@ -61,6 +62,15 @@ var _enemies_hit: int = 0
 var _tween: Tween
 var _base_box_size: Vector3 = Vector3(2.6, 2.0, 1.6)
 var _base_target: Vector3 = Vector3(0, 0, -1.0)
+var _skill_mode: String = ""
+var _skill_elapsed: float = 0.0
+var _skill_pulses: int = 0
+var _skill_lunges_left: int = 0
+var _skill_direction: Vector3 = Vector3.ZERO
+var _skill_hit_ids: Dictionary = {}
+var _skill_shape := SphereShape3D.new()
+var _skill_query := PhysicsShapeQueryParameters3D.new()
+var _parry_left: float = 0.0
 
 @export var player_path: NodePath = ^".."
 @export var pivot_path: NodePath
@@ -93,6 +103,14 @@ const THRUST_POSES := [
 const HEAVY_POSE := [Vector3(0.45, -0.04, -0.72), Vector3(50, 22, -30), Vector3(0.05, -0.8, -1.2), Vector3(-90, 5, -10)]
 
 func _ready() -> void:
+	_skill_query.shape = _skill_shape
+	# Враги (слой 3) и разрушаемые предметы (слой 4), как у обычного взмаха.
+	_skill_query.collision_mask = (1 << 2) | (1 << 3)
+	_skill_query.collide_with_areas = false
+	if player and not player.weapon_skill_landed.is_connected(_on_weapon_skill_landed):
+		player.weapon_skill_landed.connect(_on_weapon_skill_landed)
+	if player and not player.weapon_skill_lunge_step.is_connected(_on_weapon_skill_lunge_step):
+		player.weapon_skill_lunge_step.connect(_on_weapon_skill_lunge_step)
 	if hitbox and hitbox.shape is BoxShape3D:
 		_base_box_size = (hitbox.shape as BoxShape3D).size
 		_base_target = hitbox.target_position
@@ -144,6 +162,15 @@ func cancel() -> void:
 	_heavy_queued = false
 	_hold_time = -1.0
 	_since_swing_end = 99.0
+	_skill_mode = ""
+	_skill_elapsed = 0.0
+	_skill_pulses = 0
+	_skill_lunges_left = 0
+	_skill_hit_ids.clear()
+	_parry_left = 0.0
+	if player:
+		player.weapon_skill_speed_mult = 1.0
+		player.weapon_skill_cancel_motion()
 	if _tween and _tween.is_valid():
 		_tween.kill()
 	var h := view_hand()
@@ -196,7 +223,17 @@ func _pose() -> Array:
 	return set_[stage % 2]
 
 func _physics_process(delta: float) -> void:
-	if player == null or player.is_dead or not player.input_enabled or not active:
+	if player == null:
+		return
+	if player.is_dead or not active:
+		if not _skill_mode.is_empty():
+			cancel()
+		return
+	if not player.input_enabled:
+		return
+	_parry_left = maxf(0.0, _parry_left - delta)
+	if not _skill_mode.is_empty():
+		_tick_weapon_skill(delta)
 		return
 	if Input.is_action_just_pressed("attack"):
 		request_attack()
@@ -204,7 +241,7 @@ func _physics_process(delta: float) -> void:
 	if _hold_time >= 0.0:
 		if Input.is_action_pressed("attack"):
 			_hold_time += delta
-			if _hold_time >= heavy_hold_time:
+			if _hold_time >= (def.skill_hold_time if def and def.skill_kind != "none" else heavy_hold_time):
 				request_heavy()
 				_hold_time = -1.0
 		else:
@@ -213,8 +250,17 @@ func _physics_process(delta: float) -> void:
 
 ## Можно вызывать из тестов/ИИ без ввода.
 func request_attack() -> void:
-	if not active:
+	if not active or player == null or player.is_dead or not _skill_mode.is_empty():
 		return
+	if def and def.skill_kind == "lunge":
+		_parry_left = def.skill_parry_window * (def.skill_parry_lvl3_window_mult if level >= 3 else 1.0)
+	if def and not player.is_on_floor():
+		if def.skill_kind == "whirl" and player.weapon_skill_start_dive(def.skill_dive_speed):
+			_start_air_weapon_skill("axe_dive")
+			return
+		if def.skill_kind == "vault" and player.weapon_skill_arm_landing("staff_wave"):
+			_start_air_weapon_skill("staff_wave")
+			return
 	match phase:
 		Phase.IDLE:
 			if _since_swing_end <= combo_window:
@@ -226,11 +272,11 @@ func request_attack() -> void:
 
 ## Сильный удар: сразу, если оружие свободно, иначе — сразу после текущего взмаха.
 func request_heavy() -> void:
-	if not active:
+	if not active or player == null or player.is_dead or not _skill_mode.is_empty():
 		return
 	_queued = false
 	if phase == Phase.IDLE:
-		_begin_stage(0, true)
+		_start_heavy_or_weapon_skill()
 	elif not heavy:
 		_heavy_queued = true
 
@@ -256,7 +302,7 @@ func _tick(delta: float) -> void:
 		Phase.RECOVERY:
 			if _heavy_queued and _phase_time >= _recovery_time() * 0.4:
 				_heavy_queued = false
-				_begin_stage(0, true)
+				_start_heavy_or_weapon_skill()
 			elif _queued and _phase_time >= _recovery_time() * 0.4:
 				_queued = false
 				_begin_stage((stage + 1) % combo_count())
@@ -265,6 +311,271 @@ func _tick(delta: float) -> void:
 				_since_swing_end = 99.0 if heavy else 0.0
 				heavy = false
 				_animate_to(rest_pos, rest_rot, 0.18, Tween.TRANS_QUAD, Tween.EASE_OUT)
+
+## Обычный сильный удар остаётся только у оружия без заданного приёма.
+func _start_heavy_or_weapon_skill() -> void:
+	if def == null or def.skill_kind == "none":
+		_begin_stage(0, true)
+		return
+	phase = Phase.IDLE
+	heavy = false
+	_queued = false
+	_since_swing_end = 99.0
+	if not _start_weapon_skill():
+		_animate_to(rest_pos, rest_rot, 0.18, Tween.TRANS_QUAD, Tween.EASE_OUT)
+
+func _start_weapon_skill() -> bool:
+	if def == null or player == null or player.is_dead:
+		return false
+	match def.skill_kind:
+		"whirl":
+			if not player.is_on_floor() or player.is_slamming or player.is_climbing or player.is_dashing() or player.is_sliding:
+				return false
+			_skill_mode = "whirl"
+			_skill_elapsed = 0.0
+			_skill_pulses = 0
+			_skill_hit_ids.clear()
+			heavy = true
+			player.weapon_skill_speed_mult = clampf(def.skill_move_mult, 0.0, 1.0)
+			var turns := maxi(1, def.skill_lvl3_turns) if level >= 3 else 1
+			var h := view_hand()
+			if h:
+				h.set_state(&"melee_strike")
+				h.kick(Vector3(0.0, 0.0, -0.35))
+				h.tween_to(rest_pos + Vector3(0.0, 0.05, -0.1), rest_rot + Vector3(0.0, 0.0, 360.0 * turns), maxf(0.05, def.skill_duration), Tween.TRANS_LINEAR)
+			Audio.sfx("skill_whirl", "sounds/sfx/skill_whirl.wav")
+			ComicFX.pop("weapon_whirl", player.global_position + Vector3.UP * 1.8)
+			StyleMeter.event(&"melee_whirl")
+			player.camera_fx.add_trauma(0.12)
+			Perf.mark("weapon_whirl")
+			weapon_skill_started.emit("whirl")
+			return true
+		"lunge":
+			var aim := player.get_aim_forward()
+			aim.y = 0.0
+			_skill_direction = aim.normalized() if aim.length_squared() > 0.001 else -player.global_transform.basis.z
+			var distance := def.skill_lunge_distance * (def.skill_lunge_lvl3_distance_mult if level >= 3 else 1.0)
+			if not player.weapon_skill_start_lunge(_skill_direction, distance, def.skill_lunge_duration):
+				return false
+			_skill_mode = "lunge"
+			_skill_lunges_left = maxi(1, def.skill_lunge_lvl3_count) if level >= 3 else 1
+			_skill_hit_ids.clear()
+			heavy = true
+			_skill_lunge_feedback()
+			StyleMeter.event(&"melee_lunge")
+			Perf.mark("weapon_lunge")
+			weapon_skill_started.emit("lunge")
+			return true
+		"vault":
+			if not player.weapon_skill_start_vault(def.skill_vault_height_mult):
+				return false
+			var h := view_hand()
+			if h:
+				h.set_state(&"melee_strike")
+				h.kick(Vector3(0.0, 0.45, -0.3), Vector3(-35.0, 0.0, 0.0))
+				var vault_tween := h.tween_to(rest_pos + Vector3(0.0, 0.2, -0.1), rest_rot + Vector3(-55.0, 0.0, 0.0), 0.2)
+				vault_tween.chain().tween_property(h, "position", rest_pos, 0.3)
+				vault_tween.parallel().tween_property(h, "rotation_degrees", rest_rot, 0.3)
+			Audio.sfx("skill_vault", "sounds/sfx/skill_vault.wav")
+			ComicFX.pop("weapon_vault", player.global_position + Vector3.UP * 1.8)
+			StyleMeter.event(&"melee_vault")
+			player.camera_fx.add_trauma(0.12)
+			Perf.mark("weapon_vault")
+			weapon_skill_started.emit("vault")
+			return true
+	return false
+
+func _skill_lunge_feedback() -> void:
+	var h := view_hand()
+	if h:
+		h.set_state(&"melee_strike")
+		h.kick(Vector3(0.0, 0.0, -0.55))
+		h.tween_to(rest_pos + Vector3(0.0, 0.0, -0.48), rest_rot + Vector3(-20.0, 0.0, 0.0), maxf(0.05, def.skill_lunge_duration), Tween.TRANS_EXPO, Tween.EASE_OUT)
+	Audio.sfx("skill_lunge", "sounds/sfx/skill_lunge.wav")
+	ComicFX.pop("weapon_lunge", player.global_position + Vector3.UP * 1.8)
+	player.camera_fx.add_trauma(0.16)
+
+func _start_air_weapon_skill(kind: String) -> void:
+	phase = Phase.IDLE
+	_queued = false
+	_heavy_queued = false
+	_since_swing_end = 99.0
+	_skill_mode = kind
+	heavy = true
+	var h := view_hand()
+	if h:
+		h.set_state(&"melee_windup")
+		h.tween_to(HEAVY_POSE[0], HEAVY_POSE[1], 0.15)
+	Perf.mark("weapon_" + kind)
+	weapon_skill_started.emit(kind)
+
+func _tick_weapon_skill(delta: float) -> void:
+	if def == null:
+		_finish_weapon_skill()
+		return
+	match _skill_mode:
+		"whirl":
+			# Уклонение, прыжок и подкат прерывают вертушку, а не сохраняют её урон на скорости рывка.
+			if player.is_dashing() or player.is_sliding or player.is_climbing or not player.is_on_floor():
+				_finish_weapon_skill()
+				return
+			var duration := maxf(0.05, def.skill_duration)
+			var turns := maxi(1, def.skill_lvl3_turns) if level >= 3 else 1
+			var old_time := _skill_elapsed
+			_skill_elapsed = minf(duration, _skill_elapsed + delta)
+			player.rotation_target.y += TAU * float(turns) * (_skill_elapsed - old_time) / duration
+			while _skill_pulses < turns and _skill_elapsed >= duration * float(_skill_pulses) / float(turns):
+				_skill_hit_ids.clear()
+				_skill_pulses += 1
+			var radius := def.skill_radius * (def.skill_lvl3_radius_mult if level >= 3 else 1.0)
+			_skill_hits_at(player.global_position, radius, _skill_damage(def.skill_damage_mult), def.skill_knockback)
+			if _skill_elapsed >= duration:
+				_finish_weapon_skill()
+		"lunge":
+			if not player.weapon_skill_lunge_active():
+				if player.weapon_skill_lunge_completed() and _skill_lunges_left > 1:
+					_skill_lunges_left -= 1
+					_skill_hit_ids.clear()
+					var distance := def.skill_lunge_distance * (def.skill_lunge_lvl3_distance_mult if level >= 3 else 1.0)
+					if player.weapon_skill_start_lunge(_skill_direction, distance, def.skill_lunge_duration):
+						_skill_lunge_feedback()
+						return
+				_finish_weapon_skill()
+		"axe_dive", "staff_wave":
+			if not player.weapon_skill_landing_pending(_skill_mode):
+				_finish_weapon_skill()
+
+func _on_weapon_skill_lunge_step(from: Vector3, to: Vector3) -> void:
+	if _skill_mode == "lunge" and active and def != null and player != null and not player.is_dead:
+		_skill_hits_along(from, to, def.skill_lunge_hit_radius)
+
+func _on_weapon_skill_landed(kind: String) -> void:
+	if not active or def == null or kind != _skill_mode:
+		return
+	_skill_hit_ids.clear()
+	if kind == "axe_dive":
+		_skill_hits_at(player.global_position, def.skill_dive_radius, _skill_damage(def.skill_dive_damage_mult), def.skill_knockback)
+		FX.ring(player.get_parent(), player.global_position, def.skill_dive_radius, Color(1.0, 0.7, 0.3, 0.8), 0.3)
+		StyleMeter.event(&"melee_dive")
+	elif kind == "staff_wave":
+		var knock := def.skill_wave_knockback * (def.skill_wave_lvl3_knockback_mult if level >= 3 else 1.0)
+		var damage := _skill_damage(def.skill_wave_lvl3_damage_mult) if level >= 3 else 0.0
+		_skill_hits_at(player.global_position, def.skill_wave_radius, damage, knock)
+		FX.ring(player.get_parent(), player.global_position, def.skill_wave_radius, Color(0.7, 0.9, 1.0, 0.8), 0.35)
+		StyleMeter.event(&"melee_wave")
+	Audio.sfx("skill_land", "sounds/sfx/skill_land.wav")
+	player.camera_fx.add_trauma(0.22)
+	Perf.mark("weapon_" + kind + "_land")
+	_finish_weapon_skill()
+
+func _skill_damage(mult: float) -> float:
+	return def.damage * damage_mult * WeaponDef.level_mult(level) * maxf(0.0, mult)
+
+## Проверка вдоль пути выпада не пропускает врага между соседними кадрами.
+func _skill_hits_along(from: Vector3, to: Vector3, radius: float) -> void:
+	var steps := maxi(1, int(ceil(from.distance_to(to) / maxf(radius * 0.5, 0.05))))
+	for i in range(steps + 1):
+		_skill_hits_at(from.lerp(to, float(i) / float(steps)), radius, _skill_damage(def.skill_damage_mult), def.skill_knockback)
+
+func _skill_hits_at(center: Vector3, radius: float, damage: float, knockback: float) -> void:
+	if not player.is_inside_tree() or player.get_world_3d() == null:
+		return
+	_skill_shape.radius = maxf(0.05, radius)
+	_skill_query.transform = Transform3D(Basis.IDENTITY, center + Vector3.UP * 0.9)
+	var hits := player.get_world_3d().direct_space_state.intersect_shape(_skill_query, 128)
+	var new_hits := 0
+	for hit in hits:
+		var target_node := hit.collider as Node3D
+		if target_node == null or not is_instance_valid(target_node):
+			continue
+		var enemy := target_node as Enemy
+		var prop := target_node as Destructible
+		if enemy == null and prop == null:
+			continue
+		if (enemy and enemy.is_dead) or (prop and (prop.is_broken or damage <= 0.0)):
+			continue
+		var id := target_node.get_instance_id()
+		if _skill_hit_ids.has(id):
+			continue
+		# Объём удара не проходит через стены: выпад пересекает врагов, но не геометрию зала.
+		var origin := center + Vector3.UP * 0.9
+		var target := target_node.global_position + Vector3.UP * (maxf(0.3, enemy.model_scale * 0.9) if enemy else 0.45)
+		if origin.distance_squared_to(target) > 0.0001:
+			var ray := PhysicsRayQueryParameters3D.create(origin, target, 1)
+			if not player.get_world_3d().direct_space_state.intersect_ray(ray).is_empty():
+				continue
+		_skill_hit_ids[id] = true
+		var away := target_node.global_position - center
+		away.y = 0.0
+		if away.length_squared() < 0.001:
+			away = -player.global_transform.basis.z
+		var push := away.normalized() * knockback + Vector3.UP * minf(2.0, knockback * 0.2)
+		if prop:
+			# Player.deal_damage отдельно обрабатывает пропсы, без бонусов за попадание.
+			player.deal_damage(prop, damage, push, "melee_heavy")
+		elif damage > 0.0:
+			player.deal_damage(enemy, damage * _situational_mult(enemy), push, "melee_heavy")
+		else:
+			enemy.apply_knockback_only(push)
+		new_hits += 1
+	if new_hits > 0:
+		FX.hitstop(heavy_hitstop * (def.hitstop_mult if def else 1.0))
+		var h := view_hand()
+		if h:
+			h.kick(Vector3(0.0, 0.0, 0.2))
+		player.camera_fx.add_trauma(heavy_shake * 0.5)
+		hit_landed.emit(new_hits, stage)
+
+func _finish_weapon_skill() -> void:
+	if player:
+		player.weapon_skill_speed_mult = 1.0
+		if _skill_mode == "lunge":
+			player.weapon_skill_cancel_motion()
+	var h := view_hand()
+	if h and _skill_mode == "whirl":
+		# Полный оборот эквивалентен исходной позе; не вращать руку назад на 360°.
+		h.rotation_degrees = rest_rot
+	_skill_mode = ""
+	_skill_lunges_left = 0
+	_skill_hit_ids.clear()
+	heavy = false
+	phase = Phase.IDLE
+	_hold_time = -1.0
+	_since_swing_end = 99.0
+	_animate_to(rest_pos, rest_rot, 0.18, Tween.TRANS_QUAD, Tween.EASE_OUT)
+
+func weapon_skill_try_parry_melee(attacker: Enemy) -> bool:
+	if not _parry_available() or attacker == null or not is_instance_valid(attacker) or attacker.is_dead or attacker.kind == Enemy.Kind.BOSS:
+		return false
+	_parry_left = 0.0
+	attacker.apply_stun(def.skill_parry_stun, true)
+	Audio.sfx("skill_parry", "sounds/sfx/skill_parry.wav")
+	ComicFX.pop("weapon_parry", attacker.global_position + Vector3.UP * 1.5)
+	StyleMeter.event(&"reflect")
+	FX.hitstop(0.04)
+	player.camera_fx.add_trauma(0.15)
+	Perf.mark("weapon_parry")
+	weapon_skill_started.emit("parry")
+	return true
+
+func weapon_skill_try_parry_projectile(projectile: Node) -> bool:
+	if not _parry_available() or projectile == null or not is_instance_valid(projectile) or not projectile.has_method("reflect"):
+		return false
+	if bool(projectile.get("reflected")):
+		return false
+	var velocity: Vector3 = projectile.get("vel")
+	if velocity.length_squared() < 0.001:
+		velocity = -player.get_aim_forward()
+	_parry_left = 0.0
+	projectile.call("reflect", -velocity)
+	Audio.sfx("skill_parry", "sounds/sfx/skill_parry.wav")
+	ComicFX.pop("weapon_parry", player.global_position + Vector3.UP * 1.5)
+	Perf.mark("weapon_parry")
+	weapon_skill_started.emit("parry")
+	return true
+
+func _parry_available() -> bool:
+	return active and player != null and not player.is_dead and def != null and def.skill_kind == "lunge" and _parry_left > 0.0
 
 func _begin_stage(s: int, is_heavy: bool = false) -> void:
 	Perf.mark("melee_heavy" if is_heavy else "axe_swing")
@@ -366,7 +677,9 @@ func _do_hitbox() -> void:
 		var knock := (flat + right * side).normalized() * kb + Vector3.UP * ku
 		if c.has_method("reflect") and c.is_in_group("reflectable"):
 			_hit_ids[id] = true
-			c.reflect(forward * reflect_speed_mult)
+			var projectile := c as Node
+			if projectile == null or not weapon_skill_try_parry_projectile(projectile):
+				c.reflect(forward * reflect_speed_mult)
 			new_hits += 1
 		elif c is Destructible:
 			# Бочка/ящик: урон по пропсу (не враг — не тратит max_targets, без множителей и on_hit)
@@ -420,4 +733,4 @@ func _situational_mult(c: Object) -> float:
 	return m
 
 func is_busy() -> bool:
-	return phase != Phase.IDLE
+	return phase != Phase.IDLE or not _skill_mode.is_empty()
