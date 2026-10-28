@@ -1,0 +1,301 @@
+extends Node
+## Изолированный эксперимент: обычный переход Game._on_exit_reached в GL.
+## Испытание намеренно запускает переход с живыми врагами и FX; это нагрузка,
+## а не запись реального прохождения или воспроизведение случайной комнаты.
+
+var game: Game
+var old_room: WeakRef
+var old_holder: WeakRef
+var observing: bool = false
+var warmups: int = 0
+var started_us: int = 0
+var _failed: bool = false
+var _outdir: String = ""
+var _controls: bool = false
+var _paused_on_detach: bool = false
+var _cancel_mode: String = ""
+var _stress: bool = false
+var _corpses: bool = false
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	if not has_meta("runner"):
+		var runner := Node.new()
+		runner.set_script(get_script())
+		runner.set_meta("runner", true)
+		runner.name = "TransitionUniformABRunner"
+		get_tree().root.add_child.call_deferred(runner)
+		return
+	get_tree().node_added.connect(_node_added)
+	get_tree().node_removed.connect(_node_removed)
+	_run.call_deferred()
+
+func _node_removed(n: Node) -> void:
+	if _controls and observing and old_room and old_room.get_ref() == n:
+		get_tree().paused = true
+		_paused_on_detach = true
+		print("EVENT_PAUSE_ON_DETACH frame=%d" % Engine.get_process_frames())
+
+func _node_added(n: Node) -> void:
+	if not observing or not n is ShaderWarmup:
+		return
+	warmups += 1
+	var r: Object = old_room.get_ref() if old_room else null
+	var h: Object = old_holder.get_ref() if old_holder else null
+	print("EVENT_WARMUP frame=%d elapsed_ms=%.3f old_room_alive=%s old_holder_alive=%s holder_queued=%s" % [
+		Engine.get_process_frames(), (Time.get_ticks_usec() - started_us) / 1000.0,
+		str(r != null), str(h != null), str((h as Node).is_queued_for_deletion()) if h is Node else "-" ])
+
+func _frames(count: int) -> void:
+	for _i in count:
+		await get_tree().process_frame
+		if game and is_instance_valid(game) and game.player and is_instance_valid(game.player):
+			game.player.health = game.player.max_health
+
+func _snapshot(label: String) -> void:
+	var pool_size := 0
+	var pool_active := 0
+	var pool_hidden_material := 0
+	var branch_counts := {"room": 0, "player": 0, "warmup": 0, "game": 0, "other": 0}
+	for n in get_tree().root.find_children("*", "GeometryInstance3D", true, false):
+		var gi := n as GeometryInstance3D
+		if not FX._has_iu(gi.material_override) and not FX._has_iu(gi.material_overlay):
+			continue
+		var branch := "other"
+		var at: Node = gi
+		while at:
+			if at is ShaderWarmup:
+				branch = "warmup"
+				break
+			if game and is_instance_valid(game):
+				if at == game.room:
+					branch = "room"
+					break
+				if at == game.player:
+					branch = "player"
+					break
+				if at == game:
+					branch = "game"
+					break
+			at = at.get_parent()
+		branch_counts[branch] += 1
+	for kind in FX._pools:
+		var entries: Array = FX._pools[kind]
+		for entry in entries:
+			if not is_instance_valid(entry):
+				continue
+			var mi := entry as MeshInstance3D
+			pool_size += 1
+			if mi.visible:
+				pool_active += 1
+			elif mi.material_override == null:
+				pool_hidden_material += 1
+	var holder_path := "<none>"
+	if FX._holder and is_instance_valid(FX._holder) and FX._holder.is_inside_tree():
+		holder_path = str(FX._holder.get_path())
+	print("SNAPSHOT %s frame=%d room_index=%d current_mat_iu=%d pool_total=%d pool_active=%d pool_hidden_no_material=%d holder=%s enemies=%d" % [
+		label, Engine.get_process_frames(), Run.room_index, FX.instance_uniform_users(get_tree().root),
+		pool_size, pool_active, pool_hidden_material, holder_path, get_tree().get_nodes_in_group("enemies").size()])
+	print("IU_CURRENT_BRANCHES %s %s" % [label, JSON.stringify(branch_counts)])
+
+func _check(ok: bool, what: String) -> void:
+	print("CHECK %s %s" % ["OK" if ok else "FAIL", what])
+	if not ok:
+		_failed = true
+
+func _pressure_estimate() -> int:
+	# Эвристика без синхронизирующих getter-вызовов: текущие материалы плюс
+	# ранее использованные спрятанные узлы известных пулов. Не счётчик драйвера.
+	var estimate := FX.instance_uniform_users(get_tree().root)
+	for kind in FX._pools:
+		var entries: Array = FX._pools[kind]
+		for entry in entries:
+			if not is_instance_valid(entry):
+				continue
+			var mi := entry as MeshInstance3D
+			if not mi.visible and mi.material_override == null and not FX._has_iu(mi.material_overlay):
+				estimate += 1
+	return estimate
+
+func _room_corpses() -> int:
+	if not is_instance_valid(game) or not is_instance_valid(game.room):
+		return 0
+	var count := 0
+	for node in game.room.find_children("*", "RigidBody3D", true, false):
+		if node.is_in_group("debris") and not node.is_queued_for_deletion():
+			count += 1
+	return count
+
+func _cancel_to_menu(stage: String) -> void:
+	game.go_to_menu()
+	await _frames(45)
+	var current := get_tree().current_scene
+	_check(current != null and current.scene_file_path.ends_with("ui/main_menu.tscn"), "cancel %s returns to menu" % stage)
+	_check(warmups == 0, "cancel %s creates no later warmup" % stage)
+	_check(not LoadingScreen.is_showing(), "cancel %s releases loading screen" % stage)
+	print("END_TRANSITION_AB success=%s" % str(not _failed))
+	observing = false
+	get_tree().paused = false
+	FX.reset_time()
+	get_tree().quit(1 if _failed else 0)
+
+func _run() -> void:
+	var args := OS.get_cmdline_user_args()
+	_outdir = args[0] if not args.is_empty() else "user://"
+	_cancel_mode = "cancel_pending" if "cancel_pending" in args else ("cancel_detached" if "cancel_detached" in args else "")
+	_controls = "controls" in args or _cancel_mode == "cancel_detached"
+	_corpses = "corpses" in args
+	_stress = "stress" in args or _corpses
+	print("BEGIN_TRANSITION_AB renderer=%s seed=9001 forced=room_06_to_room_07 stress=%s corpses=%s" % [RenderingServer.get_current_rendering_method(), str(_stress), str(_corpses)])
+	seed(9001)
+	Run.start_run("berserker")
+	Run.room_order.assign([
+		"res://rooms/room_01.tscn", "res://rooms/room_02.tscn", "res://rooms/room_03.tscn",
+		"res://rooms/room_04.tscn", "res://rooms/room_05.tscn", "res://rooms/room_06.tscn",
+		"res://rooms/room_07.tscn"])
+	Run.room_index = 5
+	Run.miniboss_rooms.clear()
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await _frames(40)
+	game = get_tree().current_scene as Game
+	if game == null or game.room == null:
+		_check(false, "game and room_06 constructed")
+		print("END_TRANSITION_AB success=false")
+		get_tree().quit(1)
+		return
+	_check(game.room.scene_file_path.ends_with("room_06.tscn"), "source room 06")
+	game.player.max_health = 1000000.0
+	game.player.health = game.player.max_health
+	# Только поток штатных волн останавливаем; вручную добавленные враги по-прежнему
+	# выполняют физику, мышление и анимацию.
+	game.room.set_physics_process(false)
+	game.room._spawn_queue.clear()
+	for existing in game.room.alive_enemies().duplicate():
+		if is_instance_valid(existing):
+			existing.queue_free()
+	game.room._alive.clear()
+	if _corpses:
+		# Делаем искусственную толпу последней волной, чтобы реальный сигнал
+		# Room.cleared сработал после последней смерти.
+		game.room._waves.clear()
+		game.room._advance_pending = false
+	await _frames(2)
+	var center := game.player.global_position
+	var live: Array[Enemy] = []
+	var enemy_count := 10 if _corpses else (24 if _stress else 14)
+	seed(9001)
+	for i in enemy_count:
+		var angle := TAU * i / float(enemy_count)
+		var pos := center + Vector3(cos(angle) * 5.0, 0.05, sin(angle) * 5.0)
+		var e := game.room.spawn_extra("grunt" if i % 4 == 0 else "fodder", pos)
+		if e:
+			e.max_health = 1000000.0
+			e.health = e.max_health
+			live.append(e)
+	await _frames(35)
+	_check(live.size() == enemy_count and live.all(func(e: Enemy) -> bool: return is_instance_valid(e) and not e.is_dead and e.is_physics_processing()), "%d living enemies with physics" % enemy_count)
+	if _stress:
+		# Игровые эффекты, а не искусственные тестовые шейдеры. Сначала они
+		# доигрывают и остаются невидимыми в пуле; затем часть переиспользуется.
+		for i in 10:
+			var p := center + Vector3(float(i % 5) * 0.15, 0.5, float(i / 5) * 0.15)
+			FX.hit_flash(game, p, 0.5)
+			FX.smoke(game, p, 0.4)
+			FX.ichor_splash(game, p, 0.5)
+			FX.spark_star(game, p, Color.WHITE, 0.5)
+		FX.lightning(game, center + Vector3(0, 1, 0), center + Vector3(23, 1, 0), 0.25)
+		FX.lightning(game, center + Vector3(0, 1, 0), center + Vector3(-23, 1, 0), 0.25)
+		for _i in 150:
+			await _frames(1)
+			if FX.pool_active("ichor_splash") == 0 and FX.pool_active("smoke") == 0:
+				break
+		_snapshot("after_used_fx")
+		_check(FX.pool_size("ichor_splash") >= 10 and FX.pool_size("sparks") >= 10 and FX.pool_active("ichor_splash") == 0, "previously used FX retained in pool")
+	for e in live:
+		if is_instance_valid(e):
+			e._hurt_flash = 1.0
+			e._set_overlay(1.0, 0.8)
+	await _frames(3)
+	if _corpses:
+		for e in live:
+			if is_instance_valid(e):
+				e.take_hit(e.max_health + 1.0, Vector3.ZERO, "ranged")
+		await _frames(2)
+		print("CORPSES_BEFORE_EXIT count=%d alive=%d cleared=%s" % [_room_corpses(), game.room.alive_count(), str(game.room._is_cleared)])
+		_check(_room_corpses() >= 6 and game.room.alive_count() == 0 and game.room._is_cleared, "recently killed enemies leave corpses in cleared old room")
+	_snapshot("before_exit")
+	if _stress:
+		var estimate := _pressure_estimate()
+		print("ESTIMATE_PRE current_plus_hidden_pool=%d nominal_limit=%d" % [estimate, FX.INSTANCE_SLOTS_GL])
+		_check(estimate <= 224, "leave nominal headroom before transition")
+		if _failed:
+			print("END_TRANSITION_AB success=false")
+			get_tree().quit(1)
+			return
+	old_room = weakref(game.room)
+	observing = true
+	started_us = Time.get_ticks_usec()
+	game._on_exit_reached()
+	if _cancel_mode == "cancel_pending":
+		await _cancel_to_menu("before timer")
+		return
+	if _controls:
+		game._on_exit_reached()
+		_check(Run.room_index == 6, "duplicate request advances once")
+	await _frames(8)
+	# Эффекты активны до окончания обычного затемнения, не зачисляются искусственно
+	# после начала нового зала. Часть узлов находится под Game, часть — под Room.
+	for e in live:
+		if is_instance_valid(e):
+			e._hurt_flash = 1.0
+	for i in 10:
+		var p := center + Vector3(float(i % 5) * 0.15, 0.5, float(i / 5) * 0.15)
+		FX.hit_flash(game, p, 0.5)
+		FX.smoke(game, p, 0.4)
+	_check(FX.pool_active("hit_flash") > 0 and FX.pool_active("smoke") > 0, "hit flashes and smoke active during fade")
+	old_holder = weakref(FX._holder) if FX._holder and is_instance_valid(FX._holder) else null
+	_snapshot("during_fade")
+	if _corpses:
+		print("CORPSES_DURING_FADE count=%d" % _room_corpses())
+		_check(_room_corpses() >= 6, "corpses remain in old room during fade")
+	if _controls:
+		for _i in 120:
+			if _paused_on_detach:
+				break
+			await _frames(1)
+		_check(_paused_on_detach, "pause on detach observed")
+		if _paused_on_detach:
+			if _cancel_mode == "cancel_detached":
+				await _cancel_to_menu("while awaiting deletion")
+				return
+			# Ускоряем тест safety-таймера, не тратя 12 секунд GL-рендера.
+			var ls := LoadingScreen._inst
+			var old_safety := ls.safety_time if ls else 12.0
+			if ls:
+				ls.safety_time = 0.001
+			await _frames(20)
+			_check(game.room == null and LoadingScreen.is_showing(), "pause keeps loading screen while room is absent")
+			if ls:
+				ls.safety_time = old_safety
+			get_tree().paused = false
+	var completed := false
+	for i in 180:
+		await _frames(1)
+		if game and is_instance_valid(game) and game.room and is_instance_valid(game.room) and game.room.scene_file_path.ends_with("room_07.tscn"):
+			completed = true
+			print("EVENT_NEW_ROOM frame=%d elapsed_ms=%.3f old_alive=%s" % [Engine.get_process_frames(), (Time.get_ticks_usec() - started_us) / 1000.0, str(old_room.get_ref() != null)])
+			break
+	_check(completed, "room 07 loaded")
+	if completed:
+		_snapshot("new_room_warmup")
+	await _frames(20)
+	_snapshot("after_warmup")
+	_check(old_room.get_ref() == null, "old room destroyed")
+	_check(old_holder == null or old_holder.get_ref() == null, "previous FX holder destroyed")
+	_check(warmups == 1, "exactly one new warmup")
+	_check(Run.room_index == 6, "single advance to seventh room")
+	print("END_TRANSITION_AB success=%s" % str(not _failed))
+	observing = false
+	get_tree().paused = false
+	FX.reset_time()
+	get_tree().quit(1 if _failed else 0)

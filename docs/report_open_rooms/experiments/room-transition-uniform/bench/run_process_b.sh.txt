@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+set -u
+set -o pipefail
+
+project=/workspace/thor-transition-probe
+out=/workspace/thor-artifacts/room-transition-gl
+export LP_NUM_THREADS=4
+export LIBGL_ALWAYS_SOFTWARE=1
+export THOR_ROOM_PROBE_SYNC=0
+expected=ee7fc058e14d1963587175537938d468d77477a3fd987ee6ada14ca7e0bafb54
+actual=$(sha256sum "$project/scenes/game.gd" | cut -d' ' -f1)
+if [[ "$actual" != "$expected" ]]; then
+    printf 'Wrong game.gd: expected %s, got %s\n' "$expected" "$actual" >&2
+    exit 2
+fi
+
+cat > "$out/xorg-process-b.conf" <<'XCONF'
+Section "Device"
+    Identifier "DummyDevice"
+    Driver "dummy"
+    VideoRam 256000
+EndSection
+Section "Monitor"
+    Identifier "DummyMonitor"
+    HorizSync 28-80
+    VertRefresh 48-75
+    Modeline "1280x720" 74.25 1280 1390 1430 1650 720 725 730 750
+EndSection
+Section "Screen"
+    Identifier "DummyScreen"
+    Device "DummyDevice"
+    Monitor "DummyMonitor"
+    DefaultDepth 24
+    SubSection "Display"
+        Depth 24
+        Modes "1280x720"
+    EndSubSection
+EndSection
+XCONF
+
+display_num=
+for n in $(seq 150 199); do
+    if [[ ! -e "/tmp/.X11-unix/X$n" && ! -e "/tmp/.X$n-lock" ]]; then
+        display_num=$n
+        break
+    fi
+done
+if [[ -z "$display_num" ]]; then
+    printf 'No unused X display\n' >&2
+    exit 2
+fi
+
+ulimit -c 0
+# 48 828 KiB < 50 000 000 bytes per file; a process hitting the limit fails visibly.
+ulimit -f 48828
+/usr/lib/xorg/Xorg ":$display_num" -noreset -nolisten tcp -config "$out/xorg-process-b.conf" -logfile "$out/xorg-process-b.log" > "$out/xorg-process-b-stdout.log" 2>&1 &
+xorg_pid=$!
+cleanup() {
+    kill "$xorg_pid" 2>/dev/null || true
+    wait "$xorg_pid" 2>/dev/null || true
+}
+trap cleanup EXIT
+export DISPLAY=":$display_num"
+ready=0
+for ((i=0; i<50; i++)); do
+    if xdpyinfo >/dev/null 2>&1; then
+        ready=1
+        break
+    fi
+    if ! kill -0 "$xorg_pid" 2>/dev/null; then
+        break
+    fi
+    sleep 0.2
+done
+if [[ "$ready" != 1 ]]; then
+    printf 'Xorg failed to start\n' >&2
+    exit 2
+fi
+printf 'display=%s software=%s threads=%s sync=%s game_sha256=%s\n' "$DISPLAY" "$LIBGL_ALWAYS_SOFTWARE" "$LP_NUM_THREADS" "$THOR_ROOM_PROBE_SYNC" "$actual" > "$out/run-process-b-metadata.txt"
+
+for label in B_process_stress B_process_corpses B_process_controls B_process_cancel_pending B_process_cancel_detached; do
+    args=(stress)
+    if [[ "$label" == *corpses* ]]; then
+        args=(corpses)
+    elif [[ "$label" == *controls* ]]; then
+        args=(controls)
+    elif [[ "$label" == *cancel_pending* ]]; then
+        args=(cancel_pending)
+    elif [[ "$label" == *cancel_detached* ]]; then
+        args=(cancel_detached)
+    fi
+    mkdir -p "$out/userdata/$label"
+    printf 'START %s %s\n' "$label" "$(date -u +%FT%TZ)" | tee -a "$out/run-process-b-metadata.txt"
+    if XDG_DATA_HOME="$out/userdata/$label" timeout --signal=TERM --kill-after=10s 240 stdbuf -oL -eL godot --path "$project" --fixed-fps 60 --audio-driver Dummy --rendering-method gl_compatibility --resolution 320x180 res://tests/transition_uniform_ab.tscn -- "$out" "${args[@]}" > "$out/$label.log" 2>&1; then
+        rc=0
+    else
+        rc=$?
+    fi
+    printf 'END %s rc=%d %s\n' "$label" "$rc" "$(date -u +%FT%TZ)" | tee -a "$out/run-process-b-metadata.txt"
+    rg -n 'BEGIN_TRANSITION_AB|EVENT_|^SNAPSHOT|^CORPSES_|^ESTIMATE_PRE|^IU_CURRENT_BRANCHES|^CHECK|END_TRANSITION_AB|Too many instances|SCRIPT ERROR|Parse Error' "$out/$label.log" || true
+    if [[ "$rc" != 0 ]] || ! rg -q 'END_TRANSITION_AB success=true' "$out/$label.log" || rg -q 'SCRIPT ERROR|Parse Error' "$out/$label.log"; then
+        printf 'Run %s needs investigation; full log preserved\n' "$label" >&2
+        exit 1
+    fi
+    if ! awk '/EVENT_WARMUP/ { warm=1 } !warm && /Too many instances using shader instance variables/ { print NR ":" $0; bad=1 } END { exit bad ? 1 : 0 }' "$out/$label.log"; then
+        printf 'Run %s overflowed before new warmup: stress control invalid\n' "$label" >&2
+        exit 1
+    fi
+done
+actual=$(sha256sum "$project/scenes/game.gd" | cut -d' ' -f1)
+printf 'final_game_sha256=%s\n' "$actual" | tee -a "$out/run-process-b-metadata.txt"
+if [[ "$actual" != "$expected" ]]; then
+    printf 'game.gd changed during the experiment\n' >&2
+    exit 1
+fi
