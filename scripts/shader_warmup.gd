@@ -84,15 +84,22 @@ func _build() -> void:
 		h.skin_tint = Color(0.8, 0.85, 0.9)
 		add_child(h)
 		h.position = right * (1.6 if g == "Male" else -1.6)
+		var gl_flash: ShaderMaterial
+		if gl:
+			gl_flash = Enemy.FLASH_MATERIAL_GL.duplicate() as ShaderMaterial
+			gl_flash.next_pass = Outline.flash_next_pass()
+			gl_flash.set_shader_parameter("flash", 1.0)
+			gl_flash.set_shader_parameter("glow", 1.0)
 		var with_overlay := 0
 		for mi in h.find_children("*", "MeshInstance3D", true, false):
 			if gl and with_overlay >= 2:
 				continue
 			with_overlay += 1
 			var gi := mi as GeometryInstance3D
-			gi.material_overlay = Enemy.FLASH_MATERIAL
-			gi.set_instance_shader_parameter("flash", 1.0)
-			gi.set_instance_shader_parameter("glow", 1.0)
+			gi.material_overlay = gl_flash if gl else Enemy.FLASH_MATERIAL
+			if not gl:
+				gi.set_instance_shader_parameter("flash", 1.0)
+				gi.set_instance_shader_parameter("glow", 1.0)
 		Outline.add(h)
 	# Оружие (на слое мира — как у врагов)
 	var wi := 0

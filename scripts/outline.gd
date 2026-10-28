@@ -5,7 +5,8 @@ class_name Outline
 ##
 ## Как: один общий ShaderMaterial (shaders/outline.gdshader — «вывернутая оболочка») в material_overlay узла.
 ## Слот оверлея у врагов делит со вспышкой урона (shaders/hit_flash.tres): пока вспышка горит, оверлей —
-## FLASH_MATERIAL, а обводка — его next_pass (Enemy._set_overlay берёт Outline.overlay() вместо null).
+## материал вспышки, а обводка — его next_pass (Enemy._set_overlay берёт Outline.overlay() вместо null).
+## В GL у каждого врага отдельный материал вспышки с обычными uniform, у всех частей врага он общий.
 ## Шейдер без instance uniform сам не требует новых параметров; прежний блок узла может сохраняться до удаления RID.
 ## Толщина и цвет — uniform общего материала,
 ## смена настройки — без компиляции. Прогрев — ShaderWarmup (warming = true: образцы с обводкой при любой настройке).
@@ -115,6 +116,7 @@ static func apply_settings() -> void:
 	m.set_shader_parameter("width_scale", width_scale())
 	# Обводка во время вспышки урона/свечения элиты
 	_flash().next_pass = m if _on else null
+	_sync_gl_flash_passes()
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return
@@ -135,14 +137,40 @@ static func flash_next_pass() -> Material:
 static func _flash() -> ShaderMaterial:
 	return Enemy.FLASH_MATERIAL
 
+## GL-материалы принадлежат врагам, а не одному общему ресурсу. Меняем next_pass
+## только у активных оверлеев и только раз на материал; при следующем включении
+## неактивный материал синхронизируется с _flash() в Enemy._set_overlay.
+static func _sync_gl_flash_passes() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	var seen := {}
+	for n in tree.get_nodes_in_group(GROUP):
+		var gi := n as GeometryInstance3D
+		if gi == null:
+			continue
+		var m := gi.material_overlay as ShaderMaterial
+		if m == null or m.shader != Enemy.FLASH_GL_SHADER or seen.has(m.get_instance_id()):
+			continue
+		seen[m.get_instance_id()] = true
+		m.next_pass = _flash().next_pass
+
+static func is_flash(m: Material) -> bool:
+	if m == _flash():
+		return true
+	var shader_material := m as ShaderMaterial
+	return shader_material != null and shader_material.shader == Enemy.FLASH_GL_SHADER
+
 ## Прогрев: обводка на образцах (и в next_pass вспышки) при любой настройке — до end_warmup()
 static func begin_warmup() -> void:
 	warming = true
 	_flash().next_pass = material()
+	_sync_gl_flash_passes()
 
 static func end_warmup() -> void:
 	warming = false
 	_flash().next_pass = material() if enabled() else null
+	_sync_gl_flash_passes()
 
 ## Сколько узлов сейчас рисуют обводку (тесты, F3)
 static func active_count(root: Node = null) -> int:
@@ -154,6 +182,6 @@ static func active_count(root: Node = null) -> int:
 		var gi := g as GeometryInstance3D
 		if gi == null or (root and not root.is_ancestor_of(gi)):
 			continue
-		if gi.material_overlay == _material or (gi.material_overlay == Enemy.FLASH_MATERIAL and _flash().next_pass == _material):
+		if gi.material_overlay == _material or (is_flash(gi.material_overlay) and gi.material_overlay.next_pass == _material):
 			n += 1
 	return n
