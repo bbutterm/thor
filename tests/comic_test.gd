@@ -55,6 +55,8 @@ func fresh() -> void:
 
 func _run() -> void:
 	print("=== COMIC TEST ===")
+	# Криты, шанс слова и ИИ берут randf(): без зерна проверки иногда падали (особенно в параллельном прогоне)
+	seed(4242)
 	CF = get_tree().root.get_node("ComicFX")
 	GameSettings.ensure_loaded()
 	var saved_enabled := GameSettings.comic_enabled
