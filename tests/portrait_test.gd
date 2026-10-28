@@ -72,6 +72,26 @@ func _ready() -> void:
 	else:
 		ok += 1
 	Portrait.prefetch(PackedStringArray())
+	# Ярл использует эту эмоцию перед боем, во второй фазе и после победы.
+	var jarl_emb := Portrait.texture_path("jarl", "embarrassed")
+	var jarl_tex := load(jarl_emb) as Texture2D if jarl_emb != "" else null
+	var jarl_img: Image = jarl_tex.get_image() if jarl_tex else null
+	if not jarl_emb.ends_with("jarl_embarrassed.webp") or jarl_tex == null or jarl_tex.get_height() > 768 or jarl_img == null or jarl_img.get_pixel(0, 0).a > 0.01:
+		fails += 1
+		print("  [FAIL] портрет смущённого Ярла не загрузился, велик или не прозрачен")
+	else:
+		ok += 1
+	for emo in Portrait.EMOTIONS:
+		var path := Portrait.texture_path("jarl", emo)
+		if path != "":
+			load(path)
+	Portrait.prefetch(PackedStringArray(["jarl"]))
+	if not jarl_emb in Portrait.prefetched():
+		fails += 1
+		print("  [FAIL] смущённый Ярл не прогрет")
+	else:
+		ok += 1
+	Portrait.prefetch(PackedStringArray())
 	# Портреты гномов сделаны для ларька; отсутствующие эмоции используют neutral.
 	for pair in [["brokk", ["neutral", "happy", "angry", "shocked", "smug"]],
 			["eitri", ["neutral", "happy", "embarrassed"]]]:

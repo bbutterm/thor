@@ -48,12 +48,13 @@ func _run() -> void:
 		get_tree().quit(1)
 		return
 	var line := str(texts[speaker])
+	var backdrop := "midgard" if speaker == "jarl" else "couch"
 	Save.use_path("user://extra_emotion_shots_save.json")
 	Save.reset()
 	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
 	await wait_frames(12)
 	# Раньше embarrassed при отсутствии файла выбирал neutral.
-	Dialogue.play_lines([{"speaker": speaker, "emotion": "neutral", "text": line}], "", "couch")
+	Dialogue.play_lines([{"speaker": speaker, "emotion": "neutral", "text": line}], "", backdrop)
 	await wait_frames(20)
 	Dialogue.box()._finish_typing()
 	await wait_frames(2)
@@ -62,7 +63,7 @@ func _run() -> void:
 		return
 	Dialogue.box().skip()
 	await wait_frames(5)
-	Dialogue.play_lines([{"speaker": speaker, "emotion": "embarrassed", "text": line}], "", "couch")
+	Dialogue.play_lines([{"speaker": speaker, "emotion": "embarrassed", "text": line}], "", backdrop)
 	await wait_frames(20)
 	Dialogue.box()._finish_typing()
 	await wait_frames(2)
@@ -81,6 +82,10 @@ func _run() -> void:
 		printerr("SHOT FAIL: игра не загружена")
 		get_tree().quit(1)
 		return
+	for enemy in game.room.alive_enemies():
+		enemy.set_physics_process(false)
+	# Дожидаемся затухания образцов прогрева, чтобы они не закрывали игровой кадр.
+	await wait_frames(40)
 	Dialogue.bubble().show_line(speaker, "embarrassed", str(barks[speaker]))
 	await wait_frames(20)
 	if not await shot("bark"):
