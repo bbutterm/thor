@@ -386,6 +386,114 @@ func test_parry() -> void:
 		projectile.queue_free()
 	p.axe.hitbox.collision_mask = 92
 
+## reset_player очищает обработчики, поэтому для каждого случая ставим настоящее описание тела.
+func setup_parry_body(body_id: String) -> void:
+	var body := load("res://run/bodies/%s.tres" % body_id) as BodyDef
+	check(body != null, "данные тела %s загружены" % body_id)
+	if body:
+		p.setup_body_traits(body)
+
+func test_shieldmaiden_parry() -> void:
+	print("-- Пассивка Девы щита: парирование")
+	# В обоих случаях удар летит после обычного окна меча, но внутри окна Девы.
+	# Уровень 3: 0.3 с у обычного тела и 0.6 с у Девы.
+	for level in [1, 3]:
+		for body_id in ["hunter", "shieldmaiden"]:
+			await reset_player("sword", level)
+			setup_parry_body(body_id)
+			p.axe.hitbox.collision_mask = 0
+			p.health = 40.0
+			var enemy := enemy_at(p.global_position + Vector3(0, 0, -1.3))
+			enemy._set_state(Enemy.State.WINDUP)
+			await tap("attack")
+			await frames(15 if level == 1 else 22)
+			enemy._execute_attack()
+			if body_id == "shieldmaiden":
+				check(is_equal_approx(p.health, 45.0) and enemy.state == Enemy.State.STUNNED,
+					"Дева ур. %d парирует поздний реальный удар и лечится на 5 HP" % level)
+			else:
+				check(p.health < 40.0 and enemy.state != Enemy.State.STUNNED,
+					"обычное тело ур. %d не парирует удар после своего окна" % level)
+			p.axe.hitbox.collision_mask = 92
+
+	# И расширенное окно должно завершаться: поздний удар наносит урон и не лечит.
+	for level in [1, 3]:
+		await reset_player("sword", level)
+		setup_parry_body("shieldmaiden")
+		p.axe.hitbox.collision_mask = 0
+		p.health = 40.0
+		var enemy := enemy_at(p.global_position + Vector3(0, 0, -1.3))
+		enemy._set_state(Enemy.State.WINDUP)
+		await tap("attack")
+		await frames(30 if level == 1 else 42)
+		enemy._execute_attack()
+		check(p.health < 40.0 and enemy.state != Enemy.State.STUNNED,
+			"Дева ур. %d не лечится, если удар пришёл после расширенного окна" % level)
+		p.axe.hitbox.collision_mask = 92
+
+	# Обычное тело тоже парирует своевременный удар, но пассивного лечения не получает.
+	await reset_player("sword")
+	setup_parry_body("hunter")
+	p.axe.hitbox.collision_mask = 0
+	p.health = 40.0
+	var normal_enemy := enemy_at(p.global_position + Vector3(0, 0, -1.3))
+	normal_enemy._set_state(Enemy.State.WINDUP)
+	await tap("attack")
+	normal_enemy._execute_attack()
+	check(is_equal_approx(p.health, 40.0) and normal_enemy.state == Enemy.State.STUNNED,
+		"обычное тело парирует своевременный удар без лечения")
+	p.axe.hitbox.collision_mask = 92
+
+	# Настоящий снаряд входит в зону игрока; повтор с уже отражённым снарядом не лечит.
+	for level in [1, 3]:
+		await reset_player("sword", level)
+		setup_parry_body("shieldmaiden")
+		p.axe.hitbox.collision_mask = 0
+		p.health = 40.0
+		await tap("attack")
+		await frames(15 if level == 1 else 22)
+		var projectile := PROJECTILE.new()
+		game.add_child(projectile)
+		projectile.launch(p.global_position + Vector3(0, 0.9, -1.0), Vector3(0, 0, 8), 7.0, null)
+		await frames(6)
+		var reflected := is_instance_valid(projectile) and projectile.reflected and projectile.vel.z < 0.0
+		check(reflected and is_equal_approx(p.health, 45.0),
+			"Дева ур. %d отражает поздний входящий снаряд и лечится на 5 HP" % level)
+		if is_instance_valid(projectile):
+			# Откроем новое окно: отказ должен происходить именно из-за повторного отражения.
+			p.axe.request_attack()
+			var repeated := p.axe.weapon_skill_try_parry_projectile(projectile)
+			check(not repeated and is_equal_approx(p.health, 45.0),
+				"уже отражённый снаряд не парируется и не лечит повторно")
+			projectile.queue_free()
+		else:
+			check(false, "отражённый снаряд доступен для проверки повтора")
+		p.axe.hitbox.collision_mask = 92
+
+	# Верхний предел здоровья и отказ для невалидной цели и босса.
+	await reset_player("sword")
+	setup_parry_body("shieldmaiden")
+	p.axe.hitbox.collision_mask = 0
+	p.health = p.max_health - 2.0
+	var target := enemy_at(p.global_position + Vector3(0, 0, -1.3))
+	target._set_state(Enemy.State.WINDUP)
+	await tap("attack")
+	target._execute_attack()
+	check(is_equal_approx(p.health, p.max_health), "лечение при парировании не превышает максимум HP")
+
+	await reset_player("sword")
+	setup_parry_body("shieldmaiden")
+	p.axe.hitbox.collision_mask = 0
+	p.health = 40.0
+	var boss := enemy_at(p.global_position + Vector3(0, 0, -1.3))
+	boss.kind = Enemy.Kind.BOSS
+	await tap("attack")
+	var invalid := p.axe.weapon_skill_try_parry_melee(null)
+	var blocked := p.axe.weapon_skill_try_parry_melee(boss)
+	check(not invalid and not blocked and is_equal_approx(p.health, 40.0),
+		"невалидная цель и босс не считаются успешным парированием и не лечат")
+	p.axe.hitbox.collision_mask = 92
+
 func jump_height() -> float:
 	var start := p.global_position.y
 	await tap("jump")
@@ -547,6 +655,7 @@ func _run() -> void:
 	await test_skill_props()
 	await test_dive()
 	await test_parry()
+	await test_shieldmaiden_parry()
 	await test_staff()
 	await test_wave_fall()
 	await test_enemy_head()

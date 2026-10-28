@@ -19,7 +19,7 @@ var def: PassiveDef
 ##   "heal_mult" (float) — лечение; "rune_power" (int) — во сколько раз считаются руны (Run.rune_count);
 ##   "ranged_move_mult" (float) — замедление ренжем; "air_dash" (bool) — рывок в воздухе;
 ##   "aim_wobble_deg" (float) — покачивание прицела; "start_weapon_level" (int) — уровень стартового оружия;
-##   "parry_window_mult", "parry_heal" — окно парирования (TODO: парирования ещё нет);
+##   "parry_window_mult", "parry_heal" — окно парирования и лечение при успехе;
 ##   "sharpen_cost_mult" — заточка у Эйтри (run/shop.gd → Shop.price).
 func modify(_stat: StringName, value: Variant) -> Variant:
 	return value

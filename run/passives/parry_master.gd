@@ -1,7 +1,6 @@
 extends BodyTraitHandler
 ## «Мастер щита» (Дева щита): окно парирования ×2, парирование лечит 5 HP.
-## TODO: парирования мечом ещё нет (WeaponDef.special = "parry" — только метка). Когда появится, механика должна
-## брать окно × player.modify_stat("parry_window_mult", 1.0) и лечить player.modify_stat("parry_heal", 0.0).
+## Меч берёт множитель окна и лечение через player.modify_stat.
 
 @export var window_mult: float = 2.0
 @export var heal_on_parry: float = 5.0

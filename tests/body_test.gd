@@ -315,7 +315,11 @@ func _test_passives() -> void:
 	# Дева щита: ренж −25 %
 	p = await _start("shieldmaiden")
 	check(is_equal_approx(p.outgoing_damage_mult(null, "ranged"), 0.75) and is_equal_approx(p.outgoing_damage_mult(null, "melee"), 1.0), "Дева щита: ренж ×0.75, мили ×1")
-	check(not (load("res://run/passives/parry_master.tres") as PassiveDef).implemented, "«Мастер щита» — заглушка (implemented=false)")
+	var shield_trait := load("res://run/passives/parry_master.tres") as PassiveDef
+	check(shield_trait.implemented and shield_trait.todo.is_empty() and p.body_handler("parry_master") != null
+		and is_equal_approx(float(p.modify_stat(&"parry_window_mult", 1.0)), 2.0)
+		and is_equal_approx(float(p.modify_stat(&"parry_heal", 0.0)), 5.0),
+		"Дева щита: работающая пассивка ×2 к окну и +5 HP при парировании")
 	# Гонец: в спину ×2, спереди −30 %
 	p = await _start("courier")
 	await _place(p, _floor_pos())
@@ -380,6 +384,9 @@ func _test_select_screen() -> void:
 		if bs.card(b.id).get_meta("locked"):
 			locked += 1
 	check(locked == 6, "закрыто 6 тел (без открытий) — %d" % locked)
+	bs.select("shieldmaiden")
+	check(bs._passive_title.text == "Мастер щита" and bs._passive_desc.text == "Окно парирования ×2, парирование лечит 5 HP",
+		"Дева щита: экран показывает работающую пассивку без пометки «скоро»")
 	bs.select("priest")
 	var priest_price := BodySelect.price_of(bs.selected)
 	check(priest_price == 1500, "цена открытия жреца — 1500")

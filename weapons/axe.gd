@@ -253,7 +253,8 @@ func request_attack() -> void:
 	if not active or player == null or player.is_dead or not _skill_mode.is_empty():
 		return
 	if def and def.skill_kind == "lunge":
-		_parry_left = def.skill_parry_window * (def.skill_parry_lvl3_window_mult if level >= 3 else 1.0)
+		_parry_left = maxf(0.0, def.skill_parry_window * (def.skill_parry_lvl3_window_mult if level >= 3 else 1.0) \
+			* float(player.modify_stat(&"parry_window_mult", 1.0)))
 	if def and not player.is_on_floor():
 		if def.skill_kind == "whirl" and player.weapon_skill_start_dive(def.skill_dive_speed):
 			_start_air_weapon_skill("axe_dive")
@@ -549,6 +550,7 @@ func weapon_skill_try_parry_melee(attacker: Enemy) -> bool:
 		return false
 	_parry_left = 0.0
 	attacker.apply_stun(def.skill_parry_stun, true)
+	_heal_on_parry()
 	Audio.sfx("skill_parry", "sounds/sfx/skill_parry.wav")
 	ComicFX.pop("weapon_parry", attacker.global_position + Vector3.UP * 1.5)
 	StyleMeter.event(&"reflect")
@@ -568,6 +570,7 @@ func weapon_skill_try_parry_projectile(projectile: Node) -> bool:
 		velocity = -player.get_aim_forward()
 	_parry_left = 0.0
 	projectile.call("reflect", -velocity)
+	_heal_on_parry()
 	Audio.sfx("skill_parry", "sounds/sfx/skill_parry.wav")
 	ComicFX.pop("weapon_parry", player.global_position + Vector3.UP * 1.5)
 	Perf.mark("weapon_parry")
@@ -576,6 +579,12 @@ func weapon_skill_try_parry_projectile(projectile: Node) -> bool:
 
 func _parry_available() -> bool:
 	return active and player != null and not player.is_dead and def != null and def.skill_kind == "lunge" and _parry_left > 0.0
+
+## Лечение относится к успешному парированию, а не к обычному отбиванию снарядов.
+func _heal_on_parry() -> void:
+	var amount := maxf(0.0, float(player.modify_stat(&"parry_heal", 0.0)))
+	if amount > 0.0:
+		player.heal(amount)
 
 func _begin_stage(s: int, is_heavy: bool = false) -> void:
 	Perf.mark("melee_heavy" if is_heavy else "axe_swing")
