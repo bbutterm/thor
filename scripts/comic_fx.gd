@@ -1,4 +1,5 @@
 extends Node
+class_name ComicWords
 ## Комиксовые слова-удары (onomatopoeia), этап 4. Автозагрузка `ComicFX`.
 ##
 ## Вызов из игрового кода: `ComicFX.pop("slam", world_pos, big)` или хуки `ComicFX.on_*` (ниже) —
@@ -149,12 +150,22 @@ var _glyph_warm: Array[Label] = []
 var _glyph_warm_frames: int = 0
 var _last_words: Dictionary = {}
 
+## Компоненты (этап 5 рефакторинга): логика по файлам scripts/comic/comic_*.gd, состояние — поля выше.
+var hooks: ComicHooks
+var animator: ComicAnimator
+var assets: ComicAssets
+
+func _init() -> void:
+	hooks = ComicHooks.new(self)
+	animator = ComicAnimator.new(self)
+	assets = ComicAssets.new(self)
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	process_priority = 1000  # после игровых узлов: события этого кадра уже собраны
 	GameSettings.ensure_loaded()
-	_load_data()
-	_build_resources()
+	assets._load_data()
+	assets._build_resources()
 	_layer = CanvasLayer.new()
 	_layer.name = "ComicLayer"
 	_layer.layer = 6  # над HUD (5) и репликами Одина, под выбором руны (10) и паузой (20); образец из настроек — 25
@@ -169,71 +180,10 @@ func _ready() -> void:
 	_vignette.visible = false
 	_layer.add_child(_vignette)
 	for i in max_on_screen:
-		_pool.append(_new_word())
-	_warm_glyphs()
+		_pool.append(assets._new_word())
+	assets._warm_glyphs()
 
 # --- Хуки из игрового кода (однострочные вызовы) ---
-
-## Показать слово события `event` над точкой мира. big — крупно на весь экран.
-func pop(event: String, world_pos: Vector3, big: bool = false) -> void:
-	_request(event, world_pos, big)
-
-## Удар-приземление (player.gd → _do_slam_impact). height — высота падения, м.
-func on_slam(center: Vector3, height: float) -> void:
-	var big := height >= big_slam_height
-	if big:
-		FX.hitstop(big_slam_hitstop)
-	if height < slam_min_height:
-		return
-	_request("slam", _ahead_of_camera(center), big)
-
-## Попадание по врагу (enemy.gd → take_hit, после вычета здоровья). Слово — только у крита
-## (тяжёлый 3-й удар комбо, `*_finisher`) по живому врагу; убийства разбирает on_enemy_killed.
-func on_enemy_hit(enemy: Node3D, _damage: float, source: String) -> void:
-	if not _is_finisher(source) or float(enemy.get("health")) <= 0.0:
-		return
-	_request(_melee_style(enemy), _head(enemy), false)
-
-## Смерть врага (enemy.gd → _die): добивание финишером, мульти-килл, босс.
-func on_enemy_killed(enemy: Node3D, source: String) -> void:
-	var pos := _head(enemy)
-	var recent: Array[float] = []
-	for t in _kill_times:
-		if _clock - t <= multikill_window:
-			recent.append(t)
-	if recent.is_empty():
-		_multi_level = 0
-	recent.append(_clock)
-	_kill_times = recent
-	if enemy.get("kind") == Enemy.Kind.BOSS:
-		_request("boss_kill", pos, true)
-	if recent.size() >= multikill_big_count and _multi_level < 2:
-		_multi_level = 2
-		FX.hitstop(FX.cfg().multikill_big_hitstop)
-		_request("multikill", pos, true)
-	elif recent.size() >= multikill_count and _multi_level < 1:
-		_multi_level = 1
-		FX.hitstop(FX.cfg().multikill_hitstop)
-		_request("multikill", pos, false)
-	if _is_finisher(source):
-		_request(_melee_style(enemy), pos, false, finisher_kill_scale, 10)
-
-## Мьёльнир попал во врага (mjolnir_projectile.gd → _on_hit). Слово — на возврате или после рикошета.
-func on_hammer_hit(_target: Object, pos: Vector3, returning: bool, bounces: int) -> void:
-	if returning or bounces > 0:
-		_request("hammer", pos + Vector3(0, 0.6, 0), false)
-
-## Цепная молния Мьёльнира ударила врага (mjolnir_projectile.gd → _chain_lightning, после удара).
-func on_lightning(target: Node3D) -> void:
-	if lightning_kill_only and not target.get("is_dead"):
-		return
-	_request("lightning", _head(target), false)
-
-## Враг бьёт игрока (enemy.gd, перед player.take_damage). Слово — только от босса и если удар пройдёт.
-func on_player_struck(enemy: Node3D, player: Node) -> void:
-	if enemy.get("kind") != Enemy.Kind.BOSS or player == null or player.call("is_invulnerable"):
-		return
-	_request("player_hurt", Vector3.ZERO, false, 1.0, 0, true)
 
 ## Образец для настроек: слово вверху экрана, поверх меню (уважает переключатель и размер).
 func preview() -> void:
@@ -255,10 +205,10 @@ func warmup() -> void:
 		_show(w, r)
 		w.warm_frames = 10
 		w.anim_scale = 1.0
-		_place(w, 0.0, Vector2.ZERO, 0.0)
+		animator._place(w, 0.0, Vector2.ZERO, 0.0)
 	_vignette.visible = true
 	_vignette.color = Color(0, 0, 0, 0.03)
-	_warm_glyphs()
+	assets._warm_glyphs()
 
 ## Сбросить слова, кулдаун и счётчики (тесты, смена забега).
 func reset_state() -> void:
@@ -347,7 +297,7 @@ func _take_word(force: bool) -> ComicWord:
 	if active < max_on_screen:
 		if free:
 			return free
-		var nw := _new_word()
+		var nw := assets._new_word()
 		_pool.append(nw)
 		return nw
 	if force and oldest:
@@ -451,7 +401,7 @@ func _show(w: ComicWord, r: Dictionary) -> void:
 		w.shadow.polygon = out
 		w.shadow.position = shadow_offset * (1.6 if big else 1.0)
 	w.modulate = Color.WHITE
-	_place(w, 0.0, Vector2.ZERO, 0.0)
+	animator._place(w, 0.0, Vector2.ZERO, 0.0)
 
 func _burst_polygon(rx: float, ry: float, spikes: int) -> PackedVector2Array:
 	var pts := PackedVector2Array()
@@ -492,7 +442,7 @@ func _process(delta: float) -> void:
 	var combo_word := false
 	for w in _pool:
 		if w.active:
-			_animate(w, real, game)
+			animator._animate(w, real, game)
 			if w.active and w.preview:
 				preview = true
 			if w.active and w.event == "combo" and not w.preview:
@@ -511,246 +461,7 @@ func _process(delta: float) -> void:
 			for l in _glyph_warm:
 				l.visible = false
 
-func _animate(w: ComicWord, real: float, game: float) -> void:
-	if w.warm_frames > 0:
-		w.warm_frames -= 1
-		w.modulate.a = 0.03
-		if w.warm_frames == 0:
-			_release(w)
-		return
-	w.age_real += real
-	var tm := w.time_mult
-	var pin := pop_in_time * (1.4 if w.big else 1.0)
-	var s := 1.0
-	if w.age_real < pin:
-		var k := w.age_real / pin
-		if k < 0.6:
-			s = pop_overshoot * ease(k / 0.6, 0.4)
-		else:
-			s = lerpf(pop_overshoot, 1.0, ease((k - 0.6) / 0.4, 0.6))
-	else:
-		w.age_game += game
-	w.anim_scale = s
-	var g := w.age_game
-	var off := Vector2.ZERO
-	var rot := 0.0
-	var shake_end := shake_time * tm
-	if w.age_real >= pin and g < shake_end:
-		var amp := 1.0 - g / shake_end
-		off = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * shake_px * amp * (1.6 if w.big else 1.0)
-		rot = deg_to_rad(randf_range(-shake_deg, shake_deg)) * amp
-	var fade_start := (shake_time + hold_time) * tm
-	var rise := 0.0
-	w.modulate.a = 1.0
-	if g > fade_start:
-		var f := (g - fade_start) / (fade_time * tm)
-		if f >= 1.0:
-			_release(w)
-			return
-		w.modulate.a = 1.0 - f
-		rise = rise_px * ease(f, 0.5) * (1.5 if w.big else 1.0)
-	_place(w, rise, off, rot)
-
-func _place(w: ComicWord, rise: float, off: Vector2, rot: float) -> void:
-	var vp := get_viewport().get_visible_rect().size
-	var sc := w.base_scale * w.anim_scale * GameSettings.comic_scale
-	w.scale = Vector2.ONE * maxf(sc, 0.001)
-	w.rotation = w.tilt + rot
-	var combo_lane := w.event == "combo" and w.big and not w.preview
-	var combo_lane_start := vp.x * lerpf(0.4, 0.5, clampf((GameSettings.text_scale() - 1.0) / 0.6, 0.0, 1.0))
-	if combo_lane:
-		# Левую часть занимает реплика Одина. Ограничиваем только слово связки,
-		# учитывая наклон и overshoot, чтобы буквы и всплеск помещались справа.
-		var lane_half := maxf((vp.x - screen_margin_px - combo_lane_start) * 0.5 - shake_px * 1.6, 1.0)
-		var half_width := (absf(cos(w.rotation)) * w.half.x + absf(sin(w.rotation)) * w.half.y) * 1.15 * w.scale.x
-		if half_width > lane_half:
-			w.scale *= lane_half / half_width
-	var pos: Vector2
-	if w.preview:
-		pos = vp * Vector2(0.5, 0.16)
-	elif combo_lane:
-		pos = Vector2((combo_lane_start + vp.x - screen_margin_px) * 0.5, vp.y * 0.42)
-	elif w.big:
-		pos = vp * Vector2(0.5, 0.42)
-	elif w.screen:
-		pos = vp * Vector2(0.5, 0.5) + w.jitter
-	else:
-		var cam := get_viewport().get_camera_3d()
-		if w.cam == null or not is_instance_valid(w.cam) or cam != w.cam:
-			_release(w)
-			return
-		if cam.is_position_behind(w.world_pos):
-			w.visible = false
-			return
-		w.visible = true
-		var dist := cam.global_position.distance_to(w.world_pos)
-		var dk := clampf(distance_ref / maxf(dist, 0.1), min_distance_scale, 1.0)
-		w.scale *= dk
-		pos = cam.unproject_position(w.world_pos) + (w.jitter + Vector2(0, -world_lift_px)) * dk
-	pos += off + Vector2(0, -rise)
-	# Не даём слову уехать за край экрана
-	var h := w.half * w.base_scale * GameSettings.comic_scale
-	if combo_lane:
-		h = w.half * w.scale.x
-	var m := screen_margin_px
-	pos.x = vp.x * 0.5 if h.x * 2.0 + m * 2.0 > vp.x else clampf(pos.x, m + h.x, vp.x - m - h.x)
-	pos.y = vp.y * 0.5 if h.y * 2.0 + m * 2.0 > vp.y else clampf(pos.y, m + h.y, vp.y - m - h.y)
-	w.position = pos
-
 # --- Вспомогательное ---
-
-func _is_finisher(source: String) -> bool:
-	return source == "axe_finisher" or source == "melee_finisher"
-
-## Стиль мили игрока: "blade" (топор, клинки), "blunt" (дубина, молот), "pierce" (копьё).
-func _melee_style(enemy: Node) -> String:
-	var p: Node = enemy.get("player") as Node
-	if p == null:
-		p = get_tree().get_first_node_in_group("player")
-	var style := "blade"
-	if p and is_instance_valid(p) and p.has_method("current_melee_style"):
-		style = String(p.call("current_melee_style"))
-	return style if _data.has(style) else "blade"
-
-func _head(enemy: Node3D) -> Vector3:
-	var s := float(enemy.get("model_scale")) if enemy.get("model_scale") != null else 1.0
-	return enemy.global_position + Vector3(0, 1.6 * s, 0)
-
-## Точка перед камерой на уровне удара (удар-приземление — под ногами, оттуда слово не видно).
-func _ahead_of_camera(center: Vector3) -> Vector3:
-	var cam := get_viewport().get_camera_3d()
-	if cam == null:
-		return center
-	var fwd := -cam.global_basis.z
-	fwd.y = 0.0
-	fwd = fwd.normalized() if fwd.length() > 0.01 else Vector3.FORWARD
-	return center + fwd * 3.5 + Vector3(0, 0.9, 0)
-
-func _load_data() -> void:
-	var f := FileAccess.open(WORDS_PATH, FileAccess.READ)
-	if f:
-		var parsed: Variant = JSON.parse_string(f.get_as_text())
-		if parsed is Dictionary:
-			for k in parsed:
-				if parsed[k] is Dictionary:
-					_data[k] = parsed[k]
-	if _data.is_empty():
-		push_warning("ComicFX: не прочитан %s" % WORDS_PATH)
-		_data = {"slam": {"words": ["KA-BOOM!"], "priority": 60}}
-	for ev in _data.keys():
-		var path: String = SPRITE_DIR + ev + ".png"
-		if ResourceLoader.exists(path):
-			_textures[ev] = load(path)
-	if ResourceLoader.exists(SPRITE_DIR + "burst.png"):
-		_generic_texture = load(SPRITE_DIR + "burst.png")
-	for i in KIT_BURST_COUNT:
-		var kp := KIT_BURST_PATH % (i + 1)
-		if ResourceLoader.exists(kp):
-			_kit_bursts.append(load(kp))
-
-func _build_resources() -> void:
-	var font: Font = load(FONT_PATH)
-	_ls = _label_settings(font, font_size)
-	_ls_big = _label_settings(font, big_font_size)
-	_text_mat = _halftone(false, font_size * 1.2, 9.0)
-	_text_mat_big = _halftone(false, big_font_size * 1.2, 14.0)
-	_burst_mat = _halftone(true, 1.0, 11.0)
-	_kit_mat = ShaderMaterial.new()
-	_kit_mat.shader = KIT_BURST
-	_kit_mat.set_shader_parameter("tint_strength", kit_tint_strength)
-
-## Одна настройка трёх существующих материалов, без новых материалов на слово.
-func set_room_halftone_multiplier(multiplier: float) -> void:
-	var m := clampf(multiplier, 0.0, 2.0)
-	if _text_mat:
-		_text_mat.set_shader_parameter("dot_strength", clampf(0.22 * m, 0.0, 1.0))
-	if _text_mat_big:
-		_text_mat_big.set_shader_parameter("dot_strength", clampf(0.22 * m, 0.0, 1.0))
-	if _burst_mat:
-		_burst_mat.set_shader_parameter("dot_strength", clampf(0.4 * m, 0.0, 1.0))
-
-func _label_settings(font: Font, size: int) -> LabelSettings:
-	var ls := LabelSettings.new()
-	ls.font = font
-	ls.font_size = size
-	ls.font_color = Color.WHITE
-	var k := float(size) / float(font_size)
-	ls.outline_size = int(round(outline_px * k))
-	ls.outline_color = Color.BLACK
-	ls.shadow_size = int(round(outline_px * k))
-	ls.shadow_color = Color(0, 0, 0, 0.9)
-	ls.shadow_offset = shadow_offset * k
-	return ls
-
-func _halftone(radial: bool, text_height: float, spacing: float) -> ShaderMaterial:
-	var m := ShaderMaterial.new()
-	m.shader = HALFTONE
-	m.set_shader_parameter("radial", radial)
-	m.set_shader_parameter("text_height", text_height)
-	m.set_shader_parameter("dot_spacing", spacing)
-	if radial:
-		m.set_shader_parameter("dot_strength", 0.4)
-		m.set_shader_parameter("highlight", 0.22)
-	else:
-		m.set_shader_parameter("dot_strength", 0.22)
-		m.set_shader_parameter("highlight", 0.5)
-		m.set_shader_parameter("dot_max", 0.34)
-	return m
-
-func _new_word() -> ComicWord:
-	var w := ComicWord.new()
-	w.visible = false
-	w.shadow = Polygon2D.new()
-	w.shadow.color = Color(0, 0, 0, 0.85)
-	w.shadow.antialiased = true
-	w.add_child(w.shadow)
-	w.outline = Polygon2D.new()
-	w.outline.color = Color.BLACK
-	w.outline.antialiased = true
-	w.add_child(w.outline)
-	w.burst = Polygon2D.new()
-	w.burst.material = _burst_mat
-	w.burst.antialiased = true
-	w.add_child(w.burst)
-	w.sprite_shadow = Sprite2D.new()
-	w.sprite_shadow.visible = false
-	w.add_child(w.sprite_shadow)
-	w.sprite = Sprite2D.new()
-	w.sprite.visible = false
-	w.add_child(w.sprite)
-	w.label = Label.new()
-	w.label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	w.label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	w.label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	w.label.label_settings = _ls
-	w.label.material = _text_mat
-	w.add_child(w.label)
-	_layer.add_child(w)
-	return w
-
-## Растеризация всех букв словаря в обоих размерах заранее: первый глиф шрифта на 160 px с обводкой —
-## заметная работа CPU в кадре появления слова.
-func _warm_glyphs() -> void:
-	var chars := {}
-	for ev in _data:
-		for word in (_data[ev] as Dictionary).get("words", []):
-			for ch in String(word):
-				chars[ch] = true
-	var text := "".join(PackedStringArray(chars.keys()))
-	if _glyph_warm.is_empty():
-		for big in [false, true]:
-			var l := Label.new()
-			l.label_settings = _ls_big if big else _ls
-			l.material = _text_mat_big if big else _text_mat
-			l.modulate = Color(1, 1, 1, 0.02)
-			l.position = Vector2(0, 0)
-			l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			_layer.add_child(l)
-			_glyph_warm.append(l)
-	for l in _glyph_warm:
-		l.text = text
-		l.visible = true
-	_glyph_warm_frames = 4
 
 class ComicWord extends Node2D:
 	var active := false
@@ -775,3 +486,43 @@ class ComicWord extends Node2D:
 	var sprite: Sprite2D
 	var sprite_shadow: Sprite2D
 	var label: Label
+
+# --- Функции компонентов, доступные на ComicWords ---
+# API (## API →) и приватные функции, которые зовут другие файлы (## совместимость →).
+# Реализация и описание — в компоненте.
+
+# ComicHooks (comic_hooks.gd)
+
+## API → hooks.pop
+func pop(event: String, world_pos: Vector3, big: bool = false) -> void:
+	hooks.pop(event, world_pos, big)
+
+## API → hooks.on_slam
+func on_slam(center: Vector3, height: float) -> void:
+	hooks.on_slam(center, height)
+
+## API → hooks.on_enemy_hit
+func on_enemy_hit(enemy: Node3D, _damage: float, source: String) -> void:
+	hooks.on_enemy_hit(enemy, _damage, source)
+
+## API → hooks.on_enemy_killed
+func on_enemy_killed(enemy: Node3D, source: String) -> void:
+	hooks.on_enemy_killed(enemy, source)
+
+## API → hooks.on_hammer_hit
+func on_hammer_hit(_target: Object, pos: Vector3, returning: bool, bounces: int) -> void:
+	hooks.on_hammer_hit(_target, pos, returning, bounces)
+
+## API → hooks.on_lightning
+func on_lightning(target: Node3D) -> void:
+	hooks.on_lightning(target)
+
+## API → hooks.on_player_struck
+func on_player_struck(enemy: Node3D, player: Node) -> void:
+	hooks.on_player_struck(enemy, player)
+
+# ComicAssets (comic_assets.gd)
+
+## API → assets.set_room_halftone_multiplier
+func set_room_halftone_multiplier(multiplier: float) -> void:
+	assets.set_room_halftone_multiplier(multiplier)

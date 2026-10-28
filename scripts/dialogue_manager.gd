@@ -1,4 +1,5 @@
 extends Node
+class_name DialogueManager
 ## Автозагрузка «Dialogue» — диалоги-новелла (как в Hades) и короткие реплики-пузыри.
 ## Данные: data/dialogues/*.json, по файлу на персонажа (формат — в STORY.md, раздел «Формат данных»).
 ##
@@ -59,6 +60,16 @@ var _loc_names: Dictionary = {}
 var _ru_names: Dictionary = {}
 var _loc_locale: String = ""
 
+## Компоненты (этап 5 рефакторинга): логика по файлам scripts/dialogue/dialogue_*.gd, состояние — поля выше.
+var locale: DialogueLocale
+var conditions: DialogueConditions
+var validator: DialogueValidator
+
+func _init() -> void:
+	locale = DialogueLocale.new(self)
+	conditions = DialogueConditions.new(self)
+	validator = DialogueValidator.new(self)
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	for a in OS.get_cmdline_args():
@@ -67,7 +78,7 @@ func _ready() -> void:
 	load_all()
 	GameSettings.events.changed.connect(func(section: String, key: String) -> void:
 		if section == "text" and key == "language":
-			refresh_locale())
+			locale.refresh_locale())
 
 # --- Загрузка ---
 
@@ -90,88 +101,9 @@ func load_all() -> void:
 	for k in speakers:
 		_ru_names[k] = {"name": speakers[k].get("name", k), "initial": speakers[k].get("initial", "")}
 	_loc_locale = ""
-	refresh_locale()
+	locale.refresh_locale()
 
 # --- Перевод ---
-
-## Перечитать перевод под текущий язык (смена языка в настройках, load_all). Имена говорящих
-## меняются прямо в speakers — портреты, пузыри и журнал берут def.name.
-func refresh_locale() -> void:
-	var loc := I18n.locale()
-	if loc == _loc_locale:
-		return
-	_loc_locale = loc
-	_loc_lines.clear()
-	_loc_names.clear()
-	if loc != I18n.DEFAULT:
-		var dir := DIR + loc + "/"
-		var files: Array = []
-		var d := DirAccess.open(dir)
-		if d:
-			files = Array(d.get_files())
-		if files.is_empty() and DirAccess.dir_exists_absolute(dir):
-			files = Array(ResourceLoader.list_directory(dir))
-		files.sort()
-		for f in files:
-			if str(f).get_extension() == "json":
-				_load_locale_file(dir + str(f), loc)
-	for k in speakers:
-		var ru: Dictionary = _ru_names.get(k, {})
-		var nm := str(_loc_names.get(k, ""))
-		speakers[k]["name"] = nm if nm != "" else str(ru.get("name", k))
-		var ini := str(ru.get("initial", ""))
-		if nm != "":
-			ini = nm.left(1)
-		if ini != "":
-			speakers[k]["initial"] = ini
-
-func _load_locale_file(p: String, loc: String) -> void:
-	var f := FileAccess.open(p, FileAccess.READ)
-	if f == null:
-		return
-	var json := JSON.new()
-	if json.parse(f.get_as_text()) != OK or not json.data is Dictionary:
-		load_errors.append("%s:%d: %s" % [p, json.get_error_line(), json.get_error_message()])
-		return
-	var d: Dictionary = json.data
-	var sp: Dictionary = d.get("speakers", {})
-	for k in sp:
-		var v: Variant = sp[k]
-		var nm := str((v as Dictionary).get(loc, "")) if v is Dictionary else str(v)
-		if nm != "":
-			_loc_names[k] = nm
-	var ls: Dictionary = d.get("lines", {})
-	for k in ls:
-		var v: Variant = ls[k]
-		var t := str((v as Dictionary).get(loc, "")) if v is Dictionary else str(v)
-		if t.strip_edges() != "":
-			_loc_lines[k] = t
-
-## Есть ли перевод реплики (id) на текущий язык
-func has_translation(line_id: String) -> bool:
-	refresh_locale()
-	return _loc_lines.has(line_id)
-
-## Реплика на текущем языке (копия не нужна — меняет переданный словарь): текст по id,
-## ответы Тора по «id/выбор», подписи выборов — tr. Нет перевода — как есть (русский).
-func localize_line(line: Dictionary) -> Dictionary:
-	refresh_locale()
-	if _loc_locale == I18n.DEFAULT:
-		return line
-	var lid := str(line.get("id", ""))
-	if lid != "" and _loc_lines.has(lid):
-		line["text"] = _loc_lines[lid]
-	for ch in line.get("choices", []):
-		if not ch is Dictionary:
-			continue
-		var key := lid + "/" + str(ch.get("id", ""))
-		if _loc_lines.has(key):
-			ch["text"] = _loc_lines[key]
-		ch["label"] = tr(str(ch.get("label", "")))
-		for sub in ch.get("lines", []):
-			if sub is Dictionary:
-				localize_line(sub)
-	return line
 
 func _load_file(p: String) -> void:
 	var f := FileAccess.open(p, FileAccess.READ)
@@ -210,7 +142,7 @@ func _load_file(p: String) -> void:
 func _parse_all(conds: Array, where: String) -> Array:
 	var out: Array = []
 	for c in conds:
-		var parsed := parse_condition(str(c))
+		var parsed := conditions.parse_condition(str(c))
 		if not parsed.ok:
 			load_errors.append("%s: условие «%s» — %s" % [where, c, parsed.error])
 		out.append(parsed)
@@ -218,122 +150,11 @@ func _parse_all(conds: Array, where: String) -> Array:
 
 # --- Условия ---
 
-## Разбирает условие: "deaths >= 3", "killed_by == boss_jarl", "first_time", "!seen:odin_intro",
-## "has_unlock:boomerang", "tag:quick", "choice:odin_intro == snap", "deaths_by.fall >= 2", "random < 0.3".
-func parse_condition(s: String) -> Dictionary:
-	var src := s.strip_edges()
-	if src == "":
-		return {"ok": false, "error": "пустое условие"}
-	var neg := false
-	if src.begins_with("!"):
-		neg = true
-		src = src.substr(1).strip_edges()
-	for op in OPS:
-		var i := src.find(op)
-		if i > 0:
-			var lhs := src.substr(0, i).strip_edges()
-			var rhs := src.substr(i + op.length()).strip_edges()
-			if lhs == "" or (rhs != "" and rhs[0] in ["=", "<", ">", "!"]):
-				if rhs.begins_with("="):
-					continue
-				return {"ok": false, "error": "лишний оператор"}
-			if rhs.begins_with("\"") and rhs.ends_with("\"") and rhs.length() >= 2:
-				rhs = rhs.substr(1, rhs.length() - 2)
-			if rhs == "":
-				return {"ok": false, "error": "нет значения справа"}
-			if not _is_var_name(lhs):
-				return {"ok": false, "error": "непонятная переменная «%s»" % lhs}
-			return {"ok": true, "kind": "cmp", "var": lhs, "op": op, "value": rhs, "neg": neg}
-	if src in FLAGS:
-		return {"ok": true, "kind": "flag", "var": src, "neg": neg}
-	var colon := src.find(":")
-	if colon > 0:
-		var fn := src.substr(0, colon)
-		var arg := src.substr(colon + 1).strip_edges()
-		if fn in ["seen", "has_unlock", "tag", "event"] and arg != "":
-			return {"ok": true, "kind": fn, "arg": arg, "neg": neg}
-	return {"ok": false, "error": "не разобрать"}
-
-func _is_var_name(v: String) -> bool:
-	var re := RegEx.create_from_string("^[a-z_][a-z0-9_]*([.:][a-z0-9_]+)?$")
-	return re.search(v) != null
-
-func context(trigger: String = "") -> Dictionary:
-	var ctx := Save.context()
-	ctx["trigger"] = trigger
-	ctx["event_count"] = Save.event_count(trigger) if trigger != "" else 0
-	for k in _extra_ctx:
-		ctx[k] = _extra_ctx[k]
-	return ctx
-
-func check(conds: Array, ctx: Dictionary) -> bool:
-	for c in conds:
-		if not _check_one(c, ctx):
-			return false
-	return true
-
-func _check_one(c: Dictionary, ctx: Dictionary) -> bool:
-	if not c.get("ok", false):
-		return false
-	var res := false
-	match c.kind:
-		"flag":
-			match c.var:
-				"first_time":
-					res = int(ctx.get("event_count", 0)) <= 1
-				"won":
-					res = bool(ctx.get("last_won", false))
-				"lost":
-					res = not bool(ctx.get("last_won", false))
-		"seen":
-			res = Save.is_seen(c.arg)
-		"has_unlock":
-			res = Save.has_method("is_unlocked") and Save.call("is_unlocked", c.arg)
-		"tag":
-			res = c.arg in Save.data.get("last_run", {}).get("tags", [])
-		"event":
-			res = Save.event_count(c.arg) > 0
-		"cmp":
-			res = _compare(_resolve(c.var, ctx), c.op, c.value)
-	return res != c.neg
-
-func _resolve(v: String, ctx: Dictionary) -> Variant:
-	if v == "random":
-		return randf()
-	if v.begins_with("deaths_by."):
-		return Save.deaths_by(v.substr(10))
-	if v.begins_with("killed_by_count."):
-		return Save.killed_by_count(v.substr(16))
-	if v.begins_with("event."):
-		return Save.event_count(v.substr(6))
-	if v.begins_with("choice:") or v.begins_with("choice."):
-		return Save.get_choice(v.substr(7))
-	return ctx.get(v, null)
-
-func _compare(a: Variant, op: String, raw: String) -> bool:
-	if a == null:
-		a = 0 if raw.is_valid_float() else ""
-	if (a is int or a is float or a is bool) and raw.is_valid_float():
-		var x := float(a)
-		var y := raw.to_float()
-		match op:
-			"==": return is_equal_approx(x, y)
-			"!=": return not is_equal_approx(x, y)
-			">=": return x >= y
-			"<=": return x <= y
-			">": return x > y
-			"<": return x < y
-	var sa := str(a)
-	match op:
-		"==": return sa == raw
-		"!=": return sa != raw
-	return false
-
 # --- Выбор ---
 
 ## Самая приоритетная непросмотренная сцена события с выполненными условиями (или {}).
 func pick_scene(trigger: String) -> Dictionary:
-	var ctx := context(trigger)
+	var ctx := conditions.context(trigger)
 	var best: Array[Dictionary] = []
 	var best_pri := -INF
 	for sc in scenes:
@@ -341,7 +162,7 @@ func pick_scene(trigger: String) -> Dictionary:
 			continue
 		if not sc.get("repeat", false) and Save.is_seen(str(sc.get("id", ""))):
 			continue
-		if not check(sc._conds, ctx):
+		if not conditions.check(sc._conds, ctx):
 			continue
 		var pri := float(sc.get("priority", 0))
 		if pri > best_pri:
@@ -358,10 +179,10 @@ func pool_lines(pool: String) -> Array:
 	var items: Array = pools.get(pool, [])
 	if items.is_empty():
 		return []
-	var ctx := context()
+	var ctx := conditions.context()
 	var ok: Array = []
 	for it in items:
-		if check(it._conds, ctx):
+		if conditions.check(it._conds, ctx):
 			ok.append(it)
 	if ok.is_empty():
 		return []
@@ -372,7 +193,7 @@ func pool_lines(pool: String) -> Array:
 	var out: Array = (ok[idx].lines as Array).duplicate(true)
 	for l in out:
 		if l is Dictionary:
-			localize_line(l)
+			locale.localize_line(l)
 	return out
 
 func has_pool(pool: String) -> bool:
@@ -386,7 +207,7 @@ func pool_text(pool: String) -> String:
 func format_text(t: String) -> String:
 	if t.find("{") < 0:
 		return t
-	var ctx := context()
+	var ctx := conditions.context()
 	ctx["deaths_next"] = int(ctx.get("deaths", 0)) + 1
 	ctx["time"] = _fmt_time(float(ctx.get("last_run_time", 0.0)))
 	return t.format(ctx)
@@ -457,7 +278,7 @@ func expand(lines: Array) -> Array:
 				pool = reaction_pool(bool(Save.data.get("last_run", {}).get("won", false)))
 			out.append_array(expand(pool_lines(pool)))
 			continue
-		var line: Dictionary = localize_line(l.duplicate(true))
+		var line: Dictionary = locale.localize_line(l.duplicate(true))
 		line["text"] = format_text(str(line.get("text", "")))
 		for ch in line.get("choices", []):
 			ch["text"] = format_text(str(ch.get("text", "")))
@@ -618,11 +439,11 @@ func after_run(won: bool) -> void:
 ## Короткий визит знакомого персонажа: случайный пул *.visit, у которого выполнены условия.
 func visitor_lines() -> Array:
 	var keys: Array = []
-	var ctx := context()
+	var ctx := conditions.context()
 	for k in pools:
 		if str(k).ends_with(".visit"):
 			for it in pools[k]:
-				if check(it._conds, ctx):
+				if conditions.check(it._conds, ctx):
 					keys.append(k)
 					break
 	if keys.is_empty():
@@ -631,61 +452,40 @@ func visitor_lines() -> Array:
 
 # --- Проверка данных (тест) ---
 
-## Ошибки данных: у каждой реплики id, speaker (известный), emotion (из списка), text; условия разбираются.
-func validate() -> Array[String]:
-	var errs: Array[String] = load_errors.duplicate()
-	var ids := {}
-	for sc in scenes:
-		var sid := str(sc.get("id", ""))
-		if sid == "":
-			errs.append("%s: сцена без id" % sc._file)
-		elif ids.has(sid):
-			errs.append("повтор id сцены %s" % sid)
-		ids[sid] = true
-		if not str(sc.get("trigger", "")) in TRIGGERS:
-			errs.append("%s: неизвестное событие «%s»" % [sid, sc.get("trigger", "")])
-		if (sc.get("lines", []) as Array).is_empty():
-			errs.append("%s: пустая сцена" % sid)
-		if sc.has("image") and ScreenArt.story_path(str(sc.image)) == "" and str(sc.image) != "none":
-			errs.append("%s: нет сюжетного кадра «%s» (sprites/story/)" % [sid, sc.image])
-		if sc.has("backdrop") and ScreenArt.backdrop_path(str(sc.backdrop)) == "" and str(sc.backdrop) != "none":
-			errs.append("%s: нет фона «%s» (sprites/backgrounds/)" % [sid, sc.backdrop])
-		_validate_lines(sc.get("lines", []), sid, errs, ids)
-	for p in pools:
-		for it in pools[p]:
-			_validate_lines(it.lines, p, errs, ids)
-	return errs
+# --- Функции компонентов, доступные на DialogueManager ---
+# API (## API →) и приватные функции, которые зовут другие файлы (## совместимость →).
+# Реализация и описание — в компоненте.
 
-func _validate_lines(lines: Array, where: String, errs: Array[String], ids: Dictionary) -> void:
-	for l in lines:
-		if not l is Dictionary:
-			errs.append("%s: реплика не объект" % where)
-			continue
-		if l.has("pool"):
-			var pn := str(l.pool)
-			if pn != "$reaction" and not pools.has(pn):
-				errs.append("%s: нет пула %s" % [where, pn])
-			continue
-		var lid := str(l.get("id", ""))
-		if lid == "":
-			errs.append("%s: реплика без id («%s»)" % [where, l.get("text", "")])
-		elif ids.has(lid):
-			errs.append("%s: повтор id %s" % [where, lid])
-		ids[lid] = true
-		var sp := str(l.get("speaker", ""))
-		if sp == "" or not speakers.has(sp):
-			errs.append("%s: неизвестный говорящий «%s»" % [lid, sp])
-		if not str(l.get("emotion", "")) in EMOTIONS:
-			errs.append("%s: эмоция «%s»" % [lid, l.get("emotion", "")])
-		if str(l.get("text", "")).strip_edges() == "":
-			errs.append("%s: пустой текст" % lid)
-		if l.has("image") and str(l.image) != "none" and ScreenArt.story_path(str(l.image)) == "":
-			errs.append("%s: нет сюжетного кадра «%s» (sprites/story/)" % [lid, l.image])
-		var chs: Array = l.get("choices", [])
-		if not chs.is_empty():
-			if chs.size() != 2:
-				errs.append("%s: выборов должно быть 2" % lid)
-			for ch in chs:
-				if str(ch.get("id", "")) == "" or str(ch.get("text", "")) == "" or str(ch.get("label", "")) == "":
-					errs.append("%s: у выбора нет id/label/text" % lid)
-				_validate_lines(ch.get("lines", []), lid, errs, ids)
+# DialogueLocale (dialogue_locale.gd)
+
+## API → locale.refresh_locale
+func refresh_locale() -> void:
+	locale.refresh_locale()
+
+## API → locale.has_translation
+func has_translation(line_id: String) -> bool:
+	return locale.has_translation(line_id)
+
+## API → locale.localize_line
+func localize_line(line: Dictionary) -> Dictionary:
+	return locale.localize_line(line)
+
+# DialogueConditions (dialogue_conditions.gd)
+
+## API → conditions.parse_condition
+func parse_condition(s: String) -> Dictionary:
+	return conditions.parse_condition(s)
+
+## API → conditions.context
+func context(trigger: String = "") -> Dictionary:
+	return conditions.context(trigger)
+
+## API → conditions.check
+func check(conds: Array, ctx: Dictionary) -> bool:
+	return conditions.check(conds, ctx)
+
+# DialogueValidator (dialogue_validator.gd)
+
+## API → validator.validate
+func validate() -> Array[String]:
+	return validator.validate()

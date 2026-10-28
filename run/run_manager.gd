@@ -1,4 +1,5 @@
 extends Node
+class_name RunManager
 ## Автозагрузка «Run» — состояние одного забега: тело, порядок залов, руны, Слава.
 
 signal glory_changed(total: int)
@@ -117,6 +118,14 @@ var combat_clock: float = 0.0
 ## Во сколько раз считается каждая руна (Старый жрец: «все руны ×2»), см. BodyDef.stat("rune_power")
 var rune_power: int = 1
 
+## Компоненты (этап 5 рефакторинга): логика по файлам run/parts/run_*.gd, состояние — поля выше.
+var mjolnir: RunMjolnir
+var doors: RunDoors
+
+func _init() -> void:
+	mjolnir = RunMjolnir.new(self)
+	doors = RunDoors.new(self)
+
 func _exit_tree() -> void:
 	AssetCache.shutdown()
 	ScreenArt.shutdown()
@@ -179,7 +188,7 @@ func start_run(forced_body_id: String = "") -> void:
 	if body == null:
 		body = BodyDef.new()
 	rune_power = maxi(1, int(body.stat(&"rune_power", 1)))
-	_build_room_order()
+	doors._build_room_order()
 	_place_miniboss_arenas()
 	room_index = 0
 	room_rewards.clear()
@@ -207,7 +216,7 @@ func start_run(forced_body_id: String = "") -> void:
 
 func current_room_path() -> String:
 	# Ларёк — свой зал (блок К), остальные награды — в залах из room_order
-	if current_reward() == "shop" and map and ResourceLoader.exists(map.shop_scene):
+	if doors.current_reward() == "shop" and map and ResourceLoader.exists(map.shop_scene):
 		return map.shop_scene
 	return room_order[room_index] if room_index < room_order.size() else BOSS_SCENE
 
@@ -359,272 +368,9 @@ func _place_miniboss_arenas() -> void:
 func miniboss_def() -> Resource:
 	return load(miniboss_def_path) if miniboss_def_path != "" and ResourceLoader.exists(miniboss_def_path) else null
 
-func mjolnir_trait_level(id: StringName) -> int:
-	return int(mjolnir_trait_levels.get(id, 0))
-
 # --- Трейты Мьёльнира: стихии, приёмы, связки (блок Б4, GDD 10) ---
 
-func rules() -> MjolnirRules:
-	if mjolnir_rules == null:
-		mjolnir_rules = MjolnirRules.new()
-	return mjolnir_rules
-
-func mjolnir_trait_def(id: StringName) -> MjolnirTrait:
-	for t in all_mjolnir_traits + all_mjolnir_combos:
-		if t.id == id:
-			return t
-	return null
-
-func owned_elements() -> Array[MjolnirTrait]:
-	var out: Array[MjolnirTrait] = []
-	for t in mjolnir_traits:
-		if t.is_element():
-			out.append(t)
-	return out
-
-## Стихия молота (null — ещё не выбрана)
-func owned_element() -> MjolnirTrait:
-	var els := owned_elements()
-	return els[0] if not els.is_empty() else null
-
-func owned_techniques() -> Array[MjolnirTrait]:
-	var out: Array[MjolnirTrait] = []
-	for t in mjolnir_traits:
-		if t.is_technique():
-			out.append(t)
-	return out
-
-## Активные связки: взяты и стихия, и приём связки
-func active_combos() -> Array[MjolnirTrait]:
-	var out: Array[MjolnirTrait] = []
-	for c in all_mjolnir_combos:
-		if mjolnir_trait_level(c.combo_element) > 0 and mjolnir_trait_level(c.combo_technique) > 0:
-			out.append(c)
-	return out
-
-## Связки, которые включатся, если взять t (для карточки «+ СВЯЗКА» на экране выбора)
-func combos_completed_by(t: MjolnirTrait) -> Array[MjolnirTrait]:
-	var out: Array[MjolnirTrait] = []
-	if t == null or t.is_combo() or mjolnir_trait_level(t.id) > 0:
-		return out
-	var replaced := mjolnir_trait_conflict(t)
-	for c in all_mjolnir_combos:
-		var other := c.combo_technique if c.combo_element == t.id else (c.combo_element if c.combo_technique == t.id else &"")
-		if other != &"" and mjolnir_trait_level(other) > 0 and (replaced == null or replaced.id != other):
-			out.append(c)
-	return out
-
-## Уровень lv трейта открыт в «Плане тренировок» (бывшие трейты-способы доставки: lightning_rod, sky_thunder…)
-func mjolnir_level_in_pool(t: MjolnirTrait, lv: int) -> bool:
-	var pid := t.level_pool_id(lv)
-	return pid == "" or Save.is_in_pool("trait", pid)
-
-## Можно ли поднять уровень взятого трейта (ларёк, повтор карточки)
-func can_level_up(t: MjolnirTrait) -> bool:
-	var lv := mjolnir_trait_level(t.id)
-	return lv > 0 and lv < t.max_level and mjolnir_level_in_pool(t, lv + 1)
-
-## Можно ли предложить t в выборе: новым (есть место и он открыт) или повышением уровня
-func mjolnir_offer_ok(t: MjolnirTrait) -> bool:
-	if t == null or t.is_combo() or not Save.is_in_pool("trait", str(t.id)):
-		return false
-	if mjolnir_trait_level(t.id) > 0:
-		return can_level_up(t)
-	if not mjolnir_level_in_pool(t, 1):
-		return false
-	if mjolnir_trait_conflict(t):
-		return true  # заменит несовместимый (с подтверждением)
-	if t.is_element():
-		return owned_elements().size() < rules().max_elements
-	return owned_techniques().size() < rules().max_techniques
-
-## Активный трейт, который заменит t, или null. Приёмы — по группе и списку conflicts; стихия — только если
-## стихию можно менять (MjolnirRules.element_swap) и место занято.
-func mjolnir_trait_conflict(t: MjolnirTrait) -> MjolnirTrait:
-	if t == null:
-		return null
-	for o in mjolnir_traits:
-		if o.id == t.id:
-			continue
-		if t.is_element() and o.is_element():
-			if rules().element_swap and owned_elements().size() >= rules().max_elements:
-				return o
-			continue
-		if t.is_element() or o.is_element():
-			continue
-		if t.conflicts_with(o):
-			return o
-	return null
-
-## Выбор 1 из count (по умолчанию MjolnirRules.offer_count). kinds — только эти виды ("element" — наковальня).
-## В одном наборе нет несовместимых приёмов; трейты на макс. уровне и закрытые не выпадают; уже взятый —
-## повышение уровня, несовместимый — замена. Без kinds (мини-босс) — если можно и то и другое, есть оба вида.
-func random_mjolnir_trait_choices(count: int = -1, kinds: Array = []) -> Array[MjolnirTrait]:
-	if count < 0:
-		count = rules().offer_count
-	var pool: Array[MjolnirTrait] = []
-	for t in all_mjolnir_traits:
-		if (kinds.is_empty() or t.kind in kinds) and mjolnir_offer_ok(t):
-			pool.append(t)
-	pool.shuffle()
-	var out: Array[MjolnirTrait] = []
-	if rules().mix_kinds and kinds.is_empty():
-		for want in ["element", "technique"]:
-			for t in pool:
-				if t.kind == want:
-					out.append(t)
-					break
-	for t in pool:
-		if out.size() >= count:
-			break
-		if t in out:
-			continue
-		var clash := false
-		for o in out:
-			if t.conflicts_with(o) and not (t.is_element() or o.is_element()):
-				clash = true
-				break
-		if not clash:
-			out.append(t)
-	while out.size() > count:
-		out.pop_back()
-	out.shuffle()
-	return out
-
-## Наковальня Эйтри может что-то дать: новая стихия или новый уровень своей
-func anvil_available() -> bool:
-	if not rules().anvil_enabled:
-		return false
-	for t in all_mjolnir_traits:
-		if t.is_element() and mjolnir_offer_ok(t):
-			return true
-	return false
-
-## Взять трейт: новый — уровень 1 (несовместимый уходит), повтор — уровень выше.
-## Возвращает связки, которые появились (они же — сигнал mjolnir_combo_unlocked).
-func add_mjolnir_trait(t: MjolnirTrait) -> Array[MjolnirTrait]:
-	Perf.mark("trait_pick")
-	var before := active_combos()
-	if mjolnir_trait_levels.has(t.id):
-		mjolnir_trait_levels[t.id] = mini(mjolnir_trait_level(t.id) + 1, t.max_level)
-	else:
-		var old := mjolnir_trait_conflict(t)
-		if old:
-			mjolnir_traits.erase(old)
-			mjolnir_trait_levels.erase(old.id)
-		mjolnir_traits.append(t)
-		mjolnir_trait_levels[t.id] = 1
-	mjolnir_traits_changed.emit(mjolnir_traits)
-	var fresh: Array[MjolnirTrait] = []
-	for c in active_combos():
-		if not c in before:
-			fresh.append(c)
-			Perf.mark("trait_combo")
-			mjolnir_combo_unlocked.emit(c)
-	return fresh
-
 # --- Двери-награды (блок И, GDD 15.1) ---
-
-## Порядок сцен: обязательные комнаты вне слота мини-босса и без повторов, остальные — случайно.
-## Тесты могут задать room_order сами — двери тогда назначают только награды.
-func _build_room_order() -> void:
-	var n := map.rooms if map else rooms_per_run
-	room_order.clear()
-	if map:
-		miniboss_rooms = PackedInt32Array([map.miniboss_index()])
-	var required: Array[String] = []
-	if map:
-		for path in map.required_rooms:
-			if path not in ROOM_SCENES:
-				push_error("RunMap: обязательный зал отсутствует в ROOM_SCENES: %s" % path)
-			elif path not in required:
-				required.append(path)
-	var slots: Array[int] = []
-	for i in n:
-		if i not in miniboss_rooms:
-			slots.append(i)
-	if not required.is_empty():
-		slots.shuffle()
-	var placed := {}
-	for path in required:
-		if slots.is_empty():
-			push_error("RunMap: недостаточно боевых слотов для обязательных залов")
-			break
-		placed[slots.pop_back()] = path
-	var candidates: Array = []
-	for path in ROOM_SCENES:
-		if path not in required:
-			candidates.append(path)
-	var pool: Array = []
-	for i in n:
-		if placed.has(i):
-			room_order.append(placed[i])
-			continue
-		if pool.is_empty():
-			pool = candidates.duplicate()
-			pool.shuffle()
-			if pool.is_empty():
-				push_error("RunMap: нет необязательных комнат для оставшихся слотов")
-				break
-			if not room_order.is_empty() and pool[0] == room_order[room_order.size() - 1] and pool.size() > 1:
-				pool.append(pool.pop_front())
-		room_order.append(pool.pop_front())
-	room_order.append(BOSS_SCENE)
-
-func reward_def(id: String) -> RewardDef:
-	for r in all_rewards:
-		if r.id == id:
-			return r
-	return null
-
-## Награда текущего зала (id RewardDef).
-func current_reward() -> String:
-	if room_index < room_rewards.size() and room_rewards[room_index] != "":
-		return room_rewards[room_index]
-	if room_index == 0 and map:
-		return map.first_room_reward
-	if room_index < room_order.size() and room_order[room_index] == BOSS_SCENE:
-		return "boss"
-	if room_index in miniboss_rooms:
-		return "miniboss"
-	return "combat"
-
-## Тихий зал: без врагов (отдых, ларёк).
-func is_peaceful_room() -> bool:
-	if is_boss_room() or is_miniboss_room():
-		return false
-	var d := reward_def(current_reward())
-	return d != null and not d.combat
-
-## Можно ли вести дверь в ларёк (сцена зала-ларька уже есть).
-func shop_available() -> bool:
-	var d := reward_def("shop")
-	return map != null and d != null and d.enabled and ResourceLoader.exists(map.shop_scene)
-
-## Набор дверей после зачистки текущего зала: 2–3 награды (GDD 15.1), к мини-боссу и боссу — одна дверь.
-func roll_door_offers() -> Array[String]:
-	var out: Array[String] = []
-	if not forced_offers.is_empty():
-		for id in forced_offers.pop_front():
-			out.append(str(id))
-		return out
-	var next := room_index + 1
-	var boss_index := room_order.size() - 1
-	if map == null:
-		out.append("boss" if next >= boss_index else "combat")
-		return out
-	# Тихая награда пропускает бой, а ларёк заменяет сцену; обязательный зал должен реально сыграться.
-	var required_next := next < room_order.size() and room_order[next] in map.required_rooms
-	return map.roll_offers(all_rewards, next, boss_index, reward_visits, current_reward(), shop_available() and not required_next, anvil_available(), required_next)
-
-## Игрок вошёл в дверь: следующий зал получит эту награду.
-func choose_door(id: String) -> void:
-	Perf.mark("door_choose")
-	var next := room_index + 1
-	while room_rewards.size() <= next:
-		room_rewards.append("")
-	room_rewards[next] = id
-	reward_visits[id] = int(reward_visits.get(id, 0)) + 1
 
 # --- Серебро (блок К) ---
 
@@ -653,3 +399,95 @@ func remove_rune(id: String) -> bool:
 			runes_changed.emit(runes)
 			return true
 	return false
+
+# --- Функции компонентов, доступные на RunManager ---
+# API (## API →) и приватные функции, которые зовут другие файлы (## совместимость →).
+# Реализация и описание — в компоненте.
+
+# RunMjolnir (run_mjolnir.gd)
+
+## API → mjolnir.mjolnir_trait_level
+func mjolnir_trait_level(id: StringName) -> int:
+	return mjolnir.mjolnir_trait_level(id)
+
+## API → mjolnir.rules
+func rules() -> MjolnirRules:
+	return mjolnir.rules()
+
+## API → mjolnir.mjolnir_trait_def
+func mjolnir_trait_def(id: StringName) -> MjolnirTrait:
+	return mjolnir.mjolnir_trait_def(id)
+
+## API → mjolnir.owned_elements
+func owned_elements() -> Array[MjolnirTrait]:
+	return mjolnir.owned_elements()
+
+## API → mjolnir.owned_element
+func owned_element() -> MjolnirTrait:
+	return mjolnir.owned_element()
+
+## API → mjolnir.owned_techniques
+func owned_techniques() -> Array[MjolnirTrait]:
+	return mjolnir.owned_techniques()
+
+## API → mjolnir.active_combos
+func active_combos() -> Array[MjolnirTrait]:
+	return mjolnir.active_combos()
+
+## API → mjolnir.combos_completed_by
+func combos_completed_by(t: MjolnirTrait) -> Array[MjolnirTrait]:
+	return mjolnir.combos_completed_by(t)
+
+## API → mjolnir.mjolnir_level_in_pool
+func mjolnir_level_in_pool(t: MjolnirTrait, lv: int) -> bool:
+	return mjolnir.mjolnir_level_in_pool(t, lv)
+
+## API → mjolnir.can_level_up
+func can_level_up(t: MjolnirTrait) -> bool:
+	return mjolnir.can_level_up(t)
+
+## API → mjolnir.mjolnir_offer_ok
+func mjolnir_offer_ok(t: MjolnirTrait) -> bool:
+	return mjolnir.mjolnir_offer_ok(t)
+
+## API → mjolnir.mjolnir_trait_conflict
+func mjolnir_trait_conflict(t: MjolnirTrait) -> MjolnirTrait:
+	return mjolnir.mjolnir_trait_conflict(t)
+
+## API → mjolnir.random_mjolnir_trait_choices
+func random_mjolnir_trait_choices(count: int = -1, kinds: Array = []) -> Array[MjolnirTrait]:
+	return mjolnir.random_mjolnir_trait_choices(count, kinds)
+
+## API → mjolnir.anvil_available
+func anvil_available() -> bool:
+	return mjolnir.anvil_available()
+
+## API → mjolnir.add_mjolnir_trait
+func add_mjolnir_trait(t: MjolnirTrait) -> Array[MjolnirTrait]:
+	return mjolnir.add_mjolnir_trait(t)
+
+# RunDoors (run_doors.gd)
+
+## API → doors.reward_def
+func reward_def(id: String) -> RewardDef:
+	return doors.reward_def(id)
+
+## API → doors.current_reward
+func current_reward() -> String:
+	return doors.current_reward()
+
+## API → doors.is_peaceful_room
+func is_peaceful_room() -> bool:
+	return doors.is_peaceful_room()
+
+## API → doors.shop_available
+func shop_available() -> bool:
+	return doors.shop_available()
+
+## API → doors.roll_door_offers
+func roll_door_offers() -> Array[String]:
+	return doors.roll_door_offers()
+
+## API → doors.choose_door
+func choose_door(id: String) -> void:
+	doors.choose_door(id)
