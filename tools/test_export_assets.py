@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Проверки аудита исключений перед упаковкой плейтеста."""
 import contextlib
+import configparser
+import fnmatch
 import io
 import json
 from pathlib import Path
@@ -98,6 +100,22 @@ class ExportAuditTest(unittest.TestCase):
         (self.root / entry["path"]).touch()
         self.exclude(entry["path"])
         return scene, entry
+
+    def deferred_finale_image(self):
+        scene, backdrop = self.deferred_finale()
+        scene["image"] = "finale"
+        self.put_dialogue("finale.json", [scene])
+        image = {
+            "source": "data/dialogues/finale.json", "scene": "finale_a", "field": "image",
+            "value": "finale", "path": "sprites/story/finale.webp", "trigger": "meet",
+            "conditions": ["event:odin_finale_unlocked"],
+            "guard": {"kind": "event", "name": "odin_finale_unlocked", "trigger": "meet"},
+            "reason": "future finale image",
+        }
+        self.set_deferred([backdrop, image])
+        (self.root / image["path"]).touch()
+        self.exclude(image["path"])
+        return scene, image
 
     def test_unused_resources_are_allowed(self):
         self.assertEqual(self.check(), 0)
@@ -198,6 +216,70 @@ class ExportAuditTest(unittest.TestCase):
         self.assertIn("DEFERRED:", output)
         self.assertIn("finale_a/backdrop", output)
         self.assertIn("исключён из экспорта", output)
+
+    def test_finale_image_is_separately_deferred_by_same_event(self):
+        self.deferred_finale_image()
+        code, output = self.check_with_output()
+        self.assertEqual(code, 0)
+        self.assertIn("DEFERRED:", output)
+        self.assertIn("finale_a/image", output)
+        self.assertIn("sprites/story/finale.webp", output)
+        self.assertIn("finale_a/backdrop", output)
+
+    def test_active_scene_cannot_reuse_deferred_finale_image(self):
+        scene, image = self.deferred_finale_image()
+        active = {"id": "active", "lines": [{"image": "finale"}]}
+        self.put_dialogue("finale.json", [scene, active])
+        code, output = self.check_with_output()
+        self.assertEqual(code, 1)
+        self.assertIn("#active/lines/0/image", output)
+        self.assertIn(image["path"], output)
+        self.assertIn("активная ссылка исключена", output)
+
+    def test_active_pool_cannot_reuse_deferred_finale_image(self):
+        scene, image = self.deferred_finale_image()
+        data = {"scenes": [scene], "pools": {"active": [{"lines": [{"image": "finale"}]}]}}
+        (self.root / "data/dialogues/finale.json").write_text(json.dumps(data), encoding="utf-8")
+        code, output = self.check_with_output()
+        self.assertEqual(code, 1)
+        self.assertIn("pool:active", output)
+        self.assertIn(image["path"], output)
+
+    def test_changed_finale_guard_invalidates_deferred_image(self):
+        scene, image = self.deferred_finale_image()
+        scene["conditions"] = []
+        self.put_dialogue("finale.json", [scene])
+        code, output = self.check_with_output()
+        self.assertEqual(code, 1)
+        self.assertIn("условия/событие изменились", output)
+        self.assertIn(image["path"], output)
+        self.assertIn("активная ссылка исключена", output)
+
+    def test_added_finale_event_source_invalidates_deferred_image(self):
+        _, image = self.deferred_finale_image()
+        (self.root / "scripts/new.gd").write_text('Save.bump_event("odin_finale_unlocked")\n', encoding="utf-8")
+        code, output = self.check_with_output()
+        self.assertEqual(code, 1)
+        self.assertIn("источник события", output)
+        self.assertIn(image["path"], output)
+
+    def test_changed_finale_image_cannot_reuse_old_deferral(self):
+        scene, _ = self.deferred_finale_image()
+        scene["image"] = "other"
+        (self.root / "sprites/story/other.webp").touch()
+        self.put_dialogue("finale.json", [scene])
+        code, output = self.check_with_output()
+        self.assertEqual(code, 1)
+        self.assertIn("отложенная ссылка отсутствует или изменилась", output)
+
+    def test_candidate_export_excludes_only_exact_finale_image(self):
+        cfg = configparser.ConfigParser(interpolation=None)
+        cfg.read(Path(__file__).resolve().parent.parent / "export_presets.cfg", encoding="utf-8")
+        for section in ("preset.0", "preset.1"):
+            patterns = [x.strip() for x in cfg[section]["exclude_filter"].strip('"').split(",")]
+            with self.subTest(section=section):
+                self.assertTrue(any(fnmatch.fnmatchcase("sprites/story/finale.webp", p) for p in patterns))
+                self.assertFalse(any(fnmatch.fnmatchcase("sprites/story/first_death.webp", p) for p in patterns))
 
     def test_changed_guard_or_trigger_rejects_stale_deferral(self):
         scene, _ = self.deferred_finale()

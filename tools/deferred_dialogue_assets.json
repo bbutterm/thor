@@ -13,6 +13,17 @@
       "reason": "Черновой финал ожидает будущего события победы над Одином и постановки; демо его не подключает."
     },
     {
+      "source": "data/dialogues/finale.json",
+      "scene": "finale_a",
+      "field": "image",
+      "value": "finale",
+      "path": "sprites/story/finale.webp",
+      "trigger": "meet",
+      "conditions": ["event:odin_finale_unlocked"],
+      "guard": {"kind": "event", "name": "odin_finale_unlocked", "trigger": "meet"},
+      "reason": "Кадр только для ещё не подключённого финала; исключение — запасной вариант при превышении лимита ZIP."
+    },
+    {
       "source": "data/dialogues/hel.json",
       "scene": "hel_intro",
       "field": "backdrop",
