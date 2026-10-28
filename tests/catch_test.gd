@@ -212,6 +212,16 @@ func _run() -> void:
 	check(assist != null, "подсказка хвата есть в сцене игры")
 	await wait(0.2)
 	check(assist != null and assist._eta < 0.0, "молот в руке — колец нет")
+	var cam := get_viewport().get_camera_3d()
+	if assist and cam:
+		var camera_transform := cam.get_camera_transform()
+		for depth in [-0.025, 0.0, 0.025]:
+			assist._arrow_on = false
+			assist._aim_arrow(camera_transform * Vector3(2.0, 0.0, depth))
+			check(assist._arrow_on and is_finite(assist._arrow_angle) and absf(assist._arrow_angle) < 0.05,
+					"стрелка хвата у плоскости камеры указывает вправо (глубина %.3f)" % depth)
+	else:
+		check(false, "есть камера и подсказка для проверки стрелки хвата")
 
 	print("-- Время до поимки и кольца")
 	var proj := await _throw_and_recall(hand, 1.0)

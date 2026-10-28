@@ -143,6 +143,12 @@ func _aim_arrow(world: Vector3) -> void:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
 		return
+	# Проекция точки в плоскости камеры не определена; сохраняем сторону и направление стрелки.
+	var camera_transform := cam.get_camera_transform()
+	var depth := (camera_transform.affine_inverse() * world).z
+	if absf(depth) < 0.05:
+		var safe_depth := 0.05 if depth > 0.0 else -0.05
+		world += camera_transform.basis.z * (safe_depth - depth)
 	var c := get_viewport_rect().size * 0.5
 	var sp := cam.unproject_position(world)
 	var d := sp - c
