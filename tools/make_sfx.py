@@ -562,4 +562,33 @@ if not ONLY or any(name.startswith(prefix) for name in hazard_names for prefix i
     brass *= np.clip(tt / 0.15, 0, 1) * np.clip((1.2 - tt) / 0.3, 0, 1)
     save("horn_call", lp(brass + rng.standard_normal(len(tt)) * 0.03, 1800), 0.7)
 
+# --- Мьёльнир, П2 (плейтест 28.10): тяжёлый «бум» с треском, гул возврата, низ броска. Свой seed ---
+hammer_names = ("hammer_boom_1", "hammer_boom_2", "hammer_boom_3", "hammer_crackle", "hammer_return_hum", "hammer_throw_low")
+if not ONLY or any(name.startswith(prefix) for name in hammer_names for prefix in ONLY):
+    rng = np.random.default_rng(281028 + 2)
+
+    def crackle(dur, count, lo=1500):
+        n = int(SR * dur)
+        c = np.zeros(n)
+        for _ in range(count):
+            p = rng.integers(0, max(1, n - 300))
+            c[p:p + 300] += rng.standard_normal(300) * np.exp(-np.linspace(0, 9, 300))
+        return hp(c, lo) * env(n, 0.001, 1.6)
+
+    # Попадание: низкий удар + металл + треск молнии; три варианта по высоте
+    for i, (f0, f1, m) in enumerate([(120, 32, 360), (105, 28, 320), (135, 38, 400)]):
+        n = int(SR * 0.55)
+        body = thump(0.55, f0, f1) * 1.6 + lp(rng.standard_normal(n), 500) * env(n, 0.001, 3.0) * 0.7
+        save("hammer_boom_%d" % (i + 1), mix(body, metal(0.35, m) * 0.35, crackle(0.4, 50) * 0.5), 0.95)
+    # Треск молнии (слой поверх попадания владельца и у воткнутого молота)
+    save("hammer_crackle", crackle(0.3, 45, 1800), 0.55)
+    # Гул возврата: тон и шум растут — молот разгоняется
+    tt = t(0.6)
+    f = np.linspace(90, 320, len(tt)) ** 1.0
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    hum = (np.sin(ph) + 0.5 * np.sign(np.sin(ph * 2)) * 0.3) * np.clip(tt / 0.5, 0, 1) ** 1.5
+    save("hammer_return_hum", mix(lp(hum, 1500), whoosh(0.6, 300, 2400) * 0.6), 0.65)
+    # Низ броска: «вуф» под владельческий «вжух»
+    save("hammer_throw_low", mix(thump(0.3, 90, 40) * 1.2, lp(rng.standard_normal(int(SR * 0.3)), 250) * env(int(SR * 0.3), 0.005, 2.0) * 0.6), 0.8)
+
 print("Готово:", OUT)

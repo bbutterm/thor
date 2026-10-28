@@ -226,7 +226,7 @@ func _test_agile() -> void:
 	e.set_physics_process(true)
 	var h := EnemyTraits.handler_of(e)
 	var hand := p.mjolnir
-	hand.throw_cooldown = 0.0
+	hand.catch_cooldown = 0.0
 	hand.reset_cooldown()
 	var to := e.global_position + Vector3(0, 1.0, 0) - p.get_aim_origin()
 	p.rotation_target = Vector2(asin(clampf(to.normalized().y, -1, 1)), atan2(-to.x, -to.z))

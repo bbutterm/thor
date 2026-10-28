@@ -11,7 +11,7 @@ extends MjolnirTraitHandler
 @export var boss_factor: float = 0.25
 @export var blast_damage: float = 11.0
 @export var blast_knockback: float = 15.0
-## Сколько воткнутый молот ждёт ПКМ
+## Сколько воткнутый молот ждёт ПКМ — только при старом автовозврате (FeelSwitch hammer_recall); по умолчанию ждёт ПКМ всегда
 @export var stuck_hold: float = 3.0
 ## Как часто рисуется искра к притянутому врагу (с)
 @export var arc_interval: float = 0.3

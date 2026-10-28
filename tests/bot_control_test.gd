@@ -118,6 +118,24 @@ func _run() -> void:
 			check(false, "бот: перк ловли существует")
 	else:
 		check(false, "бот: снаряд для проверки хвата существует")
+	# П5: автовозврата нет — бот сам зовёт молот ПКМ после попадания
+	h.force_return_instant()
+	h.reset_cooldown()
+	await frames(2)
+	bot._held.clear()
+	h.throw_hammer()
+	var proj2 := h.projectile
+	if proj2:
+		proj2.hits_done = 1
+		bot._hammer_out_t = 0.4
+		bot._hammer(p, 10.0, 0.0, 1.0 / 60.0)
+		check(bot._held.has("throw") and int(bot.stats.get("recalls", 0)) >= 1, "после попадания бот зовёт молот ПКМ")
+		await frames(4)
+		check(h.in_hand or (h.projectile != null and h.projectile.state == MjolnirProjectile.State.RETURN), "молот летит к боту по его ПКМ")
+	else:
+		check(false, "бот: снаряд для проверки возврата существует")
+	bot._held.clear()
+	h.force_return_instant()
 	bot.stop()
 	# На высокой изолированной площадке проверяем, что рывок не начнётся за край.
 	var platform := StaticBody3D.new()

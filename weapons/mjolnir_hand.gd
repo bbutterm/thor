@@ -1,6 +1,7 @@
 extends Node
 class_name MjolnirHand
-## Мьёльнир в левой руке: ПКМ — метнуть, повторное ПКМ (или таймер) — вернуть.
+## Мьёльнир в левой руке: ПКМ — метнуть, повторное ПКМ — вернуть (автовозврата нет — П5, GDD 26.4;
+## свой возврат только у приёмов, где он суть: Бумеранг, Буря, копии Двух молотов).
 ## Сам полёт — в mjolnir_projectile.gd. Трейты (GDD 10, блок Б4: стихия + приёмы + связки) — обработчики
 ## MjolnirTraitHandler, собираются из Run.mjolnir_traits и Run.active_combos(); рука и снаряд вызывают
 ## их хуки (trait_call / trait_modify).
@@ -17,27 +18,54 @@ signal catch_timing(result: StringName, offset: float)
 signal traits_changed
 
 @export_group("Бросок")
-@export var throw_speed: float = 32.0
-## Перезарядка броска (с): считается от броска, бросить снова можно, когда молот в руке и перезарядка 0.
-## Качается: трейт modify(&"throw_cooldown"), тело/перк — player.modify_stat("hammer_cooldown_mult")
+## Скорость броска (П2: 32 → 45 — «как выстрел из пушки»; старое — F6 hammer_power)
+@export var throw_speed: float = 45.0
+## Перезарядка броска (с) — начинается при поимке (П1, GDD 26.4): после обычной поимки столько секунд
+## нельзя бросить. Умеешь ловить — кидаешь без остановки. Качается: трейт modify(&"catch_cooldown"),
+## тело/перк — player.modify_stat("hammer_cooldown_mult")
+@export var catch_cooldown: float = 1.5
+## Перезарядка после идеального хвата (0 — бросай сразу); трейт — modify(&"perfect_catch_cooldown")
+@export var perfect_catch_cooldown: float = 0.0
+## Старое (FeelSwitch hammer_cooldown, F6): перезарядка от броска и сколько снимает идеальный хват
 @export var throw_cooldown: float = 7.0
-## Идеальный хват снимает столько секунд перезарядки (трейт — modify(&"perfect_cooldown_refund"))
 @export var perfect_cooldown_refund: float = 5.0
 ## 1.5 У (GDD 10)
 @export var base_damage: float = 33.0
-## Дальше этого молот не летит — начинает возврат
+## Дальше этого молот не летит: теряет скорость, падает по дуге и втыкается в землю (ждёт ПКМ)
 @export var max_range: float = 25.0
-## Через сколько секунд полёта молот сам летит обратно
-@export var auto_return_after: float = 1.5
 ## Втыкается в стену или пол (GDD 10). Выключи — будет отскакивать max_wall_bounces раз и возвращаться
 @export var sticks_to_world: bool = true
-## Сколько секунд воткнутый молот ждёт ПКМ, прежде чем вернуться сам (0 — ждёт всегда)
-@export var stuck_auto_return: float = 0.8
-@export var return_speed: float = 36.0
+## Возврат разгоняется (П2): с return_speed до return_speed_max с ускорением return_accel (старое — 36 постоянно)
+@export var return_speed: float = 25.0
+@export var return_speed_max: float = 50.0
+@export var return_accel: float = 70.0
 ## Насколько резко молот поворачивает к руке на возврате (дуга)
 @export var return_turn_accel: float = 140.0
 ## Отскоки от стен до того, как воткнуться/вернуться (база 0; Рикошет добавляет)
 @export var max_wall_bounces: int = 0
+
+## Старое (FeelSwitch hammer_recall, F6): автовозврат через столько секунд полёта / воткнутого
+@export var auto_return_after: float = 1.5
+@export var stuck_auto_return: float = 0.8
+
+@export_group("Промах и останов")
+## Долетел до max_range: какая доля скорости остаётся (дальше — падение по дуге)
+@export var drop_speed_keep: float = 0.3
+## Гравитация падающего молота (м/с²)
+@export var drop_gravity: float = 30.0
+## Падает дольше этого (пропасть, за край) — сам летит к руке, чтобы не потеряться
+@export var drop_lost_time: float = 3.0
+## Сквозь корм и бойцов летит дальше; тяжёлые (Раздутый), щитоносцы (без пробития) и боссы останавливают
+@export var stopped_by_heavy: bool = true
+## Отскок от того, кто остановил: назад (м/с) и вверх — потом падает и втыкается рядом
+@export var stop_bounce_speed: float = 4.0
+@export var stop_bounce_up: float = 6.0
+## Копии «Двух молотов» без ПКМ: через столько секунд полёта возвращаются сами
+@export var clone_return_after: float = 1.0
+
+@export_group("Забыл молот")
+## Молот не в руке и не летит к ней столько секунд — Один ворчит (раз за зал, пул odin.hammer_forgot)
+@export var forgot_nag_after: float = 8.0
 
 @export_group("Без молота")
 ## Пока молота нет в руке, рывок перезаряжается быстрее на эту долю (0.2 = на 20 %)
@@ -59,8 +87,57 @@ signal traits_changed
 @export var chain_radius: float = 7.0
 
 @export_group("Отдача")
-@export var hit_hitstop: float = 0.04
-@export var catch_shake: float = 0.15
+## Hit-stop первого попадания за бросок; каждое следующее ×hit_hitstop_falloff, не меньше hit_hitstop_min
+## (предел за секунду — FX.hitstop, VfxTuning.hitstop_budget_per_second)
+@export var hit_hitstop: float = 0.07
+@export var hit_hitstop_falloff: float = 0.7
+@export var hit_hitstop_min: float = 0.02
+@export var catch_shake: float = 0.25
+## Толчок руки назад при поимке (множитель ViewmodelMotionTuning.catch_kick)
+@export var catch_kick_mult: float = 1.6
+
+@export_group("Сила (П2)")
+## Вращение в полёте (рад/с)
+@export var spin_speed: float = 34.0
+## Бросок: толчок FOV (°), отдача камеры вверх (°), тряска, выпад руки вперёд (ViewmodelMotion.Hand.kick)
+@export var throw_fov_kick: float = 3.5
+@export var throw_recoil_deg: float = 1.6
+@export var throw_trauma: float = 0.18
+@export var throw_arm_kick: float = 1.0
+@export var throw_arm_tilt: float = 220.0
+## Отброс каждого задетого: по линии полёта и вверх (корм — в полёт, «кегли»); на возврате — к Тору
+@export var hit_knock_forward: float = 18.0
+@export var hit_knock_up: float = 6.0
+@export var hit_shake: float = 0.2
+## Малая ударная волна у задетого: радиус (м) и отброс соседей без урона
+@export var hit_wave_radius: float = 1.5
+@export var hit_wave_knock: float = 6.0
+@export var hit_wave_up: float = 2.0
+## Втыкание в стену/пол: ударная волна (слабый урон, сильный отброс), тряска, трещина на полу
+@export var stick_wave_radius: float = 3.0
+@export var stick_wave_damage: float = 6.0
+@export var stick_wave_knock: float = 14.0
+@export var stick_wave_up: float = 5.0
+@export var stick_shake: float = 0.3
+## «Высота» для размера трещины FX.crack (как у удара-приземления)
+@export var stick_crack_height: float = 8.0
+## Потрескивание молнии у воткнутого молота (с между разрядами)
+@export var stuck_crackle_interval: float = 0.45
+## След в полёте: звёзды-искры и короткие ленты молнии (с между ними)
+@export var trail_interval: float = 0.035
+@export var trail_bolt_interval: float = 0.11
+@export var trail_star_size: float = 0.35
+## Идеальный хват: короткое замедление (с, масштаб времени), толчок FOV
+@export var perfect_slowmo: float = 0.1
+@export var perfect_slowmo_scale: float = 0.3
+@export var perfect_fov_kick: float = 6.0
+
+## Старые числа силы молота (до плейтеста 28.10) — для сравнения F6 (FeelSwitch hammer_power)
+const OLD_POWER := {
+	"throw_speed": 32.0, "return_speed": 36.0, "spin": 22.0, "hitstop": 0.04, "catch_shake": 0.15,
+	"knock_forward": 9.0, "knock_up": 3.0, "hit_shake": 0.12, "throw_trauma": 0.12, "stick_shake": 0.08,
+	"perfect_fov_kick": 4.0, "catch_kick_mult": 1.0,
+}
 
 var damage_mult: float = 1.0
 var return_speed_mult: float = 1.0
@@ -93,6 +170,9 @@ var _catch_attempted: bool = false
 var cooldown_left: float = 0.0
 ## Полная длина текущей перезарядки (для полоски HUD)
 var cooldown_total: float = 0.0
+## Сколько секунд молот не в руке и не возвращается (для ворчания Одина) и сказал ли уже в этом зале
+var away_time: float = 0.0
+var forgot_nagged: bool = false
 
 @export var player_path: NodePath = ^".."
 @export var pivot_path: NodePath
@@ -130,6 +210,7 @@ func _physics_process(delta: float) -> void:
 	if not in_hand:
 		_dash_bonus_tick(delta)
 		_anim_recall_tick()
+		_forgot_tick(delta)
 	if holding:
 		_hold_tick(delta)
 	if not player.input_enabled:
@@ -230,9 +311,16 @@ func _blocked_by_cooldown() -> bool:
 	throw_blocked.emit(cooldown_left)
 	return true
 
-## Длина перезарядки с учётом трейтов и тела
-func effective_cooldown() -> float:
-	var cd := float(trait_modify(&"throw_cooldown", throw_cooldown))
+## Длина перезарядки после поимки с учётом трейтов и тела (perfect — после идеального хвата)
+## Старое (FeelSwitch hammer_cooldown) — перезарядка от броска throw_cooldown, perfect не учитывается.
+func effective_cooldown(perfect: bool = false) -> float:
+	var cd: float
+	if FeelSwitch.is_old(&"hammer_cooldown"):
+		cd = float(trait_modify(&"throw_cooldown", throw_cooldown))
+	elif perfect:
+		cd = float(trait_modify(&"perfect_catch_cooldown", perfect_catch_cooldown))
+	else:
+		cd = float(trait_modify(&"catch_cooldown", catch_cooldown))
 	if player:
 		cd *= float(player.modify_stat(&"hammer_cooldown_mult", 1.0))
 	return maxf(cd, 0.0)
@@ -246,15 +334,17 @@ func throw_hammer() -> void:
 	if not in_hand:
 		return
 	in_hand = false
-	cooldown_total = effective_cooldown()
-	cooldown_left = cooldown_total
 	_catch_attempted = false
+	away_time = 0.0
+	if FeelSwitch.is_old(&"hammer_cooldown"):
+		cooldown_total = effective_cooldown()
+		cooldown_left = cooldown_total
 	var proj := MjolnirProjectile.new()
 	player.get_parent().add_child(proj)
 	var origin := player.get_aim_origin() + player.get_aim_forward() * 0.8 + player.global_transform.basis.x * -0.35
 	var mods := next_throw
 	next_throw = {}
-	var speed := float(trait_modify(&"throw_speed", throw_speed)) * float(mods.get("speed_mult", 1.0))
+	var speed := float(trait_modify(&"throw_speed", current_throw_speed())) * float(mods.get("speed_mult", 1.0))
 	projectile = proj
 	proj.launch(self, origin, player.get_aim_forward() * speed)
 	proj.apply_throw_mods(mods)
@@ -262,8 +352,13 @@ func throw_hammer() -> void:
 		perfect_ready = false
 		proj.set_empowered(perfect_damage_mult)
 	_anim_throw()
-	player.camera_fx.add_trauma(0.12)
+	player.camera_fx.add_trauma(pw(throw_trauma, &"throw_trauma"))
 	Audio.play("sounds/sfx/hammer_throw.wav")
+	if powered():
+		# П2: толчок FOV, отдача камеры, низы под «вжух»
+		player.camera_fx.kick_fov(throw_fov_kick)
+		player.camera_fx.kick_recoil(throw_recoil_deg, randf_range(-0.3, 0.3))
+		Audio.play("sounds/sfx/hammer_throw_low.wav")
 	state_changed.emit(false)
 
 ## Вызывается снарядом, когда молот вернулся в руку.
@@ -276,6 +371,10 @@ func on_caught() -> void:
 	# Нажал раньше окна — «поздний» хват после поимки тоже не засчитывается
 	_perfect_open = not _catch_attempted
 	var perfect := now - _recall_press_time <= effective_perfect_window()
+	# Перезарядка начинается при поимке; идеальный хват (ниже или в окне после поимки) её снимает
+	if not FeelSwitch.is_old(&"hammer_cooldown"):
+		cooldown_total = effective_cooldown()
+		cooldown_left = cooldown_total
 	if player and not player.is_dead:
 		player.restore_mjolnir_runes(catch_runes)
 		if not player.is_on_floor() and not player.is_climbing:
@@ -287,8 +386,10 @@ func on_caught() -> void:
 		catch_timing.emit(&"perfect", _recall_press_time - now)
 	_recall_press_time = -10.0
 	_anim_catch(perfect)
-	player.camera_fx.add_trauma(catch_shake)
+	player.camera_fx.add_trauma(pw(catch_shake, &"catch_shake"))
 	Audio.play("sounds/sfx/hammer_catch.wav")
+	if powered() and player and not player.is_dead:
+		FX.sparks(player.get_parent(), hand_point() + player.get_aim_forward() * 0.6, Color(0.6, 0.88, 1.0), 12, 4.0, 6.0, 0.05, 0.3)
 	state_changed.emit(true)
 	trait_call(&"on_caught", [self])
 
@@ -314,6 +415,9 @@ func _anim_throw() -> void:
 	h.set_state(&"throw", t.throw_time + 0.05)
 	h.snap(REST_POS + t.throw_cock_pos, REST_ROT + t.throw_cock_rot)
 	h.wrist_target = Vector3(-25, 0, 0)
+	if powered():
+		# П2: короткий резкий выпуск — рука «выстреливает» вперёд
+		h.kick(Vector3(0.15, 0.05, -1.0) * throw_arm_kick, Vector3(-throw_arm_tilt, 0, 0))
 	var arm := h.arm
 	var tw := h.new_tween()
 	tw.set_parallel(true)
@@ -382,13 +486,14 @@ func _anim_catch(perfect: bool) -> void:
 		arm.grip = 1.0
 		arm.open_style = 0.0
 	h.tween_to(REST_POS, REST_ROT, 0.24, Tween.TRANS_BACK, Tween.EASE_OUT)
+	var km := pw(catch_kick_mult, &"catch_kick_mult")
 	if perfect:
 		h.set_state(&"perfect_catch", t.perfect_twirl_time)
-		h.kick(Vector3(0, 0.3, 1.0) * t.perfect_kick, Vector3(t.perfect_tilt, 0, -t.perfect_tilt * 0.3))
+		h.kick(Vector3(0, 0.3, 1.0) * t.perfect_kick * km, Vector3(t.perfect_tilt, 0, -t.perfect_tilt * 0.3))
 		_twirl(arm, t)
 	else:
 		h.set_state(&"catch", 0.1)
-		h.kick(Vector3(0, 0.2, 1.0) * t.catch_kick, Vector3(t.catch_tilt, 0, 0))
+		h.kick(Vector3(0, 0.2, 1.0) * t.catch_kick * km, Vector3(t.catch_tilt, 0, 0))
 
 ## Прокрут молота вокруг рукояти (только модель в кулаке; рука держит хват).
 var _twirl_tween: Tween
@@ -412,15 +517,46 @@ func _grant_perfect() -> void:
 	perfect_ready = true
 	if player and not player.is_dead:
 		player.restore_mjolnir_runes(player.dash_charges_max)
-	cooldown_left = maxf(cooldown_left - float(trait_modify(&"perfect_cooldown_refund", perfect_cooldown_refund)), 0.0)
+	if FeelSwitch.is_old(&"hammer_cooldown"):
+		cooldown_left = maxf(cooldown_left - float(trait_modify(&"perfect_cooldown_refund", perfect_cooldown_refund)), 0.0)
+	else:
+		cooldown_left = minf(cooldown_left, effective_cooldown(true))
 	Audio.play("sounds/sfx/perfect_catch.wav")
 	var p := hand_point() + player.get_aim_forward() * 0.7
 	FX.burst(player.get_parent(), p, 0.3, Color(1.0, 0.85, 0.4, 0.8), 0.16)
 	FX.perfect_catch(p)
-	player.camera_fx.kick_fov(4.0)
+	player.camera_fx.kick_fov(pw(perfect_fov_kick, &"perfect_fov_kick"))
+	if powered():
+		# П2: ярче — короткое замедление и золотая вспышка
+		FX.slowmo(perfect_slowmo, perfect_slowmo_scale)
+		FX.hit_flash(player.get_parent(), p, 0.9, Color(1.0, 0.82, 0.35))
+		FX.sparks(player.get_parent(), p, Color(1.0, 0.85, 0.4), 16, 5.0, 4.0, 0.05, 0.35)
+		ComicFX.on_perfect_catch()
 	perfect_catch.emit()
 	Dialogue.thor_bark("catch", 0.5)
 	trait_call(&"on_perfect_catch", [self])
+
+## Новая сила молота (П2) включена — не старое под F6 (FeelSwitch hammer_power)
+func powered() -> bool:
+	return not FeelSwitch.is_old(&"hammer_power")
+
+## Число силы: новое значение или старое из OLD_POWER (F6)
+func pw(new_value: float, old_key: StringName) -> float:
+	return new_value if powered() else float(OLD_POWER[String(old_key)])
+
+func current_throw_speed() -> float:
+	return pw(throw_speed, &"throw_speed")
+
+## Скорость возврата через t с после начала: разгон return_speed → return_speed_max (старое — постоянная 36)
+func return_speed_at(t: float) -> float:
+	var v := float(OLD_POWER["return_speed"]) if not powered() else minf(return_speed + return_accel * maxf(t, 0.0), return_speed_max)
+	return v * return_speed_mult
+
+## Hit-stop n-го попадания за бросок (n с 0)
+func hitstop_for(n: int) -> float:
+	if not powered():
+		return float(OLD_POWER["hitstop"])
+	return maxf(hit_hitstop * pow(hit_hitstop_falloff, n), hit_hitstop_min)
 
 func current_damage() -> float:
 	return base_damage * damage_mult
@@ -451,6 +587,27 @@ func _dash_bonus_tick(delta: float) -> void:
 	if t is float:
 		player.set("_dash_recharge_timer", t + delta * dash_recharge_bonus)
 
+## Забыл молот: воткнут/лежит/висит без ПКМ дольше forgot_nag_after — Один ворчит раз за зал.
+## Реплика может не пройти лимит боевых реплик Одина — тогда попробуем ещё раз позже.
+func _forgot_tick(delta: float) -> void:
+	if FeelSwitch.is_old(&"hammer_recall"):
+		return
+	if projectile and is_instance_valid(projectile) and projectile.state == MjolnirProjectile.State.RETURN:
+		away_time = 0.0
+		return
+	away_time += delta
+	if not forgot_nagged and away_time >= forgot_nag_after:
+		if Odin.say("hammer_forgot") != "":
+			forgot_nagged = true
+		else:
+			away_time = forgot_nag_after - 1.0
+
+## Новый зал: молот сам в руке, без перезарядки, ворчание Одина — снова доступно.
+func on_room_start() -> void:
+	force_return_instant()
+	away_time = 0.0
+	forgot_nagged = false
+
 ## Сбросить при смене зала (на всякий случай).
 func force_return_instant() -> void:
 	cancel_hold()
@@ -458,6 +615,8 @@ func force_return_instant() -> void:
 		projectile.queue_free()
 	if not in_hand:
 		on_caught()
+	# Служебный возврат (смена зала, трейтов) — не поимка: перезарядки нет
+	reset_cooldown()
 
 # --- Трейты ---
 

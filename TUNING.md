@@ -53,7 +53,10 @@
 
 ## Мьёльнир — узел **Mjolnir** (`weapons/mjolnir_hand.gd`)
 
-База по GDD 10: `throw_speed` 32, `base_damage` 33 (1.5 У), `max_range` 25 м (дальше — возврат), `auto_return_after` 1.5 с (полёт без попадания в стену), `sticks_to_world` вкл. (втыкается в стену/пол), `stuck_auto_return` 0.8 с (сколько воткнутый молот ждёт ПКМ; трейты «на воткнутый» продлевают до 3–5 с; 0 — ждёт всегда), `return_speed` 36, `return_turn_accel` 140 (дуга возврата), `max_wall_bounces` 0 (было 2: теперь отскоки даёт Рикошет), `chain_targets` 0 (базовой молнии нет — это стихия «Молния»), `chain_damage_ratio` 0.5, `chain_radius` 7, `hit_hitstop` 0.04.
+База по GDD 10: `throw_speed` 45 (П2; было 32), `base_damage` 33 (1.5 У), `max_range` 25 м (дальше — падает дугой и втыкается в землю), `sticks_to_world` вкл. (втыкается в стену/пол), **автовозврата нет** (П5: только ПКМ; свой возврат у Бумеранга, Бури и копий Двух молотов; старое `auto_return_after` 1.5 с / `stuck_auto_return` 0.8 с — под переключателем F6 `FeelSwitch` `hammer_recall`), возврат разгоняется `return_speed` 25 → `return_speed_max` 50 с `return_accel` 70 м/с² (было 36 постоянно), `return_turn_accel` 140 (дуга возврата), `max_wall_bounces` 0 (было 2: теперь отскоки даёт Рикошет), `chain_targets` 0 (базовой молнии нет — это стихия «Молния»), `chain_damage_ratio` 0.5, `chain_radius` 7, hit-stop `hit_hitstop` 0.07 на первом попадании за бросок, дальше ×`hit_hitstop_falloff` 0.7 до `hit_hitstop_min` 0.02 (было 0.04 на каждом; предел за секунду — `hitstop_budget_per_second`), `catch_shake` 0.25 (было 0.15), `catch_kick_mult` 1.6.
+**Сила (П2, группа «Сила (П2)»):** `spin_speed` 34 (было 22); бросок — `throw_fov_kick` 3.5°, `throw_recoil_deg` 1.6°, `throw_trauma` 0.18 (было 0.12), выпад руки `throw_arm_kick` 1 / `throw_arm_tilt` 220, звук `hammer_throw_low`; попадание — отброс `hit_knock_forward` 18 по линии полёта (на возврате — к Тору) + `hit_knock_up` 6 (было 9 + 3), тряска `hit_shake` 0.2 (было 0.12), вспышка, искры, малая волна `hit_wave_radius` 1.5 м (`hit_wave_knock` 6, `hit_wave_up` 2, без урона), «бум» `hammer_boom_1..3` + треск `hammer_crackle`; втыкание — волна `stick_wave_radius` 3 м, `stick_wave_damage` 6, `stick_wave_knock` 14, `stick_wave_up` 5, тряска `stick_shake` 0.3 (было 0.08), трещина `stick_crack_height` 8, обломки и пыль; у воткнутого — разряды раз в `stuck_crackle_interval` 0.45 с; след — звёзды раз в `trail_interval` 0.035 с (`trail_star_size` 0.35), ленты молнии раз в `trail_bolt_interval` 0.11 с; возврат — гул `hammer_return_hum`; идеальный хват — замедление `perfect_slowmo` 0.1 с × `perfect_slowmo_scale` 0.3, золотая вспышка, `perfect_fov_kick` 6 (было 4). Старые числа — `MjolnirHand.OLD_POWER`, F6 (`FeelSwitch` `hammer_power`).
+Промах и останов (П5): `drop_speed_keep` 0.3 (доля скорости на пределе дальности), `drop_gravity` 30 м/с², `drop_lost_time` 3 с (падает дольше — упал в пропасть, летит к руке сам); `stopped_by_heavy` вкл. — сквозь корм и бойцов летит дальше, останавливают Раздутый, щитоносец (без пробития) и боссы: отскок `stop_bounce_speed` 4 м/с назад + `stop_bounce_up` 6 вверх, падение, втыкается рядом; копии Двух молотов — `clone_return_after` 1 с. Забыл молот: `forgot_nag_after` 8 с — Один ворчит раз за зал (пул `odin.hammer_forgot`); иконка «где молот» на краю экрана — `OffscreenIndicators.hammer_size` 44 px, `hammer_color`. Новый зал — молот в руке сам (`MjolnirHand.on_room_start`).
+Перезарядка броска — **от поимки** (П1, GDD 26.4): `catch_cooldown` 1.5 с после обычной поимки, `perfect_catch_cooldown` 0 после идеального хвата (бросай сразу); в полёте перезарядки нет, служебный возврат (новый зал) — без перезарядки. Качается: трейт `modify(&"catch_cooldown"/"perfect_catch_cooldown")`, тело/перк `hammer_cooldown_mult`. Старое (`throw_cooldown` 7 с от броска, `perfect_cooldown_refund` 5 с) — под F6 (`FeelSwitch` `hammer_cooldown`). HUD — полоска по низу бойка `RuneHammer` (красная при осечке).
 Без молота: `dash_recharge_bonus` 0.2 (руны на земле восстанавливаются на 20 % быстрее); `catch_runes` 1 — обычная поимка возвращает руну и, в воздухе, прыжки; идеальный хват заполняет запас. Перехват в воздухе: `restore_dash` / `restore_dash_lvl2` 1 / 2 дополнительных руны, `hop_lvl2` 5 м/с. Идеальный хват: `perfect_window` 0.15 с (ПКМ до или после поимки), `perfect_damage_mult` 2.
 
 ## Трейты Мьёльнира (блок Б4: стихии × приёмы) — `weapons/mjolnir_traits/*.tres`, связки — `combos/*.tres`
@@ -62,7 +65,7 @@
 
 **Правила** — `weapons/mjolnir_rules.tres` (`MjolnirRules`): `max_elements` 1, `element_swap` выкл. (стихия одна на забег), `max_techniques` 2, `offer_count` 3, `mix_kinds` вкл. (у мини-босса в наборе и стихия, и приём), `anvil_enabled` вкл. (дверь «Наковальня Эйтри»), `combo_card_time` 3.2 с (плашка «СВЯЗКА!»). Наковальня в мире — `run/maps/midgard.tres`: `anvil_per_world` 1, `anvil_earliest_room` 2, `anvil_latest_room` 3.
 
-**Стихии** (общие поля `MjolnirElementHandler`): след — `trail_spacing` 1.8 м, `trail_radius` 1.1, `trail_duration` 3 с, `trail_max_height` 4 м, `trail_max_zones` 10; аура — `aura_interval` 1 с, `aura_radius` 4 м, `aura_damage` 8, `aura_stuck_hold` 5 с; с неба — `sky_max_distance` 40, `sky_radius` 3, `sky_damage` 33 (1.5 У); связка — `slam_reach` 2 м (насколько дальше радиуса удара-приземления), окружение — `world_radius` 1.6.
+**Стихии** (общие поля `MjolnirElementHandler`): след — `trail_spacing` 1.8 м, `trail_radius` 1.1, `trail_duration` 3 с, `trail_max_height` 4 м, `trail_max_zones` 10; аура — `aura_interval` 1 с, `aura_radius` 4 м, `aura_damage` 8, `aura_stuck_hold` 5 с (только при старом автовозврате, F6); с неба — `sky_max_distance` 40, `sky_radius` 3, `sky_damage` 33 (1.5 У); связка — `slam_reach` 2 м (насколько дальше радиуса удара-приземления), окружение — `world_radius` 1.6.
 
 | Стихия | Свои числа |
 |---|---|
@@ -78,19 +81,19 @@
 
 | Приём | Группа / не вместе с | Главные числа |
 |---|---|---|
-| Притяжение к молоту | к молоту | `speed` 30, `max_time` 1.2 с, `damage` 22 (1 У), `hit_radius` 1.6, `knockback` 11, `exit_up` 10, `mantle_height` 2.2 м, `stuck_hold` 3 с; ур. 2 — `arrive_slam_*` |
-| Магнит | — | `radius` 6 / 9 м, `pull_speed` 7, `hold_distance` 1.6, `boss_factor` 0.25, `blast_damage` 11, `blast_knockback` 15, `stuck_hold` 3 с |
+| Притяжение к молоту | к молоту | `speed` 30, `max_time` 1.2 с, `damage` 22 (1 У), `hit_radius` 1.6, `knockback` 11, `exit_up` 10, `mantle_height` 2.2 м, `stuck_hold` 3 с (только старый автовозврат, F6); ур. 2 — `arrive_slam_*` |
+| Магнит | — | `radius` 6 / 9 м, `pull_speed` 7, `hold_distance` 1.6, `boss_factor` 0.25, `blast_damage` 11, `blast_knockback` 15, `stuck_hold` 3 с (старый автовозврат, F6) |
 | Бумеранг | Магнит, Ступенька, Пёс, Пике | `speed_mult` 1.25, `loop_time` 0.5 с, `turn_rate` 3.6 рад/с; ур. 2 — две петли |
 | Рикошет | — | `ricochets` 3 / 5, `seek_radius` 14 м |
-| Буря | удержание ПКМ | `hold_delay` 0.18 с, `duration` 3 / 5 с, `radius` 3, `tick` 0.3 с, `tick_damage` 11; ур. 2 — `pull_speed_lvl2` 5, `pull_radius_lvl2` 7 |
+| Буря | удержание ПКМ | `hover_distance` 6 м (было `hold_delay` 0.18 с — с броском 45 м/с место зависания уезжало), `duration` 3 / 5 с, `radius` 3, `tick` 0.3 с, `tick_damage` 11; ур. 2 — `pull_speed_lvl2` 5, `pull_radius_lvl2` 7 |
 | Два молота | — | копии веером через `spread_deg` 12°, каждый ×`damage_mult` 0.6 |
-| Молот-ступенька | — | прыжок ×`jump_mult` 1.5 / 1.85, ждёт `stuck_hold` 6 / 10 с, площадка `platform_size` 1 × 0.2 × 0.9 м, стена — `max_wall_normal_y` 0.5 |
+| Молот-ступенька | — | прыжок ×`jump_mult` 1.5 / 1.85, `stuck_hold` 6 / 10 с (старый автовозврат, F6), площадка `platform_size` 1 × 0.2 × 0.9 м, стена — `max_wall_normal_y` 0.5 |
 | Обмен | к молоту | неуязвимость `arrive_invuln` 0.35 с; ур. 2 — волна `burst_radius` 3, `burst_damage` 11, `burst_knockback` 9 |
 | Пике молотом | — | взгляд ниже `min_down_angle` 30°, бросок ×`throw_speed_mult` 1.6, Тор летит `follow_speed` 40, бонус высоты `height_bonus` 4 / 7 м, `max_follow_time` 1.5 с. Разрешение на удар проверяется при броске и действует до посадки или завершения залезания |
 | Праща | удержание ПКМ | крутится после `spin_delay` 0.2 с, `orbit_radius` 1.9, `spin_speed` 9 рад/с, `tick` 0.25 с × `spin_damage` 11, `spin_knockback` 8, до `max_spin` 4 / 6 с; бросок ×`launch_speed_mult` 1.4, ×`launch_damage_mult` 1.3 / 1.6, пробивает щиты |
 | Заряд | удержание ПКМ | короче `min_hold` 0.12 с — обычный бросок; полный за `charge_time` 0.8 / 0.55 с: урон до ×`max_damage_mult` 2.2 / 2.6, скорость ×`max_speed_mult` 1.4, дальность ×`max_range_mult` 1.8, пробитие с `pierce_at` 0.95; ур. 2 — оглушение `stun_lvl2` 0.8 с |
 | Перехват в воздухе | — | `restore_dash` / `restore_dash_lvl2` 1 / 2 дополнительных руны, ур. 2 — подброс `hop_lvl2` 5 м/с |
-| Верный пёс | — | раз в `interval` 1 / 0.6 с бьёт ближайшего в `radius` 8 м на `damage` 15 (0.7 У), `knockback` 6, ждёт `stuck_hold` 6 / 9 с |
+| Верный пёс | — | раз в `interval` 1 / 0.6 с бьёт ближайшего в `radius` 8 м на `damage` 15 (0.7 У), `knockback` 6, `stuck_hold` 6 / 9 с (старый автовозврат, F6) |
 
 **Связки** (`combos/*.tres`): Огненный смерч — `radius_mult` 1.35, тянет в `pull_radius` 7 со `pull_speed` 6, поджог раз в `ignite_tick` 0.3 с, огонь под смерчем раз в `fire_every` 0.7 с (`fire_radius` 2, `fire_time` 2, `fire_dps` 6.6, `max_fires` 3); Ледяной рикошет — корка `crust_radius` 1.6, `crust_time` 4, `crust_fall_stun` 0.8, промерзание в `chill_radius` 2.5, `max_crusts` 6; Грозовой магнит — разряд раз в `interval` 0.6 с на `damage` 8, на возврате цепь `recall_chain` 2 × `recall_chain_damage` 11; Ураганный рывок — путь `path_radius` 2.6 / `path_push` 14, прилёт `arrive_radius` 5.5, `arrive_push` 18, `arrive_lift` 6, `arrive_damage` 5; Кратер — радиус удара ×`radius_mult` 1.5, `pin_time` 1.5, `damage` 11 (корм погибает).
 
@@ -662,11 +665,25 @@ HUD (`ui/style_hud.gd`): `bar_width` 340, `caption_height` 58, `burst_size` 210�
 | `CatchAssist.feedback_time` | 0.7 с | сколько висит «ИДЕАЛЬНО!/РАНО/ПОЗДНО» |
 | `MjolnirHand.catch_feedback_range` | 0.6 с | промах дальше этого — обычное нажатие, без «РАНО/ПОЗДНО» |
 
+## Плейтест владельца 28.10 (вечер, GDD 26.4)
+Старое и новое переключается F6 в «Быстрой проверке» — `scripts/feel_switch.gd` (`FeelSwitch.is_old(&"hammer_cooldown"|"hammer_recall"|"hammer_power")`), на лету; по умолчанию — новое.
+
+| Число | Было → стало | Зачем |
+|---|---|---|
+| `MjolnirHand.catch_cooldown` (старое `throw_cooldown` — F6) | 7 с от броска → 1.5 с от поимки | «было веселее без КД, но это имба»: умеешь ловить — кидаешь без остановки |
+| `MjolnirHand.perfect_catch_cooldown` (старое `perfect_cooldown_refund` −5 с — F6) | → 0 с | идеальный хват — бросай сразу |
+| `auto_return_after` / `stuck_auto_return` | 1.5 с / 0.8 с → нет (старое — F6) | автовозврата нет: молот возвращается только по ПКМ (решение 28.10, 23:00) |
+| `stuck_hold` приёмов (Магнит, Притяжение, Ступенька, Пёс), `aura_stuck_hold` стихий | 3–10 с → действуют только в старом режиме (F6) | воткнутый и так ждёт ПКМ |
+| Пробитие толпы | сквозь всех → сквозь корм и бойцов; Раздутый, щитоносец, босс останавливают | бросок — выбор цели, тяжёлые держат удар |
+| Промах на `max_range` | возврат → падение дугой и втыкание в землю | молот — вещь в мире, его надо позвать |
+| Сила молота (П2) | бросок 32 → 45 м/с, возврат 36 → 25…50, отброс 9+3 → 18+6, hit-stop 0.04 → 0.07…0.02, тряска 0.12 → 0.2 | «как Левиафан, только громче»; старое — F6 |
+| HUD перезарядки | надпись «ПЕРЕЗАРЯДКА … · ПОЙМАЙ ИДЕАЛЬНО — БЫСТРЕЕ» → полоска у молота + короткое «ПЕРЕЗАРЯДКА» | не перекрывает бой |
+
 ## Плейтест владельца 27.10 (вечер)
 | Число | Было → стало | Зачем |
 |---|---|---|
-| `MjolnirHand.throw_cooldown` | — → 7 с | молот спамился; бросок — решение, а не кнопка «всегда» |
-| `MjolnirHand.perfect_cooldown_refund` | — → 5 с | идеальный хват — способ бросать чаще |
+| `MjolnirHand.throw_cooldown` | — → 7 с (**отменено 28.10**: `catch_cooldown` 1.5 с от поимки) | молот спамился; бросок — решение, а не кнопка «всегда» |
+| `MjolnirHand.perfect_cooldown_refund` | — → 5 с (**отменено 28.10**: идеальный хват — перезарядка 0) | идеальный хват — способ бросать чаще |
 | `ComicFX.cooldown` | 0.4 → 1.1 с | слова мельтешили |
 | `ComicFX.routine_chance` | — → 0.45 | обычные слова (priority < `important_priority` 50) — через раз |
 | `ComicFX.fullscreen_events` | любое big → boss_kill, slam (≥ 10 м), rank_4, combo | остальные «big» — крупное слово у места удара (`world_big_scale` 1.6) |

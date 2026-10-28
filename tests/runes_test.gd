@@ -110,11 +110,13 @@ func _run() -> void:
 	p.dash_charges = 0
 	h._recall_press_time = -100.0
 	h._catch_attempted = false
-	h.cooldown_left = 7.0
 	h.on_caught()
+	var cd_after_catch := h.cooldown_left
 	h.press_throw()
-	check(p.dash_charges == p.dash_charges_max and h.in_hand and h.cooldown_left < 7.0,
-		"кнопка после поимки засчитывает идеальный хват во время перезарядки")
+	# П1: перезарядка начинается при поимке, идеальный хват её снимает — бросок проходит сразу
+	check(p.dash_charges == p.dash_charges_max and cd_after_catch > 0.0 and h.cooldown_left == 0.0 and not h.in_hand,
+		"кнопка после поимки засчитывает идеальный хват во время перезарядки и бросает сразу")
+	h.force_return_instant()
 	p.dash_charges = 0
 	p.restore_mjolnir_runes(999)
 	p._spend_dash_charge()

@@ -14,9 +14,10 @@ func _shield_blocks(knockback: Vector3, source: String) -> bool:
 		return false
 	if source in ["slam", "stomp", "fire", "lightning", "explosion", "wall", "fall"]:
 		return false
+	# Пробитие (кирка, Заряд/Праща Мьёльнира) — даже если враг ещё не знает игрока
+	if hit_breaks_armor(source):
+		return false
 	if enemy.player and is_instance_valid(enemy.player):
-		if hit_breaks_armor(source):
-			return false
 		if enemy.player.global_position.y - enemy.global_position.y > 1.6 * enemy.model_scale:
 			return false
 	var from_dir := Vector3.ZERO

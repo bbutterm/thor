@@ -49,7 +49,8 @@ bot_test, bot_control_test, bot_*_test       # бот-плейтест
 ## Соглашения в тестах
 - Тесты (`res://tests/*`) и `--selftest` пишут сохранение в `user://test_save.json`, настройки — в `user://test_settings.cfg`; язык в тестах всегда ru.
 - Порядок залов — `Run.room_order` (после `Run.start_run`), наборы дверей — `Run.forced_offers`, испытание — `Run.forced_trial = "<id>"`, `Run.doors_enabled = false` — старая одна дверь после руны. Общие шаги — `door_helper.gd` (`resolve_reward`, `take_door`).
-- Где важны броски подряд — `hand.throw_cooldown = 0`.
+- Где важны броски подряд — `hand.catch_cooldown = 0` (перезарядка — от поимки).
+- Автовозврата нет: молот возвращается только по ПКМ (`hand.request_throw_or_recall()`); `trait_test._wait_in_hand(timeout, recall_after)` сам зовёт его, `recall_after < 0` — для приёмов со своим возвратом.
 - Вставки на паузе (заставка босса, страница комикса) в тестах выключены (`ScreenArt.pauses_in_tests`, как `Dialogue.in_run_scenes`).
 - Окна мультикилла/попадания/шмяка — по `Run.combat_clock`; не заменяй системными часами.
 
@@ -59,9 +60,9 @@ Forward+ на программном Vulkan (`apt-get install mesa-vulkan-driver
 
 ## Кадры (нужен xvfb)
 - Общие: `xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/screenshots.tscn -- <папка>`.
-- По системам: `ui_shots` (`-- <папка> en` — английский), `deck_shots` (1280×800), `room_shots -- <папка> room_07 …`, `weapon_shots` (640x360), `mjolnir_shots`, `hands_shots -- <папка> [quick]`, `vfx_shots`, `world_art_shots`, `outline_shots`, `portrait_shots`, `enemy_shots`, `boss_shots`, `hazard_shots`, `destruct_shots`.
+- По системам: `ui_shots` (`-- <папка> en` — английский), `deck_shots` (1280×800), `room_shots -- <папка> room_07 …`, `weapon_shots` (640x360), `mjolnir_shots`, `hammer_shots -- <папка> [old]` (бросок сквозь толпу, втыкание, возврат, хват, промах; `old` — старое под F6), `hands_shots -- <папка> [quick]`, `vfx_shots`, `world_art_shots`, `outline_shots`, `portrait_shots`, `enemy_shots`, `boss_shots`, `hazard_shots`, `destruct_shots`.
 - Витрина ассетов: `xvfb-run -a godot --path . --rendering-method gl_compatibility --resolution 1280x720 res://tools/preview_assets.tscn -- out.png lineup|characters|village|props`.
 
 ## Бот-плейтест и баланс (Н5)
-- `bot/bot_player.gd` — бот через ввод и реальные ограничения игрока: руны, второй прыжок перед ударом, перезарядка и хват Мьёльнира. `bot_test.tscn` проверяет забег; `bot_control_test.tscn` — ввод, руны, удар, кулдаун и край платформы.
+- `bot/bot_player.gd` — бот через ввод и реальные ограничения игрока: руны, второй прыжок перед ударом, перезарядка, возврат по ПКМ (после попадания, втыкания или промаха) и хват Мьёльнира. `bot_test.tscn` проверяет забег; `bot_control_test.tscn` — ввод, руны, удар, кулдаун и край платформы.
 - Полный прогон: `tests/bot/run_balance.sh /tmp/thor-balance-new 5 skilled 11 3`. Он создаёт отдельное `user://` на процесс, обрезает логи и отказывается перезаписать прежние результаты. Таблицы — `tests/bot/balance_report.py`; методы и ограничения, 45 исходных строк — `docs/balance_2026-10-27.md` и `.jsonl`.

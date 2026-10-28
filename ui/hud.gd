@@ -32,6 +32,8 @@ var _dash_pips: Array[HudIcon] = []
 var _hammer_icon: HudIcon
 var _hammer_label: Label
 var _hammer_state: String = ""
+## Молот с рунами; по низу бойка — полоска перезарядки броска
+var _rune_hammer: RuneHammer
 var _glory_label: Label
 var _room_label: Label
 var _body_label: Label
@@ -82,10 +84,10 @@ func bind_player(p: Player) -> void:
 	player.hurt.connect(_on_hurt)
 	player.slam_unavailable.connect(func() -> void: toast(tr("НУЖЕН ВТОРОЙ ПРЫЖОК")))
 	player.mjolnir.state_changed.connect(_on_hammer_state)
-	# Бросок на перезарядке: подпись вспыхивает красным, иконка дёргается
+	# Бросок на перезарядке: полоска у молота вспыхивает красным, иконка дёргается
 	player.mjolnir.throw_blocked.connect(func(_left: float) -> void:
 		_hammer_icon.pop()
-		_hammer_flash_until = Time.get_ticks_msec() + 400)
+		_rune_hammer.flash_until = Time.get_ticks_msec() + 400)
 	_on_health_changed(player.health, player.max_health)
 	_on_dash_changed(player.dash_charges, player.dash_charges_max, 0.0)
 	_on_hammer_state(true)
@@ -166,6 +168,7 @@ func _build() -> void:
 	hv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Ресурс и высота образуют один молот: руны на бойке, шкала в рукояти.
 	var rune_hammer := RuneHammer.new()
+	_rune_hammer = rune_hammer
 	hammer_row.add_child(rune_hammer)
 	_dash_box = HBoxContainer.new()
 	_dash_box.position = Vector2(11, 5)
@@ -437,18 +440,14 @@ func _on_dash_changed(current: int, maximum: int, progress: float) -> void:
 			pip.fill = 0.0
 
 ## Мьёльнир: в руке / летит / воткнут / возвращается (иконки комплекта)
-## До какого момента (мс) подпись перезарядки красная — после попытки броска
-var _hammer_flash_until: int = 0
-
 func _update_hammer() -> void:
 	var m := player.mjolnir
 	var st := "hand"
+	var cd := 0.0
 	if m.in_hand and m.cooldown_left > 0.0:
 		st = "cooldown"
-		# Секунды перезарядки обновляются каждый кадр
-		_hammer_label.text = tr("ПЕРЕЗАРЯДКА %.1f с · ПОЙМАЙ ИДЕАЛЬНО — БЫСТРЕЕ") % m.cooldown_left
-		if _hammer_state == "cooldown":
-			_hammer_label.label_settings.font_color = Color(1.0, 0.35, 0.3) if Time.get_ticks_msec() < _hammer_flash_until else Color(0.75, 0.75, 0.8)
+		cd = m.cooldown_left / maxf(m.cooldown_total, 0.01)
+	_rune_hammer.set_cooldown(cd)
 	if not m.in_hand and m.projectile and is_instance_valid(m.projectile):
 		match m.projectile.state:
 			MjolnirProjectile.State.STUCK:
@@ -466,7 +465,7 @@ func _update_hammer() -> void:
 		"cooldown":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_ready")
 			_hammer_icon.tint = Color(0.45, 0.45, 0.5)
-			_hammer_label.text = tr("ПЕРЕЗАРЯДКА %.1f с · ПОЙМАЙ ИДЕАЛЬНО — БЫСТРЕЕ") % m.cooldown_left
+			_hammer_label.text = tr("ПЕРЕЗАРЯДКА")
 			_hammer_label.label_settings.font_color = Color(0.75, 0.75, 0.8)
 		"hand":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_ready")

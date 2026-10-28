@@ -75,6 +75,8 @@ func _run() -> void:
 	stage = make_world()
 	p = await make_airborne(stage, -30.0)
 	check(p.can_start_slam(), "второй бросок тоже разрешён до посадки")
+	# Скорость броска — прежняя (32 м/с): молот должен лететь дольше, чем Тор падает
+	p.mjolnir.throw_speed = 32.0
 	p.mjolnir.throw_hammer()
 	proj = p.mjolnir.projectile
 	var landed := false

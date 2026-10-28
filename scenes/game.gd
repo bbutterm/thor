@@ -193,7 +193,8 @@ func _finish_room_load() -> void:
 	player.global_position = t.origin
 	player.velocity = Vector3.ZERO
 	player.rotation_target = Vector2(0.0, t.basis.get_euler().y)
-	player.mjolnir.force_return_instant()
+	# Новый зал — Мьёльнир в руке сам (автовозврата нет, П5), без перезарядки
+	player.mjolnir.on_room_start()
 	player.on_room_start()  # пассивки тела «на зал» (скальд: первый удар не ранит)
 	_release_room_hold()
 	room.cleared.connect(_on_room_cleared)

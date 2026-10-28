@@ -513,6 +513,10 @@ func on_enemy_killed(enemy: Node3D, source: String) -> void:
 func on_hammer_hit(_target: Object, pos: Vector3, returning: bool, bounces: int) -> void:
 	hooks.on_hammer_hit(_target, pos, returning, bounces)
 
+## API → hooks.on_perfect_catch
+func on_perfect_catch() -> void:
+	hooks.on_perfect_catch()
+
 ## API → hooks.on_lightning
 func on_lightning(target: Node3D) -> void:
 	hooks.on_lightning(target)
