@@ -37,9 +37,8 @@ func _build() -> void:
 	var right := global_transform.basis.x
 	var center := global_position
 	# Враги: по одному каждого вида, со вспышкой урона и свечением замаха (общий оверлей на скин-мешах)
-	# В GL Compatibility вариант шейдера не зависит от формата вершин, а буфер instance-переменных —
-	# всего 256 узлов на сцену (FX.INSTANCE_SLOTS_GL; прогрев целиком занимал 263–270): оверлей вспышки —
-	# только на паре образцов. В Forward+ (буфер на 4096 узлов) — на всех: там пайплайн на каждый формат вершин.
+	# В GL Compatibility вариант шейдера не зависит от формата вершин: оверлей достаточно прогреть
+	# на паре образцов. В Forward+ он нужен на всех форматах вершин, с исходными instance-параметрами.
 	var gl := RenderingServer.get_current_rendering_method() == "gl_compatibility"
 	var i := 0
 	for path in ["res://enemies/grunt.tscn", "res://enemies/thrower.tscn", "res://enemies/boss.tscn",
@@ -81,15 +80,21 @@ func _build() -> void:
 		h.skin_tint = Color(0.8, 0.85, 0.9)
 		add_child(h)
 		h.position = right * (1.6 if g == "Male" else -1.6)
+		var gl_flash: ShaderMaterial
+		if gl:
+			gl_flash = Enemy.FLASH_MATERIAL_GL.duplicate() as ShaderMaterial
+			gl_flash.set_shader_parameter("flash", 1.0)
+			gl_flash.set_shader_parameter("glow", 1.0)
 		var with_overlay := 0
 		for mi in h.find_children("*", "MeshInstance3D", true, false):
 			if gl and with_overlay >= 2:
 				continue
 			with_overlay += 1
 			var gi := mi as GeometryInstance3D
-			gi.material_overlay = Enemy.FLASH_MATERIAL
-			gi.set_instance_shader_parameter("flash", 1.0)
-			gi.set_instance_shader_parameter("glow", 1.0)
+			gi.material_overlay = gl_flash if gl else Enemy.FLASH_MATERIAL
+			if not gl:
+				gi.set_instance_shader_parameter("flash", 1.0)
+				gi.set_instance_shader_parameter("glow", 1.0)
 	# Оружие (на слое мира — как у врагов)
 	var wi := 0
 	for kind in WeaponMeshes.MODEL_WEAPONS.keys() + WeaponMeshes.PAINTED.keys() + ["axe", "hammer", "club", "staff", "sword", "spear", "pitchfork", "torch", "shield"]:

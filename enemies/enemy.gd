@@ -165,6 +165,9 @@ var _strafe_sign: float = 1.0
 var _visual: Node3D
 ## Меши врага — для общего оверлея вспышки/свечения (см. shaders/hit_flash.gdshader)
 var _flash_meshes: Array[GeometryInstance3D] = []
+## GL Compatibility: один материал на врага, общий для всех частей его модели.
+## Создаётся при появлении и переиспользуется для попаданий, замахов и стихий.
+var _flash_material_gl: ShaderMaterial
 var _overlay_on: bool = false
 var _hurt_flash: float = 0.0
 var _windup_glow: float = 0.0
@@ -196,6 +199,8 @@ var elite_glow: Color = Color(0, 0, 0, 0)
 var status_glow: Color = Color(0, 0, 0, 0)
 
 func _ready() -> void:
+	if RenderingServer.get_current_rendering_method() == "gl_compatibility":
+		_flash_material_gl = FLASH_MATERIAL_GL.duplicate() as ShaderMaterial
 	add_to_group("enemies")
 	collision_layer = 1 << 2
 	collision_mask = 1 | (1 << 1) | (1 << 2) | (1 << 3)
@@ -1041,8 +1046,11 @@ func _update_visual_feedback(delta: float) -> void:
 	_set_overlay(_hurt_flash, glow)
 
 const FLASH_MATERIAL := preload("res://shaders/hit_flash.tres")
+const FLASH_GL_SHADER := preload("res://shaders/hit_flash_gl.gdshader")
+const FLASH_MATERIAL_GL := preload("res://shaders/hit_flash_gl.tres")
 
-## Вспышка и свечение — общим оверлей-материалом с per-instance параметрами.
+## Forward+ использует общий оверлей с per-instance параметрами; в GL у каждого врага
+## свой материал с обычными uniform, чтобы части модели не занимали ограниченный буфер.
 ## Оверлей включается только пока есть что показывать (лишний проход рисования не нужен).
 ## Элита светится постоянно (цвет модификатора, мягкая пульсация) — тот же материал, параметр "elite".
 func _set_overlay(flash: float, glow: float) -> void:
@@ -1057,12 +1065,17 @@ func _set_overlay(flash: float, glow: float) -> void:
 	var on := flash > 0.001 or glow > 0.001 or el > 0.001
 	if not on and not _overlay_on:
 		return
+	var use_gl_material := _flash_material_gl != null
+	if on and use_gl_material:
+		_flash_material_gl.set_shader_parameter("flash", flash)
+		_flash_material_gl.set_shader_parameter("glow", glow)
+		_flash_material_gl.set_shader_parameter("elite", Color(el_color.r, el_color.g, el_color.b, el))
 	for g in _flash_meshes:
 		if not is_instance_valid(g):
 			continue
 		if on != _overlay_on:
-			g.material_overlay = FLASH_MATERIAL if on else null
-		if on:
+			g.material_overlay = (_flash_material_gl if use_gl_material else FLASH_MATERIAL) if on else null
+		if on and not use_gl_material:
 			g.set_instance_shader_parameter("flash", flash)
 			g.set_instance_shader_parameter("glow", glow)
 			g.set_instance_shader_parameter("elite", Color(el_color.r, el_color.g, el_color.b, el))
@@ -1071,8 +1084,7 @@ func _set_overlay(flash: float, glow: float) -> void:
 func _collect_meshes(root: Node) -> void:
 	_flash_meshes.clear()
 	for mi in root.find_children("*", "GeometryInstance3D", true, false):
-		# Глаза и брови (Eyes, Eyebrows*) вспышку не показывают — светятся сами и крошечные, а каждый узел
-		# с оверлеем занимает 16 ячеек буфера instance-переменных (в GL — 256 узлов на сцену, FX.INSTANCE_SLOTS_GL)
+		# Глаза и брови (Eyes, Eyebrows*) вспышку не показывают — светятся сами и крошечные.
 		if mi is MeshInstance3D and not mi.name.begins_with("Eye"):
 			_flash_meshes.append(mi as GeometryInstance3D)
 
