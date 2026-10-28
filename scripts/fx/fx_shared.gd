@@ -109,6 +109,27 @@ static func shared_mesh(kind: String) -> Mesh:
 			cm.radial_segments = 32
 			cm.rings = 1
 			m = cm
+		"wedge":
+			# Сектор 90° (±45° от +Z) радиуса 1 на полу (XZ) — конус опасной зоны (enemies/hazard_zone.gd).
+			# Другой угол — масштаб по X (tan половины угла), радиус — по Z и X.
+			var verts := PackedVector3Array()
+			var seg := 12
+			for i in seg:
+				var a0 := deg_to_rad(-45.0 + 90.0 * float(i) / seg)
+				var a1 := deg_to_rad(-45.0 + 90.0 * float(i + 1) / seg)
+				verts.append(Vector3.ZERO)
+				verts.append(Vector3(sin(a1), 0, cos(a1)))
+				verts.append(Vector3(sin(a0), 0, cos(a0)))
+			var normals := PackedVector3Array()
+			normals.resize(verts.size())
+			normals.fill(Vector3.UP)
+			var arr := []
+			arr.resize(Mesh.ARRAY_MAX)
+			arr[Mesh.ARRAY_VERTEX] = verts
+			arr[Mesh.ARRAY_NORMAL] = normals
+			var am := ArrayMesh.new()
+			am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+			m = am
 		"quad", "quad_bottom", "quad_floor":
 			# Квад 1×1 для текстурных эффектов (fx_sprite): по центру / с опорой на нижний край
 			# (огонь, кристаллы льда растут от пола) / лёжа на полу (пятна, трещины, волна)

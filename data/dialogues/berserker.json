@@ -1,0 +1,58 @@
+{
+	"id": "berserker",
+	"draft": true,
+	"note": "ЧЕРНОВИК — тексты ждут утверждения владельца. Берсерк-ульфхеднар — мини-босс Мидгарда (GDD 14.1). Портрета нет — драугр (ui/portrait.gd, ALIASES)",
+	"speakers": {
+		"berserker": {
+			"name": "Берсерк",
+			"color": "#8a8f96",
+			"initial": "Б",
+			"side": "right"
+		}
+	},
+	"scenes": [],
+	"pools": {
+		"intro": [
+			{
+				"speaker": "berserker",
+				"emotion": "angry",
+				"text": "Р-р-р… Бог! Один на один! Без молотков… ладно, с молотком.",
+				"id": "berserker.intro.01"
+			},
+			{
+				"speaker": "berserker",
+				"emotion": "smug",
+				"text": "Волчья шкура, волчьи зубы, волчий аппетит. Иди сюда.",
+				"id": "berserker.intro.02"
+			}
+		],
+		"rage": [
+			{
+				"speaker": "berserker",
+				"emotion": "angry",
+				"text": "А-А-А-А! ВОЛК ПРОСНУЛСЯ!",
+				"id": "berserker.rage.01"
+			},
+			{
+				"speaker": "berserker",
+				"emotion": "angry",
+				"text": "Кровь! Красное всё! Где ты?!",
+				"id": "berserker.rage.02"
+			}
+		],
+		"death": [
+			{
+				"speaker": "berserker",
+				"emotion": "shocked",
+				"text": "Хороший… бой… Ау-у-у…",
+				"id": "berserker.death.01"
+			},
+			{
+				"speaker": "berserker",
+				"emotion": "neutral",
+				"text": "Шкуру… не продавай. Она с характером.",
+				"id": "berserker.death.02"
+			}
+		]
+	}
+}

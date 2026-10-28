@@ -16,7 +16,7 @@
 - `Run.kill_registered(source)` — сигнал убийства; `Run.enemy_killed(source)` — убийства с источником (испытания); `Run.register_kill`, `Run.style_glory_mult`, `Run.rune_power` — руны ×N.
 - `Run.silver` (`add_silver`, `spend_silver`, сигнал `silver_changed`).
 - `Run.mjolnir_traits`, `Run.active_combos()`, сигнал `Run.mjolnir_combo_unlocked`, `Run.rules()`, `Run.random_mjolnir_trait_choices(count, kinds)`, `mjolnir_offer_ok`, `can_level_up`, `mjolnir_trait_conflict`, `Run.trait_rerolls` (см. `weapons/CLAUDE.md`).
-- `Run.miniboss_rooms`, `Run.miniboss_arena`, `Run._place_miniboss_arenas`, `Run.BOSS_SCENE`, `Run.ROOM_SCENES`.
+- `Run.miniboss_rooms`, `Run.miniboss_arena`, `Run._place_miniboss_arenas`, `Run.BOSS_SCENE`, `Run.ROOM_SCENES`; мини-босс забега — `Run.miniboss_pool` → `_pick_miniboss()` (без повтора подряд, `Save.data.last_miniboss`; в тестах — первый, `Run.forced_miniboss`/`miniboss_rotation_in_tests`), арена — из `MinibossDef.arena`.
 - `Run.combat_clock` — боевые часы (см. ниже).
 - **Источник урона по Тору:** перед `player.take_damage()` вызывай `RunTracker.note_damage("barrel")` или `RunTracker.note_hit(enemy)` (id из `enemy_id`/`death_source_id`/`kind`). Падение определяется само.
 

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyTraitDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://enemies/traits/enemy_trait_def.gd" id="1_def"]
+[ext_resource type="Script" path="res://enemies/traits/coward.gd" id="2_handler"]
+
+[resource]
+script = ExtResource("1_def")
+id = "coward"
+title = "Трус"
+color = Color(1, 0.92, 0.35, 1)
+icon_shape = "sphere"
+icon_scale = Vector3(0.2, 0.2, 0.2)
+icon_rotation = Vector3(0, 0, 0)
+handler = ExtResource("2_handler")

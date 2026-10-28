@@ -65,6 +65,10 @@ func _prepare() -> void:
 			for m in base:
 				var c := Marker3D.new()
 				c.set_meta("kind", m.get_meta("kind", "grunt"))
+				# Отряд (GDD 12.6) копируется целиком: состав, подгонка, точка якоря
+				for key in ["squad", "squad_options", "squad_override", "squad_anchor_pos"]:
+					if m.has_meta(key):
+						c.set_meta(key, m.get_meta(key))
 				c.position = m.position + Vector3(randf_range(-0.8, 0.8), 0, randf_range(-0.8, 0.8))
 				copies.append(c)
 			room.add_wave(copies)

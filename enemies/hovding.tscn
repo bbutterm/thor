@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://enemies/bosses/hovding.gd" id="1_o8xao"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_o4yii"]
+radius = 0.6075
+height = 2.43
+
+[node name="Hovding" type="CharacterBody3D" unique_id=318700050]
+collision_layer = 4
+collision_mask = 15
+floor_snap_length = 0.3
+script = ExtResource("1_o8xao")
+kind = 2
+max_health = 484.0
+move_speed = 4.0
+knock_resist = 0.65
+attack_range = 2.6
+attack_damage = 18.0
+windup_time = 0.7
+recover_time = 0.85
+attack_cooldown = 1.0
+lunge_speed = 5.0
+boss_slam_radius = 4.0
+boss_slam_damage = 18.0
+boss_slam_windup = 0.9
+boss_far_slam_chance = 0.0
+wall_splat_speed = 99.0
+body_color = Color(0.6, 0.3, 0.25, 1)
+model_scale = 1.35
+model_outfit = "outfits/Male_Ranger.gltf"
+model_hair = "hair/Hair_Beard.gltf"
+skin_tint = Color(0.5, 0.66, 0.72, 1)
+cloth_tint = Color(0.62, 0.22, 0.18, 1)
+eye_glow = Color(1, 0.8, 0.3, 1)
+hand_weapon = "q_axe"
+weapon_pool = PackedStringArray()
+anim_idle = "Sword_Idle"
+anim_attack = "Sword_Regular_C"
+anim_attack_hit_at = 0.35
+anim_slam = "Sword_Regular_C"
+
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=220234698]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.215, 0)
+shape = SubResource("CapsuleShape3D_o4yii")

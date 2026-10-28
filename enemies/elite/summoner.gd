@@ -19,7 +19,8 @@ func _physics_process(delta: float) -> void:
 			FX.ring(enemy.get_parent(), enemy.global_position, 3.5, Color(mod.color, 0.9), 0.4)
 		return
 	# Уже начатый обряд выше завершается, но новый не начинается до обнаружения Тора.
-	if enemy.state != Enemy.State.CHASE or not enemy.is_alert_to_player():
+	# Таймер идёт и во время атак (GDD 12.4: «раз в 8 с»): боец у Тора бьёт без пауз — роль «окружение».
+	if not (enemy.state in [Enemy.State.CHASE, Enemy.State.WINDUP, Enemy.State.RECOVER]) or not enemy.is_alert_to_player():
 		return
 	_t += delta
 	if _t >= mod.summon_interval:

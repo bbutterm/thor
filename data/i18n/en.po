@@ -214,6 +214,58 @@ msgstr "Vampire"
 msgid "ТОЛСТЫЙ СВЕН"
 msgstr "FAT SVEN"
 
+#: enemies/minibosses/berserker.tres (title)
+msgid "БЕРСЕРК"
+msgstr "BERSERKER"
+
+#: enemies/minibosses/hovding.tres (title)
+msgid "ХЁВДИНГ"
+msgstr "HOVDING"
+
+#: enemies/minibosses/volva.tres (title)
+msgid "ВЁЛЬВА"
+msgstr "VOLVA"
+
+#: enemies/squads/hovding_guard.tres (title)
+msgid "Дружина Хёвдинга"
+msgstr "Hovding's Warband"
+
+#: enemies/squads/loki_ambush.tres (title)
+msgid "Засада Локи"
+msgstr "Loki's Ambush"
+
+#: enemies/squads/loki_flank.tres (title)
+msgid "Засада Локи (сбоку)"
+msgstr "Loki's Ambush (flank)"
+
+#: enemies/squads/pack.tres (title)
+msgid "Стая"
+msgstr "Pack"
+
+#: enemies/squads/powder_keg.tres (title)
+msgid "Пороховая бочка"
+msgstr "Powder Keg"
+
+#: enemies/squads/shaman_escort.tres (title)
+msgid "Шаман и свита"
+msgstr "Shaman and Retinue"
+
+#: enemies/squads/shield_wall.tres (title)
+msgid "Стена щитов"
+msgstr "Shield Wall"
+
+#: enemies/traits/agile.tres (title)
+msgid "Ловкий"
+msgstr "Agile"
+
+#: enemies/traits/furious.tres (title)
+msgid "Яростный"
+msgstr "Furious"
+
+#: enemies/traits/shouter.tres (title)
+msgid "Крикун"
+msgstr "Shouter"
+
 #: player/movement_profile.gd:9
 #: run/movement/base.tres (title)
 msgid "Базовый"
@@ -382,6 +434,7 @@ msgid "Метла, лапти и мечты. Слава ему идёт вдво
 msgstr "A broom, bast shoes and dreams. Glory suits him double — social mobility."
 
 #: run/body_def.gd:7
+#: run/run_tracker.gd:35
 msgid "Берсерк"
 msgstr "Berserker"
 
@@ -394,6 +447,7 @@ msgid "Нет двойного прыжка. Удар-приземление ×1
 msgstr "No double jump. Ground slam ×1.5 radius and damage, 1 s stun, higher bounce."
 
 #: run/movement/heavy.tres (title)
+#: enemies/traits/heavy.tres (title)
 msgid "Тяжёлый"
 msgstr "Heavy"
 
@@ -402,6 +456,7 @@ msgid "Тройной прыжок, отскок от стены 3 раза и �
 msgstr "Triple jump, wall bounce 3 times and stronger. Dash — only in the air."
 
 #: run/movement/jumper.tres (title)
+#: enemies/traits/jumper.tres (title)
 msgid "Прыгун"
 msgstr "Jumper"
 
@@ -466,6 +521,7 @@ msgid "Урон спереди −30%"
 msgstr "Damage from the front −30%"
 
 #: run/passives/coward_front.tres (title)
+#: enemies/traits/coward.tres (title)
 msgid "Трус"
 msgstr "Coward"
 
@@ -525,10 +581,6 @@ msgstr "Parry window ×2, parrying heals 5 HP"
 msgid "Мастер щита"
 msgstr "Shield Master"
 
-#: run/passives/parry_master.tres (todo)
-msgid "Парирования мечом ещё нет"
-msgstr "Sword parrying isn't in yet"
-
 #: run/passives/ranged_no_slow.tres (description)
 msgid "Ренж в руке не замедляет"
 msgstr "Ranged weapon in hand doesn't slow you"
@@ -585,133 +637,133 @@ msgstr "Your aim sways"
 msgid "Пьяный прицел"
 msgstr "Drunk Aim"
 
-#: run/reward_flow.gd:156
+#: run/reward_flow.gd:155
 msgid "НАКОВАЛЬНЯ ЭЙТРИ — СТИХИЯ МОЛОТА"
 msgstr "EITRI'S ANVIL — THE HAMMER'S ELEMENT"
 
-#: run/reward_flow.gd:176
+#: run/reward_flow.gd:175
 msgid "БЛАГОСЛОВЕНИЕ ФРЕЙИ — РУНА СРАЗУ УР. %d"
 msgstr "FREYA'S BLESSING — RUNE STARTS AT LV. %d"
 
-#: run/reward_flow.gd:179
+#: run/reward_flow.gd:178
 msgid "РУНА ИСПЫТАНИЯ — СРАЗУ НА УРОВЕНЬ ВЫШЕ"
 msgstr "TRIAL RUNE — ONE LEVEL HIGHER RIGHT AWAY"
 
-#: run/reward_flow.gd:187
-#: run/reward_flow.gd:201
-#: run/reward_flow.gd:203
+#: run/reward_flow.gd:186
+#: run/reward_flow.gd:200
+#: run/reward_flow.gd:202
 msgid "%s %s — уровень %d"
 msgstr "%s %s — level %d"
 
-#: run/reward_flow.gd:190
+#: run/reward_flow.gd:189
 msgid "Руна «%s». Почти не проклятая."
 msgstr "Rune “%s”. Barely cursed."
 
-#: run/reward_flow.gd:197
+#: run/reward_flow.gd:196
 msgid "ᛒ %s — уровень %d"
 msgstr "ᛒ %s — level %d"
 
-#: run/reward_flow.gd:225
+#: run/reward_flow.gd:224
 msgid "ЭЛИТА ПОВЕРЖЕНА: ОРУЖИЕ + СЛАВА"
 msgstr "ELITE DOWN: WEAPON + GLORY"
 
-#: run/reward_flow.gd:241
+#: run/reward_flow.gd:240
 msgid "ИСПЫТАНИЕ ПРОВАЛЕНО — БЕЗ НАГРАДЫ"
 msgstr "TRIAL FAILED — NO REWARD"
 
-#: run/reward_flow.gd:245
+#: run/reward_flow.gd:244
 msgid "ИСПЫТАНИЕ ПРОЙДЕНО!"
 msgstr "TRIAL PASSED!"
 
-#: run/reward_flow.gd:249
+#: run/reward_flow.gd:248
 msgid "ИСПЫТАНИЕ ПРОЙДЕНО: +%d СЛАВЫ"
 msgstr "TRIAL PASSED: +%d GLORY"
 
-#: run/reward_flow.gd:271
+#: run/reward_flow.gd:270
 msgid "Один разрешил пять минут. Выбери одно."
 msgstr "Odin allowed five minutes. Pick one."
 
-#: run/reward_flow.gd:271
+#: run/reward_flow.gd:270
 msgid "ПРИВАЛ"
 msgstr "REST STOP"
 
-#: run/reward_flow.gd:272
+#: run/reward_flow.gd:271
 msgid "Лечение %d %% (+%d HP)"
 msgstr "Heals %d %% (+%d HP)"
 
-#: run/reward_flow.gd:272
+#: run/reward_flow.gd:271
 msgid "Похлёбка"
 msgstr "Stew"
 
-#: run/reward_flow.gd:273
+#: run/reward_flow.gd:272
 msgid "Нет рун для улучшения"
 msgstr "No runes to upgrade"
 
-#: run/reward_flow.gd:273
+#: run/reward_flow.gd:272
 msgid "Точить руну"
 msgstr "Sharpen a Rune"
 
-#: run/reward_flow.gd:273
+#: run/reward_flow.gd:272
 msgid "Улучшить руну на 1 уровень"
 msgstr "Upgrade a rune by 1 level"
 
-#: run/reward_flow.gd:288
+#: run/reward_flow.gd:287
 msgid "Кровь за сталь"
 msgstr "Blood for Steel"
 
-#: run/reward_flow.gd:288
+#: run/reward_flow.gd:287
 msgid "−%d %% здоровья → легендарное оружие (ур. 3)"
 msgstr "−%d %% health → legendary weapon (lv. 3)"
 
-#: run/reward_flow.gd:289
+#: run/reward_flow.gd:288
 msgid "%d %%: две руны. Иначе −%d %% здоровья"
 msgstr "%d %%: two runes. Otherwise −%d %% health"
 
-#: run/reward_flow.gd:289
+#: run/reward_flow.gd:288
 msgid "Кости Локи"
 msgstr "Loki's Dice"
 
-#: run/reward_flow.gd:289
+#: run/reward_flow.gd:288
 msgid "Проклятая руна: %s"
 msgstr "Cursed rune: %s"
 
-#: run/reward_flow.gd:290
+#: run/reward_flow.gd:289
 msgid "Локи обидится. Ненадолго."
 msgstr "Loki will be offended. Briefly."
 
-#: run/reward_flow.gd:290
+#: run/reward_flow.gd:289
 msgid "Отказаться"
 msgstr "Refuse"
 
-#: run/reward_flow.gd:292
+#: run/reward_flow.gd:291
 msgid "Проклятая руна или риск. Подписывай, не читая."
 msgstr "A cursed rune or a gamble. Sign without reading."
 
-#: run/reward_flow.gd:292
+#: run/reward_flow.gd:291
 msgid "СДЕЛКА ЛОКИ"
 msgstr "LOKI'S DEAL"
 
-#: run/reward_flow.gd:307
+#: run/reward_flow.gd:306
 msgid "ЛЕГЕНДАРНОЕ ОРУЖИЕ — ЗА ПОЛОВИНУ ЗДОРОВЬЯ"
 msgstr "LEGENDARY WEAPON — FOR HALF YOUR HEALTH"
 
-#: run/reward_flow.gd:316
+#: run/reward_flow.gd:315
 msgid "КОСТИ: %s"
 msgstr "DICE: %s"
 
-#: run/reward_flow.gd:320
+#: run/reward_flow.gd:319
 msgid "КОСТИ: НЕ ПОВЕЗЛО"
 msgstr "DICE: NO LUCK"
 
-#: run/reward_flow.gd:326
+#: run/reward_flow.gd:325
 msgid "☠ %s — ПРОКЛЯТАЯ РУНА"
 msgstr "☠ %s — CURSED RUNE"
 
-#: run/reward_flow.gd:339
+#: run/reward_flow.gd:338
 msgid "УЛУЧШИТЬ РУНУ (+1 УРОВЕНЬ)"
 msgstr "UPGRADE A RUNE (+1 LEVEL)"
 
-#: run/reward_flow.gd:344
+#: run/reward_flow.gd:343
 msgid "ПОХЛЁБКА: +%d %% ЗДОРОВЬЯ"
 msgstr "STEW: +%d %% HEALTH"
 
@@ -812,22 +864,23 @@ msgstr "A challenge from Odin, Hild or Loki → lots of Glory or a special rune"
 msgid "Испытание"
 msgstr "Trial"
 
-#: run/run_manager.gd:318
-#: run/run_manager.gd:321
+#: run/run_manager.gd:355
+#: run/run_manager.gd:358
 msgid "Вальхалла ждёт"
 msgstr "Valhalla awaits"
 
-#: run/run_manager.gd:323
+#: run/run_manager.gd:360
 #: player/style_meter.gd:27
 msgid "Сойдёт"
 msgstr "It'll do"
 
-#: run/run_manager.gd:324
+#: run/run_manager.gd:361
 msgid "Недостоин"
 msgstr "Unworthy"
 
 #: run/run_map.gd:8
 #: run/maps/midgard.tres (title)
+#: run/maps/midgard_slice.tres (title)
 msgid "Мидгард"
 msgstr "Midgard"
 
@@ -856,8 +909,16 @@ msgid "драугр-метатель"
 msgstr "draugr thrower"
 
 #: run/run_tracker.gd:35
+msgid "Вёльва"
+msgstr "Volva"
+
+#: run/run_tracker.gd:35
 msgid "Толстый Свен"
 msgstr "Fat Sven"
+
+#: run/run_tracker.gd:35
+msgid "Хёвдинг"
+msgstr "Hovding"
 
 #: run/run_tracker.gd:35
 msgid "Ярл Бьорн"
@@ -1517,44 +1578,44 @@ msgstr "+%d Glory"
 msgid "особая руна"
 msgstr "a special rune"
 
-#: run/trial_runner.gd:130
+#: run/trial_runner.gd:134
 msgid "Выстрелил из палки-стрелялки"
 msgstr "Fired the boom-stick"
 
-#: run/trial_runner.gd:133
-#: run/trial_runner.gd:198
+#: run/trial_runner.gd:137
+#: run/trial_runner.gd:202
 msgid "Не уложился в %d с"
 msgstr "Didn't make it in %d s"
 
-#: run/trial_runner.gd:136
+#: run/trial_runner.gd:140
 msgid "%d из %d за %d с"
 msgstr "%d of %d in %d s"
 
-#: run/trial_runner.gd:158
+#: run/trial_runner.gd:162
 msgid "Слишком долго стоял в лаве"
 msgstr "Stood in the lava too long"
 
-#: run/trial_runner.gd:168
+#: run/trial_runner.gd:172
 msgid "Добил не тем: %s"
 msgstr "Finished off the wrong way: %s"
 
-#: run/trial_runner.gd:171
+#: run/trial_runner.gd:175
 msgid "Убийство из ренжа"
 msgstr "A ranged kill"
 
-#: run/trial_runner.gd:180
+#: run/trial_runner.gd:184
 msgid "оружием в руке"
 msgstr "with a weapon in hand"
 
-#: run/trial_runner.gd:182
+#: run/trial_runner.gd:186
 msgid "ренжем"
 msgstr "with a ranged weapon"
 
-#: run/trial_runner.gd:184
+#: run/trial_runner.gd:188
 msgid "рывком"
 msgstr "with a dash"
 
-#: run/trial_runner.gd:193
+#: run/trial_runner.gd:197
 msgid "%d из %d — рекорд устоял"
 msgstr "%d of %d — the record stands"
 
@@ -1598,23 +1659,8 @@ msgstr "Clear the room in 40 seconds"
 msgid "Норматив: 40 секунд"
 msgstr "Standard: 40 Seconds"
 
-#: run/tutorial.gd:129
-#: scripts/settings.gd:465
-msgid "ЛКМ"
-msgstr "LMB"
-
-#: run/tutorial.gd:131
-#: scripts/settings.gd:467
-msgid "ПКМ"
-msgstr "RMB"
-
-#: run/tutorial.gd:133
-#: scripts/settings.gd:469
-msgid "СКМ"
-msgstr "MMB"
-
-#: run/tutorial.gd:139
-#: scripts/settings.gd:482
+#: run/tutorial.gd:208
+#: scripts/settings.gd:658
 msgid "Пробел"
 msgstr "Space"
 
@@ -1866,22 +1912,22 @@ msgstr "The first rune of each run starts at level 2."
 msgid "Утренняя зарядка"
 msgstr "Morning Exercises"
 
-#: scenes/game.gd:162
+#: scenes/game.gd:268
 msgid "приём"
 msgstr "technique"
 
-#: scenes/game.gd:162
+#: scenes/game.gd:268
 #: weapons/mjolnir_traits/earth.tres (group)
 #: weapons/mjolnir_traits/fire.tres (group)
 #: weapons/mjolnir_traits/ice.tres (group)
 msgid "стихия"
 msgstr "element"
 
-#: scenes/game.gd:162
+#: scenes/game.gd:268
 msgid "уровень %d"
 msgstr "level %d"
 
-#: scenes/game.gd:200
+#: scenes/game.gd:309
 msgid "Дверь открыта — вперёд!"
 msgstr "Door open — go!"
 
@@ -1889,166 +1935,207 @@ msgstr "Door open — go!"
 msgid "Русский"
 msgstr "Русский"
 
-#: scripts/perf.gd:75
+#: scripts/perf.gd:80
 msgid "Не удалось сохранить отчёт"
 msgstr "Couldn't save the report"
 
-#: scripts/perf.gd:75
+#: scripts/perf.gd:80
 msgid "Отчёт о лаге: %s"
 msgstr "Lag report: %s"
 
-#: scripts/settings.gd:471
-msgid "Колесо ↑"
-msgstr "Wheel ↑"
-
-#: scripts/settings.gd:473
-msgid "Колесо ↓"
-msgstr "Wheel ↓"
-
-#: scripts/settings.gd:475
-msgid "Мышь 4"
-msgstr "Mouse 4"
-
-#: scripts/settings.gd:477
-msgid "Мышь 5"
-msgstr "Mouse 5"
-
-#: scripts/settings.gd:478
-msgid "Мышь %s"
-msgstr "Mouse %s"
-
-#: scripts/settings.gd:50
+#: scripts/settings.gd:51
 msgid "Влево"
 msgstr "Left"
 
-#: scripts/settings.gd:50
+#: scripts/settings.gd:51
 msgid "Вперёд"
 msgstr "Forward"
 
-#: scripts/settings.gd:50
+#: scripts/settings.gd:51
 msgid "Вправо"
 msgstr "Right"
 
-#: scripts/settings.gd:51
+#: scripts/settings.gd:52
 msgid "Прыжок"
 msgstr "Jump"
 
-#: scripts/settings.gd:51
+#: scripts/settings.gd:52
 msgid "Рывок"
 msgstr "Dash"
 
-#: scripts/settings.gd:51
+#: scripts/settings.gd:52
 msgid "Удар-приземление (в воздухе)"
 msgstr "Ground slam (in the air)"
 
-#: scripts/settings.gd:52
+#: scripts/settings.gd:53
 msgid "Метнуть / вернуть Мьёльнир"
 msgstr "Throw / recall Mjolnir"
 
-#: scripts/settings.gd:52
+#: scripts/settings.gd:53
 msgid "Удар / выстрел"
 msgstr "Attack / shoot"
 
-#: scripts/settings.gd:53
+#: scripts/settings.gd:54
 msgid "Мили-оружие"
 msgstr "Melee weapon"
 
-#: scripts/settings.gd:53
+#: scripts/settings.gd:54
 msgid "Ренж-оружие"
 msgstr "Ranged weapon"
 
-#: scripts/settings.gd:53
+#: scripts/settings.gd:54
 msgid "Сменить оружие"
 msgstr "Switch weapon"
 
-#: scripts/settings.gd:54
+#: scripts/settings.gd:55
 msgid "Перезарядка"
 msgstr "Reload"
 
-#: scripts/settings.gd:54
+#: scripts/settings.gd:55
 msgid "Подобрать / действие"
 msgstr "Pick up / interact"
 
-#: ui/body_select.gd:113
+#: scripts/settings.gd:571
+msgid "Кнопка %d"
+msgstr "Button %d"
+
+#: scripts/settings.gd:588
+msgid "Ось %d %s"
+msgstr "Axis %d %s"
+
+#: scripts/settings.gd:59
+msgid "Камера влево"
+msgstr "Camera left"
+
+#: scripts/settings.gd:59
+msgid "Камера вправо"
+msgstr "Camera right"
+
+#: scripts/settings.gd:60
+msgid "Камера вверх"
+msgstr "Camera up"
+
+#: scripts/settings.gd:60
+msgid "Камера вниз"
+msgstr "Camera down"
+
+#: scripts/settings.gd:622
+#: scripts/settings.gd:643
+msgid "ПКМ"
+msgstr "RMB"
+
+#: scripts/settings.gd:641
+msgid "ЛКМ"
+msgstr "LMB"
+
+#: scripts/settings.gd:645
+msgid "СКМ"
+msgstr "MMB"
+
+#: scripts/settings.gd:647
+msgid "Колесо ↑"
+msgstr "Wheel ↑"
+
+#: scripts/settings.gd:649
+msgid "Колесо ↓"
+msgstr "Wheel ↓"
+
+#: scripts/settings.gd:651
+msgid "Мышь 4"
+msgstr "Mouse 4"
+
+#: scripts/settings.gd:653
+msgid "Мышь 5"
+msgstr "Mouse 5"
+
+#: scripts/settings.gd:654
+msgid "Мышь %s"
+msgstr "Mouse %s"
+
+#: ui/body_select.gd:119
 msgid "В КОГО ВСЕЛИТЬСЯ?"
 msgstr "WHO WILL YOU POSSESS?"
 
-#: ui/body_select.gd:114
+#: ui/body_select.gd:120
 msgid "Один подобрал смертных. Выбирай тело на забег."
 msgstr "Odin picked out some mortals. Choose a body for the run."
 
-#: ui/body_select.gd:178
+#: ui/body_select.gd:185
 msgid "ДВИЖЕНИЕ"
 msgstr "MOVEMENT"
 
-#: ui/body_select.gd:181
+#: ui/body_select.gd:188
 msgid "ПАССИВКА"
 msgstr "PASSIVE"
 
-#: ui/body_select.gd:184
+#: ui/body_select.gd:191
 msgid "ИЗЪЯН"
 msgstr "FLAW"
 
-#: ui/body_select.gd:202
-#: ui/hud.gd:251
-#: ui/hud.gd:308
+#: ui/body_select.gd:209
+#: ui/hud.gd:257
+#: ui/hud.gd:316
 #: ui/training_plan.gd:111
 msgid "ОДИН"
 msgstr "ODIN"
 
-#: ui/body_select.gd:212
+#: ui/body_select.gd:219
 msgid "Закрытые тела открываются за Славу — здесь или в «Плане тренировок»."
 msgstr "Locked bodies are unlocked with Glory — here or in the “Training Plan”."
 
-#: ui/body_select.gd:217
-#: ui/main_menu.gd:151
-#: ui/main_menu.gd:163
-#: ui/settings_panel.gd:117
+#: ui/body_select.gd:219
+msgid "Правый стик — прокрутка описания."
+msgstr "Right stick scrolls the description."
+
+#: ui/body_select.gd:224
+#: ui/main_menu.gd:152
+#: ui/main_menu.gd:164
+#: ui/settings_panel.gd:133
 msgid "Назад"
 msgstr "Back"
 
-#: ui/body_select.gd:221
-#: ui/body_select.gd:425
-#: ui/training_plan.gd:141
+#: ui/body_select.gd:228
+#: ui/body_select.gd:454
+#: ui/training_plan.gd:142
 msgid "В бой ▸"
 msgstr "To battle ▸"
 
-#: ui/body_select.gd:279
-#: ui/hud.gd:312
-#: ui/hud.gd:343
-#: ui/training_plan.gd:211
+#: ui/body_select.gd:306
+#: ui/hud.gd:320
+#: ui/hud.gd:352
+#: ui/training_plan.gd:217
 msgid "СЛАВА %d"
 msgstr "GLORY %d"
 
-#: ui/body_select.gd:359
+#: ui/body_select.gd:386
 msgid "HP %d · %s м/с"
 msgstr "HP %d · %s m/s"
 
-#: ui/body_select.gd:362
+#: ui/body_select.gd:389
 msgid "ЗАКРЫТО · %d ᛟ"
 msgstr "LOCKED · %d ᛟ"
 
-#: ui/body_select.gd:405
+#: ui/body_select.gd:434
 msgid "ЗАКРЫТО · %d ᛟ\n"
 msgstr "LOCKED · %d ᛟ\n"
 
-#: ui/body_select.gd:406
+#: ui/body_select.gd:435
 msgid "HP %d  ·  скорость %s  ·  рун %d"
 msgstr "HP %d  ·  speed %s  ·  runes %d"
 
-#: ui/body_select.gd:411
+#: ui/body_select.gd:440
 msgid "Старт: %s"
 msgstr "Start: %s"
 
-#: ui/body_select.gd:422
+#: ui/body_select.gd:451
 msgid "Нужно %d ᛟ"
 msgstr "Need %d ᛟ"
 
-#: ui/body_select.gd:422
+#: ui/body_select.gd:451
 msgid "Открыть · %d ᛟ"
 msgstr "Unlock · %d ᛟ"
 
-#: ui/body_select.gd:452
+#: ui/body_select.gd:481
 msgid "  (скоро)"
 msgstr "  (soon)"
 
@@ -2101,23 +2188,27 @@ msgstr "A page for Odin's scrapbook"
 msgid "Тор против: %s"
 msgstr "Thor vs. %s"
 
-#: ui/dialogue_box.gd:178
-msgid "Журнал [Tab]"
-msgstr "Log [Tab]"
+#: ui/dialogue_box.gd:182
+msgid "Журнал [Tab / View]"
+msgstr "Log [Tab / View]"
 
-#: ui/dialogue_box.gd:181
-msgid "Пропустить ▸▸"
-msgstr "Skip ▸▸"
+#: ui/dialogue_box.gd:185
+msgid "Пропустить [Y] ▸▸"
+msgstr "Skip [Y] ▸▸"
 
-#: ui/dialogue_box.gd:198
+#: ui/dialogue_box.gd:202
 msgid "ЖУРНАЛ"
 msgstr "LOG"
 
-#: ui/dialogue_box.gd:201
+#: ui/dialogue_box.gd:205
 msgid "Закрыть"
 msgstr "Close"
 
-#: ui/dialogue_box.gd:275
+#: ui/dialogue_box.gd:216
+msgid "Правый стик — прокрутка журнала."
+msgstr "Right stick scrolls the log."
+
+#: ui/dialogue_box.gd:280
 msgid "Асгард · диван Тора"
 msgstr "Asgard · Thor's couch"
 
@@ -2126,9 +2217,9 @@ msgid "К Одину ▸"
 msgstr "To Odin ▸"
 
 #: ui/end_screen.gd:55
-#: ui/training_plan.gd:137
-#: scenes/game.gd:260
-#: scenes/game.gd:269
+#: ui/training_plan.gd:138
+#: scenes/game.gd:379
+#: scenes/game.gd:388
 msgid "В меню"
 msgstr "To menu"
 
@@ -2148,7 +2239,7 @@ msgstr "Odin's verdict: %s"
 msgid "Тело: %s\nСлава: %d\nУбито врагов: %d\nЛучшая серия: %d\nПройдено залов: %d из %d\nРун собрано: %d"
 msgstr "Body: %s\nGlory: %d\nEnemies killed: %d\nBest streak: %d\nRooms cleared: %d of %d\nRunes collected: %d"
 
-#: ui/hud.gd:202
+#: ui/hud.gd:208
 msgid "СЛАВА 0"
 msgstr "GLORY 0"
 
@@ -2156,47 +2247,47 @@ msgstr "GLORY 0"
 msgid "ХРИМТУРС ПОЖИРАТЕЛЬ ГЕРОЕВ"
 msgstr "HRIMTHURS THE HERO-EATER"
 
-#: ui/hud.gd:317
-#: ui/hud.gd:514
+#: ui/hud.gd:325
+#: ui/hud.gd:574
 msgid "ЗАЛ %d / %d · %s"
 msgstr "ROOM %d / %d · %s"
 
-#: ui/hud.gd:317
-#: ui/hud.gd:514
+#: ui/hud.gd:325
+#: ui/hud.gd:574
 msgid "ФИНАЛ: %s"
 msgstr "FINALE: %s"
 
-#: ui/hud.gd:387
-#: ui/hud.gd:407
+#: ui/hud.gd:449
+#: ui/hud.gd:469
 msgid "ПЕРЕЗАРЯДКА %.1f с · ПОЙМАЙ ИДЕАЛЬНО — БЫСТРЕЕ"
 msgstr "RECHARGE %.1f s · PERFECT CATCH — FASTER"
 
-#: ui/hud.gd:412
+#: ui/hud.gd:474
 msgid "МЬЁЛЬНИР В РУКЕ · ПКМ"
 msgstr "MJOLNIR IN HAND · RMB"
 
-#: ui/hud.gd:418
+#: ui/hud.gd:480
 msgid "ЛЕТИТ · ПКМ — ВЕРНУТЬ"
 msgstr "FLYING · RMB — RECALL"
 
-#: ui/hud.gd:423
+#: ui/hud.gd:485
 msgid "ВОТКНУТ · ПКМ — ВЕРНУТЬ"
 msgstr "STUCK · RMB — RECALL"
 
-#: ui/hud.gd:428
+#: ui/hud.gd:490
 msgid "ВОЗВРАЩАЕТСЯ · ЛОВИ!"
 msgstr "RETURNING · CATCH!"
 
-#: ui/hud.gd:521
+#: ui/hud.gd:581
 msgid "Врагов: %d"
 msgstr "Enemies: %d"
 
-#: ui/hud.gd:77
+#: ui/hud.gd:83
 msgid "НУЖЕН ВТОРОЙ ПРЫЖОК"
 msgstr "SECOND JUMP REQUIRED"
 
-#: ui/hud.gd:91
-#: ui/hud.gd:314
+#: ui/hud.gd:97
+#: ui/hud.gd:322
 msgid "Тело: %s"
 msgstr "Body: %s"
 
@@ -2229,6 +2320,10 @@ msgstr "Quit"
 msgid "WASD — бег  ·  Пробел — прыжок / двойной\nShift — рывок  ·  Ctrl или C в воздухе — удар-приземление\nCtrl+Shift — подкат  ·  Пробел после приземления — СУПЕР-ПРЫЖОК\nЛКМ — удар (комбо из 3)  ·  ПКМ — метнуть / вернуть Мьёльнир\nQ — сменить оружие  ·  E — подобрать  ·  Esc — пауза"
 msgstr "WASD — run  ·  Space — jump / double jump\nShift — dash  ·  Ctrl or C in the air — ground slam\nCtrl+Shift — slide  ·  Space right after landing — SUPER JUMP\nLMB — attack (3-hit combo)  ·  RMB — throw / recall Mjolnir\nQ — switch weapon  ·  E — pick up  ·  Esc — pause"
 
+#: ui/main_menu.gd:142
+msgid "Геймпад: управление и кнопки — в настройках."
+msgstr "Gamepad: controls and buttons are in Settings."
+
 #: ui/main_menu.gd:89
 msgid "ТОР"
 msgstr "THOR"
@@ -2245,25 +2340,25 @@ msgstr "Thor has let himself go. Odin puts his spirit into mortal warriors to ge
 msgid "ИДЕАЛЬНЫЙ ХВАТ ×2"
 msgstr "PERFECT CATCH ×2"
 
-#: ui/pause_menu.gd:130
+#: ui/pause_menu.gd:131
 #: ui/training_plan.gd:21
 msgid "МЬЁЛЬНИР"
 msgstr "MJOLNIR"
 
-#: ui/pause_menu.gd:137
-#: ui/trait_pick.gd:164
+#: ui/pause_menu.gd:138
+#: ui/trait_pick.gd:197
 msgid "СВЯЗКА"
 msgstr "COMBO"
 
-#: ui/pause_menu.gd:145
+#: ui/pause_menu.gd:146
 msgid "РУНЫ"
 msgstr "RUNES"
 
-#: ui/pause_menu.gd:145
+#: ui/pause_menu.gd:146
 msgid "Рун пока нет — Норны ждут зачистки зала."
 msgstr "No runes yet — the Norns are waiting for a cleared room."
 
-#: ui/pause_menu.gd:151
+#: ui/pause_menu.gd:152
 msgid "%s  ур. %d"
 msgstr "%s  lv. %d"
 
@@ -2291,15 +2386,20 @@ msgstr "Main menu"
 msgid "Сообщить о лаге"
 msgstr "Report lag"
 
-#: ui/pause_menu.gd:85
+#: ui/pause_menu.gd:82
+#: scripts/perf.gd:80
+msgid "В архиве сохранение и системные данные; журналы могут содержать локальные пути."
+msgstr "The archive includes save and system data; logs may contain local paths."
+
+#: ui/pause_menu.gd:86
 msgid "Не удалось сохранить"
 msgstr "Couldn't save"
 
-#: ui/pause_menu.gd:85
+#: ui/pause_menu.gd:86
 msgid "Сохранено на рабочий стол"
 msgstr "Saved to the desktop"
 
-#: ui/pause_menu.gd:94
+#: ui/pause_menu.gd:95
 msgid "ЖУРНАЛ ЗАБЕГА"
 msgstr "RUN LOG"
 
@@ -2308,10 +2408,10 @@ msgid "НОРНЫ ПРЕДЛАГАЮТ РУНУ"
 msgstr "THE NORNS OFFER A RUNE"
 
 #: ui/rune_pick.gd:38
-msgid "Кликни по руне или нажми 1 / 2 / 3"
-msgstr "Click a rune or press 1 / 2 / 3"
+msgid "Выбери руну: мышь, 1 / 2 / 3 или геймпад"
+msgstr "Choose a rune: mouse, 1 / 2 / 3 or gamepad"
 
-#: ui/rune_pick.gd:78
+#: ui/rune_pick.gd:81
 msgid "☠ Проклятие Локи\n"
 msgstr "☠ Loki's curse\n"
 
@@ -2339,360 +2439,377 @@ msgstr "Controls"
 msgid "Экран"
 msgstr "Display"
 
-#: ui/settings_panel.gd:113
+#: ui/settings_panel.gd:129
 msgid "Сбросить всё"
 msgstr "Reset all"
 
-#: ui/settings_panel.gd:208
-#: ui/settings_panel.gd:210
-#: ui/settings_panel.gd:214
-#: ui/settings_panel.gd:220
+#: ui/settings_panel.gd:224
+#: ui/settings_panel.gd:226
+#: ui/settings_panel.gd:230
+#: ui/settings_panel.gd:236
 msgid "вкл"
 msgstr "on"
 
-#: ui/settings_panel.gd:210
-#: ui/settings_panel.gd:214
-#: ui/settings_panel.gd:220
-#: ui/settings_panel.gd:356
+#: ui/settings_panel.gd:226
+#: ui/settings_panel.gd:230
+#: ui/settings_panel.gd:236
+#: ui/settings_panel.gd:405
 msgid "выкл"
 msgstr "off"
 
-#: ui/settings_panel.gd:251
+#: ui/settings_panel.gd:267
 msgid "ГРОМКОСТЬ"
 msgstr "VOLUME"
 
-#: ui/settings_panel.gd:252
+#: ui/settings_panel.gd:268
 msgid "Общая"
 msgstr "Master"
 
-#: ui/settings_panel.gd:253
+#: ui/settings_panel.gd:269
 msgid "Музыка"
 msgstr "Music"
 
-#: ui/settings_panel.gd:254
+#: ui/settings_panel.gd:270
 msgid "Эффекты"
 msgstr "Effects"
 
-#: ui/settings_panel.gd:256
+#: ui/settings_panel.gd:272
 msgid "Голоса"
 msgstr "Voices"
 
-#: ui/settings_panel.gd:259
+#: ui/settings_panel.gd:275
 msgid "МЫШЬ И ГЕЙМПАД"
 msgstr "MOUSE AND GAMEPAD"
 
-#: ui/settings_panel.gd:260
+#: ui/settings_panel.gd:276
 msgid "Чувствительность мыши"
 msgstr "Mouse sensitivity"
 
-#: ui/settings_panel.gd:262
+#: ui/settings_panel.gd:278
 msgid "Чувствительность стика"
 msgstr "Stick sensitivity"
 
-#: ui/settings_panel.gd:264
+#: ui/settings_panel.gd:280
 msgid "Инверсия по вертикали"
 msgstr "Invert vertical axis"
 
-#: ui/settings_panel.gd:265
-msgid "Клавиши переназначаются на вкладке «Клавиши»."
-msgstr "Keys are rebound on the “Keys” tab."
-
-#: ui/settings_panel.gd:268
-msgid "КЛАВИШИ — клик по кнопке, затем нажми клавишу или кнопку мыши (Esc — отмена)"
-msgstr "KEYS — click a button, then press a key or mouse button (Esc — cancel)"
-
 #: ui/settings_panel.gd:281
+msgid "Клавиатура и геймпад переназначаются на вкладке «Клавиши»."
+msgstr "Rebind keyboard and gamepad controls in the Keys tab."
+
+#: ui/settings_panel.gd:284
+msgid "УПРАВЛЕНИЕ — выбери столбец и нажми новую кнопку"
+msgstr "CONTROLS — select a column and press a new button"
+
+#: ui/settings_panel.gd:285
+msgid "Слева клавиатура и мышь, справа геймпад. Esc или Start — отмена."
+msgstr "Keyboard and mouse on the left, gamepad on the right. Esc or Start cancels."
+
+#: ui/settings_panel.gd:312
 msgid "Сбросить клавиши"
 msgstr "Reset keys"
 
-#: ui/settings_panel.gd:287
+#: ui/settings_panel.gd:318
 msgid "Клавиши — как по умолчанию."
 msgstr "Keys are back to defaults."
 
-#: ui/settings_panel.gd:289
-msgid "Esc — пауза, 1/2/3 — выбор карточек; геймпад не меняется."
-msgstr "Esc — pause, 1/2/3 — pick cards; the gamepad isn't changed."
+#: ui/settings_panel.gd:320
+msgid "Сбросить геймпад"
+msgstr "Reset gamepad"
 
-#: ui/settings_panel.gd:292
+#: ui/settings_panel.gd:325
+msgid "Геймпад — как по умолчанию."
+msgstr "Gamepad reset to defaults."
+
+#: ui/settings_panel.gd:328
+msgid "Esc и Start — пауза; стрелки и A/B — навигация в меню."
+msgstr "Esc and Start pause; arrows and A/B navigate menus."
+
+#: ui/settings_panel.gd:341
 msgid "ОКНО"
 msgstr "WINDOW"
 
-#: ui/settings_panel.gd:293
+#: ui/settings_panel.gd:342
 msgid "Полноэкранный режим"
 msgstr "Fullscreen"
 
-#: ui/settings_panel.gd:294
+#: ui/settings_panel.gd:343
 msgid "Вертикальная синхронизация (VSync)"
 msgstr "Vertical sync (VSync)"
 
-#: ui/settings_panel.gd:297
+#: ui/settings_panel.gd:346
 msgid "без ограничения"
 msgstr "unlimited"
 
-#: ui/settings_panel.gd:298
+#: ui/settings_panel.gd:347
 msgid "Ограничение FPS"
 msgstr "FPS limit"
 
-#: ui/settings_panel.gd:299
+#: ui/settings_panel.gd:348
 msgid "КАМЕРА"
 msgstr "CAMERA"
 
-#: ui/settings_panel.gd:300
+#: ui/settings_panel.gd:349
 msgid "Поле зрения (FOV)"
 msgstr "Field of view (FOV)"
 
-#: ui/settings_panel.gd:302
+#: ui/settings_panel.gd:351
 msgid "Тряска камеры"
 msgstr "Camera shake"
 
-#: ui/settings_panel.gd:303
+#: ui/settings_panel.gd:352
 msgid "Покачивание и наклон камеры"
 msgstr "Camera bob and tilt"
 
-#: ui/settings_panel.gd:305
+#: ui/settings_panel.gd:354
 msgid "ОБВОДКА"
 msgstr "OUTLINE"
 
-#: ui/settings_panel.gd:307
+#: ui/settings_panel.gd:356
 msgid "Обводка врагов и предметов"
 msgstr "Outline enemies and items"
 
-#: ui/settings_panel.gd:310
+#: ui/settings_panel.gd:359
 msgid "Толщина обводки"
 msgstr "Outline thickness"
 
-#: ui/settings_panel.gd:315
+#: ui/settings_panel.gd:364
 msgid "ЯЗЫК"
 msgstr "LANGUAGE"
 
-#: ui/settings_panel.gd:320
+#: ui/settings_panel.gd:369
 msgid "Язык / Language"
 msgstr "Язык / Language"
 
-#: ui/settings_panel.gd:321
+#: ui/settings_panel.gd:370
 msgid "ПРИЦЕЛ"
 msgstr "CROSSHAIR"
 
-#: ui/settings_panel.gd:322
+#: ui/settings_panel.gd:371
 msgid "Вид прицела"
 msgstr "Crosshair style"
 
-#: ui/settings_panel.gd:323
+#: ui/settings_panel.gd:372
 msgid "классический"
 msgstr "classic"
 
-#: ui/settings_panel.gd:323
+#: ui/settings_panel.gd:372
 msgid "крест"
 msgstr "cross"
 
-#: ui/settings_panel.gd:323
+#: ui/settings_panel.gd:372
 msgid "круг с молнией"
 msgstr "circle with lightning"
 
-#: ui/settings_panel.gd:323
+#: ui/settings_panel.gd:372
 msgid "точка"
 msgstr "dot"
 
-#: ui/settings_panel.gd:324
+#: ui/settings_panel.gd:373
 msgid "Размер прицела"
 msgstr "Crosshair size"
 
-#: ui/settings_panel.gd:325
+#: ui/settings_panel.gd:374
 msgid "Яркость прицела"
 msgstr "Crosshair brightness"
 
-#: ui/settings_panel.gd:326
+#: ui/settings_panel.gd:375
 msgid "Цвет прицела"
 msgstr "Crosshair color"
 
-#: ui/settings_panel.gd:327
+#: ui/settings_panel.gd:376
 msgid "белый"
 msgstr "white"
 
-#: ui/settings_panel.gd:327
+#: ui/settings_panel.gd:376
 msgid "голубой"
 msgstr "cyan"
 
-#: ui/settings_panel.gd:327
+#: ui/settings_panel.gd:376
 msgid "жёлтый"
 msgstr "yellow"
 
-#: ui/settings_panel.gd:327
+#: ui/settings_panel.gd:376
 msgid "зелёный"
 msgstr "green"
 
-#: ui/settings_panel.gd:327
+#: ui/settings_panel.gd:376
 msgid "красный"
 msgstr "red"
 
-#: ui/settings_panel.gd:327
+#: ui/settings_panel.gd:376
 msgid "пурпурный"
 msgstr "magenta"
 
-#: ui/settings_panel.gd:329
+#: ui/settings_panel.gd:378
 msgid "Индикаторы врагов за экраном"
 msgstr "Off-screen enemy indicators"
 
-#: ui/settings_panel.gd:330
+#: ui/settings_panel.gd:379
 msgid "Шкала высоты удара-приземления"
 msgstr "Ground slam height meter"
 
-#: ui/settings_panel.gd:331
+#: ui/settings_panel.gd:380
 msgid "Масштаб интерфейса"
 msgstr "Interface scale"
 
-#: ui/settings_panel.gd:332
+#: ui/settings_panel.gd:381
 msgid "КОМИКСОВЫЕ СЛОВА"
 msgstr "COMIC WORDS"
 
-#: ui/settings_panel.gd:334
+#: ui/settings_panel.gd:383
 msgid "СУБТИТРЫ И ТЕКСТ"
 msgstr "SUBTITLES AND TEXT"
 
-#: ui/settings_panel.gd:335
+#: ui/settings_panel.gd:384
 msgid "Размер текста диалогов"
 msgstr "Dialogue text size"
 
-#: ui/settings_panel.gd:336
+#: ui/settings_panel.gd:385
 msgid "Скорость печати"
 msgstr "Typing speed"
 
-#: ui/settings_panel.gd:337
+#: ui/settings_panel.gd:386
 msgid "быстро"
 msgstr "fast"
 
-#: ui/settings_panel.gd:337
+#: ui/settings_panel.gd:386
 msgid "медленно"
 msgstr "slow"
 
-#: ui/settings_panel.gd:337
+#: ui/settings_panel.gd:386
 msgid "обычно"
 msgstr "normal"
 
-#: ui/settings_panel.gd:337
+#: ui/settings_panel.gd:386
 msgid "очень быстро"
 msgstr "very fast"
 
-#: ui/settings_panel.gd:337
+#: ui/settings_panel.gd:386
 msgid "сразу целиком"
 msgstr "instant"
 
-#: ui/settings_panel.gd:341
+#: ui/settings_panel.gd:390
 msgid "Комиксовые слова (Comic FX)"
 msgstr "Comic words (Comic FX)"
 
-#: ui/settings_panel.gd:345
+#: ui/settings_panel.gd:394
 msgid "Размер слов"
 msgstr "Word size"
 
-#: ui/settings_panel.gd:350
+#: ui/settings_panel.gd:399
 msgid "Стоп-кадр комикса (смерть Тора и босса)"
 msgstr "Comic freeze-frame (Thor's and boss deaths)"
 
-#: ui/settings_panel.gd:351
+#: ui/settings_panel.gd:400
 msgid "Заставка босса"
 msgstr "Boss intro card"
 
-#: ui/settings_panel.gd:354
+#: ui/settings_panel.gd:403
 msgid "ЦВЕТ"
 msgstr "COLOR"
 
-#: ui/settings_panel.gd:355
+#: ui/settings_panel.gd:404
 msgid "Цветовая слепота (коррекция экрана)"
 msgstr "Color blindness (screen correction)"
 
-#: ui/settings_panel.gd:356
+#: ui/settings_panel.gd:405
 msgid "дейтеранопия"
 msgstr "deuteranopia"
 
-#: ui/settings_panel.gd:356
+#: ui/settings_panel.gd:405
 msgid "протанопия"
 msgstr "protanopia"
 
-#: ui/settings_panel.gd:356
+#: ui/settings_panel.gd:405
 msgid "тританопия"
 msgstr "tritanopia"
 
-#: ui/settings_panel.gd:357
+#: ui/settings_panel.gd:406
 msgid "Телеграфы атак врагов дублируются формой и звуком, не только цветом."
 msgstr "Enemy attack telegraphs are also shown by shape and sound, not just color."
 
-#: ui/settings_panel.gd:358
+#: ui/settings_panel.gd:407
 msgid "ПОМОЩЬ (облегчённый режим, без штрафа к Славе)"
 msgstr "ASSIST (easy mode, no Glory penalty)"
 
-#: ui/settings_panel.gd:359
+#: ui/settings_panel.gd:408
 msgid "Помощь в прицеливании (ренж)"
 msgstr "Aim assist (ranged)"
 
-#: ui/settings_panel.gd:360
+#: ui/settings_panel.gd:409
 msgid "Замедление времени при ударе-приземлении"
 msgstr "Slow motion during a ground slam"
 
-#: ui/settings_panel.gd:361
+#: ui/settings_panel.gd:410
 msgid "Подсказка идеального хвата (кольца у прицела)"
 msgstr "Perfect catch hint (rings at the crosshair)"
 
-#: ui/settings_panel.gd:369
+#: ui/settings_panel.gd:419
 msgid "нажми клавишу…"
 msgstr "press a key…"
 
-#: ui/settings_panel.gd:370
-msgid "Esc — отмена."
-msgstr "Esc — cancel."
+#: ui/settings_panel.gd:419
+msgid "нажми кнопку…"
+msgstr "press a button…"
 
-#: ui/settings_panel.gd:390
+#: ui/settings_panel.gd:420
+msgid "Esc или Start — отмена."
+msgstr "Esc or Start cancels."
+
+#: ui/settings_panel.gd:440
+#: ui/settings_panel.gd:449
 msgid "Отменено."
 msgstr "Cancelled."
 
-#: ui/settings_panel.gd:411
+#: ui/settings_panel.gd:471
 msgid "%s — теперь «%s» (снято с «%s»)."
 msgstr "%s — now “%s” (taken from “%s”)."
 
-#: ui/settings_panel.gd:413
+#: ui/settings_panel.gd:473
 msgid "%s — теперь «%s»."
 msgstr "%s — now “%s”."
 
-#: ui/settings_panel.gd:71
+#: ui/settings_panel.gd:86
 msgid "НАСТРОЙКИ"
 msgstr "SETTINGS"
 
-#: ui/shop.gd:144
+#: ui/shop.gd:145
 msgid "СЕРЕБРО: %d"
 msgstr "SILVER: %d"
 
-#: ui/shop.gd:217
+#: ui/shop.gd:220
 msgid "Нет серебра"
 msgstr "Not enough silver"
 
-#: ui/shop.gd:221
+#: ui/shop.gd:224
 msgid "Брокк сделает вид, что не обиделся"
 msgstr "Brokk will pretend he isn't offended"
 
-#: ui/shop.gd:221
+#: ui/shop.gd:224
 msgid "Передумал"
 msgstr "Changed my mind"
 
-#: ui/shop.gd:223
+#: ui/shop.gd:226
 msgid "Выбери"
 msgstr "Choose"
 
-#: ui/shop.gd:224
+#: ui/shop.gd:227
 msgid "выбор"
 msgstr "choice"
 
-#: ui/shop.gd:68
+#: ui/shop.gd:69
 msgid "БРОКК  И  ЭЙТРИ"
 msgstr "BROKK  &  EITRI"
 
-#: ui/shop.gd:80
+#: ui/shop.gd:81
 #: rooms/shop_stall.gd:13
 msgid "РУНЫ • ШАУРМА • ЗАТОЧКА"
 msgstr "RUNES • SHAWARMA • SHARPENING"
 
-#: ui/shop.gd:87
-msgid "Уйти  [E / Esc]"
-msgstr "Leave  [E / Esc]"
+#: ui/shop.gd:88
+msgid "Уйти  [E / Esc / B]"
+msgstr "Leave  [E / Esc / B]"
 
 #: ui/silver_hud.gd:37
 msgid "СЕРЕБРО %d"
@@ -2706,7 +2823,7 @@ msgstr "BERSERK  %.1f"
 msgid "СЛАВА ×%s"
 msgstr "GLORY ×%s"
 
-#: ui/training_plan.gd:134
+#: ui/training_plan.gd:135
 msgid "Слава копится за забеги и не сгорает. Купленное действует со следующего забега."
 msgstr "Glory builds up over runs and never burns. Purchases take effect from the next run."
 
@@ -2718,7 +2835,7 @@ msgstr "THOR GETS BACK IN SHAPE"
 msgid "ОРУЖИЕ В ПУЛ"
 msgstr "WEAPONS INTO THE POOL"
 
-#: ui/training_plan.gd:212
+#: ui/training_plan.gd:218
 msgid "Забегов: %d · Смертей: %d · Побед: %d · Открыто: %d из %d"
 msgstr "Runs: %d · Deaths: %d · Wins: %d · Unlocked: %d of %d"
 
@@ -2730,23 +2847,23 @@ msgstr "MORTAL BODIES"
 msgid "РУНЫ В ПУЛ"
 msgstr "RUNES INTO THE POOL"
 
-#: ui/training_plan.gd:288
+#: ui/training_plan.gd:294
 msgid "✓ Есть"
 msgstr "✓ Owned"
 
-#: ui/training_plan.gd:292
+#: ui/training_plan.gd:298
 msgid "Скоро"
 msgstr "Soon"
 
-#: ui/training_plan.gd:294
+#: ui/training_plan.gd:300
 msgid "Этого ещё нет в игре — откроется, когда появится."
 msgstr "This isn't in the game yet — it unlocks once it exists."
 
-#: ui/training_plan.gd:299
+#: ui/training_plan.gd:305
 msgid "Сначала: %s"
 msgstr "First: %s"
 
-#: ui/training_plan.gd:300
+#: ui/training_plan.gd:306
 msgid "Сначала «%s». %s"
 msgstr "First “%s”. %s"
 
@@ -2754,35 +2871,35 @@ msgstr "First “%s”. %s"
 msgid "ПЛАН ТРЕНИРОВОК ОДИНА"
 msgstr "ODIN'S TRAINING PLAN"
 
-#: ui/trait_pick.gd:100
+#: ui/trait_pick.gd:110
 msgid "УРОВЕНЬ %d"
 msgstr "LEVEL %d"
 
-#: ui/trait_pick.gd:104
+#: ui/trait_pick.gd:114
 msgid "+ СВЯЗКА: «%s»"
 msgstr "+ COMBO: \"%s\""
 
-#: ui/trait_pick.gd:107
+#: ui/trait_pick.gd:117
 msgid "ЗАМЕНИТ: %s"
 msgstr "REPLACES: %s"
 
-#: ui/trait_pick.gd:108
+#: ui/trait_pick.gd:118
 msgid "НОВЫЙ"
 msgstr "NEW"
 
-#: ui/trait_pick.gd:151
+#: ui/trait_pick.gd:183
 msgid "Ещё раз — заменить «%s»"
 msgstr "Once more — replaces “%s”"
 
-#: ui/trait_pick.gd:162
+#: ui/trait_pick.gd:195
 msgid "СТИХИЯ · %s"
 msgstr "ELEMENT · %s"
 
-#: ui/trait_pick.gd:165
+#: ui/trait_pick.gd:198
 msgid "ПРИЁМ"
 msgstr "TECHNIQUE"
 
-#: ui/trait_pick.gd:165
+#: ui/trait_pick.gd:198
 msgid "ПРИЁМ · %s"
 msgstr "TECHNIQUE · %s"
 
@@ -2807,14 +2924,14 @@ msgid "удар с неба"
 msgstr "strike from the sky"
 
 #: ui/trait_pick.gd:63
-msgid "Стихия — чем бьёт молот, приём — как ты им играешь. Кликни или нажми 1 / 2 / 3"
-msgstr "Element — what the hammer hits with, technique — how you play it. Click or press 1 / 2 / 3"
+msgid "Стихия — чем бьёт молот, приём — как ты им играешь. Мышь, 1 / 2 / 3 или геймпад"
+msgstr "Element is how the hammer strikes, technique is how you play. Mouse, 1 / 2 / 3 or gamepad"
 
 #: ui/trait_pick.gd:70
 msgid "ПЕРЕБРОС  [R]"
 msgstr "REROLL  [R]"
 
-#: ui/trait_pick.gd:88
+#: ui/trait_pick.gd:89
 msgid "ПЕРЕБРОС ОТ ЭЙТРИ (%d)  [R]"
 msgstr "EITRI'S REROLL (%d)  [R]"
 
@@ -2854,21 +2971,25 @@ msgstr "PASSED! Reward after the room is cleared: %s"
 msgid "ПРОВАЛ: %s"
 msgstr "FAILED: %s"
 
-#: ui/weapon_hud.gd:102
-msgid "Q / колесо — сменить · R — перезарядка"
-msgstr "Q / wheel — switch · R — reload"
-
-#: ui/weapon_hud.gd:142
+#: ui/weapon_hud.gd:158
 msgid "пусто"
 msgstr "empty"
 
-#: ui/weapon_hud.gd:148
+#: ui/weapon_hud.gd:164
 msgid "ПУСТО"
 msgstr "EMPTY"
 
-#: ui/weapon_hud.gd:151
+#: ui/weapon_hud.gd:167
 msgid "ур. %d"
 msgstr "lv. %d"
+
+#: ui/weapon_hud.gd:170
+msgid "Приём: %s"
+msgstr "Move: %s"
+
+#: ui/weapon_hud.gd:178
+msgid "%s — сменить · %s — перезарядка"
+msgstr "%s — switch · %s — reload"
 
 #: weapons/chest.gd:44
 msgid "[E] Открыть сундук"
@@ -2877,6 +2998,10 @@ msgstr "[E] Open chest"
 #: weapons/defs/axe.tres (description)
 msgid "Комбо из 3 ударов, третий — рубящий сверху (×2.2). Рабочая лошадка викинга."
 msgstr "A 3-hit combo, the third is an overhead chop (×2.2). The viking's workhorse."
+
+#: weapons/defs/axe.tres (skill_title)
+msgid "Вертушка"
+msgstr "Whirlwind"
 
 #: weapons/defs/club.tres (description)
 msgid "Медленная и тяжёлая: оглушает на 1.5 с и сильно отбрасывает — сбивай с краёв."
@@ -2983,23 +3108,31 @@ msgid "Копьё"
 msgstr "Spear"
 
 #: weapons/defs/staff.tres (description)
-msgid "Посох жреца. Каждый 3-й удар — искра огня (особенность — позже)."
-msgstr "A priest's staff. Every 3rd hit — a spark of fire (perk — later)."
+msgid "Посох жреца с широкой дугой ударов."
+msgstr "A priest's staff with a wide swing arc."
 
 #: weapons/defs/staff.tres (display_name)
 msgid "Посох"
 msgstr "Staff"
 
+#: weapons/defs/staff.tres (skill_title)
+msgid "Шест"
+msgstr "Pole Vault"
+
 #: weapons/defs/sword.tres (description)
-msgid "Быстрый, комбо из 4 ударов. (Парирование — позже.)"
-msgstr "Fast, a 4-hit combo. (Parrying — later.)"
+msgid "Быстрый меч, комбо из 4 ударов."
+msgstr "A fast sword with a four-hit combo."
 
 #: weapons/defs/sword.tres (display_name)
 msgid "Меч"
 msgstr "Sword"
 
+#: weapons/defs/sword.tres (skill_title)
+msgid "Выпад и парирование"
+msgstr "Lunge and Parry"
+
 #: weapons/loot.gd:215
-#: scripts/shader_warmup.gd:212
+#: scripts/shader_warmup.gd:241
 msgid "Элита"
 msgstr "Elite"
 
@@ -3338,12 +3471,55 @@ msgstr "[E] Take ammo: %s"
 msgid " — бросить %s"
 msgstr " — drop %s"
 
+#: weapons/pickup.gd:85
+msgid "Зажмите %s: %s"
+msgstr "Hold %s: %s"
+
 #: weapons/weapon_def.gd:10
 #: weapons/defs/axe.tres (display_name)
 msgid "Топор"
 msgstr "Axe"
 
 # --- Ключи, которых не нашёл сборщик (динамические строки или устаревшие; --prune удалит) ---
+
+msgid "Парирования мечом ещё нет"
+msgstr "Sword parrying isn't in yet"
+
+msgid "Журнал [Tab]"
+msgstr "Log [Tab]"
+
+msgid "Пропустить ▸▸"
+msgstr "Skip ▸▸"
+
+msgid "Кликни по руне или нажми 1 / 2 / 3"
+msgstr "Click a rune or press 1 / 2 / 3"
+
+msgid "Клавиши переназначаются на вкладке «Клавиши»."
+msgstr "Keys are rebound on the “Keys” tab."
+
+msgid "КЛАВИШИ — клик по кнопке, затем нажми клавишу или кнопку мыши (Esc — отмена)"
+msgstr "KEYS — click a button, then press a key or mouse button (Esc — cancel)"
+
+msgid "Esc — пауза, 1/2/3 — выбор карточек; геймпад не меняется."
+msgstr "Esc — pause, 1/2/3 — pick cards; the gamepad isn't changed."
+
+msgid "Esc — отмена."
+msgstr "Esc — cancel."
+
+msgid "Уйти  [E / Esc]"
+msgstr "Leave  [E / Esc]"
+
+msgid "Стихия — чем бьёт молот, приём — как ты им играешь. Кликни или нажми 1 / 2 / 3"
+msgstr "Element — what the hammer hits with, technique — how you play it. Click or press 1 / 2 / 3"
+
+msgid "Q / колесо — сменить · R — перезарядка"
+msgstr "Q / wheel — switch · R — reload"
+
+msgid "Посох жреца. Каждый 3-й удар — искра огня (особенность — позже)."
+msgstr "A priest's staff. Every 3rd hit — a spark of fire (perk — later)."
+
+msgid "Быстрый, комбо из 4 ударов. (Парирование — позже.)"
+msgstr "Fast, a 4-hit combo. (Parrying — later.)"
 
 msgid "Быстрый и хрупкий. Три заряда рывка."
 msgstr "Fast and fragile. Three dash charges."
@@ -3503,97 +3679,3 @@ msgstr "Spear into the pool: a 3.5 m thrust, pierces two."
 
 msgid "Почитал о копьях"
 msgstr "Read Up on Spears"
-
-msgid "Журнал [Tab / View]"
-msgstr "Log [Tab / View]"
-
-msgid "Пропустить [Y] ▸▸"
-msgstr "Skip [Y] ▸▸"
-
-msgid "Выбери руну: мышь, 1 / 2 / 3 или геймпад"
-msgstr "Choose a rune: mouse, 1 / 2 / 3 or gamepad"
-
-msgid "Клавиатура и геймпад переназначаются на вкладке «Клавиши»."
-msgstr "Rebind keyboard and gamepad controls in the Keys tab."
-
-msgid "УПРАВЛЕНИЕ — выбери столбец и нажми новую кнопку"
-msgstr "CONTROLS — select a column and press a new button"
-
-msgid "Слева клавиатура и мышь, справа геймпад. Esc или Start — отмена."
-msgstr "Keyboard and mouse on the left, gamepad on the right. Esc or Start cancels."
-
-msgid "Сбросить геймпад"
-msgstr "Reset gamepad"
-
-msgid "Геймпад — как по умолчанию."
-msgstr "Gamepad reset to defaults."
-
-msgid "Esc и Start — пауза; стрелки и A/B — навигация в меню."
-msgstr "Esc and Start pause; arrows and A/B navigate menus."
-
-msgid "нажми кнопку…"
-msgstr "press a button…"
-
-msgid "Esc или Start — отмена."
-msgstr "Esc or Start cancels."
-
-msgid "Уйти  [E / Esc / B]"
-msgstr "Leave  [E / Esc / B]"
-
-msgid "Камера влево"
-msgstr "Camera left"
-
-msgid "Камера вправо"
-msgstr "Camera right"
-
-msgid "Камера вверх"
-msgstr "Camera up"
-
-msgid "Камера вниз"
-msgstr "Camera down"
-
-msgid "Кнопка %d"
-msgstr "Button %d"
-
-msgid "Ось %d %s"
-msgstr "Axis %d %s"
-
-msgid "%s — сменить · %s — перезарядка"
-msgstr "%s — switch · %s — reload"
-
-msgid "Стихия — чем бьёт молот, приём — как ты им играешь. Мышь, 1 / 2 / 3 или геймпад"
-msgstr "Element is how the hammer strikes, technique is how you play. Mouse, 1 / 2 / 3 or gamepad"
-
-msgid "Геймпад: управление и кнопки — в настройках."
-msgstr "Gamepad: controls and buttons are in Settings."
-
-msgid "Правый стик — прокрутка описания."
-msgstr "Right stick scrolls the description."
-
-msgid "Правый стик — прокрутка журнала."
-msgstr "Right stick scrolls the log."
-
-msgid "Вертушка"
-msgstr "Whirlwind"
-
-msgid "Выпад и парирование"
-msgstr "Lunge and Parry"
-
-msgid "Шест"
-msgstr "Pole Vault"
-
-msgid "Приём: %s"
-msgstr "Move: %s"
-
-msgid "Зажмите %s: %s"
-msgstr "Hold %s: %s"
-
-msgid "Быстрый меч, комбо из 4 ударов."
-msgstr "A fast sword with a four-hit combo."
-
-msgid "Посох жреца с широкой дугой ударов."
-msgstr "A priest's staff with a wide swing arc."
-
-
-msgid "В архиве сохранение и системные данные; журналы могут содержать локальные пути."
-msgstr "The archive includes save and system data; logs may contain local paths."

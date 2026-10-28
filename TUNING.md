@@ -108,6 +108,29 @@
 - **Раздувание:** с `swell_hp_fraction` 0.25 HP бежит ×`swell_speed_mult` 1.4 к Тору (не дольше `swell_max_time` 6 с), раздувается на `swell_amount` 0.5; ближе `fuse_range` 3 м — фитиль `fuse_time` 1.1 с (красный круг), взрыв `blast_radius` 5 / `blast_damage` 30 — его конец. Убит раздутым — взрыв ×`death_blast_mult` 0.6 через 0.45 с.
 - Арена — `rooms/sven_arena.tscn` (генератор, «Пивной погреб Свена»): `Run.miniboss_arena` подменяет ею зал мини-босса (`Run.miniboss_rooms`); пусто — Свен выходит последней волной обычного зала.
 
+### Хёвдинг с дружиной (ночь 29.10, Н5, GDD 14.1) — `enemies/minibosses/hovding.tres`, `enemies/hovding.tscn` (`enemies/bosses/hovding.gd`, `HovdingBoss`)
+
+`max_health` 484 (22 У), `move_speed` 4.0, `knock_resist` 0.65, `attack_damage` 18, удар по площади 4.0 м / 18, `model_scale` 1.35, `glory` 50; свита — отряд `escort_squad` «hovding_guard» (`enemies/squads/hovding_guard.tres`: 3 воина «окружение» + 2 «фланг»); арены нет — дерётся в обычном 4-м зале. Реплики — `data/dialogues/hovding.json` (пулы intro/horn/engage/death; портрет — драугр).
+- **Знамя-аура:** дружина в `aura_radius` 14 м — скорость ×`aura_speed_mult` 1.25, урон ×`aura_damage_mult` 1.3 (золотое кольцо под ногами); со смертью вожака — снимается.
+- **Рог:** раз в `horn_interval` 11 с телеграф `horn_windup` 1.2 с (рог над головой, звук `horn_call`), подкрепление `horn_reinforce_count` 2 × `horn_reinforce_kind` grunt (не больше `horn_cap` 24 врагов в зале) и круг под Тором `horn_zone_radius` 2.6 м / телеграф `horn_zone_telegraph` 1.0 с / `horn_zone_damage` 16.
+- **Фаза 1:** держится в `hold_min`–`hold_max` 7–11 м от Тора, топор раз в `axe_cooldown` 4 с (замах `axe_windup` 0.55, `axe_speed` 18, `axe_damage` 14). **Фаза 2** с `engage_hp_fraction` 0.5: сам в бою, скорость ×`engage_speed_mult` 1.3, рог реже (×1.5).
+- **Чередование:** `Run.miniboss_pool` (Свен, Хёвдинг, Вёльва, Берсерк) — случайный, кроме прошлого (`Save.data.last_miniboss`); арена — `MinibossDef.arena` (у Свена — `rooms/sven_arena.tscn`). В тестах — всегда первый, если не задан `Run.forced_miniboss` / `Run.miniboss_rotation_in_tests`.
+
+### Вёльва-ведьма (ночь 29.10, Н6) — `enemies/minibosses/volva.tres`, `enemies/volva.tscn` (`enemies/bosses/volva.gd`, `VolvaBoss`)
+
+`max_health` 396 (18 У), `move_speed` 3.6, свита 2 корма, посох; реплики — `data/dialogues/volva.json` (портрет — заглушка).
+- **Телепорт** между высокими точками зала (выше пола на `high_min` 1.2 м, ищет сама) раз в `teleport_interval` 7 с, телеграф `teleport_time` 0.7 с (кольцо в точке выхода), не ближе `teleport_min_dist` 6 м к Тору; Тор подошёл — уходит раньше.
+- **Огненные круги:** раз в `fire_interval` 4.5 с (замах `fire_windup` 0.7) `fire_count` 2 круга `fire_radius` 2 м под Тором и в `fire_spread` 3.2 м, телеграф `fire_telegraph` 1.0 с, `fire_damage` 14, лужа огня `fire_puddle_time` 3 с по `fire_puddle_dps` 8.
+- **Корм:** раз в `raise_interval` 9 с (замах 1 с) `raise_count` 3, не больше `raise_cap` 24 в зале.
+- **Сбить молотом:** попадание Мьёльнира — падает, оглушена `knock_stun` 2 с, урон по ней ×`knock_damage_mult` 1.5. При `engage_hp_fraction` 0.5: +`engage_extra_fire` 1 круг, интервалы ×`engage_interval_mult` 0.75.
+
+### Берсерк-ульфхеднар (ночь 29.10, Н6) — `enemies/minibosses/berserker.tres`, `enemies/berserker.tscn` (`enemies/bosses/berserker.gd`, `BerserkerBoss`)
+
+`max_health` 528 (24 У), `move_speed` 4.6, без свиты; реплики — `data/dialogues/berserker.json` (портрет — драугр).
+- **Серия рывков:** раз в `series_interval` 5 с (Тор не ближе `series_min_dist` 3.5 м) `series_count` 3 рывка: полоса-телеграф `dash_aim` 0.6 с (направление замирает после `dash_lock_at` 0.75), `dash_speed` 17, до `dash_max_dist` 12 м, `dash_damage` 20, `dash_knock` 11, пауза `dash_pause` 0.25 с. Перепрыгнуть — `charge_jump_clear` (`BossEnemy`).
+- **Окно уязвимости** после серии `vulnerable_time` 2 с, урон ×`vulnerable_damage_mult` 1.5.
+- **Ярость** с `rage_hp_fraction` 0.33: телеграф ×`rage_aim_mult` 0.6, скорость ×`rage_speed_mult` 1.2, окно ×`rage_window_mult` 0.6, серии чаще (×0.7).
+
 ## Ярл Бьорн — `enemies/jarl.tscn` (`enemies/bosses/jarl.gd`), числа GDD — `enemies/defs/jarl.tres`
 
 60 У = 1320 HP, `move_speed` 3.6, удар 25 (`attack_range` 3.6 — широкий замах), удар по площади `boss_slam_radius` 6 / 30, `knock_resist` 0.85. Фазы: `phase2_at` 0.66, `phase3_at` 0.33, рёв `roar_time` 1.2 с.
@@ -161,6 +184,55 @@ HP / скорость / урон / Слава — из `enemies/defs/*.tres` (`E
 - **Наёмник:** `merc_aim_track` 7 (как быстро лазер догоняет Тора), `merc_burst_count` 6, `merc_burst_interval` 0.1, `merc_spread_deg` 2, `merc_range` 40, `keep_min_dist`/`keep_max_dist` 7/13. Очередь идёт по точке, где лазер был в конце телеграфа, — рывок вбок спасает. Роняет патроны всегда.
 - Особых (Раздутый, Щитоносец, Шаман, Наёмник) по GDD 8 сбивают с замаха только сильный удар, Мьёльнир, удар-приземление и прыжок по головам; оглушение оружием — только сильным ударом.
 - Урон ≥ 9999 (`Enemy.DEBUG_KILL_DAMAGE`) — отладочное «убить» для тестов, проходит сквозь щит.
+
+## Снаряды, опасные зоны и роли (ночь 29.10, Н2, GDD 12.6) — поля `enemies/enemy.gd` (группы «Снаряды и зоны», «Роли»), лимиты — `rooms/room.gd`
+
+Бьют все (очереди атак нет); разнообразие — снаряды и зоны на полу: телеграф → уворот рывком (неуязвимость `dash_invuln`) или прыжком (зона не задевает, если ноги выше пола на `HazardZone.JUMP_CLEARANCE` 0.45 м) → наказание.
+
+| Что | Поля | По умолчанию |
+|---|---|---|
+| Лимиты зала | `Room.max_projectiles` / `Room.max_zones` | 14 снарядов / 5 зон одновременно; сверх — обычная атака или ожидание 0.5 с (вне зала — `EnemyRangedAttacks.default_max_*`) |
+| Метатель: веер | `thrower_fan_chance` / `thrower_fan_count` / `thrower_fan_spread_deg` / `thrower_fan_damage_mult` | 35 % бросков, 4 снаряда в секторе 36°, урон каждого ×0.6 |
+| Метатель: навес | `thrower_lob_chance` / `lob_flight_time` / `lob_gravity` / `lob_radius` | 30 %, дуга 1.1 с, гравитация 20, всплеск 1.6 м (метка падения на полу; в прыжке не задевает) |
+| Шаман: между обрядами | `shaman_cast_interval` / `shaman_cast_range` / `shaman_orb_chance` | раз в 4.5 с с 22 м; 50 % — сфера, иначе круг; обряд не откладывает |
+| Шаман: медленная сфера | `shaman_orb_speed` / `shaman_orb_homing` / `shaman_orb_radius` / `shaman_orb_damage` / `shaman_orb_life` | 4 м/с, доворот 0.9 рад/с, радиус 0.6 м, 18 урона, 7 с; летящий Мьёльнир сбивает (+3 Славы, `EnemyProjectile.ORB_KNOCK_GLORY`) |
+| Шаман: круг проклятия | `shaman_curse_radius` / `shaman_curse_telegraph` / `shaman_curse_damage` / `shaman_curse_puddle_time` / `shaman_curse_puddle_dps` | 2.4 м под Тором, телеграф 1.0 с, 15 урона, лужа 3 с по 6 урона/с (тик 0.5 с) |
+| Раздутый: лужа | `bloat_puddle_radius` / `bloat_puddle_time` / `bloat_puddle_slow` | брага/яд 2.2 м на 5 с, скорость Тора ×0.6 (`BrewPuddle`) |
+| Воин: копьё | `spear_chance` / `spear_min_dist` / `spear_max_dist` / `spear_speed` / `spear_damage_mult` / `spear_cooldown` | 25 % воинов с копьём, бросок с 8–12 м, 20 м/с, урон = удар ×1.0, раз в 6 с |
+| Наёмник: граната | `merc_grenade_chance` / `merc_grenade_min_dist` / `merc_grenade_cooldown` / `merc_grenade_flight` / `merc_grenade_radius` / `merc_grenade_fuse` / `merc_grenade_damage` | 35 % атак дальше 5 м, раз в 5 с, полёт 1.0 с, взрыв 2.6 м после фитиля 0.7 с, 22 урона (бьёт и своих) |
+| Отражение | `EnemyProjectile.REFLECT_DAMAGE_MULT` | все снаряды отражаются топором (×1.8 урона, летят прямо); зоны — нет |
+| Окружение | `tactics_surround_radius` / `tactics_surround_slot_deg` / `tactics_surround_patience` / `tactics_surround_crowd` / `tactics_surround_orbit` | точки круга 1.6 м вокруг Тора; ближе attack_range + 0.6 + 2 м начинает обход по кругу к своей точке; дальше 50° от своей точки и в толкучке (у Тора уже есть другой боец ближе 3.5 м) — обходит, но не дольше 1.2 с |
+| Фланг | `tactics_flank_chance` / `tactics_flank_radius` / `tactics_flank_angle_deg` | 30 % воинов; обход на 3.5–8 м под 75° от спины Тора |
+| Прикрытие | `tactics_cover_search` / `tactics_cover_offset` | стрелок/шаман ищет щитоносца в 14 м и встаёт за ним на 2.5 м |
+| Свита / засада | `tactics_escort_radius` / `tactics_escort_engage` / `tactics_lurk_rush_dist` / `tactics_busy_radius` / `tactics_busy_count` | кольцо 3 м вокруг якоря, в бой — когда Тор ближе 6 м; Раздутый в засаде выбегает ближе 5 м или когда у Тора ≥ 2 врагов в 3 м |
+| Отступление | `tactics_retreat_hp` / `tactics_retreat_time` | раненый стрелок (< 40 % HP) отбегает 2.5 с, стреляя |
+
+Опасная зона — `enemies/hazard_zone.gd` (`HazardZone`: круг / линия / конус; `telegraph`, `damage`, `knock`, `puddle_time`, `puddle_dps`, `puddle_slow`, `puddle_tick`).
+
+## Отряды-комбинации (ночь 29.10, Н3, GDD 12.6) — `enemies/squads/*.tres` (`SquadDef` + `SquadMember`)
+
+| Отряд | Состав | Строй / вход |
+|---|---|---|
+| Стена щитов (`shield_wall`) | 3 щитоносца (передний ряд) + 2 метателя (задний, роль «прикрытие») | шеренга, из маркера |
+| Шаман и свита (`shaman_escort`) | шаман-якорь + 10 корма (роль «свита») | кольцо `ring_radius` 3.2 м, из маркера |
+| Пороховая бочка (`powder_keg`) | 4 воина («окружение») + 2 Раздутых («засада», задний ряд) | шеренга |
+| Засада Локи (`loki_ambush`, вариант `loki_flank`) | наёмник + 3 воина (`speed_mult` 1.3, «фланг») | сзади (вариант — сбоку) на `entry_distance` 9 м, `delay` 4 с |
+| Стая (`pack`) | 15 корма + 2 воина | россыпь `scatter_radius` 3 м |
+
+Поля `SquadDef`: `formation` (шеренга/кольцо/россыпь), `entry` (маркер/сзади/сбоку), `delay`, `spacing` 1.8 м, `row_gap` 2.5 м, `ring_radius`, `scatter_radius`, `entry_distance`. Участник (`SquadMember`): `kind`, `count`, `role`, `row` (0 перед / 1 зад / 2 центр), `speed_mult`, `anchor`. В зале (`tools/rooms/<зал>.gd`): `["squad", позиция, волна, 1, 0.0, {"squad": id | "squad_options": [id…], "squad_override": {вид: n}, "squad_anchor_pos": Vector3}]` — подгонка сохраняет число врагов и Славу зала. Сзади/сбоку нет пола или линия перекрыта — ближе (×0.6), другой бок, иначе из маркера.
+
+## Черты мобов (ночь 29.10, Н4, GDD 12.6) — `enemies/traits/*.tres` (`EnemyTraitDef`), обработчики `enemies/traits/<id>.gd`
+
+Выдача — `Room.trait_chance` 0.22 (доля бойцов и особых), `Room.max_traited` 3 на зал; корм, боссы, мини-боссы и элита — никогда. Значок — маленькая фигура над головой (`icon_shape`/`icon_scale`/`color`, общий меш и материал `glow`), прячется дальше `EnemyTraits.icon_hide_distance` 22 м, высота `EnemyTraits.icon_height` 2.35.
+
+| Черта | Поля | По умолчанию |
+|---|---|---|
+| Трус (`coward`, жёлтый шар) | `flee_hp` / `flee_time` / `call_radius` | при < 30 % HP убегает 3 с (один раз), будит соседей в 10 м |
+| Яростный (`furious`, красный клин) | `rage_speed_mult` / `rage_cooldown_mult` / `rage_time` | после попадания скорость ×1.4, перезарядка атаки ×0.6 на 4 с |
+| Ловкий (`agile`, голубое кольцо) | `dodge_interval` / `dodge_detect` / `dodge_speed` | отскок вбок от летящего Мьёльнира ближе 6 м, 11 м/с, раз в 6 с |
+| Крикун (`shouter`, оранжевая палка) | `shout_radius` | заметив Тора, будит всех в 18 м |
+| Тяжёлый (`heavy`, серый брусок) | `heavy_knock_resist` | сопротивление отбрасыванию 0.85 |
+| Прыгун (`jumper`, зелёный клин) | `leap_min` / `leap_max` / `leap_cooldown` / `leap_time` | прыжок к Тору с 6–8 м, полёт 0.6 с, раз в 5 с |
 
 ## Элита (блок У, GDD 12.4) — `enemies/elite/mods/*.tres` (`EliteModifier`), обработчики `enemies/elite/*.gd`
 

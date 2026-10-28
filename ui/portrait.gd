@@ -32,7 +32,7 @@ func _init() -> void:
 	add_child(_tex_rect)
 
 ## Один спрайт на двоих: Хугин и Мунин нарисованы вместе
-const ALIASES := {"munin": "hugin"}
+const ALIASES := {"munin": "hugin", "hovding": "draugr", "berserker": "draugr"}
 const EXTS := ["png", "webp"]
 ## Точки лица (центр глаз) на холсте исходника — для крупного плана в пузыре (data/portrait_faces.json)
 const FACES_PATH := "res://data/portrait_faces.json"

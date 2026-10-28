@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SquadDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://enemies/squad_def.gd" id="1_squad"]
+[ext_resource type="Script" path="res://enemies/squad_member.gd" id="2_member"]
+
+[sub_resource type="Resource" id="Member_1"]
+script = ExtResource("2_member")
+kind = "shaman"
+count = 1
+role = "cover"
+row = 2
+anchor = true
+
+[sub_resource type="Resource" id="Member_2"]
+script = ExtResource("2_member")
+kind = "fodder"
+count = 10
+role = "escort"
+
+[resource]
+script = ExtResource("1_squad")
+id = "shaman_escort"
+title = "Шаман и свита"
+members = Array[ExtResource("2_member")]([SubResource("Member_1"), SubResource("Member_2")])
+formation = 1

@@ -36,6 +36,11 @@ signal wave_started(index: int)
 @export var wave_end_slow_time: float = 0.3
 @export_range(0.05, 1.0, 0.05) var wave_end_slow_scale: float = 0.35
 
+@export_group("Снаряды и зоны")
+## GDD 12.6: не больше стольких снарядов врагов и опасных зон одновременно (иначе враг бьёт обычной атакой или ждёт)
+@export var max_projectiles: int = 14
+@export var max_zones: int = 5
+
 @export_group("Вход врагов")
 ## Высота и длительность прыжка/входа; настройки доступны отдельно у каждого зала.
 @export_range(1.0, 15.0, 0.1) var entry_jump_speed: float = 8.0
@@ -66,6 +71,9 @@ signal wave_started(index: int)
 ## Шанс, что враг (не босс) появится элитой: светится, ×2.5 HP, роняет оружие
 @export_range(0.0, 1.0) var elite_chance: float = 0.1
 @export var max_elites: int = 1
+## Черты мобов (GDD 12.6, EnemyTraits): шанс бойцу/особому получить черту и не больше стольких на зал
+@export_range(0.0, 1.0) var trait_chance: float = 0.22
+@export var max_traited: int = 3
 ## Шанс сундука с оружием после зачистки (в первом зале — всегда, у босса — никогда)
 @export_range(0.0, 1.0) var chest_chance: float = 0.5
 
@@ -80,6 +88,9 @@ const ENEMY_SCENES := {
 	"merc": "res://enemies/merc.tscn",
 	# Боссы со своими атаками (enemies/bosses/)
 	"sven": "res://enemies/sven.tscn",
+	"hovding": "res://enemies/hovding.tscn",
+	"volva": "res://enemies/volva.tscn",
+	"berserker": "res://enemies/berserker.tscn",
 	"jarl": "res://enemies/jarl.tscn",
 }
 
@@ -185,6 +196,20 @@ func _spawn_wave(index: int) -> void:
 	# Поток пачками по spawn_batch (сборка персонажа дорогая: вся волна в одном кадре давала фриз).
 	# Маркер с "count" — толпа: ставится в очередь count раз.
 	var n := 0
+	# Отряды (SquadDef, GDD 12.6): маркер kind = "squad" раскладывается на маркеры участников;
+	# отряды с задержкой (засада) — в конец очереди, их участники ждут not_before.
+	var expanded: Array = []
+	var delayed: Array = []
+	for m in markers:
+		if str(m.get_meta("kind", "")) == "squad":
+			var squad := SquadDef.for_marker(m)
+			if squad == null:
+				push_warning("Отряд не найден: %s / %s" % [name, m.name])
+				continue
+			(delayed if squad.delay > 0.0 else expanded).append_array(squad.expand(m as Node3D))
+		else:
+			expanded.append(m)
+	markers = expanded + delayed
 	for m in markers:
 		var c := maxi(1, int(m.get_meta("count", 1)))
 		for k in c:
@@ -210,6 +235,8 @@ func _physics_process(delta: float) -> void:
 		if _spawn_queue.is_empty() or not _has_spawn_capacity():
 			break
 		var marker := _spawn_queue.front() as Node3D
+		if float(marker.get_meta("not_before", 0.0)) > _wave_time:
+			break  # засада отряда ещё не вышла
 		var marker_batch := clampi(int(marker.get_meta("entry_batch", spawn_batch)), 1, maxi(1, spawn_batch))
 		var spawned: int = spawned_by_marker.get(marker, 0)
 		if spawned >= marker_batch:
@@ -319,6 +346,9 @@ func spawn_extra(kind: String, global_pos: Vector3) -> Enemy:
 func _spawn_enemy(marker: Node3D) -> void:
 	var kind: String = str(marker.get_meta("kind", "grunt"))
 	var enemy := _make_enemy(kind)
+	var squad_marker := marker.get_parent() as Node3D if marker.has_meta("squad_offset") else null
+	if squad_marker:
+		_setup_squad_member(enemy, marker, squad_marker)
 	enemy.set_meta("_room_wave", int(marker.get_meta("wave", _wave_index)))
 	# Маркер может переопределить характеристики врага до _ready (мини-босс — см. MinibossDef)
 	if marker.has_meta("setup"):
@@ -326,7 +356,12 @@ func _spawn_enemy(marker: Node3D) -> void:
 		if setup is Callable and (setup as Callable).is_valid():
 			(setup as Callable).call(enemy)
 	# Позиция до add_child: в _ready враг рисует кольцо появления там, где стоит
-	enemy.position = to_local(marker.global_position)
+	var spawn_pos := marker.global_position
+	if squad_marker:
+		var squad := SquadDef.for_marker(squad_marker)
+		if squad:
+			spawn_pos = squad.member_position(marker, _player)
+	enemy.position = to_local(spawn_pos)
 	var spread := float(marker.get_meta("spread", 0.0))
 	var axes: Vector2 = marker.get_meta("spread_axes", Vector2(spread, spread))
 	if axes.x > 0.0 or axes.y > 0.0:
@@ -336,13 +371,19 @@ func _spawn_enemy(marker: Node3D) -> void:
 	enemy.rotation.y = marker.global_rotation.y - global_rotation.y
 	Loot.maybe_make_elite(self, enemy, elite_chance, max_elites)
 	add_child(enemy)
+	EnemyTraits.maybe_assign(self, enemy, trait_chance, max_traited)
 	_register(enemy)
+	if squad_marker and marker.has_meta("squad_anchor"):
+		squad_marker.set_meta("_anchor", enemy)
+	if squad_marker and marker.has_meta("not_before"):
+		enemy.alert_to_player()  # засада выходит уже в бой
 	# Смещаем источник и цель одинаково: каждый участник идёт своей линией.
 	var entry_mode := str(marker.get_meta("entry_mode", ""))
 	if entry_mode != "":
 		var ok := false
 		if marker.has_meta("entry_target"):
-			var shift := enemy.global_position - marker.global_position
+			# Участник отряда сдвигает цель входа на своё место в строю
+			var shift := enemy.global_position - (squad_marker.global_position if squad_marker else marker.global_position)
 			shift.y = 0.0
 			var destination: Vector3 = to_global(marker.get_meta("entry_target")) + shift
 			var tuning := {"jump_speed": entry_jump_speed, "timeout": entry_timeout,
@@ -355,6 +396,18 @@ func _spawn_enemy(marker: Node3D) -> void:
 			if not marker.has_meta("_entry_warned"):
 				push_warning("Вход не запущен: %s / %s" % [name, marker.name])
 				marker.set_meta("_entry_warned", true)
+
+## Участник отряда: роль, якорь свиты, скорость — до add_child (роль ставит EnemyTactics.assign в _ready).
+func _setup_squad_member(enemy: Enemy, marker: Node3D, squad_marker: Node3D) -> void:
+	enemy.set_meta("squad_id", str(squad_marker.get_meta("_squad_id", "")))
+	if marker.has_meta("tactic_role"):
+		enemy.set_meta("tactic_role", marker.get_meta("tactic_role"))
+	var anchor: Variant = squad_marker.get_meta("_anchor") if squad_marker.has_meta("_anchor") else null
+	if is_instance_valid(anchor) and anchor is Enemy and not (anchor as Enemy).is_dead:
+		enemy.set_meta("tactic_anchor", anchor)
+	var mult := float(marker.get_meta("speed_mult", 1.0))
+	if not is_equal_approx(mult, 1.0):
+		enemy.move_speed *= mult
 
 ## Враги волны, которые ещё не появились.
 func pending_spawns() -> int:

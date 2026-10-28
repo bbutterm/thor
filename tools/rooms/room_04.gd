@@ -21,7 +21,7 @@ static func def() -> Dictionary:
 		],
 		"pillars": [],
 		"enemies": [["thrower", Vector3(-3, 2.1, -13), 0], ["thrower", Vector3(3, 2.1, -13), 0], ["grunt", Vector3(-4, 0, -3), 0], ["grunt", Vector3(4.5, 0, -9), 0], ["grunt", Vector3(0, 0, 2), 0], ["grunt", Vector3(-5, 0, -10), 0], ["fodder", Vector3(-7.2, 0, 11.5), 0, 13, 2.625, {"entry_mode": "gate", "entry_target": Vector3(-3.5, 0.05, 11.5), "spread_axes": Vector2(0.1, 1.5), "entry_batch": 1}],
-			["grunt", Vector3(-5, 0, -10), 1], ["grunt", Vector3(0, 0, -8), 1], ["grunt", Vector3(0.5, 0, 2.5), 1], ["merc", Vector3(0, 2.1, -13), 1], ["bloated", Vector3(5, 0, -10), 1], ["grunt", Vector3(4, 0, -9), 1], ["grunt", Vector3(-6, 0, 15), 1], ["fodder", Vector3(-2, 0, -0.5), 1, 14, 2.75],
+			["grunt", Vector3(-5, 0, -10), 1], ["bloated", Vector3(5, 0, -10), 1], ["grunt", Vector3(4, 0, -9), 1], ["squad", Vector3(0, 0, -8), 1, 1, 0.0, {"squad_options": ["loki_ambush", "loki_flank"]}], ["fodder", Vector3(-2, 0, -0.5), 1, 14, 2.75],
 			["shieldbearer", Vector3(0, 0, -8), 2], ["bloated", Vector3(-5, 0, -10), 2], ["grunt", Vector3(5, 0, -10), 2], ["grunt", Vector3(0, 0, 2), 2], ["grunt", Vector3(-4, 0, -3), 2], ["fodder", Vector3(-1.5, 0, -1), 2, 10, 2.25]],
 		"props": [["barrel", Vector3(-6.8, 0, 6.8)], ["barrel", Vector3(6, 0, 4)], ["crate", Vector3(-6, 0, -2)], ["crate", Vector3(6, 0, -6)], ["barrel", Vector3(0, 0, -4)]],
 	}

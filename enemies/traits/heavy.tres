@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyTraitDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://enemies/traits/enemy_trait_def.gd" id="1_def"]
+[ext_resource type="Script" path="res://enemies/traits/heavy.gd" id="2_handler"]
+
+[resource]
+script = ExtResource("1_def")
+id = "heavy"
+title = "Тяжёлый"
+color = Color(0.55, 0.62, 0.8, 1)
+icon_shape = "box"
+icon_scale = Vector3(0.3, 0.14, 0.2)
+icon_rotation = Vector3(0, 0, 0)
+handler = ExtResource("2_handler")

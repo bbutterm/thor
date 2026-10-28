@@ -17,7 +17,7 @@ static func def() -> Dictionary:
 		"pillars": [Vector3(-7, 0, 6), Vector3(7, 0, 6)],
 		"jump_pads": [[Vector3(0, 0, 5), 8.0]],
 		"enemies": [["grunt", Vector3(-5, 0, -8), 0], ["grunt", Vector3(5, 0, -8), 0], ["thrower", Vector3(0, 2.7, -4), 0], ["thrower", Vector3(-10, 2.1, -7), 0], ["grunt", Vector3(-8, 0, 0), 0], ["fodder", Vector3(3, 0, 5.5), 0, 11, 2.375],
-			["thrower", Vector3(10, 2.1, -7), 1], ["grunt", Vector3(-3, 0, 4), 1], ["grunt", Vector3(0.5, 0, 2), 1], ["shaman", Vector3(0, 2.7, -2), 1], ["grunt", Vector3(-5, 0, -8), 1], ["grunt", Vector3(-8, 0, 0), 1], ["fodder", Vector3(3.5, 0, 4), 1, 12, 2.5],
+			["thrower", Vector3(10, 2.1, -7), 1], ["grunt", Vector3(-3, 0, 4), 1], ["grunt", Vector3(0.5, 0, 2), 1], ["grunt", Vector3(-5, 0, -8), 1], ["grunt", Vector3(-8, 0, 0), 1], ["squad", Vector3(3.5, 0, 4), 1, 1, 0.0, {"squad": "shaman_escort", "squad_override": {"fodder": 12}, "squad_anchor_pos": Vector3(0, 2.7, -2)}],
 			["merc", Vector3(-8, 0, 0), 2], ["bloated", Vector3(6, 0, -10), 2], ["grunt", Vector3(3, 0, 4), 2], ["grunt", Vector3(-3, 0, 4), 2], ["grunt", Vector3(-5.5, 0, -6), 2], ["grunt", Vector3(5, 0, -8), 2], ["fodder", Vector3(-4.5, 0, -9), 2, 13, 2.25]],
 		"props": [["barrel", Vector3(-1, 2.6, -1)], ["barrel", Vector3(1, 2.6, -5)], ["crate", Vector3(-8, 0, 3)], ["crate", Vector3(8, 0, 3)], ["barrel", Vector3(0, 0, 3)]],
 	}

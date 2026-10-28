@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SquadDef" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://enemies/squad_def.gd" id="1_squad"]
+[ext_resource type="Script" path="res://enemies/squad_member.gd" id="2_member"]
+
+[sub_resource type="Resource" id="Member_1"]
+script = ExtResource("2_member")
+kind = "grunt"
+count = 3
+role = "surround"
+
+[sub_resource type="Resource" id="Member_2"]
+script = ExtResource("2_member")
+kind = "grunt"
+count = 2
+role = "flank"
+
+[resource]
+script = ExtResource("1_squad")
+id = "hovding_guard"
+title = "Дружина Хёвдинга"
+members = Array[ExtResource("2_member")]([SubResource("Member_1"), SubResource("Member_2")])
