@@ -87,6 +87,7 @@ godot --headless --path . --fixed-fps 60 res://tests/art_screens_test.tscn # г�
 godot --headless --path . --fixed-fps 60 res://tests/destructible_test.tscn # бочки/ящики: все источники урона, обломки, содержимое, взрывные, мосты, балконы Ярла
 ```
 Правило: запускать **все** `tests/*_test.tscn` (dialogue_test, save_test и новые тоже), у каждого в конце строка «ИТОГ … 0 FAIL».
+Полный headless-набор с отдельной папкой данных и лимитом 50 МБ на лог: `tools/run_test_suite.sh . /tmp/thor-test-results` (папка результатов должна быть новой). Он также отмечает неожиданные `ERROR`, а намеренные ошибки тестов и сообщения о ресурсах при выходе сохраняет в `*.expected-errors` и перечисляет в сводке; их нужно просматривать отдельно.
 Фризы с рендерингом (Forward+ на программном Vulkan: `apt-get install mesa-vulkan-drivers`):
 `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json xvfb-run -a godot --path . --fixed-fps 60 --rendering-method forward_plus --resolution 320x180 res://tests/hitch_test.tscn -- 50` (и то же с `gl_compatibility`). Прогон ~10 мин; кадры без событий — шум программного рендера, не считаются.
 Скриншоты (нужен xvfb): `xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/screenshots.tscn -- <папка>`.
