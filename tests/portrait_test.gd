@@ -52,6 +52,26 @@ func _ready() -> void:
 		ok += 1
 	warmup.free()
 	Portrait.prefetch(PackedStringArray())
+	# Смущённый Локи появляется в сценах, визитах, сделке и испытании.
+	var loki_emb := Portrait.texture_path("loki", "embarrassed")
+	var loki_tex := load(loki_emb) as Texture2D if loki_emb != "" else null
+	var loki_img: Image = loki_tex.get_image() if loki_tex else null
+	if not loki_emb.ends_with("loki_embarrassed.webp") or loki_tex == null or loki_tex.get_height() > 768 or loki_img == null or loki_img.get_pixel(0, 0).a > 0.01:
+		fails += 1
+		print("  [FAIL] портрет смущённого Локи не загрузился, велик или не прозрачен")
+	else:
+		ok += 1
+	for emo in Portrait.EMOTIONS:
+		var path := Portrait.texture_path("loki", emo)
+		if path != "":
+			load(path)
+	Portrait.prefetch(PackedStringArray(["loki"]))
+	if not loki_emb in Portrait.prefetched():
+		fails += 1
+		print("  [FAIL] смущённый Локи не прогрет")
+	else:
+		ok += 1
+	Portrait.prefetch(PackedStringArray())
 	# Портреты гномов сделаны для ларька; отсутствующие эмоции используют neutral.
 	for pair in [["brokk", ["neutral", "happy", "angry", "shocked", "smug"]],
 			["eitri", ["neutral", "happy", "embarrassed"]]]:
