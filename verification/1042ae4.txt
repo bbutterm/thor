@@ -1,0 +1,24 @@
+Источник: 1042ae446d3c6d3d3f7a9682eeee630b92889388; runtime совпадает с набором 174a0c6.
+ZIP: 94 569 675 байт; SHA-256: 675dabc0e10fdac4747171f084d3d7d897d0771510e34fb2263c8ff224370ed4.
+EXE: 170 861 704 байта; SHA-256: 156dd5c6110bdbefdc9a4a1a32aa1ea829ccaeafa744f6701e6865bc277fe428.
+CRC ZIP и хеш EXE из распакованного потока проверены; размер ZIP меньше лимита на 430 325 байт.
+Импорт и экспорт: без предупреждений, ERROR и Parse Error.
+Wine headless selftest: exit 0, SELFTEST OK, 3 врага. При выходе предупреждение ObjectDB и ERROR об удержании четырёх ресурсов: sounds/walking.ogg, sounds/music/menu/base.ogg и их OggPacketSequence; штатный вызов selftest сразу завершает дерево. Графика Windows не проверена.
+Н3: регрессия относительно прежних залов в программном GL; нужна проверка на GPU. Графические прогоны фризов ещё не закончены. Физический Steam Deck и Proton не проверены.
+
+Wine headless selftest, стандартный вывод:
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+SELFTEST bodies=9 runes=28 odin=true
+AssetCache: 471 ресурсов, 1 мс
+SELFTEST OK scene=Game room=res://rooms/room_05.tscn enemies=3
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 4 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
+
+Verbose-проверка уточнила:
+Resource still in use: res://sounds/walking.ogg::OggPacketSequence_skgro (OggPacketSequence)
+Resource still in use: res://sounds/walking.ogg (AudioStreamOggVorbis)
+Resource still in use: res://sounds/music/menu/base.ogg::OggPacketSequence_k20nu (OggPacketSequence)
+Resource still in use: res://sounds/music/menu/base.ogg (AudioStreamOggVorbis)
