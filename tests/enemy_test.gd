@@ -85,8 +85,10 @@ func _clear() -> void:
 		if is_instance_valid(e):
 			e.queue_free()
 	room._alive.clear()
-	for n in get_tree().get_nodes_in_group("ammo_pickups"):
-		n.queue_free()
+	# Лужи (Раздутый оставляет брагу, GDD 12.6) и зоны не переносятся в следующую проверку
+	for g in ["ammo_pickups", "brew_puddles", "hazard_zones", "enemy_projectiles"]:
+		for n in get_tree().get_nodes_in_group(g):
+			n.queue_free()
 	await frames(5)
 	p.global_position = room.global_position + Vector3(0, 0.1, 4)
 	p.velocity = Vector3.ZERO

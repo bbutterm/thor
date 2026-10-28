@@ -15,6 +15,7 @@ reach_test        # достижимость платформ (в т. ч. яру
 generator_test    # генератор не трогает ручные арены, все залы забега собраны
 ai_test           # враги доходят и бьют во всех залах
 enemy_test        # враги Мидгарда, щит, взрыв, шаман, волны
+hazard_test       # снаряды и опасные зоны (телеграф, прыжок/рывок, лужи, лимиты), отражение, роли поведения
 elite_test        # элита: все виды × 7 модификаторов
 trait_test        # база молота, правила выбора, наковальня, каждая стихия ур. 1–4, приём ур. 1–2, связки (-- elements|techniques|combos — часть)
 hitch_test -- 50  # фризы (CPU-часть)
@@ -56,7 +57,7 @@ Forward+ на программном Vulkan (`apt-get install mesa-vulkan-driver
 
 ## Кадры (нужен xvfb)
 - Общие: `xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/screenshots.tscn -- <папка>`.
-- По системам: `ui_shots` (`-- <папка> en` — английский), `deck_shots` (1280×800), `room_shots -- <папка> room_07 …`, `weapon_shots` (640x360), `mjolnir_shots`, `hands_shots -- <папка> [quick]`, `vfx_shots`, `world_art_shots`, `outline_shots`, `portrait_shots`, `enemy_shots`, `boss_shots`, `destruct_shots`.
+- По системам: `ui_shots` (`-- <папка> en` — английский), `deck_shots` (1280×800), `room_shots -- <папка> room_07 …`, `weapon_shots` (640x360), `mjolnir_shots`, `hands_shots -- <папка> [quick]`, `vfx_shots`, `world_art_shots`, `outline_shots`, `portrait_shots`, `enemy_shots`, `boss_shots`, `hazard_shots`, `destruct_shots`.
 - Витрина ассетов: `xvfb-run -a godot --path . --rendering-method gl_compatibility --resolution 1280x720 res://tools/preview_assets.tscn -- out.png lineup|characters|village|props`.
 
 ## Бот-плейтест и баланс (Н5)

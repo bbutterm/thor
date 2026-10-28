@@ -104,6 +104,85 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var merc_spread_deg: float = 2.0
 @export var merc_range: float = 40.0
 
+@export_group("Снаряды и зоны")
+## GDD 12.6: метатель иногда кидает веер (несколько прямых снарядов) или навесом (дуга, метка на полу)
+@export_range(0.0, 1.0, 0.05) var thrower_fan_chance: float = 0.35
+@export_range(1, 7) var thrower_fan_count: int = 4
+@export var thrower_fan_spread_deg: float = 36.0
+## Урон каждого снаряда веера — доля projectile_damage
+@export_range(0.1, 1.0, 0.05) var thrower_fan_damage_mult: float = 0.6
+@export_range(0.0, 1.0, 0.05) var thrower_lob_chance: float = 0.3
+## Навесной (метатель) и граната (наёмник): время полёта до метки и гравитация дуги
+@export var lob_flight_time: float = 1.1
+@export var lob_gravity: float = 20.0
+## Радиус всплеска навесного снаряда (м)
+@export var lob_radius: float = 1.6
+## Шаман между обрядами: медленная сфера или круг проклятия под Тором, раз в столько секунд
+@export var shaman_cast_interval: float = 4.5
+@export var shaman_cast_range: float = 22.0
+@export_range(0.0, 1.0, 0.05) var shaman_orb_chance: float = 0.5
+@export var shaman_orb_speed: float = 4.0
+## Доворот сферы к Тору, рад/с (слабо — уйти рывком)
+@export var shaman_orb_homing: float = 0.9
+@export var shaman_orb_radius: float = 0.6
+@export var shaman_orb_damage: float = 18.0
+@export var shaman_orb_life: float = 7.0
+@export var shaman_curse_radius: float = 2.4
+## Телеграф круга (GDD 12.6: 0.8–1.2 с)
+@export var shaman_curse_telegraph: float = 1.0
+@export var shaman_curse_damage: float = 15.0
+## Лужа проклятия после удара: секунды и урон в секунду, пока стоишь
+@export var shaman_curse_puddle_time: float = 3.0
+@export var shaman_curse_puddle_dps: float = 6.0
+## Раздутый: лужа браги/яда после взрыва (замедляет; 0 с — без лужи)
+@export var bloat_puddle_radius: float = 2.2
+@export var bloat_puddle_time: float = 5.0
+@export_range(0.1, 1.0, 0.05) var bloat_puddle_slow: float = 0.6
+## Доля воинов с копьём (бросают копьё с spear_min_dist–spear_max_dist м)
+@export_range(0.0, 1.0, 0.05) var spear_chance: float = 0.25
+@export var spear_min_dist: float = 8.0
+@export var spear_max_dist: float = 12.0
+@export var spear_speed: float = 20.0
+@export var spear_damage_mult: float = 1.0
+@export var spear_cooldown: float = 6.0
+## Наёмник: граната с меткой (взрыв бьёт и своих)
+@export_range(0.0, 1.0, 0.05) var merc_grenade_chance: float = 0.35
+@export var merc_grenade_min_dist: float = 5.0
+@export var merc_grenade_cooldown: float = 5.0
+@export var merc_grenade_flight: float = 1.0
+@export var merc_grenade_radius: float = 2.6
+@export var merc_grenade_fuse: float = 0.7
+@export var merc_grenade_damage: float = 22.0
+
+@export_group("Роли")
+## GDD 12.6, enemies/parts/enemy_tactics.gd. Доля воинов, обходящих с фланга (остальные — окружение)
+@export_range(0.0, 1.0, 0.05) var tactics_flank_chance: float = 0.3
+## Окружение: радиус круга точек вокруг Тора (меньше attack_range — из точки можно бить)
+@export var tactics_surround_radius: float = 1.6
+## Окружение: боец дальше этого угла от своей точки круга и в толкучке сначала обходит (не дольше patience, с)
+@export var tactics_surround_slot_deg: float = 50.0
+@export var tactics_surround_patience: float = 1.2
+## Толкучка: у Тора уже есть другой боец ближе стольких метров
+@export var tactics_surround_crowd: float = 3.5
+## Обход по кругу начинается ближе attack_range + 0.6 + столько метров
+@export var tactics_surround_orbit: float = 2.0
+## Фланг: обход на таком радиусе и угле от спины Тора, потом сходится
+@export var tactics_flank_radius: float = 3.5
+@export var tactics_flank_angle_deg: float = 75.0
+## Прикрытие: щитоносец в пределах стольких метров, стрелок встаёт за ним на cover_offset
+@export var tactics_cover_search: float = 14.0
+@export var tactics_cover_offset: float = 2.5
+## Свита (отряд «Шаман и свита»): кольцо вокруг якоря, бой — когда Тор ближе escort_engage
+@export var tactics_escort_radius: float = 3.0
+@export var tactics_escort_engage: float = 6.0
+## Раздутый в засаде: выбегает, когда Тор ближе rush_dist или занят (busy_count врагов в busy_radius)
+@export var tactics_lurk_rush_dist: float = 5.0
+@export var tactics_busy_radius: float = 3.0
+@export var tactics_busy_count: int = 2
+## Отступление раненого стрелка: ниже доли HP, на столько секунд
+@export_range(0.0, 1.0, 0.05) var tactics_retreat_hp: float = 0.4
+@export var tactics_retreat_time: float = 2.5
+
 @export_group("Об стену")
 @export var wall_splat_speed: float = 8.5
 @export var wall_splat_damage: float = 12.0
@@ -225,6 +304,17 @@ var _aim_point: Vector3 = Vector3.ZERO
 var _burst_left: int = 0
 var _burst_t: float = 0.0
 var _burst_dir: Vector3 = Vector3.FORWARD
+## GDD 12.6: выбранная особая атака замаха (EnemyRangedAttacks: &"fan", &"lob", &"orb", &"curse",
+## &"spear", &"grenade"; &"" — обычная атака вида) и перезарядка особых атак (копьё, шаман, граната)
+var _attack_mode: StringName = &""
+var _special_cd: float = 0.0
+## Роль поведения (EnemyTactics.Role) и её состояние
+var _role: int = 0
+var _slot_angle: float = 0.0
+var _flank_sign: float = 1.0
+var _retreated: bool = false
+var _retreat_left: float = 0.0
+var _reposition_t: float = 0.0
 ## Урон не меньше этого — отладочное «убить» (тесты): проходит сквозь щит и броню
 const DEBUG_KILL_DAMAGE := 9999.0
 ## Элита (GDD 12.4): обработчики модификаторов (EliteHandler, enemies/elite/) и цвет постоянного свечения
@@ -246,6 +336,8 @@ var shield: EnemyShield
 var shaman: EnemyShaman
 var merc: EnemyMerc
 var visual: EnemyVisual
+var ranged: EnemyRangedAttacks
+var tactics: EnemyTactics
 
 func _init() -> void:
 	notice = EnemyNotice.new(self)
@@ -255,6 +347,8 @@ func _init() -> void:
 	shaman = EnemyShaman.new(self)
 	merc = EnemyMerc.new(self)
 	visual = EnemyVisual.new(self)
+	ranged = EnemyRangedAttacks.new(self)
+	tactics = EnemyTactics.new(self)
 
 func _ready() -> void:
 	if RenderingServer.get_current_rendering_method() == "gl_compatibility":
@@ -286,6 +380,9 @@ func _ready() -> void:
 			_humanoid.part_tints = tints
 			if not weapon_pool.is_empty():
 				hand_weapon = weapon_pool[rng.randi() % weapon_pool.size()]
+			# GDD 12.6: часть воинов — с копьём, бросают его издалека
+			if kind == Kind.GRUNT and rng.randf() < spear_chance:
+				hand_weapon = "q_spear"
 		_humanoid.skin_tint = Color.WHITE if kind == Kind.FODDER else skin_tint
 		_humanoid.cloth_tint = cloth_tint
 		_humanoid.eye_glow = Color(0, 0, 0, 0) if kind == Kind.FODDER else eye_glow
@@ -340,6 +437,7 @@ func _physics_process(delta: float) -> void:
 		player = get_tree().get_first_node_in_group("player") as Player
 	_state_time += delta
 	_cooldown = maxf(0.0, _cooldown - delta)
+	_special_cd = maxf(0.0, _special_cd - delta)
 
 	var move_dir := Vector3.ZERO
 	match state:
@@ -403,6 +501,7 @@ func _set_state(s: State) -> void:
 		_fodder_lod_move_valid = false
 	if s != State.WINDUP:
 		_windup_glow = 0.0
+		_attack_mode = &""  # прерванный замах не переносит особую атаку на следующий
 	if s == State.STUNNED and _humanoid:
 		_humanoid.play(anim_stun, 0.05)
 
@@ -419,26 +518,39 @@ func _think_chase() -> Vector3:
 	var move := Vector3.ZERO
 	match kind:
 		Kind.GRUNT, Kind.BOSS, Kind.FODDER, Kind.SHIELD:
+			if kind == Kind.GRUNT and ranged.wants_spear(dist):
+				_attack_mode = &"spear"
+				_begin_windup(false)
+				return Vector3.ZERO
 			var reach := attack_range
 			if kind == Kind.BOSS and dist > 5.0 and _cooldown <= 0.0 and randf() < boss_far_slam_chance:
 				_begin_windup(true)
 				return Vector3.ZERO
-			if dist <= reach and _cooldown <= 0.0 and (kind == Kind.BOSS or _can_reach_melee_target()):
+			if dist <= reach and _cooldown <= 0.0 and (kind == Kind.BOSS or _can_reach_melee_target()) \
+					and (kind == Kind.BOSS or tactics.strike_ok(get_physics_process_delta_time())):
 				_begin_windup(kind == Kind.BOSS and _attack_count % 3 == 2)
 				return Vector3.ZERO
-			move = dir
+			move = tactics.melee_dir(dist, dir) if kind != Kind.BOSS else dir
 		Kind.BLOATED:
 			# Бежит к Тору; вплотную — фитиль (телеграф-диск радиусом взрыва), потом взрыв
 			if dist <= bloat_trigger_range and _cooldown <= 0.0 and _state_time > 0.2 and _can_reach_melee_target():
 				_begin_windup(true)
 				return Vector3.ZERO
-			move = dir
+			move = tactics.melee_dir(dist, dir)
 		Kind.SHAMAN:
-			move = shaman._think_shaman(dist, dir)
+			move = tactics.ranged_move(dist, dir, shaman._think_shaman(dist, dir), get_physics_process_delta_time())
 			if _ritual_left <= 0.0:
 				_ritual_left = ritual_interval
 				_begin_windup(false)
 				return Vector3.ZERO
+			# Между обрядами — сфера или круг проклятия (не откладывая обряд)
+			if _special_cd <= 0.0 and _ritual_left > windup_time + recover_time + 0.5 \
+					and dist < shaman_cast_range and notice.is_alert_to_player() and _has_line_of_sight():
+				var mode := ranged.choose_shaman()
+				if mode != &"wait":
+					_attack_mode = mode
+					_begin_windup(false)
+					return Vector3.ZERO
 		Kind.THROWER, Kind.MERC:
 			if dist < keep_min_dist:
 				move = -dir
@@ -448,9 +560,15 @@ func _think_chase() -> Vector3:
 				move = dir.cross(Vector3.UP) * _strafe_sign * 0.6
 				if randf() < 0.005:
 					_strafe_sign *= -1.0
+			move = tactics.ranged_move(dist, dir, move, get_physics_process_delta_time())
 			if _cooldown <= 0.0 and dist < keep_max_dist + 6.0 and _has_line_of_sight():
-				_begin_windup(false)
-				return Vector3.ZERO
+				var mode := ranged.choose_thrower() if kind == Kind.THROWER else ranged.choose_merc(dist)
+				if mode == &"wait":
+					_cooldown = 0.5  # лимит снарядов зала: ждём
+				else:
+					_attack_mode = mode
+					_begin_windup(false)
+					return Vector3.ZERO
 	if _tier_navigation != null and _tier_navigation.is_active():
 		# Стрелок с видимой целью может продолжать бой с балкона; пока ждёт
 		# перезарядку, не отступает вслепую через край. Шаман сохраняет обряд выше.
@@ -525,9 +643,12 @@ func _begin_windup(slam: bool) -> void:
 	_set_state(State.WINDUP)
 	if kind != Kind.THROWER and kind != Kind.MERC and (slam or randf() < (0.15 if kind == Kind.FODDER else 0.5)):
 		Audio.sfx("zombie_groan" if FX.is_undead(self) else "", "sounds/sfx/enemy_growl.wav")
+	if _attack_mode != &"":
+		ranged.windup_telegraph(_attack_mode)
 	if kind == Kind.SHAMAN:
-		shaman._ritual_telegraph()
-	elif kind == Kind.MERC:
+		if _attack_mode == &"":
+			shaman._ritual_telegraph()
+	elif kind == Kind.MERC and _attack_mode == &"":
 		_aim_point = player.global_position + Vector3(0, 1.0, 0) if player else global_position + global_transform.basis.z * 5.0
 		# Механический сигнал прицеливания до очереди.
 		Audio.sfx_while("merc_aim", "sounds/sfx/gun_reload.wav", _warning_is_timely.bind(_windup_serial))
@@ -558,6 +679,18 @@ func _execute_attack() -> void:
 	if _visual and _humanoid == null:
 		var tw := create_tween()
 		tw.tween_property(_visual, "scale", Vector3.ONE * model_scale, 0.12).set_trans(Tween.TRANS_BACK)
+	var mode := _attack_mode
+	_attack_mode = &""
+	if mode != &"" and kind != Kind.BOSS and ranged.execute(mode):
+		pass
+	else:
+		_execute_kind_attack()
+	_doing_slam = false
+	# Парирование во время удара уже могло оглушить атакующего.
+	if not is_dead and state != State.STUNNED:
+		_set_state(State.RECOVER)
+
+func _execute_kind_attack() -> void:
 	match kind:
 		Kind.THROWER:
 			_throw_projectile()
@@ -576,10 +709,6 @@ func _execute_attack() -> void:
 				_do_boss_slam()
 			else:
 				_do_melee()
-	_doing_slam = false
-	# Парирование во время удара уже могло оглушить атакующего.
-	if state != State.STUNNED:
-		_set_state(State.RECOVER)
 
 func _do_melee() -> void:
 	var fwd := global_transform.basis.z
@@ -648,6 +777,9 @@ func _setup_special() -> void:
 		shield.attach_front_shield()
 	if kind == Kind.MERC:
 		merc.build_laser()
+	if kind == Kind.SHAMAN:
+		_special_cd = shaman_cast_interval * randf_range(0.3, 0.6)
+	tactics.assign()
 
 func _update_special(delta: float) -> void:
 	match kind:
@@ -794,6 +926,7 @@ func _die(source: String) -> void:
 	if kind == Kind.BLOATED:
 		# Взрывается и сам (дошёл до Тора), и от смерти (GDD: «убить издалека, молотом в толпу»)
 		Blast.detonate(get_parent(), global_position + Vector3(0, 0.9 * model_scale, 0), boss_slam_radius, attack_damage, self, self)
+		ranged.bloated_puddle()  # GDD 12.6: лужа браги/яда
 	if source == "self_blast":
 		# Подорвался сам — не убийство Тора: ни Славы, ни лечения, ни добычи
 		died.emit(self)

@@ -181,7 +181,20 @@ func _build() -> void:
 	add_child(proj)
 	proj.call("launch", p, Vector3.ZERO, 0.0, null)
 	proj.remove_from_group("reflectable")
+	proj.remove_from_group("enemy_projectiles")
 	proj.set_physics_process(false)
+	# Снаряды GDD 12.6: копьё (вытянутый бокс), граната с меткой падения (кольцо + диск); опасные зоны — все формы
+	for k in [EnemyProjectile.Kind.SPEAR, EnemyProjectile.Kind.GRENADE]:
+		var extra := EnemyProjectile.new()
+		extra.kind = k
+		extra.landing = center + Vector3(0.3 * k, 0, 0.4)
+		extra.blast_radius = 0.4
+		add_child(extra)
+		extra.launch(p + right * 0.3 * k, Vector3.FORWARD, 0.0, null)
+		extra.remove_from_group("reflectable")
+		extra.remove_from_group("enemy_projectiles")
+		extra.set_physics_process(false)
+	HazardZone.warmup_sample(self, Vector3(0, 0.08, 0.8))
 	# Телеграф взрыва (Раздутый, элита «Взрывной», Свен)
 	Blast.warmup_sample(self, Vector3(0, 0.1, 0.5))
 	# Толстый Свен: плевок и лужа браги, полоса телеграфа тарана (у всех BossEnemy)

@@ -36,6 +36,11 @@ signal wave_started(index: int)
 @export var wave_end_slow_time: float = 0.3
 @export_range(0.05, 1.0, 0.05) var wave_end_slow_scale: float = 0.35
 
+@export_group("Снаряды и зоны")
+## GDD 12.6: не больше стольких снарядов врагов и опасных зон одновременно (иначе враг бьёт обычной атакой или ждёт)
+@export var max_projectiles: int = 14
+@export var max_zones: int = 5
+
 @export_group("Вход врагов")
 ## Высота и длительность прыжка/входа; настройки доступны отдельно у каждого зала.
 @export_range(1.0, 15.0, 0.1) var entry_jump_speed: float = 8.0

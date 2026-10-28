@@ -162,6 +162,30 @@ HP / скорость / урон / Слава — из `enemies/defs/*.tres` (`E
 - Особых (Раздутый, Щитоносец, Шаман, Наёмник) по GDD 8 сбивают с замаха только сильный удар, Мьёльнир, удар-приземление и прыжок по головам; оглушение оружием — только сильным ударом.
 - Урон ≥ 9999 (`Enemy.DEBUG_KILL_DAMAGE`) — отладочное «убить» для тестов, проходит сквозь щит.
 
+## Снаряды, опасные зоны и роли (ночь 29.10, Н2, GDD 12.6) — поля `enemies/enemy.gd` (группы «Снаряды и зоны», «Роли»), лимиты — `rooms/room.gd`
+
+Бьют все (очереди атак нет); разнообразие — снаряды и зоны на полу: телеграф → уворот рывком (неуязвимость `dash_invuln`) или прыжком (зона не задевает, если ноги выше пола на `HazardZone.JUMP_CLEARANCE` 0.45 м) → наказание.
+
+| Что | Поля | По умолчанию |
+|---|---|---|
+| Лимиты зала | `Room.max_projectiles` / `Room.max_zones` | 14 снарядов / 5 зон одновременно; сверх — обычная атака или ожидание 0.5 с (вне зала — `EnemyRangedAttacks.default_max_*`) |
+| Метатель: веер | `thrower_fan_chance` / `thrower_fan_count` / `thrower_fan_spread_deg` / `thrower_fan_damage_mult` | 35 % бросков, 4 снаряда в секторе 36°, урон каждого ×0.6 |
+| Метатель: навес | `thrower_lob_chance` / `lob_flight_time` / `lob_gravity` / `lob_radius` | 30 %, дуга 1.1 с, гравитация 20, всплеск 1.6 м (метка падения на полу; в прыжке не задевает) |
+| Шаман: между обрядами | `shaman_cast_interval` / `shaman_cast_range` / `shaman_orb_chance` | раз в 4.5 с с 22 м; 50 % — сфера, иначе круг; обряд не откладывает |
+| Шаман: медленная сфера | `shaman_orb_speed` / `shaman_orb_homing` / `shaman_orb_radius` / `shaman_orb_damage` / `shaman_orb_life` | 4 м/с, доворот 0.9 рад/с, радиус 0.6 м, 18 урона, 7 с; летящий Мьёльнир сбивает (+3 Славы, `EnemyProjectile.ORB_KNOCK_GLORY`) |
+| Шаман: круг проклятия | `shaman_curse_radius` / `shaman_curse_telegraph` / `shaman_curse_damage` / `shaman_curse_puddle_time` / `shaman_curse_puddle_dps` | 2.4 м под Тором, телеграф 1.0 с, 15 урона, лужа 3 с по 6 урона/с (тик 0.5 с) |
+| Раздутый: лужа | `bloat_puddle_radius` / `bloat_puddle_time` / `bloat_puddle_slow` | брага/яд 2.2 м на 5 с, скорость Тора ×0.6 (`BrewPuddle`) |
+| Воин: копьё | `spear_chance` / `spear_min_dist` / `spear_max_dist` / `spear_speed` / `spear_damage_mult` / `spear_cooldown` | 25 % воинов с копьём, бросок с 8–12 м, 20 м/с, урон = удар ×1.0, раз в 6 с |
+| Наёмник: граната | `merc_grenade_chance` / `merc_grenade_min_dist` / `merc_grenade_cooldown` / `merc_grenade_flight` / `merc_grenade_radius` / `merc_grenade_fuse` / `merc_grenade_damage` | 35 % атак дальше 5 м, раз в 5 с, полёт 1.0 с, взрыв 2.6 м после фитиля 0.7 с, 22 урона (бьёт и своих) |
+| Отражение | `EnemyProjectile.REFLECT_DAMAGE_MULT` | все снаряды отражаются топором (×1.8 урона, летят прямо); зоны — нет |
+| Окружение | `tactics_surround_radius` / `tactics_surround_slot_deg` / `tactics_surround_patience` / `tactics_surround_crowd` / `tactics_surround_orbit` | точки круга 1.6 м вокруг Тора; ближе attack_range + 0.6 + 2 м начинает обход по кругу к своей точке; дальше 50° от своей точки и в толкучке (у Тора уже есть другой боец ближе 3.5 м) — обходит, но не дольше 1.2 с |
+| Фланг | `tactics_flank_chance` / `tactics_flank_radius` / `tactics_flank_angle_deg` | 30 % воинов; обход на 3.5–8 м под 75° от спины Тора |
+| Прикрытие | `tactics_cover_search` / `tactics_cover_offset` | стрелок/шаман ищет щитоносца в 14 м и встаёт за ним на 2.5 м |
+| Свита / засада | `tactics_escort_radius` / `tactics_escort_engage` / `tactics_lurk_rush_dist` / `tactics_busy_radius` / `tactics_busy_count` | кольцо 3 м вокруг якоря, в бой — когда Тор ближе 6 м; Раздутый в засаде выбегает ближе 5 м или когда у Тора ≥ 2 врагов в 3 м |
+| Отступление | `tactics_retreat_hp` / `tactics_retreat_time` | раненый стрелок (< 40 % HP) отбегает 2.5 с, стреляя |
+
+Опасная зона — `enemies/hazard_zone.gd` (`HazardZone`: круг / линия / конус; `telegraph`, `damage`, `knock`, `puddle_time`, `puddle_dps`, `puddle_slow`, `puddle_tick`).
+
 ## Элита (блок У, GDD 12.4) — `enemies/elite/mods/*.tres` (`EliteModifier`), обработчики `enemies/elite/*.gd`
 
 Любой боец или особый враг (не корм, не босс) с шансом `elite_chance` зала становится элитой: ×2.5 HP, урон ×1.5, свечение цветом модификатора (общий оверлей `shaders/hit_flash.gdshader`, параметр `elite`), подпись модификатора над головой, кольцо под ногами, гарантированный дроп — оружие (60 % мили / 40 % ренж); если в игре уже есть серебро (`Run.add_silver` или автозагрузка `Silver.add`) — с шансом `Loot.elite_silver_chance` 0.4 вместо оружия `Loot.elite_silver` 10 серебра.

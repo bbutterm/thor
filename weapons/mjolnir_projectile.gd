@@ -88,6 +88,8 @@ func _trait(hook: StringName, args: Array) -> void:
 		hand.trait_call(hook, args)
 
 func _build_visual() -> void:
+	# Летящий молот сбивает медленные сферы врагов (enemies/enemy_projectile.gd, вид ORB)
+	add_to_group("mjolnir_projectiles")
 	_mesh_root = Node3D.new()
 	add_child(_mesh_root)
 	var hm := WeaponMeshes.hammer()

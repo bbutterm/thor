@@ -13,9 +13,11 @@
 | `parts/enemy_shaman.gd` | `EnemyShaman`, `shaman` | Шаман: отход, обряд (лечение, корм), `summon_around` (и элита-Призыватель) |
 | `parts/enemy_merc.gd` | `EnemyMerc`, `merc` | Наёмник Локи: лазер, очередь |
 | `parts/enemy_visual.gd` | `EnemyVisual`, `visual` | анимации по состоянию, вздрагивание, вспышка/свечение `_set_overlay`, `_collect_meshes`, оружие в руке, заглушка, труп |
+| `parts/enemy_ranged_attacks.gd` | `EnemyRangedAttacks`, `ranged` | снаряды и зоны GDD 12.6: выбор особой атаки (`choose_*`, `wants_spear`), выполнение (`fire_fan`, `fire_lob`, `cast_orb`, `cast_curse`, `throw_spear`, `throw_grenade`, `bloated_puddle`), лимиты зала `can_fire`/`can_add_zone` |
+| `parts/enemy_tactics.gd` | `EnemyTactics`, `tactics` | роли поведения: окружение, фланг, прикрытие за щитоносцем, свита, засада, отступление раненого стрелка |
 
   Почему не подклассы на каждый вид: `kind` меняют на ходу — `MinibossDef` делает из любого врага `Kind.BOSS`, тесты переключают вид на одном экземпляре; с подклассами щитоносец-мини-босс сохранил бы щит. Функции компонентов, нужные снаружи, есть и на `Enemy` (обёртки в конце `enemy.gd`). Раздутый и метатель — несколько строк в `enemy.gd` (`_update_special`, `_die`, `_throw_projectile`). Новый вид: `Kind` (только в конец), ветки в диспетчерах, логика — новый `parts/enemy_<вид>.gd`.
-- `enemy_projectile.gd`; `blast.gd` — взрыв по площади (бьёт и Тора, и своих).
+- `enemy_projectile.gd` (`EnemyProjectile`, виды STRAIGHT / LOB / ORB / GRENADE / SPEAR; поля до `launch`); `hazard_zone.gd` (`HazardZone`, опасная зона на полу: круг / линия / конус, телеграф → удар → лужа); `blast.gd` — взрыв по площади (бьёт и Тора, и своих).
 - `enemy_def.gd` + `defs/*.tres` — числа по GDD (`EnemyDef`, враги всех миров; зал применяет к врагу `apply_def` по `game_kind`).
 - `elite/` — модификаторы элиты (`EliteModifier` .tres в `mods/` + обработчик-узел `EliteHandler` на враге; замедление Тора — компонент `PlayerSlow`, `player.gd` не трогается); элиту делает `Loot.make_elite`.
 - `miniboss_def.gd` (`MinibossDef`, `minibosses/*.tres`), `bosses/` (`BossEnemy`, Свен, Ярл).
@@ -26,6 +28,9 @@
 - Хуки эффектов: `FX.enemy_hit` / `FX.enemy_died` (ихор — у нежити, `FX.is_undead`).
 - Трюки для шкалы стиля — `StyleMeter.event(&"…")` (см. `player/CLAUDE.md`).
 - Источник урона по Тору: перед `player.take_damage()` — `RunTracker.note_hit(enemy)` (id из `enemy_id`/`death_source_id`/`kind`).
+
+## Снаряды, зоны, роли (ночь 29.10, Н2, GDD 12.6)
+Бьют все, очереди атак нет. Особая атака выбирается в `_think_chase` (`_attack_mode` = `&"fan"|"lob"|"orb"|"curse"|"spear"|"grenade"`, `&""` — обычная атака вида; ручной `_begin_windup` из тестов — всегда обычная), телеграф — `ranged.windup_telegraph`, выполнение — `ranged.execute` из `_execute_attack` (обычная — `_execute_kind_attack`). Перезарядка особых — `Enemy._special_cd`. Лимиты — `Room.max_projectiles`/`max_zones` (группы `enemy_projectiles`, `hazard_zones`): сверх — обычная атака или ожидание. Зона: `HazardZone.make(shape, pos, facing, size, telegraph, damage, color, source).place(parent)`, поля `puddle_*`; удар — только по Тору на полу (прыжок спасает, рывок — неуязвимость), через `RunTracker.note_hit`. Сфера (ORB) сбивается летящим Мьёльниром (группа `mjolnir_projectiles`). Отражение топором — все виды снарядов. Роль — `EnemyTactics.assign()` из `_setup_special`; отряд задаёт метаданные `tactic_role` (`surround|flank|cover|escort|lurk|none`) и `tactic_anchor` до `add_child`. Боссам — тот же API (`HazardZone`, `EnemyRangedAttacks`). Прогрев — `ShaderWarmup` (`HazardZone.warmup_sample`, копьё, граната). Звуки `hazard_warn`, `hazard_strike`, `orb_cast` — `tools/make_sfx.py`. Числа — TUNING.md. Тест `hazard_test`, кадры `tests/hazard_shots.tscn -- <папка>`.
 
 ## Мини-босс
 `MinibossDef` — обычный враг с переопределёнными числами и `Kind.BOSS`; добавляется последней волной (`Room.add_wave`) в залах `Run.miniboss_rooms`, после него `Game` открывает выбор трейта, потом руны.
@@ -45,4 +50,4 @@
 - Вспышка попадания — оверлей `shaders/hit_flash.tres` (`Enemy.FLASH_MATERIAL`), обводка — его `next_pass` (см. `scripts/CLAUDE.md`, «Комиксовая обводка»).
 
 ## Тесты
-`enemy_test` (враги Мидгарда, щит, взрыв, шаман, волны), `ai_test` (доходят и бьют во всех залах), `elite_test` (все виды × 7 модификаторов), `boss_test` (Свен, Ярл 3 фазы), `boss_charge_telegraph_test`, `enemy_flash_test`, `awareness_test`, `fodder_lod_test`, `fodder_model_test`, `horde_*_test`, `outline_test`. Кадры — `tests/enemy_shots.tscn`, `tests/boss_shots.tscn`.
+`enemy_test` (враги Мидгарда, щит, взрыв, шаман, волны), `hazard_test` (зоны, снаряды, лимиты, роли), `ai_test` (доходят и бьют во всех залах), `elite_test` (все виды × 7 модификаторов), `boss_test` (Свен, Ярл 3 фазы), `boss_charge_telegraph_test`, `enemy_flash_test`, `awareness_test`, `fodder_lod_test`, `fodder_model_test`, `horde_*_test`, `outline_test`. Кадры — `tests/enemy_shots.tscn`, `tests/boss_shots.tscn`, `tests/hazard_shots.tscn`.

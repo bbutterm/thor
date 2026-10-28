@@ -536,4 +536,23 @@ if not ONLY or any(name.startswith(prefix) for name in skill_names for prefix in
     dust = lp(rng.standard_normal(n), 900) * env(n, 0.002, 3.0)
     save("skill_land", mix(thump(0.38, 130, 42), dust * 0.6, metal(0.16, 290) * 0.18), 0.75)
 
+# --- Опасные зоны и снаряды врагов (GDD 12.6): отдельный seed не меняет существующие звуки ---
+hazard_names = ("hazard_warn", "hazard_strike", "orb_cast")
+if not ONLY or any(name.startswith(prefix) for name in hazard_names for prefix in ONLY):
+    rng = np.random.default_rng(291029)
+    # Телеграф зоны: нарастающий вой с дрожью — «сейчас ударит, уходи»
+    tt = t(0.7)
+    whine = np.sin(2 * np.pi * np.cumsum(np.linspace(260, 620, len(tt))) / SR)
+    whine *= (0.6 + 0.4 * np.sin(2 * np.pi * 14 * tt)) * np.clip(tt / 0.6, 0, 1)
+    rumble = lp(rng.standard_normal(len(tt)), 300) * np.clip(tt / 0.7, 0, 1) * 0.6
+    save("hazard_warn", mix(whine * 0.5, rumble), 0.5)
+    # Удар зоны: глухой хлопок с треском
+    n = int(SR * 0.35)
+    crack = bp(rng.standard_normal(n), 700, 4000) * env(n, 0.001, 5.0)
+    save("hazard_strike", mix(thump(0.35, 150, 45), crack * 0.7), 0.8)
+    # Сфера шамана: низкий гул с бульканьем
+    tt = t(0.6)
+    hum = np.sin(2 * np.pi * (110 + 30 * np.sin(2 * np.pi * 6 * tt)) * tt) * env(len(tt), 0.05, 1.2)
+    save("orb_cast", lp(hum + rng.standard_normal(len(tt)) * 0.08, 900), 0.55)
+
 print("Готово:", OUT)
