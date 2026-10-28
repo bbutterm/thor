@@ -409,8 +409,9 @@ func show_doors() -> void:
 		d.appear(0.12 * i)
 		d.entered.connect(_on_door_entered)
 		doors.append(d)
-	# Следующий зал (ларёк — свой) грузим в фоне, пока игрок выбирает
-	if "shop" in offers and Run.map and ResourceLoader.exists(Run.map.shop_scene):
+	# Следующий зал (ларёк — свой) грузим в фоне, пока игрок выбирает. В headless
+	# пропускаем фоновый запрос из-за гонки RID в Dummy-рендерере; вход загрузит сцену сам.
+	if DisplayServer.get_name() != "headless" and "shop" in offers and Run.map and ResourceLoader.exists(Run.map.shop_scene):
 		ResourceLoader.load_threaded_request(Run.map.shop_scene, "", true)
 	Audio.play("sounds/sfx/door_open.wav")
 	game.hud.toast(tr("ВЫБЕРИ ДВЕРЬ") if n > 1 else tr("ДВЕРЬ ОТКРЫТА — ВПЕРЁД!"))
