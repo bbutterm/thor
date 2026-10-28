@@ -92,7 +92,8 @@ func _test_materials(a: Enemy, b: Enemy, is_gl: bool) -> void:
 	b.status_glow = Color(0, 0, 0, 0)
 	a._set_overlay(0.0, 0.0)
 	b._set_overlay(0.0, 0.0)
-	check(_all_overlays(a, null) and _all_overlays(b, null), "после затухания оверлей снят")
+	check(_all_overlays(a, Outline.overlay()) and _all_overlays(b, Outline.overlay()),
+		"после затухания вспышка снята и восстановлена выбранная обводка")
 	# В headless с другим методом отдельно проверяем логику GL на созданных материалах;
 	# это не замена проверки реального GL-рендерера и _ready в этом режиме.
 	if not is_gl:
@@ -164,17 +165,20 @@ func _test_death(room: Room, is_gl: bool, simulate_gl: bool = true) -> void:
 	var parts := dying._flash_meshes.duplicate()
 	dying.take_hit(Enemy.DEBUG_KILL_DAMAGE, Vector3.ZERO, "ranged")
 	var cleared := true
+	var corpse_overlay := Outline.overlay()
 	for part in parts:
-		if not is_instance_valid(part) or (part as GeometryInstance3D).material_overlay != null:
+		if not is_instance_valid(part) or (part as GeometryInstance3D).material_overlay != corpse_overlay:
 			cleared = false
 	check(dying.is_dead and is_instance_valid(visual) and visual.get_parent() is RigidBody3D and cleared,
-		"при смерти модель становится трупом, а оверлей всех частей снимается")
+		"при смерти вспышка снята, а обводка трупа соответствует настройке")
 	await _frames(4)
 	if material_ref != null:
 		check(material_ref.get_ref() == null, "труп не удерживает материал погибшего врага")
 
 func _run() -> void:
 	print("=== ENEMY FLASH TEST ===")
+	var original_outline := bool(GameSettings.get_value("video", "outline"))
+	GameSettings.set_value("video", "outline", true, false)
 	var original: ShaderMaterial = Enemy.FLASH_MATERIAL
 	var candidate: ShaderMaterial = Enemy.FLASH_MATERIAL_GL
 	check(candidate.shader == Enemy.FLASH_GL_SHADER
@@ -213,6 +217,12 @@ func _run() -> void:
 		if not a._flash_meshes.is_empty() and a._flash_material_gl != null:
 			_test_elements(a)
 		await _test_death(room, is_gl)
+		GameSettings.set_value("video", "outline", false, false)
+		a._set_overlay(0.8, 0.0)
+		a._set_overlay(0.0, 0.0)
+		check(_all_overlays(a, null), "после вспышки без обводки материал убран")
+		await _test_death(room, is_gl)
+	GameSettings.set_value("video", "outline", original_outline, false)
 	get_tree().paused = false
 	FX.reset_time()
 	if is_instance_valid(game):

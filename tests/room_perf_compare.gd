@@ -51,6 +51,10 @@ func _run() -> void:
 		await get_tree().process_frame
 	await frames(25)
 	print("ВРАГОВ: ", get_tree().get_nodes_in_group("enemies").size())
+	if get_tree().get_nodes_in_group("enemies").size() != 44:
+		printerr("BENCH FAIL: нужно ровно 44 врага")
+		get_tree().quit(1)
+		return
 	await _measure(true, "СТАРЫЙ ПРОГРЕВ", 15)
 	await _measure(false, "НОВЫЙ ПРОГРЕВ", 15)
 	await _measure(true, "СТАРЫЙ 1", 60)
@@ -65,14 +69,20 @@ func _measure(old: bool, label: String, count: int) -> void:
 	baseline.visible = old
 	await frames(5)
 	var values := PackedFloat32Array()
+	var draw_counts := PackedInt32Array()
+	var visible_counts := PackedInt32Array()
 	var before := Time.get_ticks_usec()
 	for i in count:
 		await get_tree().process_frame
 		var now := Time.get_ticks_usec()
 		values.append((now - before) / 1000.0)
+		draw_counts.append(int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)))
+		visible_counts.append(int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)))
 		before = now
 	values.sort()
+	draw_counts.sort()
+	visible_counts.sort()
 	var total := 0.0
 	for x in values:
 		total += x
-	print("%s: avg %.2f ms, median %.2f ms, p95 %.2f ms, draw calls %d, enemies %d" % [label, total / count, values[count / 2], values[int(count * 0.95)], int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)), get_tree().get_nodes_in_group("enemies").size()])
+	print("%s: avg %.2f ms, median %.2f ms, p95 %.2f ms, draw calls %d, visible objects %d, enemies %d" % [label, total / count, values[count / 2], values[int(count * 0.95)], draw_counts[count / 2], visible_counts[count / 2], get_tree().get_nodes_in_group("enemies").size()])
