@@ -152,7 +152,6 @@ func _offer_anvil() -> void:
 		_offer_runes("rune")
 		return
 	_anvil_pick = true
-	Dialogue.bark_pool("dwarves.eitri")
 	game.trait_pick.open(choices, tr("НАКОВАЛЬНЯ ЭЙТРИ — СТИХИЯ МОЛОТА"))
 
 ## Выбор трейта был наградой наковальни (тогда после него — двери, а не руна). Сбрасывает признак.
@@ -401,7 +400,7 @@ func show_doors() -> void:
 		var d := RewardDoor.create(def, id)
 		var x := (i - (n - 1) / 2.0) * spacing
 		x = clampf(x, -half_w + 1.8, half_w - 1.8)
-		var local := Vector3(x, 0, z)
+		var local := Vector3(x, float(room.get_meta("exit_y", 0.0)), z)
 		var ground := Loot.floor_point(room, room.to_global(local))
 		room.add_child(d)
 		d.global_position = ground
@@ -409,8 +408,9 @@ func show_doors() -> void:
 		d.appear(0.12 * i)
 		d.entered.connect(_on_door_entered)
 		doors.append(d)
-	# Следующий зал (ларёк — свой) грузим в фоне, пока игрок выбирает
-	if "shop" in offers and Run.map and ResourceLoader.exists(Run.map.shop_scene):
+	# Следующий зал (ларёк — свой) грузим в фоне, пока игрок выбирает. В headless
+	# пропускаем фоновый запрос из-за гонки RID в Dummy-рендерере; вход загрузит сцену сам.
+	if DisplayServer.get_name() != "headless" and "shop" in offers and Run.map and ResourceLoader.exists(Run.map.shop_scene):
 		ResourceLoader.load_threaded_request(Run.map.shop_scene, "", true)
 	Audio.play("sounds/sfx/door_open.wav")
 	game.hud.toast(tr("ВЫБЕРИ ДВЕРЬ") if n > 1 else tr("ДВЕРЬ ОТКРЫТА — ВПЕРЁД!"))

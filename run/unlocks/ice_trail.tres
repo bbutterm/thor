@@ -1,13 +1,15 @@
 [gd_resource type="Resource" script_class="UnlockDef" format=3]
 
 [ext_resource type="Script" path="res://run/unlock_def.gd" id="1_unlk"]
+[ext_resource type="Texture2D" path="res://sprites/unlocks/ice_trail.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_unlk")
 id = "ice_trail"
 title = "Помёрз в Йотунхейме"
 description = "Лёд, уровень 2 — ледяной след: враги скользят и падают."
-price = 150
+price = 750
 kind = "trait"
 target_id = "ice_trail"
 order = 214
+icon = ExtResource("2_icon")

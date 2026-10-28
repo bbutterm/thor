@@ -271,7 +271,7 @@
 				{
 					"speaker": "odin",
 					"emotion": "smug",
-					"text": "Видел. Видел и то, как ты дважды упал с балкона по дороге.",
+					"text": "Видел. Ярлу теперь понадобится ещё ниток.",
 					"id": "odin_first_win_03"
 				},
 				{
@@ -725,13 +725,15 @@
 				"speaker": "odin",
 				"emotion": "angry",
 				"text": "Драугр. Обычный драугр. Он даже не целился.",
-				"id": "odin.death_draugr.01"
+				"id": "odin.death_draugr.01",
+				"conditions": ["killed_by == draugr_warrior"]
 			},
 			{
 				"speaker": "odin",
 				"emotion": "smug",
 				"text": "Тебя забил покойник. Причём уже второй раз покойник.",
-				"id": "odin.death_draugr.02"
+				"id": "odin.death_draugr.02",
+				"conditions": ["killed_by != loki_merc"]
 			},
 			{
 				"speaker": "odin",
@@ -742,19 +744,20 @@
 			{
 				"speaker": "odin",
 				"emotion": "angry",
-				"text": "Он замахивался ПОЛСЕКУНДЫ. С подсветкой! Как можно не увидеть?",
+				"text": "Он готовил атаку. А ты — место на диване?",
 				"id": "odin.death_draugr.04"
 			},
 			{
 				"speaker": "odin",
 				"emotion": "smug",
 				"text": "Драугр передавал: «Спасибо за лёгкий день».",
-				"id": "odin.death_draugr.05"
+				"id": "odin.death_draugr.05",
+				"conditions": ["killed_by != loki_merc"]
 			},
 			{
 				"speaker": "odin",
 				"emotion": "neutral",
-				"text": "Совет: бей после его замаха. Не до, не вместо, а после.",
+				"text": "Совет: следи за атакой и уходи в сторону. Не лицом в неё.",
 				"id": "odin.death_draugr.06"
 			}
 		],
@@ -763,7 +766,8 @@
 				"speaker": "odin",
 				"emotion": "neutral",
 				"text": "Ярл. Ну хоть враг солидный. Почти не стыдно. Почти.",
-				"id": "odin.death_boss.01"
+				"id": "odin.death_boss.01",
+				"conditions": ["killed_by == boss_jarl"]
 			},
 			{
 				"speaker": "odin",
@@ -775,7 +779,8 @@
 				"speaker": "odin",
 				"emotion": "smug",
 				"text": "Ярл попросил автограф. На твоей надгробной плите.",
-				"id": "odin.death_boss.03"
+				"id": "odin.death_boss.03",
+				"conditions": ["killed_by == boss_jarl"]
 			},
 			{
 				"speaker": "odin",
@@ -793,7 +798,8 @@
 				"speaker": "odin",
 				"emotion": "smug",
 				"text": "Ярлу понравилось. Он ждёт тебя снова. С рукой наготове.",
-				"id": "odin.death_boss.06"
+				"id": "odin.death_boss.06",
+				"conditions": ["killed_by == boss_jarl"]
 			}
 		],
 		"death_fall": [
@@ -914,13 +920,13 @@
 			{
 				"speaker": "odin",
 				"emotion": "neutral",
-				"text": "У тебя в другой руке Мьёльнир. Помнишь такой? Тяжёлый, родной.",
+				"text": "У тебя есть Мьёльнир. Помнишь такой? Тяжёлый, родной.",
 				"id": "odin.death_ranged.03"
 			},
 			{
 				"speaker": "odin",
 				"emotion": "angry",
-				"text": "Бог грома прячется за арбалетом. Предки в Вальгалле отвернулись.",
+				"text": "Бог грома прячется за стрелялкой. Предки в Вальгалле отвернулись.",
 				"id": "odin.death_ranged.04"
 			},
 			{

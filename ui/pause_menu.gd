@@ -79,6 +79,7 @@ func _build() -> void:
 	vb.add_child(m)
 	# «Сообщить о лаге» (GDD 23): zip с логом фризов и сохранением на рабочий стол
 	var lag := UIStyle.button(tr("Сообщить о лаге"), 17, "secondary")
+	lag.tooltip_text = tr("В архиве сохранение и системные данные; журналы могут содержать локальные пути.")
 	lag.custom_minimum_size = Vector2(280, 46)
 	lag.pressed.connect(func() -> void:
 		var path := Perf.report_lag()
@@ -177,8 +178,8 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Что делает трейт на уровне lv: у стихии — все взятые способы доставки по строке, у приёма — текст уровня
 func _trait_text(t: MjolnirTrait, lv: int) -> String:
 	if not t.is_element():
-		return tr(t.level_description(lv))
+		return GameSettings.throw_hint(tr(t.level_description(lv)))
 	var lines: Array[String] = []
 	for i in range(1, lv + 1):
-		lines.append(tr(t.level_description(i)))
+		lines.append(GameSettings.throw_hint(tr(t.level_description(i))))
 	return "\n".join(lines)

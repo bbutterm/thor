@@ -36,7 +36,7 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 	_update_visual_feedback(delta)
-	if global_position.y < -30.0:
+	if _below_fall_limit():
 		_die("fall")
 
 ## Подкласс: решить, не начать ли своё действие (вызывается каждый кадр, пока act == 0).
@@ -131,6 +131,10 @@ func charge_end() -> void:
 		remove_collision_exception_with(_charge_exc)
 	_charge_exc = null
 
+## Поперечный радиус попадания по Тору используется и для предупреждающей полосы.
+func charge_hit_radius() -> float:
+	return 1.1 * model_scale + 0.6
+
 ## Шаг тарана. Возвращает: 0 — едем дальше, 1 — врезался в стену, 2 — путь пройден.
 func charge_step(delta: float, speed: float, max_dist: float, damage: float, knock: float) -> int:
 	var before := global_position
@@ -143,7 +147,7 @@ func charge_step(delta: float, speed: float, max_dist: float, damage: float, kno
 		var to_p := player.global_position - global_position
 		var flat := Vector3(to_p.x, 0, to_p.z)
 		# Перепрыгнул (ноги выше charge_jump_clear над землёй) — мимо
-		if flat.length() < 1.1 * model_scale + 0.6 and to_p.y < charge_jump_clear and to_p.y > -1.2:
+		if flat.length() < charge_hit_radius() and to_p.y < charge_jump_clear and to_p.y > -1.2:
 			_charge_hit = true
 			var side := _charge_dir.cross(Vector3.UP)
 			var away := side * signf(side.dot(flat) + 0.001)
@@ -202,7 +206,7 @@ func strip_show(dir: Vector3, length: float, alpha: float, color: Color = Color(
 	_strip.visible = true
 	var ground := global_position + Vector3(0, 0.07, 0)
 	_strip.global_transform = Transform3D(Basis.looking_at(d, Vector3.UP), ground + d * length * 0.5)
-	_strip.scale = Vector3(1.0 * model_scale, 0.03, length)
+	_strip.scale = Vector3(2.0 * charge_hit_radius(), 0.03, length)
 	_strip.transparency = 1.0 - clampf(alpha, 0.0, 1.0)
 
 func strip_hide() -> void:

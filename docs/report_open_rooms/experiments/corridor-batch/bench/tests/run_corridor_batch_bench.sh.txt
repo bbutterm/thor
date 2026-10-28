@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+# Запускать только в эксклюзивное окно: CPU и рендер влияют на измерение.
+set -u -o pipefail
+umask 077
+project=${THOR_CORRIDOR_PROJECT:-/workspace/thor-corridor-batch}
+artifacts=${THOR_CORRIDOR_ARTIFACTS:-/workspace/thor-artifacts/corridor-batch}
+mkdir -p "$artifacts"
+run=$(mktemp -d "$artifacts/mixed-XXXXXXXX") || exit 2
+mkdir "$run/data" "$run/cache" "$run/config" "$run/shots"
+export XDG_DATA_HOME="$run/data"
+export XDG_CACHE_HOME="$run/cache"
+export XDG_CONFIG_HOME="$run/config"
+export LIBGL_ALWAYS_SOFTWARE=1
+export LP_NUM_THREADS=${LP_NUM_THREADS:-4}
+printf 'run=%s\nproject=%s\nmethod=gl_compatibility\nlp_num_threads=%s\nstarted=%s\n' "$run" "$project" "$LP_NUM_THREADS" "$(date -u +%FT%TZ)" | tee "$run/metadata.txt"
+if ! timeout --signal=TERM --kill-after=30s 900 godot --headless --path "$project" --import 2>&1 | head -c 50000000 > "$run/import-initial.log"; then
+    printf 'initial import failed: %s/import-initial.log\n' "$run" >&2
+    exit 1
+fi
+if rg -n 'SCRIPT ERROR|Parse Error|^ERROR:' "$run/import-initial.log"; then
+    # Новый checkout может обращаться к шрифту до его первого импорта. Сохраняем
+    # исходный журнал целиком и требуем чистый повторный запуск импорта.
+    if ! timeout --signal=TERM --kill-after=30s 900 godot --headless --path "$project" --import 2>&1 | head -c 50000000 > "$run/import-repeat.log"; then
+        printf 'repeat import failed: %s/import-repeat.log\n' "$run" >&2
+        exit 1
+    fi
+    if rg -n 'SCRIPT ERROR|Parse Error|^ERROR:' "$run/import-repeat.log"; then
+        printf 'repeat import contains errors: %s/import-repeat.log\n' "$run" >&2
+        exit 1
+    fi
+fi
+if ! timeout --signal=TERM --kill-after=30s 300 godot --headless --path "$project" --fixed-fps 60 --audio-driver Dummy res://tests/corridor_batch_experiment.tscn 2>&1 | head -c 50000000 > "$run/functional.log"; then
+    printf 'functional check failed: %s/functional.log\n' "$run" >&2
+    exit 1
+fi
+awk '/ИТОГ: [0-9]+ OK, [0-9]+ FAIL/ {complete=1} !complete && ($0 ~ /SCRIPT ERROR|Parse Error|^ERROR:|\[FAIL\]|^\s*FAIL:/) {print NR ":" $0}' "$run/functional.log" > "$run/functional-execution-errors.txt"
+awk '/ИТОГ: [0-9]+ OK, [0-9]+ FAIL/ {complete=1} complete && ($0 ~ /SCRIPT ERROR|Parse Error|^ERROR:|WARNING: ObjectDB instances leaked/) {print NR ":" $0}' "$run/functional.log" > "$run/functional-cleanup-messages.txt"
+if [[ -s "$run/functional-execution-errors.txt" ]] || ! rg -q 'ИТОГ: [0-9]+ OK, 0 FAIL' "$run/functional.log"; then
+    printf 'functional check contains failures: %s/functional.log\n' "$run" >&2
+    exit 1
+fi
+functional_cleanup_fail=0
+if [[ -s "$run/functional-cleanup-messages.txt" ]]; then
+    printf 'headless cleanup messages (functional assertions completed):\n' >&2
+    cat "$run/functional-cleanup-messages.txt" >&2
+    if rg -q 'SCRIPT ERROR|Parse Error|^.+:ERROR:' "$run/functional-cleanup-messages.txt"; then
+        functional_cleanup_fail=1
+    fi
+fi
+if ! timeout --signal=TERM --kill-after=30s 120 godot --headless --path "$project" res://tests/corridor_batch_parse_check.tscn 2>&1 | head -c 50000000 > "$run/parse.log"; then
+    printf 'benchmark script check failed: %s/parse.log\n' "$run" >&2
+    exit 1
+fi
+awk '/BENCH PARSE CHECK OK/ {complete=1} !complete && ($0 ~ /SCRIPT ERROR|Parse Error|^ERROR:/) {print NR ":" $0}' "$run/parse.log" > "$run/parse-execution-errors.txt"
+awk '/BENCH PARSE CHECK OK/ {complete=1} complete && ($0 ~ /SCRIPT ERROR|Parse Error|^ERROR:|WARNING: ObjectDB instances leaked/) {print NR ":" $0}' "$run/parse.log" > "$run/parse-cleanup-messages.txt"
+if [[ -s "$run/parse-execution-errors.txt" ]] || ! rg -q 'BENCH PARSE CHECK OK' "$run/parse.log"; then
+    printf 'benchmark script contains errors: %s/parse.log\n' "$run" >&2
+    exit 1
+fi
+parse_cleanup_fail=0
+if [[ -s "$run/parse-cleanup-messages.txt" ]]; then
+    printf 'parse-check cleanup messages (parse succeeded):\n' >&2
+    cat "$run/parse-cleanup-messages.txt" >&2
+    if rg -q 'SCRIPT ERROR|Parse Error|^.+:ERROR:' "$run/parse-cleanup-messages.txt"; then
+        parse_cleanup_fail=1
+    fi
+fi
+cat > "$run/xorg.conf" <<'XCONF'
+Section "Device"
+    Identifier "DummyDevice"
+    Driver "dummy"
+    VideoRam 256000
+EndSection
+Section "Monitor"
+    Identifier "DummyMonitor"
+    HorizSync 28-80
+    VertRefresh 48-75
+    Modeline "1280x720" 74.25 1280 1390 1430 1650 720 725 730 750
+EndSection
+Section "Screen"
+    Identifier "DummyScreen"
+    Device "DummyDevice"
+    Monitor "DummyMonitor"
+    DefaultDepth 24
+    SubSection "Display"
+        Depth 24
+        Modes "1280x720"
+    EndSubSection
+EndSection
+XCONF
+display_num=
+for n in $(seq 150 199); do
+    if [[ ! -e "/tmp/.X11-unix/X$n" && ! -e "/tmp/.X$n-lock" ]]; then
+        display_num=$n
+        break
+    fi
+done
+if [[ -z "$display_num" ]]; then
+    printf 'no available X display\n' >&2
+    exit 2
+fi
+ulimit -c 0
+/usr/lib/xorg/Xorg ":$display_num" -noreset -nolisten tcp -config "$run/xorg.conf" -logfile "$run/xorg.log" > "$run/xorg-stdout.log" 2>&1 &
+xorg_pid=$!
+cleanup() {
+    kill "$xorg_pid" 2>/dev/null || true
+    wait "$xorg_pid" 2>/dev/null || true
+}
+trap cleanup EXIT
+export DISPLAY=":$display_num"
+ready=0
+for ((i=0; i<50; i++)); do
+    if xdpyinfo >/dev/null 2>&1; then
+        ready=1
+        break
+    fi
+    if ! kill -0 "$xorg_pid" 2>/dev/null; then
+        break
+    fi
+    sleep 0.2
+done
+if [[ "$ready" != 1 ]]; then
+    printf 'Xorg failed to start; see %s\n' "$run" >&2
+    exit 2
+fi
+printf 'display=%s\n' "$DISPLAY" | tee -a "$run/metadata.txt"
+timeout --signal=TERM --kill-after=30s 1500 stdbuf -oL -eL godot --path "$project" --fixed-fps 60 --audio-driver Dummy --rendering-method gl_compatibility --resolution 320x180 res://tests/corridor_batch_bench.tscn -- "$run/shots" 2>&1 | head -c 50000000 > "$run/godot.log"
+rc=$?
+printf 'finished=%s\nexit_code=%d\n' "$(date -u +%FT%TZ)" "$rc" | tee -a "$run/metadata.txt"
+awk '/CORRIDOR BATCH BENCH COMPLETE/ {complete=1} !complete && ($0 ~ /SCRIPT ERROR|Parse Error|^ERROR:|SHADER ERROR/) {print NR ":" $0}' "$run/godot.log" > "$run/execution-errors.txt"
+awk '/CORRIDOR BATCH BENCH COMPLETE/ {complete=1} complete && ($0 ~ /SCRIPT ERROR|Parse Error|^ERROR:|SHADER ERROR|WARNING: ObjectDB instances leaked/) {print NR ":" $0}' "$run/godot.log" > "$run/cleanup-messages.txt"
+failed=$((functional_cleanup_fail + parse_cleanup_fail))
+if [[ $rc != 0 ]] || [[ -s "$run/execution-errors.txt" ]] || ! rg -q 'CORRIDOR BATCH BENCH COMPLETE' "$run/godot.log"; then
+    printf 'render execution failed: %s/execution-errors.txt and %s/godot.log\n' "$run" "$run" >&2
+    failed=1
+fi
+if [[ -s "$run/cleanup-messages.txt" ]]; then
+    printf 'cleanup messages (preserved verbatim in Godot log):\n' >&2
+    cat "$run/cleanup-messages.txt" >&2
+    if rg -q 'SCRIPT ERROR|Parse Error|^.+:ERROR:|SHADER ERROR' "$run/cleanup-messages.txt"; then
+        failed=1
+    fi
+fi
+if ! python3 "$project/tests/compare_corridor_batch_shots.py" "$run/shots" | tee "$run/pixels.log"; then
+    printf 'pixel comparison failed: %s/pixels.log\n' "$run" >&2
+    failed=1
+fi
+if [[ $failed != 0 ]]; then
+    printf 'experiment has failures; see %s\n' "$run" >&2
+    exit 1
+fi
+printf 'completed: %s\n' "$run"

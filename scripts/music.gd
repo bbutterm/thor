@@ -74,7 +74,10 @@ func _ready() -> void:
 	_stinger = AudioStreamPlayer.new()
 	_stinger.bus = BUS
 	add_child(_stinger)
-	var st := _load_layer("stingers", "slam")
+	# Удар — одноразовый звук, а не петля. Версия владельца имеет приоритет.
+	var st := _load_layer("stingers", "slam", OWNER_MUSIC_DIR, false)
+	if st == null:
+		st = _load_layer("stingers", "slam", MUSIC_DIR, false)
 	if st:
 		_stinger.stream = st
 
@@ -96,17 +99,18 @@ func _make_player() -> AudioStreamPlayer:
 	add_child(p)
 	return p
 
-func _load_layer(track: String, layer: String, dir: String = MUSIC_DIR) -> AudioStream:
+func _load_layer(track: String, layer: String, dir: String = MUSIC_DIR, loop: bool = true) -> AudioStream:
 	for ext in ["ogg", "wav"]:
 		var path: String = dir + track + "/" + layer + "." + ext
 		if ResourceLoader.exists(path):
 			var s := load(path) as AudioStream
 			if s is AudioStreamOggVorbis:
-				(s as AudioStreamOggVorbis).loop = true
+				(s as AudioStreamOggVorbis).loop = loop
 			elif s is AudioStreamWAV:
 				var w := s as AudioStreamWAV
-				w.loop_mode = AudioStreamWAV.LOOP_FORWARD
-				w.loop_end = int(w.get_length() * w.mix_rate)
+				w.loop_mode = AudioStreamWAV.LOOP_FORWARD if loop else AudioStreamWAV.LOOP_DISABLED
+				if loop:
+					w.loop_end = int(w.get_length() * w.mix_rate)
 			return s
 	return null
 

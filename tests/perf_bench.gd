@@ -4,7 +4,9 @@ extends Node
 ##   2) «Ярл, фаза 3»: балконы сломаны (обломки на полу), Ярл бодается и прыгает, корм рядом.
 ## Headless (CPU):  godot --headless --path . --fixed-fps 60 res://tests/perf_bench.tscn
 ## С рендером:      xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 320x180 res://tests/perf_bench.tscn
+## Аргумент после «--» — секунд замера на сцену (по умолчанию 8); «crowd=40» — размер толпы (по умолчанию 20).
 ## Аргумент после «--» — секунд замера на сцену (по умолчанию 8).
+## «-- 8 outline»: вместо обычных сцен — толпа 44 врагов с комиксовой обводкой и без (scripts/outline.gd).
 ## Пишет: среднее/медиану/95-й перцентиль кадра (мс, по часам; в headless это вся CPU-часть кадра),
 ## число узлов и draw calls.
 
@@ -12,6 +14,12 @@ var game: Game
 var seconds: float = 8.0
 ## «-- 8 ablate»: в толпе ещё и замеры с выключенными частями (где тратится CPU)
 var ablate: bool = false
+## Сколько врагов в толпе (2 элиты + корм); «-- 8 crowd=40» — проверка на 40+ врагах (блок Б0)
+var crowd: int = 20
+## «hide=Dress,Dress/Backdrop» — спрятать эти узлы зала (во сколько обходится одевание, блок Б0)
+var hide_paths: PackedStringArray = []
+## «-- 8 outline»: цена обводки на толпе 44
+var outline: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -26,6 +34,12 @@ func _ready() -> void:
 	if args.size() > 0 and args[0].is_valid_float():
 		seconds = args[0].to_float()
 	ablate = "ablate" in args
+	for a in args:
+		if a.begins_with("crowd="):
+			crowd = maxi(2, a.trim_prefix("crowd=").to_int())
+		if a.begins_with("hide="):
+			hide_paths = a.trim_prefix("hide=").split(",")
+	outline = "outline" in args
 	_run.call_deferred()
 
 func wait(sec: float) -> void:
@@ -49,8 +63,11 @@ func _start(order: Array, index: int) -> void:
 func _run() -> void:
 	var mode := "headless" if DisplayServer.get_name() == "headless" else RenderingServer.get_current_rendering_method()
 	print("=== PERF BENCH (%s, %.0f с на сцену) ===" % [mode, seconds])
-	await _bench_crowd()
-	await _bench_jarl()
+	if outline:
+		await _bench_outline()
+	else:
+		await _bench_crowd()
+		await _bench_jarl()
 	print("=== ИТОГ PERF BENCH ===")
 	get_tree().paused = false
 	FX.reset_time()
@@ -70,12 +87,14 @@ func _measure(label: String) -> void:
 		var now := Time.get_ticks_usec()
 		times.append((now - last) / 1000.0)
 		last = now
-		if i % 20 == 0:
-			p.axe.request_attack()
-		if i % 120 == 60 and p.mjolnir.in_hand:
-			p.mjolnir.throw_hammer()
-		if i % 120 == 100 and not p.mjolnir.in_hand:
-			p.mjolnir.force_return_instant()
+		# При сравнении контуров не менять состав кадра и не добавлять боевые эффекты.
+		if not outline:
+			if i % 20 == 0:
+				p.axe.request_attack()
+			if i % 120 == 60 and p.mjolnir.in_hand:
+				p.mjolnir.throw_hammer()
+			if i % 120 == 100 and not p.mjolnir.in_hand:
+				p.mjolnir.force_return_instant()
 		if i % 30 == 0:
 			iu_peak = maxi(iu_peak, FX.instance_uniform_users(get_tree().root))
 		if p.global_position.distance_to(spot) > 6.0:
@@ -86,15 +105,21 @@ func _measure(label: String) -> void:
 	var sum := 0.0
 	for t in times:
 		sum += t
-	print("%s: кадр среднее %.2f мс, медиана %.2f, p95 %.2f, макс %.1f | узлов %d, врагов %d, draw calls %d, instance uniform %d (пик %d)" % [
+	print("%s: кадр среднее %.2f мс, медиана %.2f, p95 %.2f, макс %.1f | узлов %d, врагов %d, draw calls %d, видимых объектов %d, узлов с текущим instance-материалом %d (пик %d; не слоты)" % [
 		label, sum / times.size(), sorted[sorted.size() / 2], sorted[int(sorted.size() * 0.95)], sorted[sorted.size() - 1],
 		int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)),
 		get_tree().get_nodes_in_group("enemies").size(), int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+		int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)),
 		FX.instance_uniform_users(get_tree().root), iu_peak])
 
 func _bench_crowd() -> void:
 	await _start([Run.ROOM_SCENES[0]], 0)
 	await wait(1.0)
+	for hp in hide_paths:
+		var hn := game.room.get_node_or_null(hp) as Node3D
+		if hn:
+			hn.visible = false
+			print("  спрятан узел зала: ", hp)
 	# Свои волны зала убираем — толпа своя
 	game.room._spawn_queue.clear()
 	for e in game.room.alive_enemies().duplicate():
@@ -102,9 +127,9 @@ func _bench_crowd() -> void:
 			e.take_hit(9999, Vector3.ZERO, "test")
 	await wait(1.5)
 	var c := game.player.global_position
-	for i in 20:
-		var a := TAU * i / 20.0
-		var r := 5.0 + (i % 3) * 1.5
+	for i in crowd:
+		var a := TAU * i / float(crowd)
+		var r := 5.0 + (i % 3) * 1.5 + (i % 2) * float(crowd > 20) * 1.5
 		var kind := "grunt" if i < 2 else "fodder"
 		var e := game.room.spawn_extra(kind, c + Vector3(cos(a) * r, 0.05, sin(a) * r))
 		if e:
@@ -115,10 +140,87 @@ func _bench_crowd() -> void:
 			e.health = 1e6
 		await get_tree().physics_frame
 	await wait(2.5)
-	await _measure("Толпа (18 корма + 2 элиты)")
+	await _measure("Толпа (%d корма + 2 элиты)" % (crowd - 2))
 	_iu_breakdown()
 	if ablate:
 		await _ablations()
+
+## Толпа 44 (11 воинов + 33 корма, 2 элиты): с обводкой, без, снова с (порядок — против дрейфа прогрева)
+func _bench_outline() -> void:
+	GameSettings.set_value("video", "outline", true, false)
+	await _start([Run.ROOM_SCENES[0]], 0)
+	await wait(1.0)
+	game.room.set_physics_process(false)
+	game.room._spawn_queue.clear()
+	for e in game.room.alive_enemies().duplicate():
+		e.queue_free()
+	game.room._alive.clear()
+	await wait(0.2)
+	var c := game.player.global_position
+	for i in 44:
+		var a := TAU * i / 44.0
+		var r := 5.0 + (i % 4) * 1.5
+		var e := game.room.spawn_extra("grunt" if i % 4 == 0 else "fodder", c + Vector3(cos(a) * r, 0.05, sin(a) * r))
+		if e:
+			if i < 2:
+				Loot.make_elite(e)
+			e.max_health = 1e6
+			e.health = 1e6
+			# Один и тот же набор моделей на всех проходах: без атак и падений с края.
+			e.set_physics_process(false)
+		await get_tree().physics_frame
+	await wait(1.0)
+	print("  обведено узлов: %d; врагов: %d" % [Outline.active_count(), get_tree().get_nodes_in_group("enemies").size()])
+	await _measure("Толпа 44, обводка ВКЛ")
+	GameSettings.set_value("video", "outline", false, false)
+	await wait(0.5)
+	await _measure("Толпа 44, обводка ВЫКЛ")
+	GameSettings.set_value("video", "outline", true, false)
+	await wait(0.5)
+	await _measure("Толпа 44, обводка ВКЛ (повтор)")
+	# Для сравнения — вариант (b): экранный контур по глубине (полноэкранный проход, 5 выборок глубины).
+	# Только замер: в игру не вошёл — обводит всё подряд (и стены), в GL Compatibility нет буфера нормалей.
+	GameSettings.set_value("video", "outline", false, false)
+	var quad := MeshInstance3D.new()
+	var qm := QuadMesh.new()
+	qm.size = Vector2(2, 2)
+	quad.mesh = qm
+	quad.extra_cull_margin = 16384.0
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var sh := Shader.new()
+	sh.code = SCREEN_EDGE_SHADER
+	var sm := ShaderMaterial.new()
+	sm.shader = sh
+	quad.material_override = sm
+	get_viewport().get_camera_3d().add_child(quad)
+	await wait(0.5)
+	await _measure("Толпа 44, экранный контур по глубине (b), без обводки")
+	quad.queue_free()
+	GameSettings.set_value("video", "outline", true, false)
+
+const SCREEN_EDGE_SHADER := """shader_type spatial;
+render_mode unshaded, depth_draw_never, depth_test_disabled, cull_disabled, shadows_disabled, fog_disabled;
+uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
+float lin(vec2 uv, mat4 inv) {
+	float d = texture(depth_tex, uv).r;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	d = d * 2.0 - 1.0;
+#endif
+	vec4 v = inv * vec4(uv * 2.0 - 1.0, d, 1.0);
+	return -v.z / v.w;
+}
+void vertex() {
+	POSITION = vec4(VERTEX.xy, 1.0, 1.0);
+}
+void fragment() {
+	vec2 px = 1.5 / VIEWPORT_SIZE;
+	float c = lin(SCREEN_UV, INV_PROJECTION_MATRIX);
+	float e = abs(lin(SCREEN_UV + vec2(px.x, 0.0), INV_PROJECTION_MATRIX) - c) + abs(lin(SCREEN_UV - vec2(px.x, 0.0), INV_PROJECTION_MATRIX) - c)
+		+ abs(lin(SCREEN_UV + vec2(0.0, px.y), INV_PROJECTION_MATRIX) - c) + abs(lin(SCREEN_UV - vec2(0.0, px.y), INV_PROJECTION_MATRIX) - c);
+	ALBEDO = vec3(0.0);
+	ALPHA = clamp(e / (c * 0.08) - 0.5, 0.0, 1.0);
+}
+"""
 
 ## Выключаем по одной части и мерим снова — разница = её цена.
 func _ablations() -> void:
@@ -175,7 +277,7 @@ func _bench_jarl() -> void:
 	print("  обломков: %d, балконов: %d, фаза %d" % [get_tree().get_nodes_in_group("debris").size(), get_tree().get_nodes_in_group("balconies").size(), jarl.phase])
 	await _measure("Ярл, фаза 3 (обломки, корм)")
 
-## Кто занимает буфер instance-переменных: по шейдеру и видимости
+## Узлы с текущими instance-материалами: по шейдеру и видимости; это не занятые слоты.
 func _iu_breakdown() -> void:
 	var by := {}
 	for g in get_tree().root.find_children("*", "GeometryInstance3D", true, false):

@@ -12,6 +12,9 @@ signal died(enemy: Enemy)
 ## Удар врага дошёл до Тора (amount — сколько HP снято на самом деле). Для модификаторов элиты.
 signal struck_player(amount: float)
 
+const SpawnEntry = preload("res://enemies/spawn_entry.gd")
+const TierNavigation = preload("res://rooms/enemy_navigation.gd")
+
 ## Новые виды — только в конец (номера сохранены в сценах).
 ## FODDER — драугр-корм, BLOATED — Раздутый, SHIELD — Щитоносец, SHAMAN — Шаман, MERC — Наёмник Локи (GDD 12.1)
 enum Kind { GRUNT, THROWER, BOSS, FODDER, BLOATED, SHIELD, SHAMAN, MERC }
@@ -29,10 +32,20 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export_range(0.0, 1.0) var knock_resist: float = 0.0
 @export var knock_decay: float = 5.0
 
+@export_group("Обнаружение")
+## Расстояние, на котором враг замечает обычного Тора (только по горизонтали).
+@export var notice_radius: float = 20.0
+## Если Тор далеко, враг всё равно включается в бой спустя это время: последний враг не запирает зал.
+@export var notice_fallback_time: float = 3.0
+
 @export_group("Атака")
 @export var attack_range: float = 2.0
+## Разница высот ног, в пределах которой обычная ближняя атака может достать Тора.
+@export var melee_vertical_reach: float = 1.6
 @export var attack_damage: float = 12.0
 @export var windup_time: float = 0.6
+## До какой доли замаха запоздавший звук ещё оставляет время среагировать.
+@export_range(0.05, 1.0, 0.05) var warning_deadline_fraction: float = 0.5
 @export var recover_time: float = 0.7
 @export var attack_cooldown: float = 0.9
 @export var lunge_speed: float = 7.0
@@ -107,6 +120,9 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var max_debris: int = 10
 ## Сколько секунд труп лежит, прежде чем исчезнуть
 @export var debris_lifetime: float = 4.0
+## Сдвиг вида при любом попадании. Не меняет состояние или движение врага.
+@export_range(0.0, 1.0, 0.01) var flinch_distance: float = 0.13
+@export_range(0.01, 1.0, 0.01) var flinch_time: float = 0.12
 @export var body_color: Color = Color(0.32, 0.45, 0.33)
 @export var model_scale: float = 1.0
 
@@ -139,6 +155,11 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var anim_stun: String = "Hit_Knockback"
 @export var anim_death: String = "Death01"
 
+@export_group("Дальняя массовка")
+## Корм дальше этого расстояния обновляет направление и позу реже; физика и таймеры идут каждый кадр.
+@export var fodder_lod_distance: float = 20.0
+@export_range(1, 8, 1) var fodder_lod_frames: int = 3
+
 var health: float
 ## Описание по GDD 12 (EnemyDef), если враг появился в зале; Слава за убийство (-1 — по умолчанию забега)
 var enemy_def: EnemyDef
@@ -146,7 +167,16 @@ var glory_value: int = -1
 var is_dead: bool = false
 var state: State = State.SPAWNING
 var knockback_velocity: Vector3 = Vector3.ZERO
+## Создаётся только для маркера с активным входом.
+var _spawn_entry: SpawnEntry
+## Только при наличии у зала настроенной навигации между ярусами.
+var _tier_navigation: TierNavigation
 var player: Player
+## Каждый враг запоминает обнаруженного игрока до смерти или смены игрока.
+var _notice_player_id: int = 0
+var _notice_pending: bool = false
+var _noticed_player: bool = false
+var _notice_wait: float = 0.0
 
 var _state_time: float = 0.0
 var _cooldown: float = 0.0
@@ -159,12 +189,20 @@ var _airborne: bool = false
 var _fall_peak_y: float = 0.0
 var _fall_forced: bool = false
 var _last_knock: Vector3 = Vector3.ZERO
+var _flinch_left: float = 0.0
+var _flinch_direction: Vector3 = Vector3.ZERO
+var _flinch_applied: Vector3 = Vector3.ZERO
 var _attack_count: int = 0
+## Идентификатор замаха: прерванная атака не передаёт своё предупреждение следующей.
+var _windup_serial: int = 0
 var _doing_slam: bool = false
 var _strafe_sign: float = 1.0
 var _visual: Node3D
 ## Меши врага — для общего оверлея вспышки/свечения (см. shaders/hit_flash.gdshader)
 var _flash_meshes: Array[GeometryInstance3D] = []
+## GL Compatibility: one material per enemy, shared by all of its meshes.
+## Allocated at spawn and reused through hits, windups and status changes.
+var _flash_material_gl: ShaderMaterial
 var _overlay_on: bool = false
 var _hurt_flash: float = 0.0
 var _windup_glow: float = 0.0
@@ -194,21 +232,29 @@ var elite_handlers: Array[Node] = []
 var elite_glow: Color = Color(0, 0, 0, 0)
 ## Подсветка состояния стихии (ElementStatus ставит каждый кадр; сила — в альфе, уже с пульсом)
 var status_glow: Color = Color(0, 0, 0, 0)
+var _fodder_lod_move := Vector3.ZERO
+var _fodder_lod_move_valid := false
+var _fodder_anim_lod := false
+var _fodder_anim_delta := 0.0
+var _fodder_anim_previous_mode: int = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_IDLE
 
 func _ready() -> void:
+	if RenderingServer.get_current_rendering_method() == "gl_compatibility":
+		_flash_material_gl = FLASH_MATERIAL_GL.duplicate() as ShaderMaterial
 	add_to_group("enemies")
 	collision_layer = 1 << 2
 	collision_mask = 1 | (1 << 1) | (1 << 2) | (1 << 3)
 	health = max_health
 	_strafe_sign = 1.0 if randf() < 0.5 else -1.0
 	_visual = get_node_or_null("Visual")
-	if _visual == null and model_outfit != "":
+	if _visual == null and (model_outfit != "" or kind == Kind.FODDER):
 		_humanoid = HumanoidModel.new()
 		_humanoid.name = "Visual"
-		_humanoid.body = model_body
-		_humanoid.outfit = model_outfit
-		_humanoid.hair = model_hair
-		if randomize_look:
+		# У корма уже одетый персонаж в одном заранее собранном меше/материале.
+		_humanoid.body = "base/Fodder_Midgard.glb" if kind == Kind.FODDER else model_body
+		_humanoid.outfit = "" if kind == Kind.FODDER else model_outfit
+		_humanoid.hair = "" if kind == Kind.FODDER else model_hair
+		if randomize_look and kind != Kind.FODDER:
 			var rng := RandomNumberGenerator.new()
 			rng.randomize()
 			var look := HumanoidModel.random_look(rng, rng.randf() < 0.3)
@@ -222,9 +268,9 @@ func _ready() -> void:
 			_humanoid.part_tints = tints
 			if not weapon_pool.is_empty():
 				hand_weapon = weapon_pool[rng.randi() % weapon_pool.size()]
-		_humanoid.skin_tint = skin_tint
+		_humanoid.skin_tint = Color.WHITE if kind == Kind.FODDER else skin_tint
 		_humanoid.cloth_tint = cloth_tint
-		_humanoid.eye_glow = eye_glow
+		_humanoid.eye_glow = Color(0, 0, 0, 0) if kind == Kind.FODDER else eye_glow
 		add_child(_humanoid)
 		_humanoid.scale = Vector3.ONE * model_scale
 		_visual = _humanoid
@@ -235,6 +281,9 @@ func _ready() -> void:
 	if _visual == null:
 		_visual = _build_procedural_model()
 	_collect_meshes(_visual)
+	if kind == Kind.FODDER:
+		for mesh in _flash_meshes:
+			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	FX.ring(get_parent(), global_position, 1.5 * model_scale, Color(0.7, 0.2, 1.0, 0.8), 0.45)
 	if _humanoid:
 		# Появление: драугр поднимается с земли
@@ -250,6 +299,22 @@ func _ready() -> void:
 		tw.tween_property(_visual, "scale", Vector3.ONE * model_scale, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_setup_special()
 
+## Запуск входа из метаданных маркера. Непроверенный путь возвращает false.
+func begin_spawn_entry(mode: String, target: Vector3, tuning: Dictionary = {}) -> bool:
+	if _spawn_entry == null:
+		_spawn_entry = SpawnEntry.new()
+	var ok := _spawn_entry.begin(self, mode, target, move_speed, gravity, tuning)
+	if ok and _humanoid:
+		_humanoid.play(anim_move, 0.1)
+	return ok
+
+## Room регистрирует и обычные волны, и призывы через одну точку.
+func enable_tier_navigation(root: Node3D, settings: Dictionary) -> void:
+	if root == null or _tier_navigation != null:
+		return
+	_tier_navigation = TierNavigation.new()
+	_tier_navigation.setup(self, root, settings)
+
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
@@ -261,10 +326,26 @@ func _physics_process(delta: float) -> void:
 	var move_dir := Vector3.ZERO
 	match state:
 		State.SPAWNING:
-			if _state_time >= _spawn_time:
+			if _spawn_entry != null and _spawn_entry.active:
+				move_dir = _spawn_entry.desired_velocity(self, accel) / maxf(move_speed, 0.01)
+			elif _state_time >= _spawn_time:
 				_set_state(State.CHASE)
 		State.CHASE:
-			move_dir = _think_chase()
+			if _tier_navigation != null and _tier_navigation.is_jumping():
+				move_dir = _tier_navigation.jump_direction(move_speed, accel)
+			elif _tier_navigation != null and _tier_navigation.is_waiting_for_landing():
+				move_dir = Vector3.ZERO
+			elif _notice_tick(delta):
+				if _tier_navigation != null:
+					if _tier_navigation.step(player):
+						_fodder_lod_move_valid = false
+					_tier_navigation.try_jump(move_speed, gravity)
+				if _tier_navigation != null and _tier_navigation.is_jumping():
+					move_dir = _tier_navigation.jump_direction(move_speed, accel)
+				elif _tier_navigation == null or not _tier_navigation.has_pending_jump():
+					move_dir = _think_chase_lod(delta)
+			else:
+				_fodder_lod_move_valid = false
 		State.WINDUP:
 			_face_player(delta * 0.5)
 			var wt := boss_slam_windup if _doing_slam else windup_time
@@ -284,13 +365,24 @@ func _physics_process(delta: float) -> void:
 				_set_state(State.CHASE)
 
 	_apply_movement(move_dir, delta)
+	if _spawn_entry != null:
+		_spawn_entry.after_step(self, delta)
+	if _tier_navigation != null:
+		_tier_navigation.after_move(delta)
 	_update_special(delta)
 	_update_visual_feedback(delta)
 	_update_animation(delta)
+	_update_fodder_animation_lod(delta)
 
 func _set_state(s: State) -> void:
+	if s != State.CHASE and _tier_navigation != null:
+		_tier_navigation.interrupt_jump()
+	if s != State.SPAWNING and _spawn_entry != null:
+		_spawn_entry.cancel()
 	state = s
 	_state_time = 0.0
+	if s != State.CHASE:
+		_fodder_lod_move_valid = false
 	if s != State.WINDUP:
 		_windup_glow = 0.0
 	if s == State.STUNNED and _humanoid:
@@ -317,6 +409,100 @@ func _update_animation(delta: float) -> void:
 
 # --- Мышление ---
 
+## Только ближний корм: дальние стрелки и боссы по-прежнему думают каждый кадр.
+## Если дальность атаки переопределили, её область тоже остаётся на полной частоте.
+func _fodder_lod_active() -> bool:
+	if kind != Kind.FODDER or state != State.CHASE or not is_instance_valid(player) or player.is_dead:
+		return false
+	var d := player.global_position - global_position
+	var distance := maxf(maxf(0.0, fodder_lod_distance), attack_range + 1.0)
+	return d.x * d.x + d.z * d.z > distance * distance and fodder_lod_frames > 1
+
+## Задерживаем только пересчёт направления и раздвигания толпы. Движение, гравитация,
+## обнаружение, таймеры и все фазы удара продолжают обновляться каждый физический кадр.
+func _think_chase_lod(delta: float) -> Vector3:
+	if not _fodder_lod_active():
+		_fodder_lod_move_valid = false
+		return _think_chase()
+	var interval := maxi(1, fodder_lod_frames)
+	if not _fodder_lod_move_valid or Engine.get_physics_frames() % interval == get_instance_id() % interval:
+		_fodder_lod_move = _think_chase()
+		_fodder_lod_move_valid = true
+	else:
+		if _tier_navigation != null and _tier_navigation.is_active():
+			_face_dir(_tier_navigation.direction(), delta)
+		else:
+			_face_player(delta)
+	return _fodder_lod_move
+
+## У дальнего корма обновляем именно позу анимации, а не просто повторный вызов play().
+func _update_fodder_animation_lod(delta: float) -> void:
+	if not _fodder_lod_active() or _humanoid == null or _humanoid.anim == null:
+		_restore_fodder_animation()
+		return
+	var ap := _humanoid.anim
+	if not _fodder_anim_lod:
+		_fodder_anim_previous_mode = ap.callback_mode_process
+		ap.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
+		_fodder_anim_delta = 0.0
+		_fodder_anim_lod = true
+	_fodder_anim_delta += delta
+	var interval := maxi(1, fodder_lod_frames)
+	if Engine.get_physics_frames() % interval == (get_instance_id() + 1) % interval:
+		ap.advance(_fodder_anim_delta)
+		_fodder_anim_delta = 0.0
+
+func _restore_fodder_animation() -> void:
+	if not _fodder_anim_lod:
+		return
+	if _humanoid and is_instance_valid(_humanoid) and _humanoid.anim:
+		if _fodder_anim_delta > 0.0:
+			_humanoid.anim.advance(_fodder_anim_delta)
+		_humanoid.anim.callback_mode_process = _fodder_anim_previous_mode
+	_fodder_anim_delta = 0.0
+	_fodder_anim_lod = false
+
+## Новая цель не наследует знание прошлой. Без живого игрока время поиска не идёт.
+func _sync_notice_player() -> bool:
+	var valid_player: Player = null
+	if is_instance_valid(player) and not player.is_dead:
+		valid_player = player
+	var player_id: int = valid_player.get_instance_id() if valid_player else 0
+	if player_id != _notice_player_id:
+		_notice_player_id = player_id
+		_notice_wait = 0.0
+		_noticed_player = _notice_pending and player_id != 0
+		if player_id != 0:
+			_notice_pending = false
+	return player_id != 0
+
+## Удар/толчок будит врага сразу; сигнал до назначения player не теряется.
+func alert_to_player() -> void:
+	if _sync_notice_player():
+		_noticed_player = true
+	else:
+		_notice_pending = true
+
+func is_alert_to_player() -> bool:
+	return _sync_notice_player() and (kind == Kind.BOSS or _noticed_player)
+
+func _notice_tick(delta: float) -> bool:
+	if not _sync_notice_player():
+		return false
+	if kind == Kind.BOSS or _noticed_player:
+		return true
+	var mult := maxf(0.0, float(player.modify_stat(&"enemy_notice_radius_mult", 1.0)))
+	var radius := maxf(0.0, notice_radius) * mult
+	var diff := player.global_position - global_position
+	# Слух не требует дополнительного луча через всю толпу и работает за стенами.
+	if diff.x * diff.x + diff.z * diff.z <= radius * radius:
+		_noticed_player = true
+	else:
+		_notice_wait += maxf(0.0, delta)
+		if _notice_wait >= maxf(0.0, notice_fallback_time):
+			_noticed_player = true
+	return _noticed_player
+
 func _think_chase() -> Vector3:
 	if player == null or player.is_dead:
 		return Vector3.ZERO
@@ -332,13 +518,13 @@ func _think_chase() -> Vector3:
 			if kind == Kind.BOSS and dist > 5.0 and _cooldown <= 0.0 and randf() < boss_far_slam_chance:
 				_begin_windup(true)
 				return Vector3.ZERO
-			if dist <= reach and _cooldown <= 0.0:
+			if dist <= reach and _cooldown <= 0.0 and (kind == Kind.BOSS or _can_reach_melee_target()):
 				_begin_windup(kind == Kind.BOSS and _attack_count % 3 == 2)
 				return Vector3.ZERO
 			move = dir
 		Kind.BLOATED:
 			# Бежит к Тору; вплотную — фитиль (телеграф-диск радиусом взрыва), потом взрыв
-			if dist <= bloat_trigger_range and _cooldown <= 0.0 and _state_time > 0.2:
+			if dist <= bloat_trigger_range and _cooldown <= 0.0 and _state_time > 0.2 and _can_reach_melee_target():
 				_begin_windup(true)
 				return Vector3.ZERO
 			move = dir
@@ -360,7 +546,16 @@ func _think_chase() -> Vector3:
 			if _cooldown <= 0.0 and dist < keep_max_dist + 6.0 and _has_line_of_sight():
 				_begin_windup(false)
 				return Vector3.ZERO
-	if _detour_left > 0.0 and move != Vector3.ZERO:
+	if _tier_navigation != null and _tier_navigation.is_active():
+		# Стрелок с видимой целью может продолжать бой с балкона; пока ждёт
+		# перезарядку, не отступает вслепую через край. Шаман сохраняет обряд выше.
+		if kind in [Kind.THROWER, Kind.MERC] and dist < keep_max_dist + 6.0 and _has_line_of_sight():
+			return Vector3.ZERO
+		move = _tier_navigation.direction()
+		if move == Vector3.ZERO:
+			return Vector3.ZERO  # нет проверенного пути: не толкаем себя к краю
+		_face_dir(move, get_physics_process_delta_time())
+	elif _detour_left > 0.0 and move != Vector3.ZERO:
 		move = (_detour_dir + move * 0.35).normalized()
 	return (move + _separation()).normalized() if move != Vector3.ZERO else _separation()
 
@@ -382,6 +577,9 @@ func _separation() -> Vector3:
 			continue
 		var other := e as Node3D
 		var d := global_position - other.global_position
+		# На отдельном этаже чужая капсула не должна сдвигать нас с настила.
+		if _tier_navigation != null and absf(d.y) > melee_vertical_reach * model_scale:
+			continue
 		d.y = 0
 		var l := d.length()
 		var min_d := 1.4 * model_scale
@@ -393,6 +591,12 @@ func _has_line_of_sight() -> bool:
 	var space := get_world_3d().direct_space_state
 	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 1.2, 0), player.global_position + Vector3(0, 1.0, 0), 1)
 	return space.intersect_ray(q).is_empty()
+
+## Не бить сквозь настил и не начинать замах по цели на другом ярусе.
+func _can_reach_melee_target() -> bool:
+	return player != null and is_instance_valid(player) and not player.is_dead \
+		and absf(player.global_position.y - global_position.y) <= melee_vertical_reach * model_scale \
+		and _has_line_of_sight()
 
 func _face_dir(dir: Vector3, delta: float) -> void:
 	if dir.length() < 0.01:
@@ -409,8 +613,10 @@ func _face_player(delta: float) -> void:
 # --- Атаки ---
 
 func _begin_windup(slam: bool) -> void:
+	alert_to_player()  # Вручную начатая атака и её оставшаяся очередь уже видят цель.
 	Perf.mark("enemy_windup")
 	_doing_slam = slam
+	_windup_serial += 1
 	_set_state(State.WINDUP)
 	if kind != Kind.THROWER and kind != Kind.MERC and (slam or randf() < (0.15 if kind == Kind.FODDER else 0.5)):
 		Audio.sfx("zombie_groan" if FX.is_undead(self) else "", "sounds/sfx/enemy_growl.wav")
@@ -418,6 +624,11 @@ func _begin_windup(slam: bool) -> void:
 		_ritual_telegraph()
 	elif kind == Kind.MERC:
 		_aim_point = player.global_position + Vector3(0, 1.0, 0) if player else global_position + global_transform.basis.z * 5.0
+		# Механический сигнал прицеливания до очереди.
+		Audio.sfx_while("merc_aim", "sounds/sfx/gun_reload.wav", _warning_is_timely.bind(_windup_serial))
+	elif kind == Kind.THROWER:
+		# Предупреждение до выпуска снаряда; ударный curse_throw остаётся отдельно.
+		Audio.sfx_while("thrower_aim", "sounds/sfx/enemy_growl.wav", _warning_is_timely.bind(_windup_serial))
 	if slam:
 		_show_slam_telegraph()
 	if _humanoid:
@@ -431,6 +642,10 @@ func _begin_windup(slam: bool) -> void:
 		var tw := create_tween()
 		tw.tween_property(_visual, "scale", Vector3(1.12, 0.88, 1.12) * model_scale, 0.15)
 		tw.tween_property(_visual, "scale", Vector3(0.95, 1.08, 0.95) * model_scale, maxf(0.05, (boss_slam_windup if slam else windup_time) - 0.15))
+
+## Сигнал нужен в начале именно этого замаха, чтобы оставалось время среагировать.
+func _warning_is_timely(serial: int) -> bool:
+	return not is_dead and state == State.WINDUP and _windup_serial == serial and _state_time < windup_time * warning_deadline_fraction
 
 func _execute_attack() -> void:
 	_attack_count += 1
@@ -457,7 +672,9 @@ func _execute_attack() -> void:
 			else:
 				_do_melee()
 	_doing_slam = false
-	_set_state(State.RECOVER)
+	# Парирование во время удара уже могло оглушить атакующего.
+	if state != State.STUNNED:
+		_set_state(State.RECOVER)
 
 func _do_melee() -> void:
 	var fwd := global_transform.basis.z
@@ -467,8 +684,8 @@ func _do_melee() -> void:
 	var to_p := player.global_position - global_position
 	to_p.y = 0
 	var reach := attack_range * 1.35 + 0.3
-	if to_p.length() <= reach and fwd.dot(to_p.normalized()) > 0.25:
-		_hit_player(attack_damage, to_p.normalized() * 6.0 + Vector3.UP * 2.5)
+	if to_p.length() <= reach and fwd.dot(to_p.normalized()) > 0.25 and (kind == Kind.BOSS or _can_reach_melee_target()):
+		_hit_player(attack_damage, to_p.normalized() * 6.0 + Vector3.UP * 2.5, true)
 	FX.burst(get_parent(), global_position + fwd * attack_range * 0.8 + Vector3(0, 1, 0), 0.5 * model_scale, Color(1, 0.3, 0.2, 0.5), 0.15)
 	Audio.play("sounds/enemy_attack.ogg")
 
@@ -554,7 +771,7 @@ func _setup_special() -> void:
 func _update_special(delta: float) -> void:
 	match kind:
 		Kind.SHAMAN:
-			if state == State.CHASE:
+			if state == State.CHASE and is_alert_to_player():
 				_ritual_left -= delta
 		Kind.BLOATED:
 			if _visual:
@@ -568,8 +785,10 @@ func _room() -> Node:
 	return p if p and p.has_method("spawn_extra") else null
 
 ## Удар по Тору от этого врага; возвращает, сколько HP на самом деле снято (неуязвимость — 0).
-func _hit_player(amount: float, knock: Vector3) -> float:
+func _hit_player(amount: float, knock: Vector3, parryable: bool = false) -> float:
 	if player == null or not is_instance_valid(player) or player.is_dead:
+		return 0.0
+	if parryable and player.axe and player.axe.weapon_skill_try_parry_melee(self):
 		return 0.0
 	var h0 := player.health
 	RunTracker.note_hit(self)
@@ -638,8 +857,8 @@ func _do_shield_bash() -> void:
 	if player and not player.is_dead:
 		var to_p := player.global_position - global_position
 		to_p.y = 0
-		if to_p.length() <= attack_range * 1.35 + 0.3 and fwd.dot(to_p.normalized()) > 0.25:
-			_hit_player(attack_damage, to_p.normalized() * shove_force + Vector3.UP * shove_up)
+		if to_p.length() <= attack_range * 1.35 + 0.3 and fwd.dot(to_p.normalized()) > 0.25 and _can_reach_melee_target():
+			_hit_player(attack_damage, to_p.normalized() * shove_force + Vector3.UP * shove_up, true)
 	FX.burst(get_parent(), global_position + fwd * attack_range * 0.8 + Vector3(0, 1, 0), 0.6 * model_scale, Color(0.8, 0.85, 1.0, 0.5), 0.15)
 	Audio.play("sounds/sfx/wall_splat.wav")
 
@@ -776,6 +995,14 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	Perf.mark("enemy_hit")
 	if is_dead:
 		return
+	if _tier_navigation != null:
+		_tier_navigation.interrupt_jump()
+	if _spawn_entry != null:
+		_spawn_entry.cancel()
+	# Даже блок щитом или поглощение брони сообщает врагу о присутствии игрока.
+	alert_to_player()
+	if damage > 0.0:
+		_begin_flinch(knockback)
 	if kind == Kind.SHIELD and damage < DEBUG_KILL_DAMAGE and _shield_blocks(knockback, source):
 		_on_blocked(knockback)
 		return
@@ -785,7 +1012,7 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 		if damage <= 0.0:
 			return
 	health -= damage
-	_last_hit_time = Time.get_ticks_msec() / 1000.0
+	_last_hit_time = Run.combat_clock
 	ComicFX.on_enemy_hit(self, damage, source)
 	_hurt_flash = 1.0
 	var big := source == "melee_finisher" or source == "melee_heavy" or source == "slam"
@@ -794,12 +1021,7 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	FX.enemy_hit(self, damage, source, big)  # вспышка, у нежити — ихор (VFX-комплект)
 	FX.damage_number(get_parent(), global_position + Vector3(0, 1.8 * model_scale, 0), damage,
 		Color(1, 0.55, 0.2) if big else (Color(0.6, 0.85, 1.0) if source in ["hammer", "lightning"] else Color(1, 0.92, 0.4)), big)
-	var k := knockback * (1.0 - knock_resist)
-	knockback_velocity += k
-	# Скорость = база + отбрасывание (_apply_movement вычитает knockback_velocity из velocity, чтобы найти базу):
-	# толчок кладём и в velocity — иначе база «съедала» его и враг ехал к Тору, а не от него (до блока Б3)
-	velocity.x += k.x
-	velocity.z += k.z
+	var k := apply_knockback_only(knockback)
 	# Реакция на удар (не сбиваем анимацию атаки и оглушения)
 	if _humanoid and health > 0.0 and state in [State.CHASE, State.RECOVER] and k.length() > 1.0:
 		_humanoid.play(anim_hit, 0.03, 1.3)
@@ -818,6 +1040,47 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	if health <= 0.0:
 		_die(source)
 
+## Только локальный вид: не мешаем замахам, физике, навигации и защитам.
+func _begin_flinch(knockback: Vector3) -> void:
+	if _visual == null or not is_instance_valid(_visual) or flinch_time <= 0.0:
+		return
+	var dir := Vector3(knockback.x, 0.0, knockback.z)
+	if dir.length_squared() < 0.0001 and is_instance_valid(player):
+		dir = global_position - player.global_position
+		dir.y = 0.0
+	if dir.length_squared() < 0.0001:
+		dir = -global_transform.basis.z
+		dir.y = 0.0
+	_visual.position -= _flinch_applied
+	_flinch_direction = global_transform.basis.inverse() * dir.normalized()
+	_flinch_left = flinch_time
+	_flinch_applied = _flinch_direction * maxf(0.0, flinch_distance) * model_scale
+	_visual.position += _flinch_applied
+
+## Толчок без урона: волна посоха на первых двух уровнях использует ту же физику, что и попадание.
+func apply_knockback_only(knockback: Vector3) -> Vector3:
+	if is_dead:
+		return Vector3.ZERO
+	if knockback.length_squared() > 0.0001:
+		if _tier_navigation != null:
+			_tier_navigation.interrupt_jump()
+		if _spawn_entry != null:
+			_spawn_entry.cancel()
+		alert_to_player()
+	var k := knockback * (1.0 - knock_resist)
+	if k.length_squared() > 0.0001:
+		# Толчок без урона тоже может сбросить врага с уступа.
+		_last_hit_time = Run.combat_clock
+		# Удар может прервать прыжок уже в воздухе, а не только до отрыва.
+		if _airborne:
+			_fall_forced = true
+			_fall_peak_y = maxf(_fall_peak_y, global_position.y)
+	knockback_velocity += k
+	# _apply_movement вычитает накопленный толчок из velocity при вычислении базовой скорости.
+	velocity.x += k.x
+	velocity.z += k.z
+	return k
+
 ## Оглушить на time секунд (трейты, эффекты, Мьёльнир — сильное оглушение: элиту тоже). Босса — нет.
 ## HP, скорость, урон и Слава из описания GDD (вызывается залом до add_child).
 func apply_def(d: EnemyDef) -> void:
@@ -835,7 +1098,10 @@ func stun(time: float) -> void:
 
 ## Оглушение оружием (дубина и т. п.). Элиту и босса — только сильным ударом (strong), босса — никогда.
 func apply_stun(time: float, strong: bool = false) -> void:
-	if is_dead or kind == Kind.BOSS or time <= 0.0 or ((has_meta("elite") or _tough) and not strong):
+	if is_dead or time <= 0.0:
+		return
+	alert_to_player()
+	if kind == Kind.BOSS or ((has_meta("elite") or _tough) and not strong):
 		return
 	if _telegraph and is_instance_valid(_telegraph):
 		_telegraph.queue_free()
@@ -843,7 +1109,7 @@ func apply_stun(time: float, strong: bool = false) -> void:
 	_set_state(State.STUNNED)
 
 func _apply_movement(move_dir: Vector3, delta: float) -> void:
-	var can_move := state == State.CHASE
+	var can_move: bool = state == State.CHASE or (state == State.SPAWNING and _spawn_entry != null and _spawn_entry.active)
 	var target := move_dir * move_speed if can_move else Vector3.ZERO
 	var horiz := Vector3(velocity.x, 0, velocity.z)
 	# Базовая скорость стремится к цели, отбрасывание добавляется сверху
@@ -865,8 +1131,16 @@ func _apply_movement(move_dir: Vector3, delta: float) -> void:
 	_check_wall_splat(pre)
 	_check_fall()
 	_update_stuck(move_dir, delta)
-	if global_position.y < -30.0:
+	if _below_fall_limit():
 		_die("fall")
+
+## Залы с ямой могут задать локальную границу, не меняя другие арены.
+func _below_fall_limit() -> bool:
+	if global_position.y < -30.0:
+		return true
+	var room := get_parent() as Node3D
+	return room != null and room.has_meta("enemy_fall_y") \
+		and room.to_local(global_position).y < float(room.get_meta("enemy_fall_y"))
 
 ## Сброшенный с высоты враг (GDD 8): корм — насмерть, остальные — fall_damage. Босса не касается.
 func _check_fall() -> void:
@@ -875,7 +1149,7 @@ func _check_fall() -> void:
 		if not _airborne:
 			_airborne = true
 			_fall_peak_y = global_position.y
-			_fall_forced = state != State.SPAWNING and Time.get_ticks_msec() / 1000.0 - _last_hit_time <= fall_hit_window
+			_fall_forced = state != State.SPAWNING and Run.combat_clock - _last_hit_time <= fall_hit_window
 		_fall_peak_y = maxf(_fall_peak_y, global_position.y)
 		return
 	if not _airborne:
@@ -927,7 +1201,7 @@ func _check_wall_splat(pre_horiz: Vector3) -> void:
 			continue
 		if pre_horiz.normalized().dot(-n) < 0.3:
 			continue
-		_last_splat_time = Time.get_ticks_msec() / 1000.0
+		_last_splat_time = Run.combat_clock
 		knockback_velocity = n * 2.0
 		FX.burst(get_parent(), col.get_position(), 0.8, Color(1, 1, 1, 0.6), 0.2)
 		if player:
@@ -943,7 +1217,11 @@ func _check_wall_splat(pre_horiz: Vector3) -> void:
 func _die(source: String) -> void:
 	if is_dead:
 		return
+	# Тело продолжает анимацию смерти после передачи в RigidBody3D.
+	_restore_fodder_animation()
 	is_dead = true
+	# Смерть отмечаем до эффектов и взрыва: Раздутый и самоподрыв не создают обычный труп.
+	Perf.mark("enemy_death")
 	remove_from_group("enemies")
 	if _telegraph and is_instance_valid(_telegraph):
 		_telegraph.queue_free()
@@ -955,11 +1233,16 @@ func _die(source: String) -> void:
 		died.emit(self)
 		queue_free()
 		return
-	var now := Time.get_ticks_msec() / 1000.0
+	var now := Run.combat_clock
 	# Мини-босс — тоже Kind.BOSS (поведение босса), но Славу за него даёт MinibossDef
 	# Слава по GDD 15.2: по слою врага (EnemyDef), элита — 15
 	var glory_base := Run.glory_elite_kill if has_meta("elite") else glory_value
-	Run.register_kill(source == "melee_finisher", now - _last_splat_time < 0.6, kind == Kind.BOSS and not has_meta("miniboss"), source, glory_base)
+	Run.register_kill(source == "melee_finisher", now - _last_splat_time < 0.6,
+		kind == Kind.BOSS and not has_meta("miniboss"), source, glory_base,
+		kind == Kind.FODDER and not has_meta("elite"))
+	if source == "fall" and _fall_forced and _fall_peak_y - global_position.y >= fall_kill_height:
+		ComicFX.pop("ledge_kill", global_position + Vector3.UP * model_scale)
+		StyleMeter.event(&"ledge_kill")
 	ComicFX.on_enemy_killed(self, source)
 	FX.enemy_died(self, source)
 	if player and is_instance_valid(player) and not player.is_dead:
@@ -972,9 +1255,10 @@ func _die(source: String) -> void:
 	queue_free()
 
 func _spawn_debris() -> void:
-	Perf.mark("enemy_death")
 	if _visual == null:
 		return
+	_visual.position -= _flinch_applied
+	_flinch_applied = Vector3.ZERO
 	# Не копим трупы: сверх лимита самый старый исчезает сразу
 	var old := get_tree().get_nodes_in_group("debris").filter(func(n: Node) -> bool: return not n.is_queued_for_deletion())
 	for k in maxi(0, old.size() - max_debris + 1):
@@ -1008,9 +1292,20 @@ func _spawn_debris() -> void:
 	else:
 		rb.apply_central_impulse((knock * 1.1 + Vector3.UP * 4.0) * rb.mass)
 		rb.apply_torque_impulse(Vector3(randf_range(-3, 3), randf_range(-2, 2), randf_range(-3, 3)) * rb.mass)
-	# Через 4 с «рэгдолл» сжимается и исчезает (твин привязан к телу и умрёт вместе с ним)
+	# Корм в активной волне остаётся до её полного завершения; вне волн — старый таймер.
+	var room := get_parent()
+	if kind == Kind.FODDER and room and room.has_method("keep_fodder_corpse") \
+			and bool(room.call("keep_fodder_corpse", self, rb, vis)):
+		return
+	fade_debris(rb, vis, debris_lifetime)
+
+## Общий финал тела — используется комнатой после окончания конкретной волны.
+static func fade_debris(rb: RigidBody3D, vis: Node3D, delay: float = 0.0) -> void:
+	if not is_instance_valid(rb) or not is_instance_valid(vis) or rb.is_queued_for_deletion():
+		return
 	var tw := rb.create_tween()
-	tw.tween_interval(debris_lifetime)
+	if delay > 0.0:
+		tw.tween_interval(delay)
 	tw.tween_callback(FX.corpse_smoke.bind(rb))
 	tw.tween_property(vis, "scale", Vector3(0.01, 0.01, 0.01), 0.3)
 	tw.tween_callback(rb.queue_free)
@@ -1019,6 +1314,10 @@ func _spawn_debris() -> void:
 
 func _update_visual_feedback(delta: float) -> void:
 	_hurt_flash = maxf(0.0, _hurt_flash - delta * 8.0)
+	if _visual and is_instance_valid(_visual):
+		_visual.position -= _flinch_applied
+		_flinch_left = maxf(0.0, _flinch_left - delta)
+		_flinch_applied = _flinch_direction * maxf(0.0, flinch_distance) * model_scale * (_flinch_left / maxf(flinch_time, 0.001))
 	# Процедурная «анимация» (только для заглушки): покачивание, отклонение на замахе, рывок на ударе
 	if _visual and _humanoid == null and state != State.STUNNED:
 		var hs := Vector2(velocity.x, velocity.z).length()
@@ -1038,11 +1337,16 @@ func _update_visual_feedback(delta: float) -> void:
 	if _windup_glow > 0.0:
 		var pulse := 0.5 + 0.5 * sin(_state_time * 30.0)
 		glow = _windup_glow * (1.0 + pulse) * (0.35 if _humanoid else 0.8)
+	if _visual and is_instance_valid(_visual):
+		_visual.position += _flinch_applied
 	_set_overlay(_hurt_flash, glow)
 
 const FLASH_MATERIAL := preload("res://shaders/hit_flash.tres")
+const FLASH_GL_SHADER := preload("res://shaders/hit_flash_gl.gdshader")
+const FLASH_MATERIAL_GL := preload("res://shaders/hit_flash_gl.tres")
 
-## Вспышка и свечение — общим оверлей-материалом с per-instance параметрами.
+## Forward+ использует общий оверлей с per-instance параметрами; в GL у каждого врага
+## свой материал с обычными uniform, чтобы части модели не занимали ограниченный буфер.
 ## Оверлей включается только пока есть что показывать (лишний проход рисования не нужен).
 ## Элита светится постоянно (цвет модификатора, мягкая пульсация) — тот же материал, параметр "elite".
 func _set_overlay(flash: float, glow: float) -> void:
@@ -1057,12 +1361,20 @@ func _set_overlay(flash: float, glow: float) -> void:
 	var on := flash > 0.001 or glow > 0.001 or el > 0.001
 	if not on and not _overlay_on:
 		return
+	var use_gl_material := _flash_material_gl != null
+	if on and use_gl_material:
+		if not _overlay_on:
+			_flash_material_gl.next_pass = Outline.flash_next_pass()
+		_flash_material_gl.set_shader_parameter("flash", flash)
+		_flash_material_gl.set_shader_parameter("glow", glow)
+		_flash_material_gl.set_shader_parameter("elite", Color(el_color.r, el_color.g, el_color.b, el))
 	for g in _flash_meshes:
 		if not is_instance_valid(g):
 			continue
 		if on != _overlay_on:
-			g.material_overlay = FLASH_MATERIAL if on else null
-		if on:
+			# Погасла — обратно комиксовая обводка (scripts/outline.gd; при вспышке она — next_pass FLASH_MATERIAL)
+			g.material_overlay = (_flash_material_gl if use_gl_material else FLASH_MATERIAL) if on else Outline.overlay()
+		if on and not use_gl_material:
 			g.set_instance_shader_parameter("flash", flash)
 			g.set_instance_shader_parameter("glow", glow)
 			g.set_instance_shader_parameter("elite", Color(el_color.r, el_color.g, el_color.b, el))
@@ -1071,10 +1383,11 @@ func _set_overlay(flash: float, glow: float) -> void:
 func _collect_meshes(root: Node) -> void:
 	_flash_meshes.clear()
 	for mi in root.find_children("*", "GeometryInstance3D", true, false):
-		# Глаза и брови (Eyes, Eyebrows*) вспышку не показывают — светятся сами и крошечные, а каждый узел
-		# с оверлеем занимает 16 ячеек буфера instance-переменных (в GL — 256 узлов на сцену, FX.INSTANCE_SLOTS_GL)
+		# Глаза и брови (Eyes, Eyebrows*) вспышку не показывают — светятся сами и крошечные.
 		if mi is MeshInstance3D and not mi.name.begins_with("Eye"):
 			_flash_meshes.append(mi as GeometryInstance3D)
+	# Комиксовая обводка (GDD 20) — тот же слот оверлея, те же меши
+	Outline.add_meshes(_flash_meshes)
 
 ## Оружие в правую руку (процедурное, в текстурах Quaternius).
 func _attach_weapon(kind_name: String) -> void:

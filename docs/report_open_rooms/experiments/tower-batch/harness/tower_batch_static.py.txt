@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""Check the two generated tower scenes' batch prerequisites without Godot."""
+import hashlib
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+GROUPS = [
+    ['Post_-1_-1', 'Post_-1_1', 'Post_1_-1', 'Post_1_1'],
+    ['Step0', 'Step1', 'Step2', 'Step3'],
+    *[[f'StepPost{i}_-1', f'StepPost{i}_1'] for i in range(4)],
+    ['Rail_-1', 'Rail_1'],
+]
+
+
+def parse(path):
+    resources = {}
+    nodes = {}
+    current = None
+    for line in path.read_text().splitlines():
+        if line.startswith('[sub_resource '):
+            match = re.search(r'type="([^"]+)" id="([^"]+)"', line)
+            current = ('resource', match[2]) if match else None
+            if match:
+                resources[match[2]] = {'type': match[1]}
+        elif line.startswith('[node '):
+            match = re.search(r'name="([^"]+)" type="([^"]+)" parent="([^"]+)"', line)
+            current = ('node', match[3] + '/' + match[1]) if match else None
+            if match:
+                nodes[current[1]] = {'type': match[2]}
+        elif current and ' = ' in line and len(line) < 1000:
+            key, value = line.split(' = ', 1)
+            (resources if current[0] == 'resource' else nodes)[current[1]][key] = value
+    return resources, nodes
+
+
+def check(path):
+    resources, nodes = parse(path)
+    tower = 'Geometry/Watchtower0'
+    materials = set()
+    count = 0
+    for group in GROUPS:
+        boxes = []
+        for part in group:
+            owner = nodes[tower + '/' + part]
+            mesh_node = nodes[tower + '/' + part + '/Mesh']
+            assert mesh_node['type'] == 'MeshInstance3D'
+            assert 'transform' not in mesh_node and 'visible' not in mesh_node
+            assert 'material_overlay' not in mesh_node and 'custom_aabb' not in mesh_node
+            transform = owner.get('transform', 'IDENTITY')
+            assert transform == 'IDENTITY' or transform.startswith('Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1,'), part
+            match = re.fullmatch(r'SubResource\("([^"]+)"\)', mesh_node['mesh'])
+            assert match, part
+            box = resources[match[1]]
+            assert box['type'] == 'BoxMesh'
+            boxes.append(box)
+            materials.add(mesh_node.get('material_override'))
+            count += 1
+        assert all(box == boxes[0] for box in boxes), group
+    assert len(materials) == 1 and None not in materials
+    collisions = [name for name, node in nodes.items() if name.startswith(tower + '/') and node['type'] == 'CollisionShape3D']
+    assert count == 18 and len(GROUPS) == 7 and len(collisions) == 5
+    print(f'{path.name}: {count} identical-box instances in {len(GROUPS)} groups, one material, {len(collisions)} collisions; sha256={hashlib.sha256(path.read_bytes()).hexdigest()}')
+
+
+if __name__ == '__main__':
+    for room in ('room_01', 'room_06'):
+        check(ROOT / 'rooms' / f'{room}.tscn')

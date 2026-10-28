@@ -12,6 +12,8 @@ class_name RunMap
 @export var miniboss_room: int = 4
 ## Награда первого зала (в него не входят через дверь)
 @export var first_room_reward: String = "combat"
+## Эти залы гарантированно входят в боевые слоты мира, не чаще одного раза.
+@export var required_rooms: PackedStringArray = []
 
 @export_group("Двери")
 ## Сколько дверей после зачистки (GDD 4: 2–3)
@@ -35,9 +37,13 @@ class_name RunMap
 ## Панорама неба мира (equirect 2:1, assets/sky/<мир>.webp); пусто — небо сцены игры (процедурное).
 ## Путь, а не текстура: 4096×2048 грузится в фоне (AssetCache), а не при старте игры вместе с картой
 @export_file("*.webp", "*.png", "*.jpg") var sky: String = ""
-## Яркость панорамы и поворот вокруг вертикали, град (солнце панорамы — в сторону выхода)
+## Яркость панорамы и поворот вокруг вертикали, град. Середина панорамы — +Z (за спиной у входа в зал);
+## солнце сцены ставится туда, где диск (sky_sun_uv), — поворотом выбирается сторона света (Мидгард: юго-запад)
 @export var sky_energy: float = 1.0
 @export var sky_rotation_deg: float = 0.0
+## При необходимости затонировать панораму, не меняя саму текстуру неба.
+@export var sky_tint: Color = Color.WHITE
+@export_range(0.0, 1.0) var sky_tint_strength: float = 0.0
 ## Экспозиция кадра (тонмаппинг): яркое небо-закат подсвечивает зал — подгоняем к прежней яркости
 @export var exposure: float = 1.0
 ## Рассеянный свет: яркость и доля неба в нём (остальное — ambient_color)
@@ -53,6 +59,52 @@ class_name RunMap
 @export var ground_fog_color: Color = Color(0.95, 0.84, 0.78, 0.3)
 @export var dust_motes: bool = false
 @export var torch_embers: bool = false
+
+@export_group("Свет и цвет (блок Б0)")
+## Солнце по панораме: где на ней диск (u, v — доли ширины и высоты, замерено по яркости файла);
+## направление солнца (DirectionalLight Sun) берётся отсюда с учётом sky_rotation_deg — тени совпадают с небом
+@export var sky_sun_uv: Vector2 = Vector2(-1.0, -1.0)
+## Высота солнца для теней, град (на закатной панораме диск у горизонта: тени во весь зал нечитаемы)
+@export_range(5.0, 85.0) var sun_elevation_deg: float = 40.0
+@export var sun_color: Color = Color(1.0, 0.86, 0.7)
+@export var sun_energy: float = 1.15
+## Тонмаппинг ACES: белая точка; цветокоррекция кадра (яркость, контраст, насыщенность)
+@export var tonemap_white: float = 6.0
+@export var adjust_brightness: float = 1.0
+@export var adjust_contrast: float = 1.0
+@export var adjust_saturation: float = 1.0
+## Цветокоррекция по палитре мира (GDD 16): тени, середина, света — 1D-кривая по каналам (GradientTexture1D)
+@export var grade_shadows: Color = Color(0.0, 0.0, 0.0)
+@export var grade_midtones: Color = Color(0.5, 0.5, 0.5)
+@export var grade_highlights: Color = Color(1.0, 1.0, 1.0)
+## SSAO / SSIL (только Forward+; в GL Compatibility — запечённое затемнение залов, блок Б0)
+@export var ssao_intensity: float = 1.6
+@export var ssao_radius: float = 1.2
+@export var ssil_enabled: bool = true
+@export var ssil_intensity: float = 0.8
+## Свечение (Glow): сила и порог bloom
+@export var glow_intensity: float = 0.6
+@export var glow_bloom: float = 0.08
+## Объёмный туман (только Forward+): плотность (0 — выкл.), цвет-альбедо, свечение, длина, м
+@export var volumetric_fog_density: float = 0.0
+@export var volumetric_fog_albedo: Color = Color(0.9, 0.75, 0.65)
+@export var volumetric_fog_emission: Color = Color(0.0, 0.0, 0.0)
+@export var volumetric_fog_length: float = 48.0
+## Тени от факелов (только Forward+): сколько факелов зала бросают тени (у выхода — первыми)
+@export var torch_shadows: int = 2
+## Художественный профиль: применяется к общим материалам и восстанавливается при смене зала.
+@export_range(0.5, 2.0) var room_outline_multiplier: float = 1.0
+@export_range(0.0, 2.0) var room_halftone_multiplier: float = 1.0
+
+@export_group("Закрытый зал (длинный дом)")
+## Room.indoor: под крышей — без солнца и неба, тёплый полумрак факелов и очага
+@export var indoor_background: Color = Color(0.05, 0.035, 0.03)
+@export var indoor_ambient_color: Color = Color(0.42, 0.3, 0.22)
+@export var indoor_ambient_energy: float = 0.55
+@export var indoor_fog_color: Color = Color(0.2, 0.12, 0.08)
+@export var indoor_fog_density: float = 0.018
+@export var indoor_exposure: float = 1.0
+@export var indoor_volumetric_fog_density: float = 0.0
 
 @export_group("Награды")
 ## Элитный бой: шанс элиты у каждого врага и предел элиты в зале (обычный зал — 0.1 / 1)
@@ -80,7 +132,7 @@ func miniboss_index() -> int:
 ## Набор дверей к залу next_index. rewards — все RewardDef, visits — сколько раз заходили (id → n),
 ## prev — награда зала, из которого выходим; boss_index — номер зала босса;
 ## anvil_ok — наковальне есть что дать (Run.anvil_available()).
-func roll_offers(rewards: Array, next_index: int, boss_index: int, visits: Dictionary, prev: String, shop_ok: bool, anvil_ok: bool = false) -> Array[String]:
+func roll_offers(rewards: Array, next_index: int, boss_index: int, visits: Dictionary, prev: String, shop_ok: bool, anvil_ok: bool = false, combat_only: bool = false) -> Array[String]:
 	var out: Array[String] = []
 	if next_index >= boss_index:
 		out.append("boss")
@@ -97,10 +149,12 @@ func roll_offers(rewards: Array, next_index: int, boss_index: int, visits: Dicti
 			continue
 		if rd.id == prev and not rd.combat:
 			peaceful_prev = true
+		if (combat_only and not rd.combat) or (rd.id == "shop" and not shop_ok):
+			continue
 		if rd.weight > 0.0:
 			pool.append(rd)
 	# Ларёк гарантирован: пока не зашли нужное число раз — дверь ларька в каждом наборе с shop_earliest_room
-	if shop_ok and int(visits.get("shop", 0)) < shop_per_world and next_index + 1 >= shop_earliest_room \
+	if shop_ok and not combat_only and int(visits.get("shop", 0)) < shop_per_world and next_index + 1 >= shop_earliest_room \
 			and not (no_peaceful_twice and peaceful_prev):
 		out.append("shop")
 	# Наковальня Эйтри — в ранних залах (стихия молота до мини-босса), если такая награда есть

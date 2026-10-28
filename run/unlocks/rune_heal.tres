@@ -1,13 +1,15 @@
 [gd_resource type="Resource" script_class="UnlockDef" format=3]
 
 [ext_resource type="Script" path="res://run/unlock_def.gd" id="1_unlk"]
+[ext_resource type="Texture2D" path="res://sprites/unlocks/rune_heal.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_unlk")
 id = "rune_heal"
 title = "Вспомнил вкус мёда"
 description = "Руна «Мёд поэзии» в пул: сразу лечит 50."
-price = 80
+price = 400
 kind = "rune"
 target_id = "heal"
 order = 427
+icon = ExtResource("2_icon")

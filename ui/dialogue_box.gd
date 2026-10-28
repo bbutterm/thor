@@ -2,7 +2,8 @@ extends CanvasLayer
 class_name DialogueBox
 ## Окно диалога-новеллы: портреты слева (Тор) и справа (собеседник), плашка с именем, текст по букве,
 ## выбор ответа Тора, «Пропустить» и журнал прочитанного. Строится кодом. Создаёт и показывает Dialogue.
-## Управление: клик / Пробел / Enter — допечатать или дальше; 1 / 2 — выбор; Tab или кнопка — журнал.
+## Управление: клик / Пробел / Enter / A — допечатать или дальше; 1 / 2 или стрелки + A — выбор;
+## Tab / View — журнал, Y — пропустить сцену на геймпаде.
 ## Фон (backdrop) — картинка sprites/backgrounds/*.webp (ScreenArt.backdrop_path: couch → диван,
 ## shop → ларёк, run → мир забега…); сюжетный кадр sprites/story/<id>.webp — поле "image" у реплики
 ## (или у сцены — с первой реплики): на весь экран за окном текста, портреты прячутся; "none" — убрать.
@@ -28,6 +29,8 @@ signal line_shown(line: Dictionary)
 @export var story_fade_time: float = 0.35
 ## Яркость картинки-фона (чуть темнее — портреты и текст читаются)
 @export var backdrop_brightness: float = 0.82
+## Прокрутка журнала правым стиком, px/s.
+@export var log_scroll_speed: float = 320.0
 
 var _root: Control
 var _backdrop: ColorRect
@@ -64,6 +67,7 @@ var _waiting_choice: bool = false
 var _age: float = 0.0
 var _left_sp: String = ""
 var _right_sp: String = ""
+var _log_scroll_axis: float = 0.0
 
 func _ready() -> void:
 	layer = 40
@@ -168,17 +172,17 @@ func _build() -> void:
 
 	var top := HBoxContainer.new()
 	top.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	top.offset_left = -420
+	top.offset_left = -520
 	top.offset_right = -24
 	top.offset_top = 20
 	top.offset_bottom = 64
 	top.alignment = BoxContainer.ALIGNMENT_END
 	top.add_theme_constant_override("separation", 10)
 	_root.add_child(top)
-	_log_btn = _small_button(tr("Журнал [Tab]"))
+	_log_btn = _small_button(tr("Журнал [Tab / View]"))
 	_log_btn.pressed.connect(toggle_log)
 	top.add_child(_log_btn)
-	_skip_btn = _small_button(tr("Пропустить ▸▸"))
+	_skip_btn = _small_button(tr("Пропустить [Y] ▸▸"))
 	_skip_btn.pressed.connect(skip)
 	top.add_child(_skip_btn)
 
@@ -209,6 +213,7 @@ func _build() -> void:
 	_log_text.add_theme_font_size_override("normal_font_size", 19)
 	_log_text.add_theme_color_override("default_color", UIStyle.TEXT)
 	lv.add_child(_log_text)
+	lv.add_child(UIStyle.label(tr("Правый стик — прокрутка журнала."), 14, UIStyle.TEXT_DIM, 3))
 
 ## Фон «между забегами»: тёмная комната, диван-силуэт и подпись — Тор проснулся на диване.
 func _make_couch_backdrop() -> Control:
@@ -429,6 +434,9 @@ func _process(delta: float) -> void:
 		return
 	_age += delta
 	_next_mark.modulate.a = 0.55 + 0.45 * sin(_now() * 6.0)
+	if _log_panel.visible and _log_scroll_axis != 0.0:
+		var bar := _log_text.get_v_scroll_bar()
+		bar.value += _log_scroll_axis * log_scroll_speed * delta
 	if not _typing:
 		return
 	if _pause_left > 0.0:
@@ -476,6 +484,15 @@ func _show_choices(chs: Array) -> void:
 		b.add_theme_color_override("font_hover_color", accent.lightened(0.3))
 		b.pressed.connect(choose.bind(i))
 		_choices_box.add_child(b)
+	_focus_first_choice.call_deferred()
+
+## Выбор могли закрыть в том же кадре, пока ждёт отложенный вызов.
+func _focus_first_choice() -> void:
+	if not is_inside_tree() or not visible or not _waiting_choice or _log_panel.visible or _choices_box.get_child_count() == 0:
+		return
+	var first := _choices_box.get_child(0) as Button
+	if is_instance_valid(first) and first.is_inside_tree():
+		first.grab_focus()
 
 func _clear_choices() -> void:
 	for c in _choices_box.get_children():
@@ -533,6 +550,11 @@ func _close() -> void:
 
 func toggle_log() -> void:
 	_log_panel.visible = not _log_panel.visible
+	_log_scroll_axis = 0.0
+	if is_inside_tree() and not _log_panel.visible and _waiting_choice:
+		var focused := get_viewport().gui_get_focus_owner()
+		if focused == null or not _choices_box.is_ancestor_of(focused):
+			_focus_first_choice.call_deferred()
 
 func _log_append(def: Dictionary, col: Color, text: String) -> void:
 	var name := str(def.get("name", "?"))
@@ -546,16 +568,45 @@ func _on_click_input(event: InputEvent) -> void:
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
+	if event is InputEventJoypadMotion and _log_panel.visible:
+		if event.axis == JOY_AXIS_RIGHT_Y:
+			_log_scroll_axis = event.axis_value if absf(event.axis_value) >= 0.25 else 0.0
+		get_viewport().set_input_as_handled()
+		return
+	if event is InputEventJoypadButton and event.pressed:
+		if event.button_index == JOY_BUTTON_BACK:
+			toggle_log()
+			get_viewport().set_input_as_handled()
+			return
+		if _log_panel.visible:
+			if event.is_action_pressed("ui_cancel"):
+				toggle_log()
+			get_viewport().set_input_as_handled()
+			return
+		if event.button_index == JOY_BUTTON_Y and _age >= open_guard:
+			skip()
+			get_viewport().set_input_as_handled()
+			return
+		if not _waiting_choice and event.is_action_pressed("ui_accept"):
+			advance()
+			get_viewport().set_input_as_handled()
+			return
+		# Выборы обрабатываются обычным фокусом Control, чтобы работали стики и D-pad.
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var k := event as InputEventKey
 		if k.physical_keycode == KEY_TAB:
 			toggle_log()
 		elif _log_panel.visible and k.physical_keycode == KEY_ESCAPE:
 			toggle_log()
+		elif _log_panel.visible:
+			pass
 		elif _waiting_choice and (event.is_action("pick_1") or k.physical_keycode == KEY_KP_1):
 			choose(0)
 		elif _waiting_choice and (event.is_action("pick_2") or k.physical_keycode == KEY_KP_2):
 			choose(1)
+		elif _waiting_choice and (event.is_action("ui_accept") or event.is_action("ui_up") or event.is_action("ui_down")):
+			return
 		elif k.physical_keycode in [KEY_SPACE, KEY_ENTER, KEY_KP_ENTER] or event.is_action("jump"):
 			advance()
 		get_viewport().set_input_as_handled()

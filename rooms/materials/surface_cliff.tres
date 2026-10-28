@@ -1,0 +1,35 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/world_surface.gdshader" id="1_plmkk"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_RockTrim_BaseColor.png" id="2_1sbxs"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_Noise_Terrain.png" id="3_sk0a0"]
+
+[resource]
+resource_name = "surface_cliff"
+render_priority = 0
+shader = ExtResource("1_plmkk")
+shader_parameter/albedo_tex = ExtResource("2_1sbxs")
+shader_parameter/normal_strength = null
+shader_parameter/tint = Color(0.42, 0.38, 0.42, 1)
+shader_parameter/uv_scale = 0.12
+shader_parameter/roughness_base = null
+shader_parameter/blend_sharpness = null
+shader_parameter/noise_tex = ExtResource("3_sk0a0")
+shader_parameter/detail_mix = null
+shader_parameter/detail_scale = null
+shader_parameter/detail_angle = null
+shader_parameter/antitile_scale = null
+shader_parameter/macro_scale = null
+shader_parameter/macro_strength = 0.35
+shader_parameter/macro_tint = null
+shader_parameter/overlay_color = Color(0.22, 0.28, 0.14, 1)
+shader_parameter/overlay_uv = null
+shader_parameter/overlay_amount = 0.4
+shader_parameter/overlay_scale = 0.05
+shader_parameter/overlay_softness = null
+shader_parameter/overlay_top = 0.9
+shader_parameter/overlay_roughness = null
+shader_parameter/grime_color = null
+shader_parameter/grime_height = null
+shader_parameter/grime_strength = 0.0
+shader_parameter/vertex_ao = null

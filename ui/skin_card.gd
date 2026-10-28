@@ -122,5 +122,19 @@ func add_text(text: String, font_size: int, color: Color, outline: int = 4) -> L
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.custom_minimum_size = Vector2(body.size.x, 0)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if body.get_child_count() == 0:
+		# Заголовок не должен делить слово на отдельные буквы, даже на узкой карточке.
+		var words := text.replace("\n", " ").replace("\t", " ").split(" ", false)
+		var available := maxf(1.0, body.size.x - outline * 2.0)
+		var size := font_size
+		while size > 8:
+			var longest := 0.0
+			for word in words:
+				longest = maxf(longest, l.label_settings.font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x)
+			if longest <= available:
+				break
+			size -= 1
+		l.label_settings.font_size = size
+	l.set_meta("preferred_font_size", l.label_settings.font_size)
 	body.add_child(l)
 	return l

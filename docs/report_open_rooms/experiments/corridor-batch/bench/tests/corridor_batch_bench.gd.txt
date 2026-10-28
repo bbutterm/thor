@@ -1,0 +1,204 @@
+extends Node
+## Сравнение живой анимации одной толпы, старого зала, Н3 и групп стен ворот.
+## ИИ и физика врагов выключены; сцена и коллизии в игре не изменяются.
+const Exp := preload("res://tests/fixtures/corridor_batch_experiment.gd")
+var game: Game
+var baseline: Room
+var data: Dictionary
+var animations: Array[AnimationPlayer] = []
+var out_dir := "user://corridor_batch_bench"
+var failed := false
+
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	if not has_meta("runner"):
+		var runner := Node.new()
+		runner.set_script(get_script())
+		runner.set_meta("runner", true)
+		get_tree().root.add_child.call_deferred(runner)
+		return
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		out_dir = args[0]
+	var err := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
+	if err != OK:
+		push_error("Cannot create screenshot directory (%d)" % err)
+		get_tree().quit(1)
+		return
+	_run.call_deferred()
+
+
+func frames(n: int) -> void:
+	for i in n:
+		await get_tree().process_frame
+
+
+func _run() -> void:
+	Run.start_run("berserker")
+	Run.room_order.assign(["res://rooms/room_01.tscn", Run.BOSS_SCENE])
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await frames(40)
+	game = get_tree().current_scene as Game
+	if game == null or game.room == null:
+		push_error("Could not start game and room")
+		get_tree().quit(1)
+		return
+	game.room.set_physics_process(false)
+	game.room._spawn_queue.clear()
+	for enemy in game.room.alive_enemies().duplicate():
+		enemy.queue_free()
+	game.room._alive.clear()
+	game.player.input_enabled = false
+	game.player.set_physics_process(false)
+	await frames(5)
+	baseline = (load("res://tests/fixtures/room_01_before_b0.tscn") as PackedScene).instantiate() as Room
+	game.level.add_child(baseline)
+	baseline.visible = false
+	baseline.set_physics_process(false)
+	WorldArt.dress_room(baseline, Run.map)
+	var c := game.player.global_position
+	for i in 44:
+		var a := TAU * i / 44.0
+		var radius := 5.0 + (i % 4) * 1.5
+		var kind := "grunt" if i % 4 == 0 else "fodder"
+		var enemy := game.room.spawn_extra(kind, c + Vector3(cos(a) * radius, 0.05, sin(a) * radius))
+		if enemy == null or enemy._humanoid == null:
+			push_error("Expected a humanoid model on every enemy")
+			get_tree().quit(1)
+			return
+		enemy.health = 1e6
+		enemy.max_health = 1e6
+		enemy.set_physics_process(false)
+		enemy.reparent(game, true)
+		if not enemy._humanoid.play("Zombie_Walk_Fwd_Loop", 0.0, 1.0):
+			push_error("Walking animation missing")
+			get_tree().quit(1)
+			return
+		var ap: AnimationPlayer = enemy._humanoid.anim
+		ap.get_animation(ap.current_animation).loop_mode = Animation.LOOP_LINEAR
+		animations.append(ap)
+		await get_tree().process_frame
+	await frames(25)
+	if get_tree().get_nodes_in_group("enemies").size() != 44:
+		push_error("Expected exactly 44 enemies")
+		get_tree().quit(1)
+		return
+	data = Exp.prepare(game.room)
+	if data.has("error") or not Exp.verify(data):
+		push_error("Could not create matching corridor batches: %s" % data.get("error", "validation failed"))
+		get_tree().quit(1)
+		return
+	var collisions := Exp.snapshot(game.room, "collision")
+	var lights := Exp.snapshot(game.room, "light")
+	print("CORRIDOR BATCH: original=%d, row_groups=%d, side_groups=%d, surfaces=%d, animated_enemies=%d" % [
+		data.records.size(), data.rows.size(), data.sides.size(), (data.mesh as Mesh).get_surface_count(), animations.size()])
+	print("CONSERVATIVE EXTRA LIGHT BOUNDS: rows=%d, sides=%d" % [
+		Exp.count_extra_light_bounds(data, lights, "rows"), Exp.count_extra_light_bounds(data, lights, "sides")])
+	await _measure(true, "original", "OLD WARMUP", 15)
+	await _measure(false, "original", "N3 ORIGINAL WARMUP", 15)
+	await _measure(false, "rows", "N3 ROWS WARMUP", 15)
+	await _measure(false, "sides", "N3 SIDES WARMUP", 15)
+	for iteration in 3:
+		await _measure(true, "original", "OLD %d" % (iteration + 1), 45)
+		await _measure(false, "original", "N3 ORIGINAL %dA" % (iteration + 1), 45)
+		var order := ["rows", "sides"] if iteration % 2 == 0 else ["sides", "rows"]
+		for index in order.size():
+			await _measure(false, order[index], "N3 %s %d" % [order[index].to_upper(), iteration + 1], 45)
+			await _measure(false, "original", "N3 ORIGINAL %d%s" % [iteration + 1, "B" if index == 0 else "C"], 45)
+	await _capture_views()
+	Exp.select(data, "original")
+	if not Exp.verify(data) or not Exp.snapshots_equal(collisions, Exp.snapshot(game.room, "collision")) or not Exp.snapshots_equal(lights, Exp.snapshot(game.room, "light")):
+		push_error("Geometry, collision or lighting changed")
+		failed = true
+	if failed:
+		get_tree().quit(1)
+		return
+	print("CORRIDOR BATCH BENCH COMPLETE")
+	await _release_temporary_state()
+	get_tree().quit(0)
+
+
+func _measure(old: bool, mode: String, label: String, count: int) -> void:
+	Exp.select(data, mode)
+	game.room.visible = not old
+	baseline.visible = old
+	for ap in animations:
+		ap.seek(0.15, true)
+	await frames(10)
+	var values := PackedFloat32Array()
+	var before := Time.get_ticks_usec()
+	for i in count:
+		await get_tree().process_frame
+		var now := Time.get_ticks_usec()
+		values.append((now - before) / 1000.0)
+		before = now
+	values.sort()
+	var total := 0.0
+	for value in values:
+		total += value
+	print("%s: avg %.2f ms, median %.2f ms, p95 %.2f ms, draw calls %d, primitives %d, enemies %d" % [
+		label, total / count, values[count / 2], values[int(count * 0.95)],
+		int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+		int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
+		get_tree().get_nodes_in_group("enemies").size()])
+
+
+func _capture_views() -> void:
+	if DisplayServer.get_name() == "headless":
+		push_error("Renderer required for screenshot comparison")
+		failed = true
+		return
+	get_tree().paused = true
+	game.room.visible = true
+	baseline.visible = false
+	for ap in animations:
+		ap.seek(0.35, true)
+	DisplayServer.window_set_size(Vector2i(640, 360))
+	await frames(20)
+	var player := game.player
+	var old_transform := player.global_transform
+	var old_pitch := player.head.rotation.x
+	# Камера Тора расположена на 1,6 м выше указанных координат ног.
+	var views := [
+		{"name": "floor", "pos": Vector3(0, 0.1, 0), "yaw": 0.0, "pitch": 0.0},
+		{"name": "entrance", "pos": Vector3(0, 0.1, -11.0), "yaw": 0.0, "pitch": 0.0},
+		{"name": "left", "pos": Vector3(-1.0, 0.1, -14.5), "yaw": PI / 2.0, "pitch": 0.0},
+		{"name": "right", "pos": Vector3(1.0, 0.1, -14.5), "yaw": -PI / 2.0, "pitch": 0.0},
+		{"name": "torch", "pos": Vector3(-3.0, 0.1, -10.0), "yaw": -0.4, "pitch": 0.1},
+		{"name": "tower", "pos": Vector3(9, 3.75, -2.5), "yaw": 0.71, "pitch": -0.17},
+		{"name": "above", "pos": Vector3(0, 7.0, -12.5), "yaw": 0.0, "pitch": -0.55},
+	]
+	for view in views:
+		player.global_position = view.pos
+		player.rotation.y = view.yaw
+		player.head.rotation.x = view.pitch
+		for mode in ["original", "rows", "sides", "hidden"]:
+			# "hidden" — контроль: кадр должен измениться, иначе он не видит коридор.
+			Exp.select(data, mode)
+			await frames(6)
+			await RenderingServer.frame_post_draw
+			var img := get_viewport().get_texture().get_image()
+			var err := img.save_png(out_dir.path_join("%s_%s.png" % [view.name, mode]))
+			if err != OK:
+				push_error("Could not save %s/%s (%d)" % [view.name, mode, err])
+				failed = true
+	player.global_transform = old_transform
+	player.head.rotation.x = old_pitch
+
+
+func _release_temporary_state() -> void:
+	# Завершить игру до остановки рендера: так освобождаются её SubViewport,
+	# толпа и экспериментальные MultiMesh. Глобальные кэши не подменяем и не
+	# подавляем замечания движка: видим, что осталось при штатном завершении.
+	get_tree().paused = true
+	data.clear()
+	animations.clear()
+	baseline = null
+	var previous_game := game
+	game = null
+	previous_game.queue_free()
+	await frames(4)
+	AssetCache.shutdown()
+	await frames(4)
+	print("CORRIDOR BATCH TEMPORARY STATE RELEASED")

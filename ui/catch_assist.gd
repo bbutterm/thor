@@ -2,7 +2,7 @@ extends Control
 class_name CatchAssist
 ## Подсказка идеального хвата Мьёльнира (вокруг прицела), пока молот летит обратно:
 ## - сходящееся кольцо: радиус = цель + время до поимки (MjolnirProjectile.catch_eta), сходится с целевым ровно в момент поимки;
-## - целевое кольцо золотеет и «дышит», пока открыто окно ±perfect_window (до и после поимки), под ним — клавиша броска;
+## - целевое кольцо золотеет и «дышит», пока открыто эффективное окно хвата до и после поимки;
 ## - стрелка на кольце — откуда летит молот (если он за спиной или сбоку);
 ## - после попытки — «ИДЕАЛЬНО!» / «РАНО» / «ПОЗДНО» (сигнал MjolnirHand.catch_timing).
 ## Рисуется draw_arc стандартным 2D-материалом — новых шейдеров и материалов нет. Выключатель — [access] catch_assist.
@@ -113,7 +113,7 @@ func _process(delta: float) -> void:
 			if _eta > lead_time:
 				_eta = -1.0
 			if _eta >= 0.0:
-				_window = _eta <= _hand.perfect_window and not _failed
+				_window = _eta <= _hand.effective_perfect_window() and not _failed
 				_aim_arrow(proj.global_position)
 		elif _hand.perfect_window_left() >= 0.0 and not _failed:
 			_eta = 0.0
@@ -143,6 +143,12 @@ func _aim_arrow(world: Vector3) -> void:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
 		return
+	# Проекция точки в плоскости камеры не определена; сохраняем сторону и направление стрелки.
+	var camera_transform := cam.get_camera_transform()
+	var depth := (camera_transform.affine_inverse() * world).z
+	if absf(depth) < 0.05:
+		var safe_depth := 0.05 if depth > 0.0 else -0.05
+		world += camera_transform.basis.z * (safe_depth - depth)
 	var c := get_viewport_rect().size * 0.5
 	var sp := cam.unproject_position(world)
 	var d := sp - c

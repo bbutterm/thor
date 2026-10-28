@@ -1,0 +1,37 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/world_surface.gdshader" id="1_hsshw"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_UnevenBrick_BaseColor.png" id="2_ssa4w"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_Noise_Terrain.png" id="3_md2co"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_UnevenBrick_Normal.png" id="4_6d4e6"]
+
+[resource]
+resource_name = "surface_pillar"
+render_priority = 0
+shader = ExtResource("1_hsshw")
+shader_parameter/albedo_tex = ExtResource("2_ssa4w")
+shader_parameter/normal_tex = ExtResource("4_6d4e6")
+shader_parameter/normal_strength = 0.8
+shader_parameter/tint = Color(0.82, 0.8, 0.77, 1)
+shader_parameter/uv_scale = 0.45
+shader_parameter/roughness_base = null
+shader_parameter/blend_sharpness = null
+shader_parameter/noise_tex = ExtResource("3_md2co")
+shader_parameter/detail_mix = null
+shader_parameter/detail_scale = null
+shader_parameter/detail_angle = null
+shader_parameter/antitile_scale = null
+shader_parameter/macro_scale = null
+shader_parameter/macro_strength = 0.25
+shader_parameter/macro_tint = null
+shader_parameter/overlay_color = Color(0.33, 0.37, 0.2, 1)
+shader_parameter/overlay_uv = null
+shader_parameter/overlay_amount = 0.16
+shader_parameter/overlay_scale = 0.2
+shader_parameter/overlay_softness = null
+shader_parameter/overlay_top = 0.4
+shader_parameter/overlay_roughness = null
+shader_parameter/grime_color = null
+shader_parameter/grime_height = null
+shader_parameter/grime_strength = null
+shader_parameter/vertex_ao = null

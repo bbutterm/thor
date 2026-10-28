@@ -1,0 +1,35 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/world_surface.gdshader" id="1_455h3"]
+[ext_resource type="Texture2D" path="res://assets/textures/midgard/dirt_straw.webp" id="2_u6wbk"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_Noise_Terrain.png" id="3_263uw"]
+
+[resource]
+resource_name = "surface_ground"
+render_priority = 0
+shader = ExtResource("1_455h3")
+shader_parameter/albedo_tex = ExtResource("2_u6wbk")
+shader_parameter/normal_strength = null
+shader_parameter/tint = Color(0.7, 0.62, 0.55, 1)
+shader_parameter/uv_scale = 0.1
+shader_parameter/roughness_base = null
+shader_parameter/blend_sharpness = null
+shader_parameter/noise_tex = ExtResource("3_263uw")
+shader_parameter/detail_mix = null
+shader_parameter/detail_scale = 0.37
+shader_parameter/detail_angle = null
+shader_parameter/antitile_scale = null
+shader_parameter/macro_scale = 0.012
+shader_parameter/macro_strength = 0.45
+shader_parameter/macro_tint = null
+shader_parameter/overlay_color = Color(0.24, 0.3, 0.14, 1)
+shader_parameter/overlay_uv = null
+shader_parameter/overlay_amount = 0.5
+shader_parameter/overlay_scale = 0.03
+shader_parameter/overlay_softness = null
+shader_parameter/overlay_top = 0.0
+shader_parameter/overlay_roughness = null
+shader_parameter/grime_color = null
+shader_parameter/grime_height = null
+shader_parameter/grime_strength = 0.0
+shader_parameter/vertex_ao = null

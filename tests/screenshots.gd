@@ -232,7 +232,7 @@ func _run() -> void:
 	# «План тренировок» (блок В): немного Славы для наглядности и одна покупка
 	var plan := game.get_node_or_null("TrainingPlan") as TrainingPlan
 	if plan:
-		Save.add_glory_bank(420)
+		Save.add_glory_bank(820)
 		plan._rebuild()
 		plan.buy("belly")
 		await wait(0.6)

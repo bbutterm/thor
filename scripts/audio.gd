@@ -32,6 +32,8 @@ var voice_bus := "Voice"
 ## «Ух!» Тора при получении урона: шанс и кулдаун (с)
 @export var pain_chance: float = 0.6
 @export var pain_cooldown: float = 4.0
+## Одинаковых готовых звуков за один кадр — не больше этого числа (до постановки в очередь).
+@export_range(1, 16, 1) var identical_sfx_per_frame: int = 2
 
 var available = []  # The available players.
 var queue = []  # The queue of sounds to play.
@@ -43,6 +45,8 @@ var voice_clips: Dictionary = {}
 ## Темп петель владельца: трек → {bpm}
 var owner_music: Dictionary = {}
 var _last_played: Dictionary = {}
+var _sfx_frame: int = -1
+var _sfx_frame_counts: Dictionary = {}
 var _voice: AudioStreamPlayer
 var _voice_priority: int = -1
 var _voice_clip: String = ""
@@ -101,14 +105,36 @@ func _on_stream_finished(stream):
 ## Звук по пути (или нескольким через запятую — случайный). Синтез с версией владельца — подменяется.
 func play(sound_path):  # Path (or multiple, separated by commas)
 	var sounds = sound_path.split(",")
-	queue.append(resolve("res://" + sounds[randi() % sounds.size()].strip_edges()))
+	_enqueue(resolve("res://" + sounds[randi() % sounds.size()].strip_edges()))
+
+func _enqueue(entry: Dictionary) -> void:
+	var frame := Engine.get_process_frames()
+	if frame != _sfx_frame:
+		_sfx_frame = frame
+		_sfx_frame_counts.clear()
+	var path := str(entry.get("path", ""))
+	var count := int(_sfx_frame_counts.get(path, 0))
+	if count >= maxi(1, identical_sfx_per_frame):
+		return
+	_sfx_frame_counts[path] = count + 1
+	queue.append(entry)
 
 ## Звук владельца по имени события (data/owner_audio.json); нет его — запасной путь (можно пустой).
 func sfx(id: String, fallback: String = "") -> void:
 	if _owner_sfx.has(id):
-		queue.append(_owner_sfx[id])
+		_enqueue(_owner_sfx[id])
 	elif fallback != "":
 		play(fallback)
+
+## Сигнал, который имеет смысл только пока valid() истинна (например, предупреждение до атаки).
+## Обычный порядок очереди и общий лимит плееров сохраняются; устаревший сигнал пропускается.
+func sfx_while(id: String, fallback: String, valid: Callable) -> void:
+	var before := queue.size()
+	sfx(id, fallback)
+	if queue.size() > before:
+		var entry: Dictionary = queue[-1].duplicate()  # не изменяем общую карту звуков владельца
+		entry["_valid_while"] = valid
+		queue[-1] = entry
 
 ## Есть ли у звука (имя или путь) версия владельца.
 func has_owner(name_or_path: String) -> bool:
@@ -126,6 +152,10 @@ func _process(_delta):
 	while not queue.is_empty() and not available.is_empty():
 		var item: Variant = queue.pop_front()
 		var e: Dictionary = item if item is Dictionary else resolve(str(item))
+		if e.has("_valid_while"):
+			var valid: Callable = e["_valid_while"]
+			if not valid.is_valid() or not valid.call():
+				continue
 		var path: String = e.path
 		var now := Time.get_ticks_msec() / 1000.0
 		if float(e.min_interval) > 0.0 and now - float(_last_played.get(path, -100.0)) < float(e.min_interval):

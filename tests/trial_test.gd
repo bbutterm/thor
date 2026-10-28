@@ -90,6 +90,23 @@ func _enter_trial(id: String) -> void:
 	var t := _trial()
 	check(Run.current_reward() == "trial" and t != null and t.def.id == id, "зал-испытание «%s»" % (t.def.title if t else "—"))
 	check(t != null and t.is_running(), "испытание идёт, таймер пошёл")
+	if t and id in ["loki_lava", "hild_record"]:
+		var warmup := ShaderWarmup.new()
+		warmup.game_node = game
+		var speakers := warmup._room_speakers()
+		for which in ["intro", "win", "fail"]:
+			var host := t.def.pool(which).get_slice(".", 0)
+			check(host in speakers, "%s: ведущий пула %s прогревается" % [id, which])
+		if id == "loki_lava":
+			# Пользовательский intro может принадлежать другому говорящему; остальные пулы — Локи по умолчанию.
+			var original := t.def
+			var custom := original.duplicate() as TrialDef
+			custom.intro_pool = "freya.blessing"
+			t.def = custom
+			var custom_speakers := warmup._room_speakers()
+			check("freya" in custom_speakers and "loki" in custom_speakers, "пул по умолчанию и override другого говорящего прогреваются")
+			t.def = original
+		warmup.free()
 	check(t != null and t.hud != null and t.hud._title.text != "", "панель испытания в HUD")
 
 func _kill_all(source: String) -> void:

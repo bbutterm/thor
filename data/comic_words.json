@@ -1,5 +1,29 @@
 {
 	"_comment": "Комиксовые слова (scripts/comic_fx.gd). Событие -> слова (берём случайное), цвет букв (fill), цвет «взрыва» за словом (burst), приоритет (если в одном кадре несколько событий — показываем старшее). Слова всегда на английском. Рисованный «взрыв» можно подложить в sprites/comic/<событие>.png (или общий sprites/comic/burst.png) — код менять не нужно.",
+	"weapon_whirl": {
+		"words": ["WHIRL!"],
+		"fill": "#fff04a",
+		"burst": "#e85b1e",
+		"priority": 58
+	},
+	"weapon_lunge": {
+		"words": ["LUNGE!"],
+		"fill": "#fff2a3",
+		"burst": "#ee5a1a",
+		"priority": 58
+	},
+	"weapon_parry": {
+		"words": ["PARRY!"],
+		"fill": "#ffffff",
+		"burst": "#64b6ff",
+		"priority": 70
+	},
+	"weapon_vault": {
+		"words": ["VAULT!"],
+		"fill": "#fff48a",
+		"burst": "#e09e22",
+		"priority": 56
+	},
 	"combo": {
 		"words": ["FUSION!", "COMBO!", "DUET!"],
 		"fill": "#ffe03a",
@@ -83,6 +107,12 @@
 		"fill": "#ffffff",
 		"burst": "#22b8f0",
 		"priority": 55
+	},
+	"ledge_kill": {
+		"words": ["YEET!"],
+		"fill": "#ffe03a",
+		"burst": "#2f6fe8",
+		"priority": 75
 	},
 	"multikill": {
 		"words": ["SMASH!", "KAPOW!", "BOOM!"],

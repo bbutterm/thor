@@ -85,6 +85,32 @@ func _test_skin() -> void:
 	check(UISkin.weapon_icon("rifle") != null and UISkin.weapon_icon("axe") != null and UISkin.trait_icon("fire_trail") != null
 		and UISkin.rune_category_icon("defense") != null and UISkin.rune_category_icon("mjolnir") != null,
 		"иконки оружия, трейтов и категорий рун находятся по id")
+	check(UISkin.trait_icon("sling") != null and UISkin.trait_icon("wind") != null
+		and UISkin.path("trait_sling") == "res://sprites/ui/icons/trait_sling.webp"
+		and UISkin.path("trait_wind") == "res://sprites/ui/icons/trait_wind.webp",
+		"у Пращи и Ветра есть иконки для карточки и HUD")
+	for id in ["air_catch", "charge", "hammer_dive", "hammer_step", "loyal_dog", "swap"]:
+		check(UISkin.trait_icon(id) != null, "иконка приёма %s загружена" % id)
+	for id in ["earth_dive", "fire_tornado", "ice_ricochet", "lightning_magnet", "wind_pull"]:
+		check(UISkin.trait_icon(id) != null, "иконка связки %s загружена" % id)
+	var sling := load("res://weapons/mjolnir_traits/sling.tres") as MjolnirTrait
+	var traits_hud := MjolnirTraitsHud.new()
+	var hud_icon := traits_hud._icon(sling, 1)
+	check(hud_icon is HudIcon and (hud_icon as HudIcon).base == UISkin.trait_icon("sling"),
+		"Праща показана картинкой на HUD")
+	hud_icon.free()
+	var combo := load("res://weapons/mjolnir_traits/combos/fire_tornado.tres") as MjolnirTrait
+	var combo_icon := traits_hud._icon(combo, 0)
+	check(combo_icon is HudIcon and (combo_icon as HudIcon).base == UISkin.trait_icon("fire_tornado")
+		and (combo_icon as HudIcon).badge == "★", "связка показана картинкой со звездой на HUD")
+	combo_icon.free()
+	traits_hud.free()
+	var sling_card := SkinCard.make("card_trait", 300.0, sling.color)
+	sling_card.set_icon(UISkin.trait_icon("sling"), "", sling.color)
+	check(sling_card.icon_box.get_child_count() == 1 and sling_card.icon_box.get_child(0) is TextureRect
+		and (sling_card.icon_box.get_child(0) as TextureRect).texture == UISkin.trait_icon("sling"),
+		"Праща показана картинкой на карточке")
+	sling_card.free()
 	var b := UIStyle.button("Тест")
 	check(b.get_theme_stylebox("normal") is SkinStyleBox and b.get_theme_stylebox("disabled") is SkinStyleBox, "UIStyle.button — на скине")
 	b.free()
@@ -205,7 +231,7 @@ func _test_hud() -> void:
 	check(p.shield > 0.0 and hud._hp_bar.overlay > 0.0 and "⛨" in hud._hp_label.text, "щит Сиф поверх HP (%.0f)" % p.shield)
 	p.dash_charges = 0
 	p.dash_charges_changed.emit(0, p.dash_charges_max, 0.5)
-	check(hud._dash_pips.size() == p.dash_charges_max and is_equal_approx(hud._dash_pips[0].fill, 0.5), "заряды рывка: камни, перезарядка видна (%d)" % hud._dash_pips.size())
+	check(hud._dash_pips.size() == p.dash_charges_max and is_equal_approx(hud._dash_pips[0].fill, 0.5), "руны Мьёльнира на бойке, восстановление видно (%d)" % hud._dash_pips.size())
 	var style_hud := hud.get_node_or_null("StyleHUD") as StyleHUD
 	p.style.set_points(40.0)
 	await wait(0.05)
@@ -247,7 +273,7 @@ func _test_hud() -> void:
 	p.global_position += Vector3.UP * 8.0
 	p.velocity = Vector3.ZERO
 	await wait(0.05)
-	check(hud._slam_meter.visible and hud._slam_meter.value > 0.4, "в воздухе на 8 м — шкала высоты у прицела (%.2f)" % hud._slam_meter.value)
+	check(hud._slam_meter.visible and hud._slam_meter.value > 0.4, "в воздухе на 8 м — шкала высоты в рукояти (%.2f)" % hud._slam_meter.value)
 	var t2 := 0
 	while not p.is_on_floor() and t2 < 240:
 		await get_tree().physics_frame

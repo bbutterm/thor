@@ -4,6 +4,11 @@ class_name FX
 
 static var _hitstop_left: float = 0.0
 static var _hitstop_scale: float = 1.0
+static var _slow_left: float = 0.0
+static var _slow_scale: float = 1.0
+## Зарезервированные интервалы hit-stop, по Run.combat_clock. Перекрытие не суммируется.
+static var _hitstop_bookings: Array[Dictionary] = []
+static var _hitstop_last_clock: float = -1.0
 ## Кадр, в котором последний раз менялся Engine.time_scale, и масштаб, бывший до этого в начале кадра
 static var _scale_frame: int = -1
 static var _scale_before: float = 1.0
@@ -16,21 +21,56 @@ static func tree() -> SceneTree:
 static func hitstop(duration: float, scale: float = 0.05) -> void:
 	if duration <= 0.0:
 		return
-	_hitstop_left = maxf(_hitstop_left, duration)
-	_hitstop_scale = minf(_hitstop_scale, scale) if _hitstop_left > 0.0 else scale
+	var now: float = Run.combat_clock
+	if now < _hitstop_last_clock:
+		_hitstop_bookings.clear()  # Run.start_run сбросил часы
+	_hitstop_last_clock = now
+	# Каждый ещё пересекающий окно интервал считаем целиком: верхняя граница
+	# строгая и немного консервативная в начале следующего окна.
+	var used := 0.0
+	var kept: Array[Dictionary] = []
+	for booking in _hitstop_bookings:
+		if float(booking.end) > now - 1.0:
+			kept.append(booking)
+			used += float(booking.end) - float(booking.start)
+	_hitstop_bookings = kept
+	var extension := maxf(0.0, duration - _hitstop_left)
+	var allowed := minf(extension, maxf(0.0, cfg().hitstop_budget_per_second - used))
+	if allowed > 0.0:
+		var start := now + _hitstop_left
+		_hitstop_bookings.append({"start": start, "end": start + allowed})
+		_hitstop_left += allowed
+	if _hitstop_left <= 0.0:
+		return
+	_hitstop_scale = minf(_hitstop_scale, clampf(scale, 0.001, 1.0))
 	_set_time_scale(_hitstop_scale)
+
+## Замедление конца волны идёт отдельно от hit-stop и не превращается в длинную заморозку.
+## Если стоп уже идёт, все 0.3 с замедления начинаются после него.
+static func slowmo(duration: float, scale: float) -> void:
+	if duration <= 0.0:
+		return
+	_slow_left = maxf(_slow_left, duration)
+	_slow_scale = minf(_slow_scale, clampf(scale, 0.001, 1.0))
+	if _hitstop_left <= 0.0:
+		_set_time_scale(_slow_scale)
 
 ## Вызывается каждый кадр. Run передаёт delta / текущий time_scale; пересчитываем по масштабу,
 ## с которым движок на самом деле умножил delta этого кадра (см. real_delta).
 static func tick(passed_real_delta: float) -> void:
 	sync_fades()
-	if _hitstop_left <= 0.0:
+	if _hitstop_left <= 0.0 and _slow_left <= 0.0:
 		return
-	_hitstop_left -= real_delta(passed_real_delta * maxf(Engine.time_scale, 0.0001))
-	if _hitstop_left <= 0.0:
-		_hitstop_left = 0.0
-		_hitstop_scale = 1.0
-		_set_time_scale(1.0)
+	var elapsed := real_delta(passed_real_delta * maxf(Engine.time_scale, 0.0001))
+	if _hitstop_left > 0.0:
+		_hitstop_left = maxf(0.0, _hitstop_left - elapsed)
+		if _hitstop_left <= 0.0:
+			_hitstop_scale = 1.0
+	elif _slow_left > 0.0:
+		_slow_left = maxf(0.0, _slow_left - elapsed)
+		if _slow_left <= 0.0:
+			_slow_scale = 1.0
+	_set_time_scale(_hitstop_scale if _hitstop_left > 0.0 else (_slow_scale if _slow_left > 0.0 else 1.0))
 
 ## Реальная длительность кадра по delta из _process. Движок умножает delta на time_scale, каким он был
 ## В НАЧАЛЕ кадра; удары (и hit-stop) случаются в физике этого же кадра. Если делить на новый 0.05,
@@ -49,6 +89,10 @@ static func _set_time_scale(s: float) -> void:
 static func reset_time() -> void:
 	_hitstop_left = 0.0
 	_hitstop_scale = 1.0
+	_slow_left = 0.0
+	_slow_scale = 1.0
+	_hitstop_bookings.clear()
+	_hitstop_last_clock = -1.0
 	_set_time_scale(1.0)
 
 ## Всплывающая цифра урона в мире.
@@ -218,15 +262,17 @@ static func fx_material(kind: String) -> ShaderMaterial:
 	materials_created += 1
 	return m
 
-## Буфер instance-переменных: каждый узел, у материала которого есть instance uniform, занимает в нём
-## 16 ячеек (ShaderLanguage::MAX_INSTANCE_UNIFORM_INDICES), пока узел жив и материал назначен — даже
-## невидимый. В GL Compatibility буфер — 4096 ячеек (= 256 таких узлов на сцену); сверх — ошибка
-## «Too many instances using shader instance variables», и у новых эффектов пропадают цвет и кадр.
+## В GL Compatibility выделенный блок instance-переменных занимает 16 ячеек независимо от их числа.
+## Номинальный буфер на 4096 ячеек даёт до 256 блоков; запас зависит от настроек и глобальных параметров.
+## Снятие материала не гарантирует освобождения блока: ранее заданные параметры могут жить до удаления RID.
+## При переполнении появляется «Too many instances using shader instance variables», и эффекты теряют параметры.
 const INSTANCE_SLOTS_GL := 256
 
 static var _iu_shaders: Dictionary = {}
 
-## Сколько узлов под root сейчас занимают буфер instance-переменных (диагностика: Perf F3, тесты).
+## Узлы под root с текущим override/overlay, чей шейдер совпадает с текстовым признаком _has_iu.
+## Это не занятые слоты: поверхностные материалы, next_pass, сохранённые параметры и удалённые из дерева RID
+## здесь не учитываются; текстовый признак также может ошибаться (диагностика: Perf F3, тесты).
 static func instance_uniform_users(root: Node) -> int:
 	if root == null:
 		return 0
@@ -270,7 +316,7 @@ static func uses_fade_emulation() -> bool:
 static func _track_fade(gi: GeometryInstance3D) -> void:
 	if not uses_fade_emulation():
 		return
-	# Материал назначен заново — значения instance-переменных на сервере сброшены: отправим fade снова
+	# Материал назначен заново — принудительно отправим fade, независимо от состояния сервера
 	gi.set_meta("_fade", -1.0)
 	if not gi.has_meta("_fade_tracked"):
 		gi.set_meta("_fade_tracked", true)
@@ -469,8 +515,8 @@ static func _take(kind: String, parent: Node, limit: int) -> MeshInstance3D:
 		mi = MeshInstance3D.new()
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
-		# Спрятанный (свободный) узел отдаёт материал — и вместе с ним 16 ячеек буфера instance-переменных
-		# (INSTANCE_SLOTS_GL). При взятии из пула _sprite назначает материал заново (тот же общий — без компиляции).
+		# Скрытый свободный узел снимает override; прежние instance-параметры могут удерживать блок до удаления RID.
+		# При повторном использовании _sprite назначает тот же общий материал, без создания нового.
 		mi.visibility_changed.connect(func() -> void:
 			if not mi.visible:
 				mi.material_override = null)
@@ -642,6 +688,42 @@ static func smoke(parent: Node, pos: Vector3, size: float, color: Color = Color(
 	tw.tween_property(mi, "position", pos + Vector3(0, c.smoke_rise, 0), c.smoke_time).set_ease(Tween.EASE_OUT)
 	tw.tween_property(mi, "scale", Vector3.ONE * size * 1.25, c.smoke_time)
 	tw.chain().tween_callback(mi.hide)
+
+## Взрыв (enemies/blast.gd: Раздутый, элита «Взрывной», взрывная бочка, Свен): вместо плоского шара-диска —
+## вспышка-ядро vfx_hit_flash, короткий огненный шар из языков vfx_fire, клубы тёмного дыма, ударная волна
+## vfx_shockwave по полу на радиус урона (радиус читается), звёзды-искры. Всё — пулы и общие материалы FX.
+static func explosion(parent: Node, pos: Vector3, radius: float, color: Color = Color(1.0, 0.45, 0.15)) -> void:
+	Perf.mark("fx_explosion")
+	if parent == null or not parent.is_inside_tree():
+		return
+	var c := cfg()
+	var hot := color.lerp(Color(1.0, 0.92, 0.7), 0.45)
+	hit_flash(parent, pos, radius * c.explosion_flash, hot)
+	var ground := pos
+	var hit := _floor(_holder_for(parent), pos)
+	if not hit.is_empty():
+		ground = hit.position
+	# Огненный шар: языки пламени вокруг центра, держатся explosion_fire_time и гаснут вместе с узлом
+	if c.explosion_fire_time > 0.0:
+		var ball := Node3D.new()
+		ball.name = "ExplosionFire"
+		ball.set_meta("transient", true)
+		parent.add_child(ball)
+		ball.global_position = ground
+		ball.scale = Vector3.ONE * c.explosion_fire_scale
+		fire_sprites(ball, maxf(radius * c.explosion_fire, 0.4), c.explosion_fire_time)
+		var tw := ball.create_tween()
+		tw.tween_property(ball, "scale", Vector3.ONE * c.explosion_fire_scale * 1.25, c.explosion_fire_time).set_ease(Tween.EASE_OUT)
+		tw.tween_interval(c.fire_fade + 0.1)
+		tw.tween_callback(ball.queue_free)
+	for i in maxi(c.explosion_smoke, 0):
+		var a := TAU * float(i) / maxf(c.explosion_smoke, 1) + randf_range(-0.5, 0.5)
+		var off := Vector3(cos(a), randf_range(0.1, 0.5), sin(a)) * radius * 0.35
+		smoke(parent, pos + off, radius * c.explosion_smoke_size * randf_range(0.85, 1.15), c.explosion_smoke_color)
+	shockwave(parent, ground, radius, hot)
+	for i in maxi(c.explosion_stars, 0):
+		var off2 := Vector3(randf_range(-1, 1), randf_range(-0.3, 0.8), randf_range(-1, 1)) * radius * 0.3
+		spark_star(parent, pos + off2, hot, c.explosion_star_size * randf_range(0.8, 1.2))
 
 ## Дым взрыва (enemies/blast.gd): размер от радиуса.
 static func blast_smoke(parent: Node, pos: Vector3, radius: float) -> void:

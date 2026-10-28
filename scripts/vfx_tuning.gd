@@ -4,6 +4,13 @@ class_name VfxTuning
 ## Данные — data/vfx_tuning.tres (открыть в инспекторе Godot); FX.cfg() читает его один раз.
 ## Экранные эффекты (линии скорости, виньетка берсерка, идеальный хват) — в scripts/vfx_screen.gd (@export там же).
 
+@export_group("Паузы удара")
+## Сумма длительностей hit-stop в скользящем окне одной секунды, в реальных секундах.
+@export_range(0.0, 1.0, 0.01) var hitstop_budget_per_second: float = 0.35
+## Мульти-килл использует те же пороги, что и ComicFX; учитывается в общем бюджете.
+@export var multikill_hitstop: float = 0.11
+@export var multikill_big_hitstop: float = 0.14
+
 @export_group("Вспышка попадания (vfx_hit_flash)")
 ## Размер вспышки, м (крупный удар — × hit_flash_big_mult)
 @export var hit_flash_size: float = 0.9
@@ -59,6 +66,21 @@ class_name VfxTuning
 @export var smoke_limit: int = 12
 ## Пыль разбитой бочки, м
 @export var barrel_dust_size: float = 1.3
+
+@export_group("Взрыв (enemies/blast.gd → FX.explosion)")
+## Вспышка-ядро vfx_hit_flash: размер на 1 м радиуса взрыва
+@export var explosion_flash: float = 1.15
+## Огненный шар из языков vfx_fire: радиус шара на 1 м радиуса взрыва, масштаб языков, сколько горит, с
+@export var explosion_fire: float = 0.45
+@export var explosion_fire_scale: float = 1.5
+@export var explosion_fire_time: float = 0.55
+## Клубы дыма vfx_smoke: сколько, размер на 1 м радиуса, цвет
+@export var explosion_smoke: int = 3
+@export var explosion_smoke_size: float = 0.85
+@export var explosion_smoke_color: Color = Color(0.36, 0.32, 0.3)
+## Звёзды-искры vfx_sparks поверх частиц: сколько и размер, м
+@export var explosion_stars: int = 3
+@export var explosion_star_size: float = 1.1
 
 @export_group("Серебро")
 ## Блеск-звёздочка при вылете монеты: размер, м (0 — нет), и не чаще раза в столько секунд

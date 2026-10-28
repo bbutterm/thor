@@ -1,7 +1,7 @@
 extends CanvasLayer
 class_name ChoicePick
 ## Экран выбора из 2–3 вариантов (Отдых, Сделка Локи, награда испытания): карточки как у рун,
-## слева — портрет того, кто предлагает. Мышь или 1/2/3; на время выбора игра на паузе.
+## слева — портрет того, кто предлагает. Мышь, 1/2/3 или геймпад; на время выбора игра на паузе.
 ## Вариант: {id, title, desc, glyph, color, enabled (по умолчанию true)}.
 
 signal picked(id: String)
@@ -68,6 +68,7 @@ func open(title: String, hint: String, choices: Array, speaker: String = "", emo
 	_title.text = title
 	_hint.text = hint
 	for c in _cards.get_children():
+		_cards.remove_child(c)
 		c.queue_free()
 	for i in choices.size():
 		_cards.add_child(_make_card(choices[i], i))
@@ -77,6 +78,10 @@ func open(title: String, hint: String, choices: Array, speaker: String = "", emo
 		_portrait.set_speaker(speaker, emotion, def, 0.08)
 		_speaker_name.text = str(def.get("name", speaker)).to_upper()
 	visible = true
+	for card in _cards.get_children():
+		if not (card as Button).disabled:
+			(card as Button).grab_focus.call_deferred()
+			break
 	_open_time = Time.get_ticks_msec() / 1000.0
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

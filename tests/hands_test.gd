@@ -97,7 +97,7 @@ func _run() -> void:
 	_finish()
 
 func _melee() -> void:
-	print("-- Мили: комбо, добивающий, сильный удар")
+	print("-- Мили: комбо, добивающий, вертушка")
 	var h := vm.right
 	var axe := p.axe
 	p.weapons.equip(load("res://weapons/defs/axe.tres") as WeaponDef, 1, false)
@@ -137,15 +137,11 @@ func _melee() -> void:
 	await wait(0.3)
 	axe.request_heavy()
 	await get_tree().physics_frame
-	check(h.state == &"heavy_charge", "сильный удар: поза набора")
-	await wait(axe._windup_time() * 0.7)
-	check(h.tremor > 0.0, "при наборе рука дрожит")
-	while axe.phase == Axe.Phase.WINDUP:
-		await get_tree().physics_frame
-	await get_tree().process_frame
-	check(h.state == &"heavy_release" and h.tremor == 0.0, "выпуск сильного удара")
+	check(axe.is_busy() and h.state == &"melee_strike", "вертушка включает анимацию руки")
+	await wait(axe.def.skill_duration * 0.35)
+	check(absf(h.rotation_degrees.z - h.rest_rot.z) > 30.0, "рука заметно поворачивается во время вертушки")
 	t = await wait_rest(h, 2.5)
-	check(t >= 0.0, "после сильного удара — покой (%.2f с)" % t)
+	check(t >= 0.0, "после вертушки рука возвращается в покой (%.2f с)" % t)
 
 ## Кадр попадания мили и момент броска не зависят от анимации рук (с ней и без неё одинаково).
 func _hit_timing() -> void:

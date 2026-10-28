@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+"""Пиксельное сравнение всех восьми видов и галереи девяти материалов."""
+from pathlib import Path
+import sys
+
+from PIL import Image, ImageChops
+
+
+def compare(folder: Path, stem: str) -> bool:
+    before = folder / f"{stem}_optimized_0.png"
+    after = folder / f"{stem}_optimized_1.png"
+    try:
+        a = Image.open(before).convert("RGB")
+        b = Image.open(after).convert("RGB")
+    except (FileNotFoundError, OSError) as exc:
+        print(f"FAIL {stem}: {exc}")
+        return False
+    if a.size != b.size:
+        print(f"FAIL {stem}: sizes {a.size} and {b.size} differ")
+        return False
+    diff = ImageChops.difference(a, b)
+    pixels = diff.get_flattened_data() if hasattr(diff, "get_flattened_data") else diff.getdata()
+    different = sum(pixel != (0, 0, 0) for pixel in pixels)
+    colors = len(a.getcolors(maxcolors=256) or [])
+    if not colors:  # getcolors returns None for more than 256 colours
+        colors = 257
+    good = different == 0 and colors > 16
+    print(f"{'OK' if good else 'FAIL'} {stem}: {a.width}x{a.height}, different={different}, colors>={colors}")
+    return good
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        print(f"usage: {sys.argv[0]} SHOT_DIR", file=sys.stderr)
+        return 2
+    folder = Path(sys.argv[1])
+    stems = [f"pose_{sample}_view_{view}" for sample in (15, 50) for view in range(4)]
+    stems.append("gallery")
+    results = [compare(folder, stem) for stem in stems]
+    print(f"PIXEL RESULTS: {sum(results)} OK, {len(results) - sum(results)} FAIL")
+    return int(not all(results))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

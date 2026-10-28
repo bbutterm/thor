@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+"""Gate the isolated GL probe; rc=0 clean, 3 only known exit leaks, 1 incomplete/failed."""
+import json
+import math
+import re
+import sys
+from pathlib import Path
+
+VIEWS = ('south_west', 'south_east', 'stairs', 'above', 'under', 'deck')
+
+
+def fail(message):
+    raise ValueError(message)
+
+
+def errors(text, end):
+    occurrences = list(re.finditer(r'ERROR:[^\r\n]*', text))
+    early = [m.group() for m in occurrences if m.start() < end]
+    late = [m.group() for m in occurrences if m.start() >= end]
+    known = re.compile(r'^ERROR: Texture with GL ID of [0-9]+: leaked 349524 bytes\.$')
+    if early or len(late) not in (0, 2) or any(not known.fullmatch(x) for x in late):
+        fail(f'unexpected ERROR occurrences before={early} after={late}')
+    if late:
+        print('TOWER_GATE: visual/measurement checks completed but two known exit texture errors remain; see full log')
+    return len(late)
+
+
+def changed_pixels(a, b):
+    if len(a) != len(b) or len(a) % 4:
+        fail('image buffers differ in size')
+    return sum(a[i:i + 4] != b[i:i + 4] for i in range(0, len(a), 4))
+
+
+def views(log, folder):
+    from PIL import Image
+
+    marker = 'TOWER_VIEWS_END room=room_01 failures=0'
+    if log.count(marker) != 1 or 'OpenGL API ' not in log or 'TOWER_VIEWS renderer=gl_compatibility' not in log:
+        fail('missing successful view sentinel or real GL renderer')
+    rows = re.findall(r'TOWER_VIEW (\w+) repeat_diff=(-?\d+) batch_diff=(-?\d+) hidden_diff=(-?\d+)', log)
+    if len(rows) != len(VIEWS) or {x[0] for x in rows} != set(VIEWS):
+        fail(f'expected exactly the six named view results, got {rows}')
+    for name, repeat, batch, hidden in rows:
+        pixels = []
+        for label in ('original_a', 'original_b', 'batch', 'hidden'):
+            path = folder / f'{name}_{label}.png'
+            with Image.open(path) as img:
+                if img.size != (640, 360):
+                    fail(f'{path}: expected 640x360, got {img.size}')
+                pixels.append(img.convert('RGBA').tobytes())
+        independent = [changed_pixels(pixels[0], x) for x in pixels[1:]]
+        reported = [int(repeat), int(batch), int(hidden)]
+        if independent != reported or independent[0] != 0 or independent[1] != 0 or independent[2] <= 0:
+            fail(f'{name}: reported={reported}, independent={independent}')
+        print(f'TOWER_GATE_VIEW {name} repeat=0 batch=0 hidden={independent[2]}')
+    return errors(log, log.index(marker))
+
+
+def perf(log, path):
+    marker = 'TOWER_PERF_END rounds=2 enemies=44'
+    if log.count(marker) != 1 or 'OpenGL API ' not in log or 'TOWER_PERF renderer=gl_compatibility' not in log:
+        fail('missing successful perf sentinel or real GL renderer')
+    data = json.loads(path.read_text())
+    expected = [('old_warmup', 15), ('original_warmup', 15), ('batch_warmup', 15), ('old_1', 60),
+                ('original_1', 60), ('batch_1', 60), ('batch_2', 60), ('original_2', 60), ('old_2', 60)]
+    if [x['label'] for x in data] != [x[0] for x in expected]:
+        fail('unexpected sample order or duplicate/missing labels')
+    for item, (label, count) in zip(data, expected):
+        ms, calls = item['frames_ms'], item['draw_calls']
+        if len(ms) != count or len(calls) != count or any(not isinstance(x, (int, float)) or not math.isfinite(x) or x <= 0 for x in ms):
+            fail(f'{label}: missing or invalid frame samples')
+        if any(not isinstance(x, (int, float)) or not math.isfinite(x) or x < 0 for x in calls):
+            fail(f'{label}: invalid draw-call samples')
+    print('TOWER_GATE_PERF: A/B/B/A, 60 frames per measured segment; inspect raw values and repeat before conclusions')
+    return errors(log, log.index(marker))
+
+
+def main():
+    if len(sys.argv) != 4 or sys.argv[1] not in ('views', 'perf'):
+        print('usage: tower_batch_gate.py views LOG IMAGE_DIR | perf LOG SAMPLES_JSON', file=sys.stderr)
+        return 1
+    try:
+        mode, log_file, artifact = sys.argv[1:]
+        log = Path(log_file).read_text(errors='replace')
+        leaks = views(log, Path(artifact)) if mode == 'views' else perf(log, Path(artifact))
+    except (OSError, ValueError, KeyError, TypeError, ImportError) as error:
+        print(f'TOWER_GATE_FAIL: {error}', file=sys.stderr)
+        return 1
+    return 3 if leaks else 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""Сравнение без HUD: три повтора оригинала, два варианта и контроль видимости."""
+from pathlib import Path
+import sys
+from PIL import Image, ImageChops
+
+VIEWS = ("door_closed", "door_open", "left_inside", "right_inside", "left_torch", "right_torch", "tower", "above")
+
+
+def open_image(path: Path) -> Image.Image:
+    with Image.open(path) as image:
+        return image.convert("RGB")
+
+
+def difference(a: Image.Image, b: Image.Image):
+    if a.size != (640, 360) or b.size != (640, 360):
+        raise ValueError(f"unexpected image size {a.size}, {b.size}")
+    diff = ImageChops.difference(a, b)
+    values = diff.get_flattened_data() if hasattr(diff, "get_flattened_data") else diff.getdata()
+    changed = sum(pixel != (0, 0, 0) for pixel in values)
+    max_delta = max(channel[1] for channel in diff.getextrema())
+    return changed, max_delta, diff.getbbox()
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        print(f"usage: {sys.argv[0]} SHOT_DIR", file=sys.stderr)
+        return 2
+    folder = Path(sys.argv[1])
+    successes = 0
+    failures = 0
+    for view in VIEWS:
+        try:
+            original = open_image(folder / f"{view}_orig_a.png")
+        except OSError as exc:
+            print(f"FAIL {view}: {exc}")
+            failures += 6
+            continue
+        for mode in ("orig_b", "rows", "orig_c", "sides", "hidden", "orig_d"):
+            try:
+                changes, max_delta, bbox = difference(original, open_image(folder / f"{view}_{mode}.png"))
+                if mode == "hidden":
+                    # Закрытая дверь — отрицательный контроль; остальные виды
+                    # должны надёжно показывать хотя бы часть стен коридора.
+                    good = changes == 0 if view == "door_closed" else changes >= 100
+                else:
+                    good = changes == 0
+                successes += int(good)
+                failures += int(not good)
+                print(f"{'OK' if good else 'FAIL'} {view}/{mode}: different={changes}, max_delta={max_delta}, bbox={bbox}")
+            except (OSError, ValueError) as exc:
+                failures += 1
+                print(f"FAIL {view}/{mode}: {exc}")
+    print(f"FIXED PIXEL RESULTS: {successes} OK, {failures} FAIL")
+    return int(failures != 0)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

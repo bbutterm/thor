@@ -1,0 +1,148 @@
+extends Node
+## Изолированные кадры одного зала. Нужен настоящий рендерер, --headless не подходит.
+## godot --path . --rendering-method gl_compatibility --resolution 640x360 \
+##   res://tests/tower_batch_views.tscn -- /tmp/tower-views room_01
+## Повторить для room_06 и отдельно на Forward+.
+
+const Exp := preload("res://tests/fixtures/tower_batch_experiment.gd")
+const SIZE := Vector2i(640, 360)
+var output := "user://tower_batch_views"
+var room_name := "room_01"
+var failures := 0
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	if DisplayServer.get_name() == "headless":
+		push_error("A real renderer is required")
+		get_tree().quit(2)
+		return
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		output = args[0]
+	if args.size() > 1:
+		room_name = args[1]
+	if room_name not in ["room_01", "room_06"]:
+		push_error("Expected room_01 or room_06")
+		get_tree().quit(2)
+		return
+	if DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(output)) != OK:
+		push_error("Cannot create screenshot directory")
+		get_tree().quit(2)
+		return
+	_run.call_deferred()
+
+func frames(n: int) -> void:
+	for i in n:
+		await get_tree().process_frame
+
+func _run() -> void:
+	Run.start_run("berserker")
+	get_tree().paused = true
+	var viewport := SubViewport.new()
+	# Keep room scripts and physics paused while the test runner remains active.
+	viewport.process_mode = Node.PROCESS_MODE_PAUSABLE
+	viewport.own_world_3d = true
+	viewport.size = SIZE
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.msaa_3d = get_viewport().msaa_3d
+	viewport.screen_space_aa = get_viewport().screen_space_aa
+	add_child(viewport)
+	var stage := Node3D.new()
+	viewport.add_child(stage)
+	var we := WorldEnvironment.new()
+	we.name = "WorldEnvironment"
+	we.environment = load("res://scenes/game_environment.tres") as Environment
+	stage.add_child(we)
+	var sun := DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.light_color = Color(1.0, 0.86, 0.7)
+	sun.light_energy = 1.15
+	sun.shadow_enabled = true
+	sun.directional_shadow_max_distance = 60.0
+	stage.add_child(sun)
+	if not WorldArt.apply_world(stage, Run.map):
+		_fail("WorldArt.apply_world failed")
+		return
+	var room := (load("res://rooms/%s.tscn" % room_name) as PackedScene).instantiate() as Node3D
+	stage.add_child(room)
+	WorldArt.apply_room(stage, room, Run.map)
+	var collisions := Exp.snapshot(room, "collision")
+	var lights := Exp.snapshot(room, "light")
+	var data: Dictionary = Exp.prepare(room)
+	if data.has("error") or not Exp.verify(data):
+		_fail("Preparation/geometry check failed: %s" % data.get("error", "unknown"))
+		return
+	print("TOWER_VIEWS renderer=%s adapter=%s room=%s groups=7 sources=18 extra_light_aabb=%d" % [
+		RenderingServer.get_current_rendering_method(), RenderingServer.get_video_adapter_name(), room_name,
+		Exp.extra_light_bounds(data, room)])
+	var camera := Camera3D.new()
+	camera.fov = 85.0
+	camera.near = 0.05
+	stage.add_child(camera)
+	camera.current = true
+	var tower: Node3D = data.tower
+	var views := [
+		{"name": "south_west", "pos": Vector3(-4, 1.7, 4), "target": Vector3(0, 2, 0)},
+		{"name": "south_east", "pos": Vector3(4, 1.7, 4), "target": Vector3(0, 2, 0)},
+		{"name": "stairs", "pos": Vector3(0, 1.7, -7), "target": Vector3(0, 2, -1)},
+		{"name": "above", "pos": Vector3(1, 7, -3), "target": Vector3(0, 2, 0)},
+		{"name": "under", "pos": Vector3(0, 0.3, 0), "target": Vector3(1.18, 1.7, 1.18)},
+		{"name": "deck", "pos": Vector3(0, 4.3, 0), "target": Vector3(1.32, 4.35, 0)},
+	]
+	await frames(25)
+	for view in views:
+		camera.global_position = tower.to_global(view.pos)
+		camera.look_at(tower.to_global(view.target), Vector3.UP)
+		Exp.select(data, "original")
+		await frames(12)
+		var a := await _capture(viewport, view.name, "original_a")
+		await frames(8)
+		var a2 := await _capture(viewport, view.name, "original_b")
+		Exp.select(data, "batch")
+		await frames(12)
+		var b := await _capture(viewport, view.name, "batch")
+		Exp.select(data, "hidden")
+		await frames(8)
+		var hidden := await _capture(viewport, view.name, "hidden")
+		if a == null or a2 == null or b == null or hidden == null:
+			_fail("Missing image for %s" % view.name)
+			return
+		var repeat_diff := _pixels_different(a, a2)
+		var batch_diff := _pixels_different(a, b)
+		var hidden_diff := _pixels_different(a, hidden)
+		print("TOWER_VIEW %s repeat_diff=%d batch_diff=%d hidden_diff=%d" % [view.name, repeat_diff, batch_diff, hidden_diff])
+		if repeat_diff != 0 or batch_diff != 0 or hidden_diff <= 0:
+			failures += 1
+	Exp.select(data, "original")
+	if not Exp.verify(data) or collisions != Exp.snapshot(room, "collision") or lights != Exp.snapshot(room, "light"):
+		failures += 1
+		printerr("Geometry, collisions or lights changed")
+	print("TOWER_VIEWS_END room=%s failures=%d" % [room_name, failures])
+	viewport.queue_free()
+	await frames(6)
+	get_tree().paused = false
+	get_tree().quit(0 if failures == 0 else 1)
+
+func _capture(viewport: SubViewport, view: String, mode: String) -> Image:
+	await RenderingServer.frame_post_draw
+	var img := viewport.get_texture().get_image()
+	if img == null or img.get_size() != SIZE or img.save_png(output.path_join("%s_%s.png" % [view, mode])) != OK:
+		return null
+	img.convert(Image.FORMAT_RGBA8)
+	return img
+
+func _pixels_different(a: Image, b: Image) -> int:
+	var aa := a.get_data()
+	var bb := b.get_data()
+	if aa.size() != bb.size():
+		return -1
+	var count := 0
+	for i in range(0, aa.size(), 4):
+		if aa[i] != bb[i] or aa[i + 1] != bb[i + 1] or aa[i + 2] != bb[i + 2] or aa[i + 3] != bb[i + 3]:
+			count += 1
+	return count
+
+func _fail(reason: String) -> void:
+	push_error(reason)
+	get_tree().paused = false
+	get_tree().quit(1)

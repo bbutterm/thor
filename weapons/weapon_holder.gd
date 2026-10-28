@@ -372,7 +372,7 @@ func wants_ammo() -> bool:
 
 ## Прогрев: вспышка дула и все модели оружия во вьюмодели (свой SubViewport — свои пайплайны).
 func warmup_viewmodel(frames: int = 10) -> void:
-	if arm == null:
+	if arm == null or not is_inside_tree():
 		return
 	var keep := arm.weapon
 	var nodes: Array[Node3D] = []
@@ -387,6 +387,9 @@ func warmup_viewmodel(frames: int = 10) -> void:
 	arm.add_child(fl)
 	nodes.append(fl)
 	for k in frames:
+		# Сцену могут закрыть, пока прогрев ждёт следующий кадр.
+		if not is_inside_tree():
+			break
 		await get_tree().process_frame
 	for n in nodes:
 		if is_instance_valid(n):

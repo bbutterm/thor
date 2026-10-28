@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""Проверка сохранённых ShaderMaterial для экспериментального uniform.
+
+Реальную текстуру нельзя отключать. Для белой заглушки условие задаётся явно;
+остальные ресурсы с общим шейдером остаются совместимыми по умолчанию.
+"""
+from pathlib import Path
+import re
+import sys
+
+ROOT = Path(__file__).resolve().parent.parent
+SHADER = 'res://shaders/world_surface.gdshader'
+EXT_SHADER = re.compile(r'^\[ext_resource type="Shader" path="' + re.escape(SHADER) + r'" id="([^"]+)"\]$', re.M)
+SHADER_REF = re.compile(r'^shader = ExtResource\("([^"]+)"\)$', re.M)
+TEXTURE = re.compile(r'^shader_parameter/overlay_tex\s*=\s*(.+)$', re.M)
+PARAM = re.compile(r'^shader_parameter/sample_overlay_texture\s*=\s*(.+)$', re.M)
+BLOCK = re.compile(r'(?=^\[(?:sub_)?resource(?:\s|\]))', re.M)
+
+
+def main() -> int:
+    problems = []
+    counts = {"flat": 0, "textured": 0}
+    for file in sorted([*(ROOT / "rooms").rglob("*.tscn"), *(ROOT / "rooms/materials").glob("*.tres")]):
+        text = file.read_text()
+        shader_ids = set(EXT_SHADER.findall(text))
+        if not shader_ids:
+            continue
+        for block in BLOCK.split(text)[1:]:
+            if not (block.startswith('[sub_resource type="ShaderMaterial"') or block.startswith('[resource]')):
+                continue
+            shader_ref = SHADER_REF.search(block)
+            if not shader_ref or shader_ref.group(1) not in shader_ids:
+                continue
+            texture = TEXTURE.search(block)
+            has_texture = bool(texture and texture.group(1).strip() != "null")
+            param = PARAM.search(block)
+            if has_texture:
+                counts["textured"] += 1
+                if param and param.group(1).strip() == "false":
+                    problems.append(f"{file.relative_to(ROOT)}: textured material disables overlay sampling")
+            else:
+                counts["flat"] += 1
+                if not param or param.group(1).strip() != "false":
+                    problems.append(f"{file.relative_to(ROOT)}: white fallback material is not optimized")
+    generator = (ROOT / "tools/room_dresser.gd").read_text()
+    if 'm.set_shader_parameter("sample_overlay_texture", spec.has("overlay_tex"))' not in generator:
+        problems.append("generator does not derive the flag from overlay_tex")
+    for problem in problems:
+        print("FAIL:", problem)
+    print(f"OVERLAY RESOURCES: white={counts['flat']} textured={counts['textured']} failures={len(problems)}")
+    return int(bool(problems or not counts["flat"] or not counts["textured"]))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

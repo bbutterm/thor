@@ -13,6 +13,7 @@ var holder: WeaponHolder
 var _slots: Array[WeaponSlot] = []
 var _names: Array[Label] = []
 var _subs: Array[Label] = []
+var _skills: Array[Label] = []
 var _ammo_label: Label
 var _reload_bar: ProgressBar
 var _prompt: Label
@@ -34,6 +35,7 @@ func _ready() -> void:
 	UIStyle.full_rect(self)
 	UISkin.apply(self)
 	_build()
+	GameSettings.events.changed.connect(_on_setting_changed)
 
 func _build() -> void:
 	var box := VBoxContainer.new()
@@ -96,10 +98,19 @@ func _build() -> void:
 		var s := UIStyle.label("", 14, UIStyle.TEXT_DIM, 4)
 		s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(s)
+		var skill := UIStyle.label("", 12, UIStyle.GOLD, 3)
+		skill.name = "WeaponSkill"
+		skill.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		skill.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		skill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		skill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		skill.visible = false
+		v.add_child(skill)
 		_slots.append(slot)
 		_names.append(n)
 		_subs.append(s)
-	_hint = UIStyle.label(tr("Q / колесо — сменить · R — перезарядка"), 13, UIStyle.TEXT_DIM, 3)
+		_skills.append(skill)
+	_hint = UIStyle.label("", 13, UIStyle.TEXT_DIM, 3)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	box.add_child(_hint)
 	_prompt = UIStyle.label("", 22, UIStyle.GOLD, 6)
@@ -107,8 +118,9 @@ func _build() -> void:
 	_prompt.offset_left = -400
 	_prompt.offset_right = 400
 	_prompt.offset_top = 34
-	_prompt.offset_bottom = 70
+	_prompt.offset_bottom = 100
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_prompt)
 
 func bind(h: WeaponHolder) -> void:
@@ -128,6 +140,8 @@ func _refresh() -> void:
 		var it: WeaponItem = items[i]
 		var on := holder.active_slot == i
 		var slot := _slots[i]
+		slot.key_text = "" if GameSettings.using_gamepad() else GameSettings.current_binding("weapon_melee" if i == 0 else "weapon_ranged")
+		slot.queue_redraw()
 		var was := slot.active
 		slot.active = on
 		slot.custom_minimum_size = Vector2.ONE * (active_slot_size if on else slot_size)
@@ -137,6 +151,8 @@ func _refresh() -> void:
 			slot.pop()
 		_names[i].modulate.a = 1.0 if on else 0.7
 		_subs[i].modulate.a = 1.0 if on else 0.7
+		_skills[i].modulate.a = 1.0 if on else 0.7
+		_skills[i].visible = false
 		if it == null:
 			_names[i].text = "—"
 			_subs[i].text = tr("пусто")
@@ -150,12 +166,20 @@ func _refresh() -> void:
 		else:
 			_subs[i].text = tr("ур. %d") % it.level
 			_subs[i].label_settings.font_color = UIStyle.TEXT_DIM
+			if it.def and it.def.skill_kind != "none" and it.def.skill_title != "":
+				_skills[i].text = tr("Приём: %s") % tr(it.def.skill_title)
+				_skills[i].visible = true
 	var cur := holder.current()
 	if cur and cur.is_ranged():
 		_ammo_label.text = "%d / %d" % [cur.mag, cur.reserve]
 		_ammo_label.label_settings.font_color = UIStyle.BLOOD if cur.mag == 0 else UIStyle.TEXT
 	else:
 		_ammo_label.text = ""
+	_hint.text = tr("%s — сменить · %s — перезарядка") % [GameSettings.current_binding("weapon_switch"), GameSettings.current_binding("reload")]
+
+func _on_setting_changed(section: String, _key: String) -> void:
+	if section in ["input", "pad_input", "input_device", "text"]:
+		_refresh()
 
 func _on_reload(active: bool, progress: float) -> void:
 	_reload_bar.visible = active

@@ -1,0 +1,157 @@
+name: Headless checks and tagged Windows build
+
+on:
+  # Только вручную (Actions → Run workflow) или по тегу v* — решение владельца 28.10: репозиторий приватный, минуты Actions ограничены.
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  fast:
+    name: Fast headless checks (not the full suite)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Godot 4.6.3
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/godot-linux.zip"
+          url=https://github.com/godotengine/godot-builds/releases/download/4.6.3-stable/Godot_v4.6.3-stable_linux.x86_64.zip
+          curl --fail --location --silent --show-error --retry 3 --output "$archive" "$url"
+          printf '%s  %s\n' 'a035258da32b77f966a5376f9fa29c30a6adde826a85ba918e1605bd1fc9823eba7d85f1dd5e748956bd2ba72827c0025ffa11bb82aec91128c407a2e723c99c' "$archive" | sha512sum --check
+          mkdir -p "$RUNNER_TEMP/godot-bin"
+          unzip -q "$archive" -d "$RUNNER_TEMP/godot-bin"
+          mv "$RUNNER_TEMP/godot-bin/Godot_v4.6.3-stable_linux.x86_64" "$RUNNER_TEMP/godot-bin/godot"
+          chmod +x "$RUNNER_TEMP/godot-bin/godot"
+          echo "$RUNNER_TEMP/godot-bin" >> "$GITHUB_PATH"
+          rm "$archive"
+
+      - name: Python checks and export asset audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B tools/test_run_test_suite.py
+          python3 -B tools/test_export_assets.py
+          python3 -B tools/test_export_decor.py
+          python3 -B tools/test_package_playtest.py
+          python3 -B tools/check_export_assets.py
+
+      - name: Import and run nine fast scenes
+        shell: bash
+        run: python3 -B tools/run_ci_fast.py "$GITHUB_WORKSPACE" "$RUNNER_TEMP/thor-fast"
+
+      - name: Upload fast-check diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: thor-fast-diagnostics
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            ${{ runner.temp }}/thor-fast/*.log
+            ${{ runner.temp }}/thor-fast/*.failures
+            ${{ runner.temp }}/thor-fast/*.godot-errors
+            ${{ runner.temp }}/thor-fast/*.expected-errors
+            ${{ runner.temp }}/thor-fast/summary.txt
+
+  windows:
+    name: Windows build (tag only)
+    needs: fast
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Godot 4.6.3 and Windows export template
+        shell: bash
+        run: |
+          set -euo pipefail
+          base=https://github.com/godotengine/godot-builds/releases/download/4.6.3-stable
+          editor="$RUNNER_TEMP/godot-linux.zip"
+          templates="$RUNNER_TEMP/godot-templates.tpz"
+          curl --fail --location --silent --show-error --retry 3 --output "$editor" "$base/Godot_v4.6.3-stable_linux.x86_64.zip"
+          printf '%s  %s\n' 'a035258da32b77f966a5376f9fa29c30a6adde826a85ba918e1605bd1fc9823eba7d85f1dd5e748956bd2ba72827c0025ffa11bb82aec91128c407a2e723c99c' "$editor" | sha512sum --check
+          mkdir -p "$RUNNER_TEMP/godot-bin"
+          unzip -q "$editor" -d "$RUNNER_TEMP/godot-bin"
+          mv "$RUNNER_TEMP/godot-bin/Godot_v4.6.3-stable_linux.x86_64" "$RUNNER_TEMP/godot-bin/godot"
+          chmod +x "$RUNNER_TEMP/godot-bin/godot"
+          echo "$RUNNER_TEMP/godot-bin" >> "$GITHUB_PATH"
+          rm "$editor"
+          curl --fail --location --silent --show-error --retry 3 --output "$templates" "$base/Godot_v4.6.3-stable_export_templates.tpz"
+          printf '%s  %s\n' 'da606b61c10157844f8300172df374472665f95015495cb1a7cd132c40ede404faa96cc1016a4b9662db9909ddea69632c4948b2cd11163438dad4808881fb68' "$templates" | sha512sum --check
+          data="$RUNNER_TEMP/godot-xdg-data"
+          target="$data/godot/export_templates/4.6.3.stable"
+          mkdir -p "$target"
+          unzip -j -q "$templates" templates/windows_release_x86_64.exe -d "$target"
+          rm "$templates"
+          echo "XDG_DATA_HOME=$data" >> "$GITHUB_ENV"
+
+      - name: Install Wine and libdeflate
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends wine libdeflate0
+
+      - name: Export and package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B tools/package_playtest.py
+          for log in export/windows/import.log export/windows/export.log; do
+            if [[ $(stat -c '%s' "$log") -ge 50000000 ]]; then
+              echo "Godot log reached its cap: $log" >&2
+              exit 1
+            fi
+            if grep -En 'ERROR:|SCRIPT ERROR|Parse Error' "$log"; then
+              echo "Unexpected Godot diagnostic in $log" >&2
+              exit 1
+            else
+              code=$?
+              if [[ "$code" -ne 1 ]]; then
+                echo "Cannot scan $log (grep exit $code)" >&2
+                exit 1
+              fi
+            fi
+          done
+          (cd export/windows && sha256sum ThorDostoynayaSmert-windows.zip > ThorDostoynayaSmert-windows.zip.sha256)
+
+      - name: Wine selftest
+        shell: bash
+        run: python3 -B tools/ci_windows_selftest.py export/windows/ThorDostoynayaSmert.exe "$RUNNER_TEMP/wine-selftest"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: thor-windows-${{ github.sha }}
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 0
+          path: |
+            export/windows/ThorDostoynayaSmert-windows.zip
+            export/windows/ThorDostoynayaSmert-windows.zip.sha256
+
+      - name: Upload build diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: thor-windows-diagnostics
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            export/windows/*.log
+            ${{ runner.temp }}/wine-selftest/*.log
+            ${{ runner.temp }}/wine-selftest/*.failures
+            ${{ runner.temp }}/wine-selftest/*.godot-errors
+            ${{ runner.temp }}/wine-selftest/*.expected-errors

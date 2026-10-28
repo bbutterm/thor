@@ -108,7 +108,8 @@
 			"priority": 55,
 			"conditions": [
 				"seen:loki_intro",
-				"deaths >= 8"
+				"deaths >= 8",
+				"!seen:finale_a"
 			],
 			"lines": [
 				{
@@ -226,7 +227,7 @@
 			{
 				"speaker": "hugin",
 				"emotion": "smug",
-				"text": "{key_dash} — рывок. Сквозь удары проходишь целым. Почти как раньше, только с одышкой.",
+				"text": "{key_dash} — рывок. Уходи из-под удара!",
 				"id": "ravens.tutorial_dash.01"
 			}
 		],
@@ -234,7 +235,7 @@
 			{
 				"speaker": "munin",
 				"emotion": "neutral",
-				"text": "{key_attack} — бей. Зажми {key_attack} — сильный удар, сносит щиты и замахи.",
+				"text": "{key_attack} — бей. Щитоносца обходи сзади.",
 				"id": "ravens.tutorial_attack.01"
 			}
 		],
@@ -250,7 +251,7 @@
 			{
 				"speaker": "munin",
 				"emotion": "smug",
-				"text": "В прыжке жми {key_slam} — удар-приземление. Чем выше прыгнул, тем больнее им. Попал — подбросит, жми {key_jump} ещё.",
+				"text": "Прыгни дважды: {key_jump}, {key_jump}, затем жми {key_slam} — удар-приземление. С высокой площадки можно и без второго прыжка. Попал — подбросит!",
 				"id": "ravens.tutorial_slam.01"
 			}
 		],
@@ -260,6 +261,30 @@
 				"emotion": "neutral",
 				"text": "Зал чист — видишь арки? Над каждой знак награды. Выбирай дверь — и бегом в неё.",
 				"id": "ravens.tutorial_doors.01"
+			}
+		],
+		"tutorial_weapon_skill": [
+			{
+				"speaker": "munin",
+				"emotion": "happy",
+				"text": "Зажми {key_attack} — приём оружия. У каждого оружия свой!",
+				"id": "ravens.tutorial_weapon_skill.01"
+			}
+		],
+		"tutorial_runes": [
+			{
+				"speaker": "hugin",
+				"emotion": "neutral",
+				"text": "Воздушный прыжок {key_jump} и рывок {key_dash} тратят руны. Брось Мьёльнир — {key_throw}, и поймай его при возвращении, чтобы вернуть руну.",
+				"id": "ravens.tutorial_runes.01"
+			}
+		],
+		"tutorial_vertical": [
+			{
+				"speaker": "munin",
+				"emotion": "happy",
+				"text": "Лезь выше — удар-приземление {key_slam} станет сильнее. Прыгай!",
+				"id": "ravens.tutorial_vertical.01"
 			}
 		]
 	}

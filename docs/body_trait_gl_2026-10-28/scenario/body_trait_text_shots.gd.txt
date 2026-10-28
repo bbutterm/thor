@@ -1,0 +1,188 @@
+extends Node
+## Реальный экран выбора двух принудительно заданных приёмов; RU/EN, новые и ур. 2.
+## Запуск и ограничения — docs/body_trait_text_shots_2026-10-28.md.
+
+var output: String = "user://body_trait_text_shots"
+var captured: Array[Dictionary] = []
+var current_case: Dictionary = {}
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	if not has_meta("runner"):
+		var runner := Node.new()
+		runner.set_script(get_script())
+		runner.set_meta("runner", true)
+		runner.name = "BodyTraitTextShotsRunner"
+		get_tree().root.add_child.call_deferred(runner)
+		return
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	if not args.is_empty():
+		output = args[0]
+	if DirAccess.make_dir_recursive_absolute(output) != OK:
+		_fail("не удалось создать каталог: " + output)
+		return
+	_run.call_deferred()
+
+func _fail(reason: String) -> void:
+	printerr("SHOT FAIL: ", reason)
+	_write_manifest("failed", reason)
+	print("SHOT RESULT: failed; ", captured.size(), "/4")
+	get_tree().paused = false
+	get_tree().quit(1)
+
+func _write_manifest(status: String, error: String = "") -> bool:
+	var report: Dictionary = {
+		"status": status,
+		"error": error,
+		"resolution": [1280, 720],
+		"selection": "forced",
+		"current_case": current_case,
+		"captures": captured,
+	}
+	var file: FileAccess = FileAccess.open(output.path_join("manifest.json"), FileAccess.WRITE)
+	if file == null:
+		printerr("SHOT FAIL: не записать manifest.json")
+		return false
+	file.store_string(JSON.stringify(report, "\t") + "\n")
+	var err: int = file.get_error()
+	file.close()
+	return err == OK
+
+func _frames(count: int) -> void:
+	for i in count:
+		await get_tree().process_frame
+
+func _configure_level(level: int, dive: MjolnirTrait, step: MjolnirTrait) -> bool:
+	Run.mjolnir_traits.clear()
+	Run.mjolnir_trait_levels.clear()
+	Run.mjolnir_traits_changed.emit(Run.mjolnir_traits)
+	if level == 2:
+		Run.add_mjolnir_trait(dive)
+		Run.add_mjolnir_trait(step)
+	var owned: int = level - 1
+	return Run.mjolnir_trait_level(dive.id) == owned and Run.mjolnir_trait_level(step.id) == owned
+
+## Проверяем фактически построенные карточки, а не только переданный список.
+func _cards_match(pick: TraitPick, choices: Array[MjolnirTrait], level: int, language: String) -> bool:
+	if not pick.visible or pick._choices.size() != 2 or pick._cards.get_child_count() != 2:
+		return false
+	if pick._root.modulate.a < 0.99 or I18n.locale() != language:
+		return false
+	var limit: float = SkinCard.TEXT_BOX.size.y * pick.card_width / SkinCard.VISIBLE.size.x
+	for i in 2:
+		var technique: MjolnirTrait = choices[i]
+		if pick._choices[i] != technique:
+			return false
+		var card: SkinCard = pick._cards.get_child(i) as SkinCard
+		if card == null or card.body.get_child_count() != 4:
+			return false
+		var name_label: Label = card.body.get_child(0) as Label
+		var text_label: Label = card.body.get_child(2) as Label
+		var status_label: Label = card.body.get_child(3) as Label
+		var expected_title: String = tr(technique.title)
+		var expected_text: String = tr(technique.level_description(level))
+		var expected_status: String = tr("НОВЫЙ") if level == 1 else tr("УРОВЕНЬ %d") % level
+		if name_label == null or text_label == null or status_label == null:
+			return false
+		if name_label.text != expected_title or text_label.text != expected_text or status_label.text != expected_status:
+			return false
+		if language == "en" and expected_text == technique.level_description(level):
+			return false
+		var bottom: float = 0.0
+		for child in card.body.get_children():
+			var label: Label = child as Label
+			if label == null:
+				return false
+			bottom = maxf(bottom, label.position.y + label.size.y)
+		if card.body.size.y > limit + 1.0 or bottom > limit + 1.0:
+			return false
+	return true
+
+func _shot(name: String) -> bool:
+	await RenderingServer.frame_post_draw
+	var image: Image = get_viewport().get_texture().get_image()
+	if image == null or image.is_empty() or image.get_size() != Vector2i(1280, 720):
+		return false
+	var path: String = output.path_join(name + ".png")
+	if image.save_png(path) != OK:
+		return false
+	print("SHOT: ", path, " size=1280x720")
+	return true
+
+func _run() -> void:
+	if DisplayServer.get_name() == "headless":
+		_fail("нужен графический рендер, headless не снимает кадры")
+		return
+	if not _write_manifest("running"):
+		_fail("не удалось начать manifest.json")
+		return
+	Save.use_path("user://body_trait_text_shots_save.json")
+	Save.reset()
+	Dialogue.in_run_scenes = false
+	Run.start_run("berserker")
+	# Обычный зал: первая встреча с Ярлом не должна оставлять старую реплику за карточками.
+	Run.room_order.assign([Run.ROOM_SCENES[0], Run.BOSS_SCENE])
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	var game: Game = null
+	for i in 600:
+		await get_tree().process_frame
+		game = get_tree().current_scene as Game
+		if game != null and is_instance_valid(game.room) and not game._room_load_active and game.trait_pick != null:
+			break
+	if game == null or not is_instance_valid(game.room) or game._room_load_active or game.trait_pick == null:
+		_fail("игровой зал не загрузился")
+		return
+	if game.tutorial:
+		game.tutorial.active = false
+	game.room.set_physics_process(false)
+	game.room._spawn_queue.clear()
+	for enemy in game.room.alive_enemies():
+		enemy.set_physics_process(false)
+	var dive: MjolnirTrait = Run.mjolnir_trait_def(&"hammer_dive")
+	var step: MjolnirTrait = Run.mjolnir_trait_def(&"hammer_step")
+	if dive == null or step == null:
+		_fail("приёмы hammer_dive и hammer_step не загружены")
+		return
+	var choices: Array[MjolnirTrait] = [dive, step]
+	var pick: TraitPick = game.trait_pick
+	for language in ["ru", "en"]:
+		GameSettings.set_value("text", "language", language, false)
+		for level in [1, 2]:
+			var filename: String = "trait_text_%s_level%d.png" % [language, level]
+			current_case = {
+				"file": filename,
+				"caption": "Принудительное предложение: Пике молотом и Молот-ступенька, %s, уровень %d" % [language.to_upper(), level],
+				"language": language,
+				"display_level": level,
+				"offers": ["hammer_dive", "hammer_step"],
+				"owned_level": level - 1,
+			}
+			if not _configure_level(level, dive, step):
+				_fail("не удалось установить уровень %d" % level)
+				return
+			pick.open(choices)
+			await _frames(30)
+			if not _cards_match(pick, choices, level, language):
+				_fail("содержимое или размер карточек: %s, уровень %d" % [language, level])
+				return
+			print("FORCED: language=%s display_level=%d offers=[hammer_dive, hammer_step] owned_level=%d" % [language, level, level - 1])
+			if not await _shot("trait_text_%s_level%d" % [language, level]):
+				_fail("не удалось сохранить кадр %s, уровень %d, 1280x720" % [language, level])
+				return
+			captured.append(current_case.duplicate(true))
+			current_case = {}
+			if not _write_manifest("running"):
+				_fail("не удалось обновить manifest.json")
+				return
+			pick.visible = false
+			get_tree().paused = false
+			await _frames(3)
+	GameSettings.set_value("text", "language", "ru", false)
+	if captured.size() != 4:
+		_fail("получено %d кадров вместо четырёх" % captured.size())
+		return
+	if not _write_manifest("ok"):
+		_fail("не удалось завершить manifest.json")
+		return
+	print("SHOT RESULT: ok; ", captured.size(), "/4")
+	get_tree().quit(0)

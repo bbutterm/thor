@@ -56,7 +56,9 @@ func _run() -> void:
 	var p := game.player
 	var h := p.weapons
 	await wait(1.6)
-	# Враги не мешают: замораживаем и уводим
+	# Враги не мешают: останавливаем очередь и уводим уже появившихся.
+	# Иначе при поштучном входе оставшийся корм появляется во время теста.
+	game.room.set_physics_process(false)
 	for e in game.room.alive_enemies():
 		e.global_position = game.room.global_position + Vector3(14, 0.1, -14)
 		e.set_physics_process(false)
@@ -148,18 +150,25 @@ func _run() -> void:
 	check(dummy.health < hp1, "удар мили попал")
 	check(dummy.state != Enemy.State.WINDUP, "мили сбил замах (состояние %d)" % dummy.state)
 
-	print("-- Сильный удар (зажать ЛКМ)")
+	print("-- Приём топора (зажать ЛКМ)")
 	await wait(0.5)
 	dummy.global_position = p.global_position + _fwd(p) * 1.6
+	dummy.velocity = Vector3.ZERO
+	dummy.knockback_velocity = Vector3.ZERO
+	dummy._set_state(Enemy.State.CHASE)
+	var toward_player := p.global_position - dummy.global_position
+	dummy.rotation.y = atan2(toward_player.x, toward_player.z)
+	p.health = p.max_health  # кровавая ярость не должна менять базовый урон приёма
+	p.style.reset()
 	var hp2 := dummy.health
 	var crit0 := p.crit_chance_base
 	p.crit_chance_base = 0.0  # случайный крит (5 %) удваивал урон — проверка нестабильна
 	h.axe.request_heavy()
-	check(h.axe.heavy, "начат сильный удар")
+	check(h.axe.heavy and h.axe.is_busy(), "начата вертушка топора")
 	await wait(0.75)
 	var heavy_dmg := hp2 - dummy.health
 	p.crit_chance_base = crit0
-	check(absf(heavy_dmg - h.melee.def.damage * h.axe.damage_mult * h.melee.def.heavy_damage_mult) < 0.6, "сильный удар ×%.1f (%.1f урона)" % [h.melee.def.heavy_damage_mult, heavy_dmg])
+	check(absf(heavy_dmg - h.melee.def.damage * h.axe.damage_mult * h.melee.def.skill_damage_mult) < 0.6, "вертушка ×%.1f (%.1f урона)" % [h.melee.def.skill_damage_mult, heavy_dmg])
 
 	print("-- Подбор мили: старое падает на пол")
 	var sword_pk := Loot.spawn_weapon(game, p.global_position + _fwd(p) * 1.0, WeaponItem.create(Loot.get_def("sword"), 2))

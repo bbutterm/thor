@@ -19,12 +19,11 @@ static func detonate(parent: Node, pos: Vector3, radius_: float, damage_: float,
 	Perf.mark("blast")
 	if parent == null or not parent.is_inside_tree():
 		return
-	FX.burst(parent, pos, radius_ * 0.75, Color(color_, 0.55), 0.3)
+	# Вид (блок Б0): вспышка, огненный шар, дым, волна по полу на радиус урона — FX.explosion (вместо шара-диска)
 	var ground := Loot.floor_point(parent as Node3D, pos) if parent is Node3D else pos
-	FX.ring(parent, ground, radius_, Color(color_, 0.9), 0.35)
+	FX.explosion(parent, pos, radius_, color_)
 	FX.scorch(parent, ground, radius_ * 0.8)  # подпалина на полу (assets/decals/scorch)
 	FX.sparks(parent, pos, color_.lightened(0.3), 22, 9.0)
-	FX.blast_smoke(parent, pos, radius_)
 	Audio.sfx("bloater_explode", "sounds/sfx/boss_slam.wav")
 	ComicFX.pop("slam", pos)
 	var tree := parent.get_tree()

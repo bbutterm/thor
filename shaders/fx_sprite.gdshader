@@ -4,8 +4,8 @@ shader_type spatial;
 // Всё, что меняется у отдельного эффекта, — на экземпляре: цвет и яркость, кадр полосы,
 // режим billboard, поворот в плоскости, скорость петли. Затухание — GeometryInstance3D.transparency
 // (альфу умножаем: присваивание ALPHA = … отключало его), в GL Compatibility — instance uniform fade (FX.sync_fades).
-// Буфер instance-переменных: каждый узел с ними занимает 16 ячеек независимо от их числа; в GL Compatibility
-// всего 4096 ячеек = 256 узлов на сцену (FX.INSTANCE_SLOTS_GL) — поэтому свободные узлы пулов отдают материал.
+// В GL Compatibility выделенный блок instance-переменных занимает 16 ячеек; номинально до 256 блоков на 4096 ячеек.
+// Снятие материала не гарантирует освобождения блока: сохранённые параметры могут удерживать его до удаления RID.
 render_mode unshaded, shadows_disabled, depth_draw_never, cull_disabled;
 // rgb — оттенок (текстуры комплекта белые/серые там, где tintable), a — яркость (> 1 — светится в Glow)
 instance uniform vec4 color : source_color = vec4(1.0);

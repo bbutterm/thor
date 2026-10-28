@@ -65,6 +65,10 @@ static func tex(path: String) -> Texture2D:
 
 ## Фоновая загрузка заранее (экран откроется позже — не читаем картинку с диска в момент показа).
 static func prefetch(paths: Array) -> void:
+	# В headless заранее ничего не читаем: при победе эта функция вызывается внутри
+	# кадра смерти босса. tex() по-прежнему загрузит конкретное изображение по запросу.
+	if DisplayServer.get_name() == "headless":
+		return
 	for p in paths:
 		var path := str(p)
 		if path == "" or _cache.has(path) or _requested.has(path) or not ResourceLoader.exists(path):

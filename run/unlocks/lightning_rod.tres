@@ -1,13 +1,15 @@
 [gd_resource type="Resource" script_class="UnlockDef" format=3]
 
 [ext_resource type="Script" path="res://run/unlock_def.gd" id="1_unlk"]
+[ext_resource type="Texture2D" path="res://sprites/unlocks/lightning_rod.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_unlk")
 id = "lightning_rod"
 title = "Постоял под грозой"
 description = "Молния, уровень 3 — громоотвод: воткнутый молот бьёт молнией."
-price = 200
+price = 1000
 kind = "trait"
 target_id = "lightning_rod"
 order = 216
+icon = ExtResource("2_icon")

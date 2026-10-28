@@ -11,9 +11,11 @@ signal closed(body_id: String)
 
 ## Колонок в сетке тел
 @export var columns: int = 2
-@export var card_size: Vector2 = Vector2(212, 74)
+@export var card_size: Vector2 = Vector2(200, 74)
 ## Ширина колонки с портретом (портрет 2:3)
-@export var portrait_width: float = 300.0
+@export var portrait_width: float = 270.0
+## Скорость прокрутки длинного описания правым стиком, px/s.
+@export var detail_scroll_speed: float = 320.0
 ## Портрет при смене тела въезжает на столько пикселей и за столько секунд
 @export var portrait_slide: float = 36.0
 @export var portrait_slide_time: float = 0.18
@@ -44,6 +46,10 @@ var _was_paused: bool = false
 var _lock_tex: Texture2D
 var _portrait: TextureRect
 var _portrait_tween: Tween
+var _detail_panel: PanelContainer
+var _detail_scroll: ScrollContainer
+var _detail_axis: float = 0.0
+var _scroll_remainder: float = 0.0
 
 func _ready() -> void:
 	layer = 36
@@ -145,6 +151,7 @@ func _build() -> void:
 	left.add_child(lp)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
 	lp.add_child(scroll)
 	_grid = GridContainer.new()
 	_grid.columns = columns
@@ -153,24 +160,24 @@ func _build() -> void:
 	scroll.add_child(_grid)
 
 	# Карточка выбранного тела
-	var rp := UIStyle.panel(Color(0.06, 0.055, 0.08, 0.95), Color(UIStyle.GOLD, 0.6), "wood")
-	rp.custom_minimum_size = Vector2(410, 0)
-	body.add_child(rp)
+	_detail_panel = UIStyle.panel(Color(0.06, 0.055, 0.08, 0.95), Color(UIStyle.GOLD, 0.6), "wood")
+	_detail_panel.custom_minimum_size = Vector2(380, 0)
+	body.add_child(_detail_panel)
 	var rv := VBoxContainer.new()
 	rv.add_theme_constant_override("separation", 6)
 	# Описание тела может не влезть по высоте (720p) — прокрутка, кнопки внизу всегда видны
-	var rscroll := ScrollContainer.new()
-	rscroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	rp.add_child(rscroll)
+	_detail_scroll = ScrollContainer.new()
+	_detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_detail_panel.add_child(_detail_scroll)
 	rv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rscroll.add_child(rv)
+	_detail_scroll.add_child(rv)
 	_name_label = UIStyle.label("", 30, UIStyle.GOLD, 8)
 	_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_name_label.custom_minimum_size = Vector2(340, 0)
+	_name_label.custom_minimum_size = Vector2(310, 0)
 	rv.add_child(_name_label)
 	_stats_label = UIStyle.label("", 17, UIStyle.TEXT, 4)
 	_stats_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_stats_label.custom_minimum_size = Vector2(340, 0)
+	_stats_label.custom_minimum_size = Vector2(310, 0)
 	rv.add_child(_stats_label)
 	_start_label = UIStyle.label("", 18, UIStyle.TEXT, 4)
 	_start_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -194,7 +201,7 @@ func _build() -> void:
 	oh.add_theme_constant_override("separation", 8)
 	op.add_child(oh)
 	_odin = Portrait.new()
-	_odin.custom_minimum_size = Vector2(64, 84)
+	_odin.custom_minimum_size = Vector2(56, 84)
 	oh.add_child(_odin)
 	var ov := VBoxContainer.new()
 	ov.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -202,14 +209,14 @@ func _build() -> void:
 	ov.add_child(UIStyle.label(tr("ОДИН"), 14, Color(0.55, 0.68, 1.0), 4))
 	_odin_text = UIStyle.label("", 16, UIStyle.TEXT, 4)
 	_odin_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_odin_text.custom_minimum_size = Vector2(190, 0)
+	_odin_text.custom_minimum_size = Vector2(165, 0)
 	ov.add_child(_odin_text)
 
 	var foot := HBoxContainer.new()
 	foot.alignment = BoxContainer.ALIGNMENT_END
 	foot.add_theme_constant_override("separation", 14)
 	main.add_child(foot)
-	var hint := UIStyle.label(tr("Закрытые тела открываются за Славу — здесь или в «Плане тренировок»."), 16, UIStyle.TEXT_DIM, 3)
+	var hint := UIStyle.label(tr("Закрытые тела открываются за Славу — здесь или в «Плане тренировок».") + "\n" + tr("Правый стик — прокрутка описания."), 16, UIStyle.TEXT_DIM, 3)
 	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size = Vector2(200, 0)
@@ -233,7 +240,7 @@ func _section(parent: Control, caption: String, col: Color) -> Array:
 	parent.add_child(t)
 	var d := UIStyle.label("", 16, UIStyle.TEXT_DIM, 3)
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	d.custom_minimum_size = Vector2(340, 0)
+	d.custom_minimum_size = Vector2(310, 0)
 	parent.add_child(d)
 	return [t, d]
 
@@ -264,8 +271,28 @@ func open(back_text: String = "Назад", preselect: String = "") -> void:
 
 func close(body_id: String) -> void:
 	visible = false
+	_detail_axis = 0.0
 	get_tree().paused = _was_paused
 	closed.emit(body_id)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if event is InputEventJoypadMotion and event.axis == JOY_AXIS_RIGHT_Y:
+		_detail_axis = event.axis_value if absf(event.axis_value) >= 0.25 else 0.0
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		close("")
+
+func _process(delta: float) -> void:
+	if not visible or _detail_axis == 0.0:
+		return
+	_scroll_remainder += _detail_axis * detail_scroll_speed * delta
+	var step := int(_scroll_remainder)
+	if step != 0:
+		_detail_scroll.scroll_vertical += step
+		_scroll_remainder -= step
 
 func _rebuild() -> void:
 	for c in _grid.get_children():
@@ -398,12 +425,14 @@ func _mark_selected() -> void:
 
 func _update_detail() -> void:
 	var b := selected
+	_detail_scroll.scroll_vertical = 0
+	_scroll_remainder = 0.0
 	var locked := is_locked(b.id)
 	_mark_selected()
 	_show_portrait(b.id, locked)
 	_name_label.text = tr(b.display_name).to_upper()
 	_stats_label.text = (tr("ЗАКРЫТО · %d ᛟ\n") % price_of(b) if locked else "") + \
-		tr("HP %d  ·  скорость %s  ·  рывков %d") % [int(b.max_health), _num(b.move_speed), b.dash_charges]
+		tr("HP %d  ·  скорость %s  ·  рун %d") % [int(b.max_health), _num(b.move_speed), b.dash_charges]
 	_stats_label.label_settings.font_color = Color(0.95, 0.7, 0.5) if locked else UIStyle.TEXT
 	var start := tr(b.start_melee.display_name) if b.start_melee else "—"
 	if b.start_ranged:
@@ -411,7 +440,7 @@ func _update_detail() -> void:
 	_start_label.text = tr("Старт: %s") % start
 	var mp := b.movement_profile()
 	_move_title.text = tr(mp.title) if mp else b.movement_style
-	_move_desc.text = tr(mp.description) if mp else ""
+	_move_desc.text = mp.description_text() if mp else ""
 	_fill_trait(b.passive, _passive_title, _passive_desc)
 	_fill_trait(b.flaw, _flaw_title, _flaw_desc)
 	_odin_text.text = tr(b.odin_comment if b.odin_comment != "" else b.description)

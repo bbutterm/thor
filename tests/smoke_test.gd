@@ -136,6 +136,7 @@ func _test_movement(p: Player) -> void:
 	check(p.velocity.y > 5.0, "двойной прыжок (vy=%.1f)" % p.velocity.y)
 	await wait(1.5)
 	check(p.is_on_floor(), "приземлился")
+	await wait(p.dash_recharge + 0.2)  # воздушный прыжок потратил общую руну
 	var charges_before := p.dash_charges
 	Input.action_press("move_forward")
 	await press("dash")
@@ -143,9 +144,47 @@ func _test_movement(p: Player) -> void:
 	check(p.horizontal_speed() > 15.0, "рывок (скорость %.1f)" % p.horizontal_speed())
 	check(p.dash_charges == charges_before - 1, "заряд рывка списан")
 	Input.action_release("move_forward")
-	await wait(1.6)
-	check(p.dash_charges == p.dash_charges_max, "заряды восстановились")
+	# При завершении рывка Тор слегка подлетает: таймер руны работает только на полу.
+	# Дождаться настоящей посадки, затем остановиться; иначе фиксированное число
+	# кадров может закончиться до начисления полной доли (особенно при hit-stop).
+	var landed := false
+	for i in 180:
+		await get_tree().physics_frame
+		if not p.is_dashing() and p.is_on_floor() and p.velocity.y <= 0.0 and not p.is_climbing:
+			landed = true
+			break
+	check(landed, "после рывка игрок снова на полу")
+	if landed:
+		p.velocity.x = 0.0
+		p.velocity.z = 0.0
+	var restored := await _wait_for_ground_recharge(p) if landed else false
+	check(restored, "руны восстановились на земле")
 	print("    высота прыжка ~", snappedf(y1, 0.01))
+
+## Проверить восстановление за требуемое игровое время на устойчивой опоре.
+## Ожидание ограничено кадрами и верхней границей начисляемого времени: зависший
+## таймер не пройдёт тест, а время в воздухе и замедление не считаются как земля.
+func _wait_for_ground_recharge(p: Player) -> bool:
+	if not is_instance_valid(p) or p.is_dead or p.dash_charges >= p.dash_charges_max:
+		return false
+	var duration := p.dash_recharge * p.weapon_dash_recharge_mult() * p._rune_dash_recharge_mult
+	var remaining := maxf(0.0, duration - p._dash_recharge_timer)
+	var ground_time := 0.0
+	var frame_limit := int(ceil((duration + 4.0) * 60.0))
+	# Сигнал physics_frame приходит перед обработкой узлов: две физические
+	# итерации допуска учитывают порядок сигнала и округление времени.
+	var tolerance := 2.0 / 60.0
+	for i in frame_limit:
+		await get_tree().physics_frame
+		if not is_instance_valid(p) or p.is_dead:
+			return false
+		if p.is_on_floor() and not p._weapon_skill_enemy_only_floor() and not p.is_climbing:
+			ground_time += p.get_physics_process_delta_time()
+		if p.dash_charges == p.dash_charges_max:
+			return ground_time + tolerance >= remaining
+		if ground_time > remaining + tolerance:
+			return false
+	return false
 
 func _test_axe(p: Player) -> void:
 	print("-- Топор")
@@ -155,9 +194,16 @@ func _test_axe(p: Player) -> void:
 	await wait(0.35)
 	check(dummy.health < hp0, "удар топором нанёс урон (%.0f → %.0f)" % [hp0, dummy.health])
 	p.axe.request_attack()
-	await wait(0.1)
+	# Ждём фактический второй взмах: hit-stop может менять длительность кадров.
+	for i in 120:
+		if p.axe.stage == 1:
+			break
+		await get_tree().physics_frame
 	p.axe.request_attack()
-	await wait(0.6)
+	for i in 120:
+		if p.axe.stage == 2:
+			break
+		await get_tree().physics_frame
 	check(p.axe.stage == 2, "комбо дошло до 3-го удара")
 	if is_instance_valid(dummy):
 		dummy.take_hit(9999, Vector3.ZERO, "test")
@@ -200,7 +246,9 @@ func _test_slam(p: Player) -> void:
 	var dummy := _make_dummy(p, 2.5)
 	var hp0 := dummy.health
 	await press("jump")
-	await wait(0.35)
+	await wait(0.15)
+	await press("jump")
+	await wait(0.1)
 	await press("slam")
 	# Удар задел манекен → автоматический отскок (GDD 7.2), а Пробел в окне после приземления
 	# даёт не меньше супер-прыжка. Ждём окно (отскока или супер-прыжка), потом жмём прыжок.
@@ -240,6 +288,7 @@ func _make_dummy(p: Player, dist: float) -> Enemy:
 
 func _clear_room_and_exit(is_last: bool, door_pick: int = 0) -> bool:
 	var room := game.room
+	var room_id := room.get_instance_id()
 	var reward := Run.current_reward()
 	_visited.append(reward)
 	print("-- Зал %d: %s [награда: %s]" % [Run.room_index + 1, room.room_title, reward])
@@ -253,6 +302,14 @@ func _clear_room_and_exit(is_last: bool, door_pick: int = 0) -> bool:
 		await wait(1.5)
 		check(room.alive_count() == 0 and not room._started, "тихий зал (%s) — без врагов" % reward)
 	while not peaceful and not room._is_cleared and safety < 40:
+		# Проверка прохождения находится в reach_test; в smoke добираемся до ворот следующей волны.
+		var gates: Dictionary = room.get_meta("wave_gates", {})
+		var gate: Dictionary = gates.get(room._wave_index + 1, {})
+		if not gate.is_empty() and room.alive_count() == 0 and room.pending_spawns() == 0:
+			var area: Rect2 = gate.get("area", Rect2())
+			var center := area.get_center()
+			game.player.global_position = room.to_global(Vector3(center.x, float(gate.get("min_y", 0.0)) + 0.6, center.y))
+			game.player.velocity = Vector3.ZERO
 		safety += 1
 		await wait(1.2)
 		for e in room.alive_enemies().duplicate():
@@ -313,9 +370,10 @@ func _clear_room_and_exit(is_last: bool, door_pick: int = 0) -> bool:
 	var idx_before := Run.room_index
 	var took := await DoorHelper.take_door(get_tree(), game, door_pick)
 	check(Run.room_index == idx_before + 1, "переход в следующий зал через дверь «%s» (%d)" % [took, Run.room_index + 1])
-	check(game.room != room, "загружен новый зал")
+	var moved := is_instance_valid(game.room) and game.room.get_instance_id() != room_id
+	check(moved, "загружен новый зал")
 	check(Run.current_reward() == took, "награда зала = награда двери (%s)" % took)
-	return game.room != room
+	return moved
 
 func _has_chest() -> bool:
 	for c in game.room.get_children():

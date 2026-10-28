@@ -74,6 +74,10 @@ static func paths() -> PackedStringArray:
 	for p in WorldArt.preload_paths(Run.map):
 		if not p in out:
 			out.append(p)
+	# Одевание залов (блок Б0): общие материалы и меши — живут всю игру (пайплайны не выкидываются между залами)
+	for p in RoomDress.preload_paths():
+		if not p in out and ResourceLoader.exists(p):
+			out.append(p)
 	return out
 
 ## Запускает фоновую загрузку. Можно вызывать много раз — повторно не грузит.
@@ -81,9 +85,12 @@ static func start() -> void:
 	if _started:
 		return
 	_started = true
-	# «-- … sync_load»: грузить сразу в главном потоке. Для замеров Forward+ на программном Vulkan (lavapipe):
-	# там фоновая загрузка с компиляцией шейдеров в потоках намертво зависает в драйвере на старте.
-	var sync := "sync_load" in OS.get_cmdline_user_args()
+	# Dummy-рендерер Godot в headless допускает гонку RID при одновременной фоновой загрузке
+	# и создании ресурсов главной нитью (в том числе в _ready других автозагрузок). Тогда меши
+	# оказываются некорректными и ломают нарезку обломков. Синхронизация нужна только без рендера;
+	# на GL/Vulkan по умолчанию остаётся прежняя фоновая загрузка. «sync_load» — явный режим
+	# для замеров на lavapipe, где фоновая компиляция может зависать в драйвере.
+	var sync := DisplayServer.get_name() == "headless" or "sync_load" in OS.get_cmdline_user_args()
 	for p in paths():
 		if _held.has(p):
 			continue

@@ -68,6 +68,42 @@ const U := 22.0
 @export var heavy_windup: float = 0.4
 @export var hitstop_mult: float = 1.0
 
+@export_group("Приём")
+## Вид приёма: старое оружие с none сохраняет обычный сильный удар.
+@export_enum("none", "whirl", "lunge", "vault") var skill_kind: String = "none"
+@export var skill_title: String = ""
+## Время удержания ЛКМ до запуска приёма, с.
+@export var skill_hold_time: float = 0.35
+## Вертушка: длительность, радиус, множитель базового урона и сила отбрасывания.
+@export var skill_duration: float = 0.6
+@export var skill_radius: float = 2.5
+@export var skill_damage_mult: float = 1.0
+@export var skill_knockback: float = 3.0
+## Доля обычной скорости передвижения во время вертушки.
+@export var skill_move_mult: float = 0.45
+@export var skill_lvl3_radius_mult: float = 1.4
+@export var skill_lvl3_turns: int = 2
+## Выпад: дистанция, бонус длины на ур. 3, длительность и радиус линии попадания.
+@export var skill_lunge_distance: float = 5.0
+@export var skill_lunge_lvl3_distance_mult: float = 1.3
+@export var skill_lunge_lvl3_count: int = 2
+@export var skill_lunge_duration: float = 0.3
+@export var skill_lunge_hit_radius: float = 0.8
+## Парирование: окно, множитель окна на ур. 3 и оглушение атакующего.
+@export var skill_parry_window: float = 0.2
+@export var skill_parry_lvl3_window_mult: float = 1.5
+@export var skill_parry_stun: float = 1.5
+## Воздушная рубка топора: скорость пике, радиус и множитель базового урона.
+@export var skill_dive_speed: float = 18.0
+@export var skill_dive_radius: float = 2.0
+@export var skill_dive_damage_mult: float = 0.4
+## Прыжок с шестом и волна при приземлении; на ур. 3 волна наносит урон.
+@export var skill_vault_height_mult: float = 1.6
+@export var skill_wave_radius: float = 2.5
+@export var skill_wave_knockback: float = 5.0
+@export var skill_wave_lvl3_knockback_mult: float = 1.6
+@export var skill_wave_lvl3_damage_mult: float = 0.8
+
 @export_group("Ренж")
 ## Пауза между выстрелами, с
 @export var fire_interval: float = 0.25

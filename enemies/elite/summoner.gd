@@ -18,7 +18,8 @@ func _physics_process(delta: float) -> void:
 			summoned += enemy.summon_around(mod.summon_kind, mod.summon_count, mod.summon_cap)
 			FX.ring(enemy.get_parent(), enemy.global_position, 3.5, Color(mod.color, 0.9), 0.4)
 		return
-	if enemy.state != Enemy.State.CHASE:
+	# Уже начатый обряд выше завершается, но новый не начинается до обнаружения Тора.
+	if enemy.state != Enemy.State.CHASE or not enemy.is_alert_to_player():
 		return
 	_t += delta
 	if _t >= mod.summon_interval:

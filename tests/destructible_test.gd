@@ -169,9 +169,13 @@ func _test_melee() -> void:
 	await wait(0.6)
 	var c2 := spawn(CRATE, p.global_position + fwd() * 1.4 + Vector3(0, -0.08, 0))
 	await wait(0.3)
+	var skills: Array[String] = []
+	var on_skill := func(kind: String) -> void: skills.append(kind)
+	p.axe.weapon_skill_started.connect(on_skill)
 	p.axe.request_heavy()
 	await wait(1.0)
-	check(broken(c2), "ящик — сильным ударом")
+	p.axe.weapon_skill_started.disconnect(on_skill)
+	check(skills.has("whirl") and broken(c2), "вертушка топора разбила ящик")
 
 func _test_hammer() -> void:
 	print("-- Мьёльнир: бросок и возврат")
@@ -217,7 +221,7 @@ func _test_slam() -> void:
 	var b := spawn(BARREL, at + Vector3(1.6, -0.08, 0))
 	var c := spawn(CRATE, at + Vector3(-2.0, -0.08, 0.5))
 	await wait(0.3)
-	p.global_position = at + Vector3(0, 3.0, 0)
+	p.global_position = at + Vector3(0, 3.5, 0)
 	p.velocity = Vector3.ZERO
 	await get_tree().physics_frame
 	p._start_slam()

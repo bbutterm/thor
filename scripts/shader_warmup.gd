@@ -33,13 +33,16 @@ var game_node: Node
 
 func _build() -> void:
 	Perf.mark("shader_warmup")
+	# Комиксовая обводка (scripts/outline.gd): образцы обводятся и при выключенной настройке — включение
+	# в паузе потом без компиляции; на всех форматах вершин (у оверлея, как у вспышки, — свои пайплайны)
+	Outline.begin_warmup()
 	var game: Node = self
 	var right := global_transform.basis.x
 	var center := global_position
 	# Враги: по одному каждого вида, со вспышкой урона и свечением замаха (общий оверлей на скин-мешах)
-	# В GL Compatibility вариант шейдера не зависит от формата вершин, а буфер instance-переменных —
-	# всего 256 узлов на сцену (FX.INSTANCE_SLOTS_GL; прогрев целиком занимал 263–270): оверлей вспышки —
-	# только на паре образцов. В Forward+ (буфер на 4096 узлов) — на всех: там пайплайн на каждый формат вершин.
+	# В GL Compatibility вариант шейдера не зависит от формата вершин, а запас instance-переменных ограничен:
+	# оверлей вспышки только на паре образцов. Старый счётчик видел 263–270 узлов с текущими материалами при
+	# полном прогреве, но он не показывает занятые слоты. В Forward+ оверлей на всех: пайплайн на каждый формат вершин.
 	var gl := RenderingServer.get_current_rendering_method() == "gl_compatibility"
 	var i := 0
 	for path in ["res://enemies/grunt.tscn", "res://enemies/thrower.tscn", "res://enemies/boss.tscn",
@@ -81,20 +84,29 @@ func _build() -> void:
 		h.skin_tint = Color(0.8, 0.85, 0.9)
 		add_child(h)
 		h.position = right * (1.6 if g == "Male" else -1.6)
+		var gl_flash: ShaderMaterial
+		if gl:
+			gl_flash = Enemy.FLASH_MATERIAL_GL.duplicate() as ShaderMaterial
+			gl_flash.next_pass = Outline.flash_next_pass()
+			gl_flash.set_shader_parameter("flash", 1.0)
+			gl_flash.set_shader_parameter("glow", 1.0)
 		var with_overlay := 0
 		for mi in h.find_children("*", "MeshInstance3D", true, false):
 			if gl and with_overlay >= 2:
 				continue
 			with_overlay += 1
 			var gi := mi as GeometryInstance3D
-			gi.material_overlay = Enemy.FLASH_MATERIAL
-			gi.set_instance_shader_parameter("flash", 1.0)
-			gi.set_instance_shader_parameter("glow", 1.0)
+			gi.material_overlay = gl_flash if gl else Enemy.FLASH_MATERIAL
+			if not gl:
+				gi.set_instance_shader_parameter("flash", 1.0)
+				gi.set_instance_shader_parameter("glow", 1.0)
+		Outline.add(h)
 	# Оружие (на слое мира — как у врагов)
 	var wi := 0
 	for kind in WeaponMeshes.MODEL_WEAPONS.keys() + WeaponMeshes.PAINTED.keys() + ["axe", "hammer", "club", "staff", "sword", "spear", "pitchfork", "torch", "shield"]:
 		var wpn := WeaponMeshes.build(kind)
 		add_child(wpn)
+		Outline.add(wpn)
 		wpn.position = right * (wi * 0.15 - 1.3) + Vector3(0, 1.2, 0)
 		wi += 1
 	# Оружие этапа 1: ренж, подбор, сундук, трассеры, гильзы, вспышка; и то же во вьюмодели рук
@@ -134,9 +146,9 @@ func _build() -> void:
 	# Текстурные эффекты VFX-комплекта: все материалы (по одному на текстуру) во всех режимах billboard
 	FX.warmup_sprites(self, p, right)
 	# Свободный узел пула эффектов отдаёт материал (FX._take): квад остаётся с материалом по умолчанию,
-	# и его пайплайны компилируются при первом же исчезновении дыма (~0.5 с после первой разбитой бочки,
-	# первой смерти) — даже у скрытого узла. Прогреваем здесь: те же общие квады без материала.
-	# (и прозрачными — эффект прячется, когда transparency ещё не 0)
+	# и его пайплайны могут компилироваться при первом исчезновении дыма (~0.5 с после первой разбитой
+	# бочки, первой смерти). Показываем маленькие образцы в кадре под затемнением: скрытый узел не рисуется.
+	# Также нужен прозрачный вариант: эффект прячется, когда transparency ещё не 0.
 	for k in 6:
 		var bare := MeshInstance3D.new()
 		bare.mesh = FX.shared_mesh(["quad", "quad_bottom", "quad_floor"][k % 3])
@@ -144,13 +156,21 @@ func _build() -> void:
 		bare.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		bare.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 		add_child(bare)
-		bare.position = Vector3(0, -3.0, 0)
-		bare.visible = false
+		bare.position = Vector3((float(k) - 2.5) * 0.1, 0.8, 0)
+		bare.rotation_degrees.x = 35.0
+		bare.scale = Vector3.ONE * 0.06
 	FX.hit_flash(game, p, 0.4)
 	FX.smoke(game, p, 0.4)
 	FX.scorch(game, center, 0.8)
 	# Графика мира: декор на стенах, рунные круги, частицы атмосферы (искры, огонь очага, туман) — все материалы
 	WorldArt.warmup(self, p, right)
+	# Одевание залов (блок Б0): общий шейдер поверхностей и все меши MultiMesh со своими материалами
+	RoomDress.warmup(self, center, right)
+	# Открытый зал может содержать другие форматы вершин и материалы, чем общие образцы.
+	# Показываем конкретные комбинации материала и формата меша из загруженного зала.
+	var room := game_node.get("room") as Node3D if game_node else null
+	if room:
+		RoomDress.warmup_room(self, room)
 	if VfxScreen.instance and is_instance_valid(VfxScreen.instance):
 		VfxScreen.instance.warmup(FRAMES)
 	ComicFX.warmup()
@@ -179,6 +199,7 @@ func _build() -> void:
 			(e as BossEnemy).warmup_strip()
 	var hammer := WeaponMeshes.hammer()
 	add_child(hammer)
+	Outline.add(hammer)
 	hammer.position = right * 0.6 + Vector3(0, 1.0, 0)
 	# Свет без теней (как у огня, снарядов, молота) на весь зал: в GL Compatibility под каждый материал,
 	# которого впервые касается такой свет, компилируется свой вариант шейдера
@@ -195,6 +216,7 @@ func _build() -> void:
 	for e in _enemies:
 		if e.kind == Enemy.Kind.BOSS:
 			e._show_slam_telegraph()
+	Outline.warming = false
 
 ## Label3D растеризует букву (FreeType) и перезаливает текстуру кеша шрифта при первом показе этой буквы
 ## в этом размере с этой обводкой. Цифры урона прогревались двумя числами, подписи дверей — одной дверью:
@@ -254,9 +276,11 @@ func _warm_ui_glyphs() -> void:
 		box.add_child(UIStyle.label(text, spec[0], Color.WHITE, spec[1]))
 
 ## Кто может заговорить в бою пузырём с портретом: Хугин (обучение), босс/мини-босс, ведущий испытания,
-## хозяин двери-награды (Один на привале, Локи, Фрейя). Один говорящий — 5 эмоций в памяти, поэтому только они.
+## хозяин двери-награды (Один на привале, Локи, Фрейя, Эйтри на наковальне); Тор — в каждом зале.
+## У говорящего до шести эмоций в памяти.
 func _room_speakers() -> PackedStringArray:
-	var out := PackedStringArray()
+	# Тор может заговорить о тяжёлом ранении в любом бою; прогреваем все его эмоции заранее.
+	var out := PackedStringArray(["thor"])
 	var tut := game_node.get("tutorial") as Tutorial if game_node else null
 	if tut and tut.active:
 		out.append("hugin")
@@ -269,11 +293,14 @@ func _room_speakers() -> PackedStringArray:
 	var room := game_node.get("room") as Node if game_node else null
 	var trial := room.get_node_or_null("Trial") as TrialRunner if room else null
 	if trial and trial.def:
-		for pool in [trial.def.intro_pool, trial.def.win_pool, trial.def.fail_pool]:
-			if pool != "":
-				out.append(str(pool).get_slice(".", 0))
-	# Хозяин двери-награды: привал — Один (портрет в выборе), сделка — Локи, благословение — Фрейя
-	var host: String = {"rest": "odin", "loki": "loki", "freya": "freya"}.get(Run.current_reward(), "")
+		# Пустые поля означают стандартный пул ведущего (TrialDef.pool), а не отсутствие реплик.
+		for which in ["intro", "win", "fail"]:
+			var trial_speaker := trial.def.pool(which).get_slice(".", 0)
+			if trial_speaker != "" and not trial_speaker in out:
+				out.append(trial_speaker)
+	# Хозяин двери-награды: привал — Один, сделка — Локи, благословение — Фрейя, наковальня — Эйтри.
+	# dwarves.eitri — имя пула, но сам говорящий в его репликах именно eitri.
+	var host: String = {"rest": "odin", "loki": "loki", "freya": "freya", "anvil": "eitri"}.get(Run.current_reward(), "")
 	if host != "":
 		out.append(host)
 	return out
@@ -286,3 +313,7 @@ func _process(_delta: float) -> void:
 		if is_instance_valid(e) and e._telegraph and is_instance_valid(e._telegraph):
 			e._telegraph.queue_free()
 	queue_free()
+
+## Образцы ушли (и при смене сцены до конца прогрева) — next_pass вспышки снова по настройке
+func _exit_tree() -> void:
+	Outline.end_warmup()

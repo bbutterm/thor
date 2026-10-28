@@ -2,7 +2,7 @@ extends Node
 ## Графика мира (комплект владельца docs/world_art/, scripts/world_art.gd): небо мира из RunMap, рунные круги
 ## на прыжковых рунах и под дверьми-наградами, лужи браги и подпалины, декор на стенах залов и длинного дома,
 ## атмосферные частицы; общие материалы (не растут от зала к залу), без instance uniform у статичного декора,
-## лимит буфера instance-переменных GL Compatibility не превышен на толпе.
+## количество текущих instance-материалов на толпе (это не измерение занятых слотов GL).
 ## godot --headless --path . --fixed-fps 60 res://tests/world_art_test.tscn
 
 var _fails: Array[String] = []
@@ -78,7 +78,7 @@ func _run() -> void:
 	check(with_embers == torches.size() and with_embers > 0, "искры над всеми факелами (%d)" % with_embers)
 	var parts := get_tree().get_nodes_in_group("world_particles")
 	check(not parts.is_empty() and parts.all(func(n: Node) -> bool: return world_mat_ok(n as GeometryInstance3D)), "частицы — общие материалы WorldArt без instance uniform (%d)" % parts.size())
-	check(FX.instance_uniform_users(atm) == 0, "атмосфера не занимает буфер instance-переменных")
+	check(FX.instance_uniform_users(atm) == 0, "у атмосферы нет текущих instance-материалов")
 
 	print("-- Декор и декали в зале")
 	var decor := game.room.find_children("*", "WallDecor", true, false)
@@ -90,7 +90,7 @@ func _run() -> void:
 	check(arts.keys().any(func(a: String) -> bool: return a.begins_with("banner_")) and arts.keys().any(func(a: String) -> bool: return a.begins_with("shield_")), "знамёна и щиты")
 	var quads_ok := decor.all(func(n: Node) -> bool: return world_mat_ok(n.get_node_or_null("Quad") as GeometryInstance3D))
 	check(quads_ok, "у каждой картинки общий материал без instance uniform")
-	check(FX.instance_uniform_users(game.room.get_node("Banners")) == 0, "декор не занимает буфер instance-переменных")
+	check(FX.instance_uniform_users(game.room.get_node("Banners")) == 0, "у декора нет текущих instance-материалов")
 	check(game.room.find_children("*", "StaticBody3D", true, false).filter(func(b: Node) -> bool: return b.get_parent() is WallDecor).is_empty(), "декор без коллизии")
 	var pad := game.room.find_children("*", "JumpPad", true, false)
 	var circle := (pad[0] as Node).get_node_or_null("Circle") as MeshInstance3D if not pad.is_empty() else null
@@ -159,7 +159,7 @@ func _run() -> void:
 	check(WorldArt.materials_created == wa0, "материалы графики мира не растут от зала к залу (%d)" % WorldArt.materials_created)
 	check(WorldArt.materials().size() >= WorldArt.material_specs().size(), "прогрев создал все материалы (%d)" % WorldArt.materials().size())
 
-	print("-- Толпа: буфер instance-переменных GL Compatibility")
+	print("-- Толпа: текущие instance-материалы (не занятые слоты GL)")
 	await open("res://rooms/room_08.tscn")
 	var c := Vector3(0, 0.05, 0)
 	for i in 40:
@@ -169,10 +169,39 @@ func _run() -> void:
 	for i in 6:
 		FX.scorch(game.room, game.room.to_global(Vector3(i - 3, 0, 2)), 2.0)
 	var iu := FX.instance_uniform_users(get_tree().root)
-	check(iu < FX.INSTANCE_SLOTS_GL, "толпа %d врагов + декор + атмосфера: %d узлов с instance uniform < %d" % [game.room.alive_count(), iu, FX.INSTANCE_SLOTS_GL])
+	check(iu < FX.INSTANCE_SLOTS_GL, "толпа %d врагов + декор + атмосфера: %d узлов с текущим instance-материалом < %d (ориентир)" % [game.room.alive_count(), iu, FX.INSTANCE_SLOTS_GL])
 	var decor_iu := FX.instance_uniform_users(game.room.get_node("Banners")) + FX.instance_uniform_users(game.room.get_node("Atmosphere"))
-	check(decor_iu == 0, "декор и атмосфера в буфере — 0")
-	print("   instance uniform: %d (декор и атмосфера: %d), материалов графики мира: %d" % [iu, decor_iu, WorldArt.materials_created])
+	check(decor_iu == 0, "декор и атмосфера: текущих instance-материалов — 0")
+	print("   текущие instance-материалы, узлы: %d (декор и атмосфера: %d), материалов графики мира: %d" % [iu, decor_iu, WorldArt.materials_created])
+
+	print("-- Изолированный профиль вертикального среза")
+	await open("res://rooms/room_10.tscn")
+	var world_map := Run.map
+	var slice_map := game.room.visual_map
+	check(slice_map != null and slice_map != world_map and Run.map == world_map, "зал использует отдельный визуальный профиль, карту забега не меняет")
+	var slice_env := (game.get_node("WorldEnvironment") as WorldEnvironment).environment
+	var tinted := slice_env.sky.sky_material as ShaderMaterial if slice_env and slice_env.sky else null
+	check(slice_map != null and tinted != null and is_equal_approx(float(tinted.get_shader_parameter("strength")), slice_map.sky_tint_strength), "тонировка панорамы применена профилем зала")
+	var floor_visual := game.room.get_node_or_null("Dress/FloorVisual") as MeshInstance3D
+	var ramp_visual := game.room.get_node_or_null("Geometry/Ramp0/Mesh") as MeshInstance3D
+	var bridge_visual := game.room.get_node_or_null("Geometry/Block3/Mesh") as MeshInstance3D
+	check(floor_visual != null and floor_visual.material_override != null and floor_visual.material_override.resource_path == "res://rooms/materials/slice_dirt.tres", "пол использует материал среза")
+	check(ramp_visual != null and bridge_visual != null and ramp_visual.material_override != null and ramp_visual.material_override == bridge_visual.material_override and ramp_visual.material_override.resource_path == "res://rooms/materials/slice_plank.tres", "рампы и разрушаемый мост используют общий материал среза")
+	var text_mat := ComicFX.get("_text_mat") as ShaderMaterial
+	check(slice_map != null and is_equal_approx(float(Outline.material().get_shader_parameter("width_px")), Outline.cfg().width_px * slice_map.room_outline_multiplier), "профиль меняет базовую толщину общей обводки")
+	check(slice_map != null and text_mat != null and is_equal_approx(float(text_mat.get_shader_parameter("dot_strength")), 0.22 * slice_map.room_halftone_multiplier), "профиль меняет полутон общего материала слов")
+	Run.room_order.assign(["res://rooms/room_10.tscn", "res://rooms/room_09.tscn", Run.BOSS_SCENE])
+	Run.room_index = 1
+	game._load_room()
+	var restored := false
+	for i in 180:
+		await get_tree().physics_frame
+		if is_instance_valid(game.room) and game.room.scene_file_path == "res://rooms/room_09.tscn":
+			restored = true
+			break
+	var next_env := (game.get_node("WorldEnvironment") as WorldEnvironment).environment
+	check(restored and Run.map == world_map and game.room.visual_map == null and next_env != null and next_env.sky != null and next_env.sky.sky_material is PanoramaSkyMaterial, "после перехода обычный зал снова использует небо и карту мира")
+	check(restored and is_equal_approx(float(Outline.material().get_shader_parameter("width_px")), Outline.cfg().width_px) and text_mat != null and is_equal_approx(float(text_mat.get_shader_parameter("dot_strength")), 0.22), "после перехода обводка и полутон восстановлены")
 
 	print("=== ИТОГ WORLD ART: %d OK, %d FAIL ===" % [_passes, _fails.size()])
 	for f in _fails:

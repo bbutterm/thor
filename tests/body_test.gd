@@ -110,25 +110,25 @@ func _test_all_bodies_start() -> void:
 			check(pd != null and (pd.handler != null or pd.id in ["frail", "social_lift", "odin_scorn"]), "%s: черта %s с обработчиком" % [b.id, pd.id if pd else "?"])
 
 func _test_nimble() -> void:
-	print("-- Шустрый (Охотник): 3 коротких рывка, перезарядка 0.8 с")
+	print("-- Шустрый (Охотник): 3 коротких рывка, перезарядка 1.67 с")
 	var p := await _start("hunter")
 	await _place(p, _floor_pos())
-	check(p.dash_charges_max == 3 and is_equal_approx(p.dash_recharge, 0.8), "3 заряда, перезарядка 0.8 (%d, %.2f)" % [p.dash_charges_max, p.dash_recharge])
+	check(p.dash_charges_max == 3 and is_equal_approx(p.dash_recharge, 1.67), "3 руны, восстановление 1.67 (%d, %.2f)" % [p.dash_charges_max, p.dash_recharge])
 	var base_dur := (load("res://run/movement/base.tres") as MovementProfile).dash_duration
 	check(p.dash_duration < base_dur, "рывок короче базового (%.2f < %.2f)" % [p.dash_duration, base_dur])
 	for i in 3:
 		await press("dash")
 		await wait(0.2)
 	check(p.dash_charges == 0, "три рывка подряд потрачены (%d)" % p.dash_charges)
-	await wait(1.0)
-	check(p.dash_charges >= 1, "заряд вернулся за ~0.8 с")
+	await wait(1.8)
+	check(p.dash_charges >= 1, "руна вернулась за ~1.67 с")
 	var c := await _start("courier")
-	check(c.movement_style() == "nimble_plus" and c.dash_charges_max == 3 and c.dash_recharge < 0.8, "Шустрый+ (гонец): 3 рывка, перезарядка %.2f" % c.dash_recharge)
+	check(c.movement_style() == "nimble_plus" and c.dash_charges_max == 3 and c.dash_recharge < 1.67, "Шустрый+ (гонец): 3 рывка, перезарядка %.2f" % c.dash_recharge)
 
 func _test_ram() -> void:
 	print("-- Таран (Берсерк): 1 длинный рывок сквозь врагов")
 	var p := await _start("berserker")
-	check(p.dash_charges_max == 1 and is_equal_approx(p.dash_recharge, 1.6), "1 заряд, перезарядка 1.6")
+	check(p.dash_charges_max == 1 and is_equal_approx(p.dash_recharge, 3.33), "1 руна, восстановление 3.33")
 	await _place(p, _floor_pos())
 	var e := _dummy(p.global_position + Vector3(0, 0, -3.0))
 	var e2 := _dummy(p.global_position + Vector3(0.6, 0, -5.0))
@@ -145,8 +145,9 @@ func _test_ram() -> void:
 	check(p.collision_mask & (1 << 2) != 0, "после рывка снова сталкивается с врагами")
 	e.queue_free()
 	e2.queue_free()
-	# Бочку толкает
-	await wait(1.8)
+	# Бочку толкает: независимый сценарий после предыдущего рывка.
+	p.restore_mjolnir_runes(p.dash_charges_max)
+	await wait(0.1)
 	await _place(p, _floor_pos() + Vector3(3, 0, 0))
 	var barrel := (load("res://props/barrel.tscn") as PackedScene).instantiate() as RigidBody3D
 	game.add_child(barrel)
@@ -170,6 +171,7 @@ func _test_jumper() -> void:
 	await _place(p, _floor_pos())
 	var n := await _count_air_jumps(p)
 	check(n == 2, "в воздухе ровно 2 прыжка (тройной) — %d" % n)
+	p.restore_mjolnir_runes(p.dash_charges_max)
 	await _place(p, _floor_pos())
 	var ch := p.dash_charges
 	await press("dash")
@@ -193,7 +195,7 @@ func _test_heavy() -> void:
 	check(p.slam_bounce_mult > 1.0, "отскок от удара-приземления выше (×%.2f)" % p.slam_bounce_mult)
 	# Враг на 4.6 м — дальше базового радиуса 3.5 + 0.25*4, но внутри ×1.5
 	var e := _dummy(_floor_pos() + Vector3(0, 0, -4.6))
-	await _place(p, _floor_pos() + Vector3(0, 4.0, 0))
+	await _place(p, _floor_pos() + Vector3(0, 5.0, 0))
 	await press("slam")
 	var stunned := false
 	for i in 90:
@@ -313,7 +315,11 @@ func _test_passives() -> void:
 	# Дева щита: ренж −25 %
 	p = await _start("shieldmaiden")
 	check(is_equal_approx(p.outgoing_damage_mult(null, "ranged"), 0.75) and is_equal_approx(p.outgoing_damage_mult(null, "melee"), 1.0), "Дева щита: ренж ×0.75, мили ×1")
-	check(not (load("res://run/passives/parry_master.tres") as PassiveDef).implemented, "«Мастер щита» — заглушка (implemented=false)")
+	var shield_trait := load("res://run/passives/parry_master.tres") as PassiveDef
+	check(shield_trait.implemented and shield_trait.todo.is_empty() and p.body_handler("parry_master") != null
+		and is_equal_approx(float(p.modify_stat(&"parry_window_mult", 1.0)), 2.0)
+		and is_equal_approx(float(p.modify_stat(&"parry_heal", 0.0)), 5.0),
+		"Дева щита: работающая пассивка ×2 к окну и +5 HP при парировании")
 	# Гонец: в спину ×2, спереди −30 %
 	p = await _start("courier")
 	await _place(p, _floor_pos())
@@ -360,22 +366,41 @@ func _test_select_screen() -> void:
 	await wait(0.1)
 	check(bs.visible and bs.bodies.size() == 9, "экран открыт, тел 9")
 	check(bs.selected != null and bs.selected.id == "hunter", "выбрано прошлое тело")
+	check(bs._stats_label.text.contains("рун 3"), "общий запас назван рунами")
+	for pair in [["hunter", "1.67"], ["courier", "1.25"], ["berserker", "3.33"]]:
+		bs.select(pair[0])
+		check(bs._move_desc.text.contains(pair[1]) and bs._move_desc.text.contains("на земле"),
+			"%s: базовое время руны на экране выбора (%s)" % [pair[0], bs._move_desc.text])
+	bs.select("hunter")
+	var mp := bs.selected.movement_profile()
+	var saved_recharge := mp.dash_recharge
+	mp.dash_recharge = 4.21
+	bs.select("hunter")
+	check(bs._move_desc.text.contains("4.21"), "описание берёт время из данных профиля")
+	mp.dash_recharge = saved_recharge
+	bs.select("hunter")
 	var locked := 0
 	for b in bs.bodies:
 		if bs.card(b.id).get_meta("locked"):
 			locked += 1
 	check(locked == 6, "закрыто 6 тел (без открытий) — %d" % locked)
+	bs.select("shieldmaiden")
+	check(bs._passive_title.text == "Мастер щита" and bs._passive_desc.text == "Окно парирования ×2, парирование лечит 5 HP",
+		"Дева щита: экран показывает работающую пассивку без пометки «скоро»")
 	bs.select("priest")
-	check(bs._fight_btn.disabled and bs._fight_btn.text.contains("300"), "закрытое: цена на кнопке (%s)" % bs._fight_btn.text)
+	var priest_price := BodySelect.price_of(bs.selected)
+	check(priest_price == 1500, "цена открытия жреца — 1500")
+	check(bs._fight_btn.disabled and bs._fight_btn.text.contains(str(priest_price)), "закрытое: цена на кнопке (%s)" % bs._fight_btn.text)
 	check(bs._move_title.text == "Тяжёлый" and bs._passive_title.text.begins_with("Мудрость"), "видны стиль и пассивка")
 	check(bs._odin_text.text != "", "слово Одина: «%s»" % bs._odin_text.text)
 	check(not bs.choose("priest"), "закрытое тело не выбрать")
-	Save.add_glory_bank(300)
+	Save.add_glory_bank(priest_price)
 	bs._rebuild()
 	bs.select("priest")
 	check(not bs._fight_btn.disabled, "хватает Славы — можно открыть")
 	bs._fight_btn.pressed.emit()
 	check(not BodySelect.is_locked("priest"), "жрец открыт с экрана выбора")
+	check(Save.glory_bank() == 0, "покупка жреца списала цену целиком")
 	var got: Array = []
 	bs.closed.connect(func(id: String) -> void: got.append(id))
 	bs._fight_btn.pressed.emit()
