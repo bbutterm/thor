@@ -71,13 +71,13 @@ func _test_controlled_encounter() -> void:
 		check(false, "тестовый зал загружен")
 		_finish()
 		return
-	var first_room := game.room
+	var first_room_id := game.room.get_instance_id()
 	var bot := BotPlayer.new()
 	get_tree().root.add_child(bot)
 	bot.begin(game, 773)
 	for i in 1800:
 		await get_tree().physics_frame
-		if game.player.is_dead or (Run.room_index >= 1 and game.room != first_room):
+		if game.player.is_dead or (Run.room_index >= 1 and is_instance_valid(game.room) and game.room.get_instance_id() != first_room_id):
 			break
 	bot.stop()
 	check(not game.player.is_dead, "бот выжил в бою с одним обычным врагом")
@@ -85,7 +85,7 @@ func _test_controlled_encounter() -> void:
 	check(bot.rooms.any(func(rm: Dictionary) -> bool: return rm.get("scene", "") == "fixture_room" and rm.get("cleared", false)), "зал зачищен штатной логикой")
 	check(bot.picks.any(func(s: String) -> bool: return s.begins_with("rune:")), "бот выбрал настоящую награду")
 	check(bot.picks.any(func(s: String) -> bool: return s.begins_with("door:")), "бот выбрал настоящую дверь")
-	check(Run.room_index >= 1 and game.room != first_room, "бот вошёл в следующий зал через триггер двери")
+	check(Run.room_index >= 1 and is_instance_valid(game.room) and game.room.get_instance_id() != first_room_id, "бот вошёл в следующий зал через триггер двери")
 	bot.queue_free()
 	_finish()
 
