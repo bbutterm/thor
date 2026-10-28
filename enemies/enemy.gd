@@ -120,6 +120,9 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var max_debris: int = 10
 ## Сколько секунд труп лежит, прежде чем исчезнуть
 @export var debris_lifetime: float = 4.0
+## Сдвиг вида при любом попадании. Не меняет состояние или движение врага.
+@export_range(0.0, 1.0, 0.01) var flinch_distance: float = 0.13
+@export_range(0.01, 1.0, 0.01) var flinch_time: float = 0.12
 @export var body_color: Color = Color(0.32, 0.45, 0.33)
 @export var model_scale: float = 1.0
 
@@ -186,6 +189,9 @@ var _airborne: bool = false
 var _fall_peak_y: float = 0.0
 var _fall_forced: bool = false
 var _last_knock: Vector3 = Vector3.ZERO
+var _flinch_left: float = 0.0
+var _flinch_direction: Vector3 = Vector3.ZERO
+var _flinch_applied: Vector3 = Vector3.ZERO
 var _attack_count: int = 0
 ## Идентификатор замаха: прерванная атака не передаёт своё предупреждение следующей.
 var _windup_serial: int = 0
@@ -995,6 +1001,8 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 		_spawn_entry.cancel()
 	# Даже блок щитом или поглощение брони сообщает врагу о присутствии игрока.
 	alert_to_player()
+	if damage > 0.0:
+		_begin_flinch(knockback)
 	if kind == Kind.SHIELD and damage < DEBUG_KILL_DAMAGE and _shield_blocks(knockback, source):
 		_on_blocked(knockback)
 		return
@@ -1032,6 +1040,23 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	if health <= 0.0:
 		_die(source)
 
+## Только локальный вид: не мешаем замахам, физике, навигации и защитам.
+func _begin_flinch(knockback: Vector3) -> void:
+	if _visual == null or not is_instance_valid(_visual) or flinch_time <= 0.0:
+		return
+	var dir := Vector3(knockback.x, 0.0, knockback.z)
+	if dir.length_squared() < 0.0001 and is_instance_valid(player):
+		dir = global_position - player.global_position
+		dir.y = 0.0
+	if dir.length_squared() < 0.0001:
+		dir = -global_transform.basis.z
+		dir.y = 0.0
+	_visual.position -= _flinch_applied
+	_flinch_direction = global_transform.basis.inverse() * dir.normalized()
+	_flinch_left = flinch_time
+	_flinch_applied = _flinch_direction * maxf(0.0, flinch_distance) * model_scale
+	_visual.position += _flinch_applied
+
 ## Толчок без урона: волна посоха на первых двух уровнях использует ту же физику, что и попадание.
 func apply_knockback_only(knockback: Vector3) -> Vector3:
 	if is_dead:
@@ -1046,6 +1071,10 @@ func apply_knockback_only(knockback: Vector3) -> Vector3:
 	if k.length_squared() > 0.0001:
 		# Толчок без урона тоже может сбросить врага с уступа.
 		_last_hit_time = Run.combat_clock
+		# Удар может прервать прыжок уже в воздухе, а не только до отрыва.
+		if _airborne:
+			_fall_forced = true
+			_fall_peak_y = maxf(_fall_peak_y, global_position.y)
 	knockback_velocity += k
 	# _apply_movement вычитает накопленный толчок из velocity при вычислении базовой скорости.
 	velocity.x += k.x
@@ -1211,6 +1240,9 @@ func _die(source: String) -> void:
 	Run.register_kill(source == "melee_finisher", now - _last_splat_time < 0.6,
 		kind == Kind.BOSS and not has_meta("miniboss"), source, glory_base,
 		kind == Kind.FODDER and not has_meta("elite"))
+	if source == "fall" and _fall_forced and _fall_peak_y - global_position.y >= fall_kill_height:
+		ComicFX.pop("ledge_kill", global_position + Vector3.UP * model_scale)
+		StyleMeter.event(&"ledge_kill")
 	ComicFX.on_enemy_killed(self, source)
 	FX.enemy_died(self, source)
 	if player and is_instance_valid(player) and not player.is_dead:
@@ -1225,6 +1257,8 @@ func _die(source: String) -> void:
 func _spawn_debris() -> void:
 	if _visual == null:
 		return
+	_visual.position -= _flinch_applied
+	_flinch_applied = Vector3.ZERO
 	# Не копим трупы: сверх лимита самый старый исчезает сразу
 	var old := get_tree().get_nodes_in_group("debris").filter(func(n: Node) -> bool: return not n.is_queued_for_deletion())
 	for k in maxi(0, old.size() - max_debris + 1):
@@ -1258,9 +1292,20 @@ func _spawn_debris() -> void:
 	else:
 		rb.apply_central_impulse((knock * 1.1 + Vector3.UP * 4.0) * rb.mass)
 		rb.apply_torque_impulse(Vector3(randf_range(-3, 3), randf_range(-2, 2), randf_range(-3, 3)) * rb.mass)
-	# Через 4 с «рэгдолл» сжимается и исчезает (твин привязан к телу и умрёт вместе с ним)
+	# Корм в активной волне остаётся до её полного завершения; вне волн — старый таймер.
+	var room := get_parent()
+	if kind == Kind.FODDER and room and room.has_method("keep_fodder_corpse") \
+			and bool(room.call("keep_fodder_corpse", self, rb, vis)):
+		return
+	fade_debris(rb, vis, debris_lifetime)
+
+## Общий финал тела — используется комнатой после окончания конкретной волны.
+static func fade_debris(rb: RigidBody3D, vis: Node3D, delay: float = 0.0) -> void:
+	if not is_instance_valid(rb) or not is_instance_valid(vis) or rb.is_queued_for_deletion():
+		return
 	var tw := rb.create_tween()
-	tw.tween_interval(debris_lifetime)
+	if delay > 0.0:
+		tw.tween_interval(delay)
 	tw.tween_callback(FX.corpse_smoke.bind(rb))
 	tw.tween_property(vis, "scale", Vector3(0.01, 0.01, 0.01), 0.3)
 	tw.tween_callback(rb.queue_free)
@@ -1269,6 +1314,10 @@ func _spawn_debris() -> void:
 
 func _update_visual_feedback(delta: float) -> void:
 	_hurt_flash = maxf(0.0, _hurt_flash - delta * 8.0)
+	if _visual and is_instance_valid(_visual):
+		_visual.position -= _flinch_applied
+		_flinch_left = maxf(0.0, _flinch_left - delta)
+		_flinch_applied = _flinch_direction * maxf(0.0, flinch_distance) * model_scale * (_flinch_left / maxf(flinch_time, 0.001))
 	# Процедурная «анимация» (только для заглушки): покачивание, отклонение на замахе, рывок на ударе
 	if _visual and _humanoid == null and state != State.STUNNED:
 		var hs := Vector2(velocity.x, velocity.z).length()
@@ -1288,6 +1337,8 @@ func _update_visual_feedback(delta: float) -> void:
 	if _windup_glow > 0.0:
 		var pulse := 0.5 + 0.5 * sin(_state_time * 30.0)
 		glow = _windup_glow * (1.0 + pulse) * (0.35 if _humanoid else 0.8)
+	if _visual and is_instance_valid(_visual):
+		_visual.position += _flinch_applied
 	_set_overlay(_hurt_flash, glow)
 
 const FLASH_MATERIAL := preload("res://shaders/hit_flash.tres")

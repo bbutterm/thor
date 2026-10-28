@@ -30,6 +30,9 @@ signal wave_started(index: int)
 @export_range(0.0, 1.0) var next_wave_fraction: float = 0.3
 ## ...или через столько секунд после её начала
 @export var next_wave_timeout: float = 25.0
+## Последний живой враг каждой волны: замедление длится в реальном времени после hit-stop.
+@export var wave_end_slow_time: float = 0.3
+@export_range(0.05, 1.0, 0.05) var wave_end_slow_scale: float = 0.35
 
 @export_group("Вход врагов")
 ## Высота и длительность прыжка/входа; настройки доступны отдельно у каждого зала.
@@ -79,6 +82,7 @@ const ENEMY_SCENES := {
 var _player: Player
 var _waves: Dictionary = {}
 var _wave_index: int = 0
+var _finished_waves: Dictionary = {}
 var _alive: Array[Enemy] = []
 var _started: bool = false
 var _is_cleared: bool = false
@@ -146,6 +150,7 @@ func start(player: Player) -> void:
 	_player = player
 	_started = true
 	_wave_index = 0
+	_finished_waves.clear()
 	_spawn_wave(0)
 
 func wave_count() -> int:
@@ -232,6 +237,9 @@ func _make_enemy(kind: String) -> Enemy:
 	return enemy
 
 func _register(enemy: Enemy) -> void:
+	# Призыв вне очереди принадлежит текущей волне; пока следующая только ожидает — предыдущей.
+	if not enemy.has_meta("_room_wave"):
+		enemy.set_meta("_room_wave", _wave_index - 1 if _advance_pending else _wave_index)
 	enemy.player = _player
 	if enemy_navigation != null and enemy.kind != Enemy.Kind.BOSS:
 		enemy.enable_tier_navigation(enemy_navigation, {
@@ -286,6 +294,7 @@ func spawn_extra(kind: String, global_pos: Vector3) -> Enemy:
 func _spawn_enemy(marker: Node3D) -> void:
 	var kind: String = str(marker.get_meta("kind", "grunt"))
 	var enemy := _make_enemy(kind)
+	enemy.set_meta("_room_wave", int(marker.get_meta("wave", _wave_index)))
 	# Маркер может переопределить характеристики врага до _ready (мини-босс — см. MinibossDef)
 	if marker.has_meta("setup"):
 		var setup: Variant = marker.get_meta("setup")
@@ -329,9 +338,43 @@ func pending_spawns() -> int:
 func _on_enemy_died(enemy: Enemy) -> void:
 	release_navigation_jump(enemy)
 	_alive.erase(enemy)
+	var wave := int(enemy.get_meta("_room_wave", -1))
+	if _started and wave >= 0 and _wave_finished(wave):
+		_finish_wave(wave)
 	_last_death_pos = safe_drop_position(enemy.global_position)
 	enemy_count_changed.emit(_alive.size() + _spawn_queue.size())
 	_check_clear()
+
+## Пока живы участники или в очереди есть маркеры волны, её тела не тают.
+## Учёт по номеру нужен, потому что волны намеренно перекрываются.
+func _wave_finished(wave: int) -> bool:
+	for enemy in _alive:
+		if is_instance_valid(enemy) and not enemy.is_dead and int(enemy.get_meta("_room_wave", -1)) == wave:
+			return false
+	for marker in _spawn_queue:
+		if is_instance_valid(marker) and int(marker.get_meta("wave", -1)) == wave:
+			return false
+	return true
+
+func keep_fodder_corpse(enemy: Enemy, body: RigidBody3D, visual: Node3D) -> bool:
+	var wave := int(enemy.get_meta("_room_wave", -1))
+	if not _started or wave < 0 or _finished_waves.has(wave):
+		return false
+	body.set_meta("_fodder_wave", wave)
+	body.set_meta("_fodder_visual_path", body.get_path_to(visual))
+	return true
+
+func _finish_wave(wave: int) -> void:
+	if _finished_waves.has(wave):
+		return
+	_finished_waves[wave] = true
+	for child in get_children():
+		if child is RigidBody3D and int(child.get_meta("_fodder_wave", -1)) == wave:
+			var body := child as RigidBody3D
+			var visual := body.get_node_or_null(NodePath(body.get_meta("_fodder_visual_path"))) as Node3D
+			body.remove_meta("_fodder_wave")
+			Enemy.fade_debris(body, visual)
+	FX.slowmo(wave_end_slow_time, wave_end_slow_scale)
 
 ## Если враг погиб в пропасти, награды остаются на доступном полу у входа.
 func safe_drop_position(pos: Vector3) -> Vector3:

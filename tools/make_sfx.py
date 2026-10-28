@@ -108,6 +108,11 @@ for i in range(3):
     crunch = bp(rng.standard_normal(n), 900, 4000) * env(n, 0.001, 4.0)
     save("axe_hit_%d" % (i + 1), thump(0.22, 140 - i * 15, 50) * 1.2 + crunch * 0.6, 0.85)
 
+# Несколько попаданий за один взмах: отдельный плотный раскат, не серия отдельных плееров.
+save("axe_multi_hit", mix(thump(0.28, 110, 35),
+                          np.pad(thump(0.16, 160, 55) * 0.75, (int(SR * 0.025), 0)),
+                          np.pad(thump(0.13, 200, 70) * 0.55, (int(SR * 0.055), 0))), 0.85)
+
 # Тяжёлый финишер комбо
 n = int(SR * 0.4)
 save("axe_finisher", thump(0.4, 120, 35) * 1.4 + bp(rng.standard_normal(n), 300, 2500) * env(n, 0.001, 3.0) * 0.8, 0.95)

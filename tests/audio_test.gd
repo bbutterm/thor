@@ -42,6 +42,7 @@ func _run() -> void:
 	_check_sfx(data)
 	await _check_sfx_play()
 	_check_sfx_conditional_queue()
+	_check_same_frame_limit()
 	await _check_music()
 	_check_voice_data(data)
 	await _check_voice_player()
@@ -102,6 +103,24 @@ func _check_sfx_play() -> void:
 	Audio.sfx("нет_такого", "sounds/sfx/reflect.wav")
 	await wait(0.05)
 	check(_playing_with("sfx/reflect.wav") != null, "Audio.sfx: нет звука владельца — запасной путь")
+
+func _check_same_frame_limit() -> void:
+	var was_processing := Audio.is_processing()
+	Audio.set_process(false)
+	Audio.queue.clear()
+	Audio._sfx_frame = -1
+	var old_limit: int = Audio.identical_sfx_per_frame
+	Audio.identical_sfx_per_frame = 2
+	for i in 8:
+		Audio.play("sounds/sfx/hammer_catch.wav")
+	check(Audio.queue.size() == 2, "одинаковый звук в кадре ограничен до двух")
+	Audio.play("sounds/sfx/reflect.wav")
+	check(Audio.queue.size() == 3, "ограничение не блокирует другой звук")
+	check(ResourceLoader.exists("res://sounds/sfx/axe_multi_hit.wav"), "отдельный звук попадания по толпе импортирован")
+	Audio.queue.clear()
+	Audio._sfx_frame = -1
+	Audio.identical_sfx_per_frame = old_limit
+	Audio.set_process(was_processing)
 
 func _check_sfx_conditional_queue() -> void:
 	print("-- Очередь с ограниченным ожиданием")

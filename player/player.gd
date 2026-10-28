@@ -1562,7 +1562,7 @@ func refill_shield() -> void:
 ## Hit-stop главнее: пока он идёт, масштаб не трогаем (FX вернёт 1.0 сам).
 func _slam_assist_tick() -> void:
 	var want := GameSettings.slam_slowmo() and not is_dead and (is_slamming or _super_jump_left > 0.0 or _bounce_window_left > 0.0)
-	if FX._hitstop_left > 0.0:
+	if FX._hitstop_left > 0.0 or FX._slow_left > 0.0:
 		return
 	if want and not is_equal_approx(Engine.time_scale, slam_assist_time_scale):
 		FX._set_time_scale(slam_assist_time_scale)

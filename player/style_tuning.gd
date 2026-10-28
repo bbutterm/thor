@@ -26,7 +26,7 @@ class_name StyleTuning
 	"kill_wall": 12.0, "kill_reflect": 12.0, "kill_dash": 7.0, "kill_explosion": 10.0,
 	"kill_fire": 5.0, "kill_other": 3.0,
 	"slam_bounce": 5.0, "stomp": 5.0, "perfect_catch": 8.0, "wall_splat": 6.0, "reflect": 8.0,
-	"multikill": 10.0, "multikill_big": 15.0,
+	"multikill": 10.0, "multikill_big": 15.0, "ledge_kill": 3.0,
 	# Мьёльнир (блок Б4): перехват в воздухе, связка стихии с ударом-приземлением, пике молотом,
 	# прыжок с молота-ступеньки, обмен местами, раскол замёрзшего
 	"air_catch": 6.0, "element_slam": 6.0, "hammer_dive": 6.0, "hammer_step": 6.0, "hammer_swap": 5.0, "shatter": 8.0,

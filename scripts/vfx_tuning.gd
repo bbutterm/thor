@@ -4,6 +4,13 @@ class_name VfxTuning
 ## Данные — data/vfx_tuning.tres (открыть в инспекторе Godot); FX.cfg() читает его один раз.
 ## Экранные эффекты (линии скорости, виньетка берсерка, идеальный хват) — в scripts/vfx_screen.gd (@export там же).
 
+@export_group("Паузы удара")
+## Сумма длительностей hit-stop в скользящем окне одной секунды, в реальных секундах.
+@export_range(0.0, 1.0, 0.01) var hitstop_budget_per_second: float = 0.35
+## Мульти-килл использует те же пороги, что и ComicFX; учитывается в общем бюджете.
+@export var multikill_hitstop: float = 0.11
+@export var multikill_big_hitstop: float = 0.14
+
 @export_group("Вспышка попадания (vfx_hit_flash)")
 ## Размер вспышки, м (крупный удар — × hit_flash_big_mult)
 @export var hit_flash_size: float = 0.9

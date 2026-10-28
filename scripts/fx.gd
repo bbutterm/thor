@@ -4,6 +4,11 @@ class_name FX
 
 static var _hitstop_left: float = 0.0
 static var _hitstop_scale: float = 1.0
+static var _slow_left: float = 0.0
+static var _slow_scale: float = 1.0
+## Зарезервированные интервалы hit-stop, по Run.combat_clock. Перекрытие не суммируется.
+static var _hitstop_bookings: Array[Dictionary] = []
+static var _hitstop_last_clock: float = -1.0
 ## Кадр, в котором последний раз менялся Engine.time_scale, и масштаб, бывший до этого в начале кадра
 static var _scale_frame: int = -1
 static var _scale_before: float = 1.0
@@ -16,21 +21,56 @@ static func tree() -> SceneTree:
 static func hitstop(duration: float, scale: float = 0.05) -> void:
 	if duration <= 0.0:
 		return
-	_hitstop_left = maxf(_hitstop_left, duration)
-	_hitstop_scale = minf(_hitstop_scale, scale) if _hitstop_left > 0.0 else scale
+	var now: float = Run.combat_clock
+	if now < _hitstop_last_clock:
+		_hitstop_bookings.clear()  # Run.start_run сбросил часы
+	_hitstop_last_clock = now
+	# Каждый ещё пересекающий окно интервал считаем целиком: верхняя граница
+	# строгая и немного консервативная в начале следующего окна.
+	var used := 0.0
+	var kept: Array[Dictionary] = []
+	for booking in _hitstop_bookings:
+		if float(booking.end) > now - 1.0:
+			kept.append(booking)
+			used += float(booking.end) - float(booking.start)
+	_hitstop_bookings = kept
+	var extension := maxf(0.0, duration - _hitstop_left)
+	var allowed := minf(extension, maxf(0.0, cfg().hitstop_budget_per_second - used))
+	if allowed > 0.0:
+		var start := now + _hitstop_left
+		_hitstop_bookings.append({"start": start, "end": start + allowed})
+		_hitstop_left += allowed
+	if _hitstop_left <= 0.0:
+		return
+	_hitstop_scale = minf(_hitstop_scale, clampf(scale, 0.001, 1.0))
 	_set_time_scale(_hitstop_scale)
+
+## Замедление конца волны идёт отдельно от hit-stop и не превращается в длинную заморозку.
+## Если стоп уже идёт, все 0.3 с замедления начинаются после него.
+static func slowmo(duration: float, scale: float) -> void:
+	if duration <= 0.0:
+		return
+	_slow_left = maxf(_slow_left, duration)
+	_slow_scale = minf(_slow_scale, clampf(scale, 0.001, 1.0))
+	if _hitstop_left <= 0.0:
+		_set_time_scale(_slow_scale)
 
 ## Вызывается каждый кадр. Run передаёт delta / текущий time_scale; пересчитываем по масштабу,
 ## с которым движок на самом деле умножил delta этого кадра (см. real_delta).
 static func tick(passed_real_delta: float) -> void:
 	sync_fades()
-	if _hitstop_left <= 0.0:
+	if _hitstop_left <= 0.0 and _slow_left <= 0.0:
 		return
-	_hitstop_left -= real_delta(passed_real_delta * maxf(Engine.time_scale, 0.0001))
-	if _hitstop_left <= 0.0:
-		_hitstop_left = 0.0
-		_hitstop_scale = 1.0
-		_set_time_scale(1.0)
+	var elapsed := real_delta(passed_real_delta * maxf(Engine.time_scale, 0.0001))
+	if _hitstop_left > 0.0:
+		_hitstop_left = maxf(0.0, _hitstop_left - elapsed)
+		if _hitstop_left <= 0.0:
+			_hitstop_scale = 1.0
+	elif _slow_left > 0.0:
+		_slow_left = maxf(0.0, _slow_left - elapsed)
+		if _slow_left <= 0.0:
+			_slow_scale = 1.0
+	_set_time_scale(_hitstop_scale if _hitstop_left > 0.0 else (_slow_scale if _slow_left > 0.0 else 1.0))
 
 ## Реальная длительность кадра по delta из _process. Движок умножает delta на time_scale, каким он был
 ## В НАЧАЛЕ кадра; удары (и hit-stop) случаются в физике этого же кадра. Если делить на новый 0.05,
@@ -49,6 +89,10 @@ static func _set_time_scale(s: float) -> void:
 static func reset_time() -> void:
 	_hitstop_left = 0.0
 	_hitstop_scale = 1.0
+	_slow_left = 0.0
+	_slow_scale = 1.0
+	_hitstop_bookings.clear()
+	_hitstop_last_clock = -1.0
 	_set_time_scale(1.0)
 
 ## Всплывающая цифра урона в мире.

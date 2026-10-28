@@ -143,6 +143,9 @@ func _run() -> void:
 	await _test_waves()
 	await _test_fall_and_reflect()
 	await _test_vertical_melee()
+	await _test_hit_feel()
+	await _test_wave_corpses()
+	await _test_actual_ledge_push()
 	_finish()
 
 func _test_fodder() -> void:
@@ -740,6 +743,133 @@ func _test_vertical_melee() -> void:
 	p._invuln_left = 0.0
 	e._do_melee()
 	check(p.health < hp, "на одном уровне обычный удар по-прежнему попадает")
+	await _clear()
+
+func _test_hit_feel() -> void:
+	print("-- Реакция на попадание и лимит hit-stop")
+	await _clear()
+	room._is_cleared = false
+	var e := _spawn("grunt", Vector3(0, 0, -4))
+	e.set_physics_process(false)
+	e.max_health = 500.0
+	e.health = 500.0
+	e._set_state(Enemy.State.WINDUP)
+	var initial := e._visual.position
+	e.take_hit(1.0, Vector3.RIGHT * 3.0, "ranged")
+	var offset := e.global_basis * (e._visual.position - initial)
+	check(offset.dot(Vector3.RIGHT) > 0.01 and e.state == Enemy.State.WINDUP,
+		"флинч в направлении удара не прерывает замах от ренжа")
+	e._update_visual_feedback(e.flinch_time + 0.01)
+	check(e._visual.position.distance_to(initial) < 0.001, "вид возвращается после флинча")
+	var boss := _spawn("boss", Vector3(0, 0, -8))
+	boss.set_physics_process(false)
+	boss.max_health = 500.0
+	boss.health = 500.0
+	boss._set_state(Enemy.State.WINDUP)
+	initial = boss._visual.position
+	boss.take_hit(1.0, Vector3.ZERO, "ranged")
+	check(boss._visual.position.distance_to(initial) > 0.01 and boss.state == Enemy.State.WINDUP,
+		"босс реагирует на попадание без толчка, не прерывая замах")
+	await _clear()
+	FX.reset_time()
+	FX.hitstop(0.08)
+	for i in 30:
+		FX.hitstop(0.08)
+	check(absf(FX._hitstop_left - 0.08) < 0.001, "одновременные попадания не складывают стоп")
+	FX.reset_time()
+	var stopped_frames := 0
+	for i in 60:
+		FX.hitstop(0.15)
+		await get_tree().process_frame
+		if FX._hitstop_left > 0.0:
+			stopped_frames += 1
+	check(stopped_frames <= int(ceil(FX.cfg().hitstop_budget_per_second * 60.0)) + 2,
+		"непрерывная толпа ограничена бюджетом стопа (%d кадров)" % stopped_frames)
+	FX.reset_time()
+
+func _test_wave_corpses() -> void:
+	print("-- Тела и пересекающиеся волны")
+	await _clear()
+	room._is_cleared = false
+	room._started = true
+	room.set_physics_process(false)
+	room._spawn_queue.clear()
+	room._finished_waves.clear()
+	room._advance_pending = false
+	room._wave_index = 7
+	var a := _spawn("fodder", Vector3(0, 0, -4))
+	var b := _spawn("fodder", Vector3(1, 0, -4))
+	a.set_physics_process(false)
+	b.set_physics_process(false)
+	a.debris_lifetime = 0.02
+	a.take_hit(9999.0, Vector3.RIGHT * 2.0, "test")
+	var bodies := get_tree().get_nodes_in_group("debris").filter(func(n: Node) -> bool:
+		return not n.is_queued_for_deletion() and int(n.get_meta("_fodder_wave", -1)) == 7)
+	var body: Node = bodies.back() if not bodies.is_empty() else null
+	await frames(25)
+	check(is_instance_valid(body) and not body.is_queued_for_deletion(), "тело лежит, пока жива его волна")
+	room._wave_index = 8
+	var next := _spawn("grunt", Vector3(3, 0, -4))
+	next.set_physics_process(false)
+	FX.reset_time()
+	b.take_hit(9999.0, Vector3.ZERO, "test")
+	check(room._finished_waves.has(7) and is_instance_valid(next) and not next.is_dead,
+		"прошлая волна завершена, хотя следующая ещё жива")
+	check(FX._slow_left > 0.0 and Engine.time_scale > 0.1, "последний враг запускает замедление волны")
+	await frames(75)
+	check(not is_instance_valid(body) or body.is_queued_for_deletion(), "после конца своей волны тело исчезло")
+	FX.reset_time()
+	await _clear()
+
+func _test_actual_ledge_push() -> void:
+	print("-- Реальный сброс ударом с уступа")
+	await _clear()
+	room._is_cleared = false
+	room._started = false
+	p.style.reset()
+	ComicFX.reset_state()
+	FX.reset_time()
+	var platform := StaticBody3D.new()
+	platform.collision_layer = 1
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(4.0, 0.3, 4.0)
+	shape.shape = box
+	platform.add_child(shape)
+	room.add_child(platform)
+	platform.global_position = room.global_position + Vector3(0, 8, 0)
+	var e := room.spawn_extra("fodder", platform.global_position + Vector3(1.55, 0.25, 0))
+	var keeper := _spawn("grunt", Vector3(0, 0, -20))
+	keeper.set_physics_process(false)
+	e.max_health = 1000.0
+	e.health = 1000.0
+	e.fall_kill_height = 3.0
+	e._set_state(Enemy.State.STUNNED)
+	e._stun_left = 99.0
+	var ready := await wait_until(1.0, func() -> bool: return is_instance_valid(e) and e.is_on_floor())
+	check(ready, "корм стоит на настоящем уступе")
+	var ledge_points := [0]
+	var on_gained := func(action: StringName, _amount: float) -> void:
+		if action == &"ledge_kill":
+			ledge_points[0] += 1
+	p.style.gained.connect(on_gained)
+	var ref: WeakRef = weakref(e)
+	var crossed := false
+	if ready:
+		e.take_hit(1.0, Vector3.RIGHT * 12.0, "ranged")
+		for i in 180:
+			await get_tree().physics_frame
+			var current := ref.get_ref() as Enemy
+			if not is_instance_valid(current) or current.is_dead:
+				break
+			crossed = crossed or current.global_position.x > platform.global_position.x + 2.0
+	var current := ref.get_ref() as Enemy
+	check(crossed and (not is_instance_valid(current) or current.is_dead), "толчок выбил врага за край и падение убило")
+	check(ledge_points[0] == 1, "сбитый с уступа даёт очки стиля один раз")
+	check(ComicFX._data.has("ledge_kill") and ComicFX._data["ledge_kill"].words == ["YEET!"], "для сброса задано слово YEET!")
+	p.style.gained.disconnect(on_gained)
+	platform.queue_free()
+	FX.reset_time()
 	await _clear()
 
 func _finish() -> void:

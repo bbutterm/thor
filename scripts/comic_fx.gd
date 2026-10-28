@@ -209,9 +209,11 @@ func on_enemy_killed(enemy: Node3D, source: String) -> void:
 		_request("boss_kill", pos, true)
 	if recent.size() >= multikill_big_count and _multi_level < 2:
 		_multi_level = 2
+		FX.hitstop(FX.cfg().multikill_big_hitstop)
 		_request("multikill", pos, true)
 	elif recent.size() >= multikill_count and _multi_level < 1:
 		_multi_level = 1
+		FX.hitstop(FX.cfg().multikill_hitstop)
 		_request("multikill", pos, false)
 	if _is_finisher(source):
 		_request(_melee_style(enemy), pos, false, finisher_kill_scale, 10)

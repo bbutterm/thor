@@ -58,6 +58,10 @@ var _heavy_queued: bool = false
 var _hold_time: float = -1.0
 var _hit_ids: Dictionary = {}
 var _hits_this_swing: int = 0
+var _sound_enemies_this_swing: int = 0
+var _multi_hit_sounded: bool = false
+var _skill_sound_enemies: int = 0
+var _skill_multi_hit_sounded: bool = false
 var _enemies_hit: int = 0
 var _tween: Tween
 var _base_box_size: Vector3 = Vector3(2.6, 2.0, 1.6)
@@ -167,6 +171,8 @@ func cancel() -> void:
 	_skill_pulses = 0
 	_skill_lunges_left = 0
 	_skill_hit_ids.clear()
+	_skill_sound_enemies = 0
+	_skill_multi_hit_sounded = false
 	_parry_left = 0.0
 	if player:
 		player.weapon_skill_speed_mult = 1.0
@@ -485,6 +491,7 @@ func _skill_hits_at(center: Vector3, radius: float, damage: float, knockback: fl
 	_skill_query.transform = Transform3D(Basis.IDENTITY, center + Vector3.UP * 0.9)
 	var hits := player.get_world_3d().direct_space_state.intersect_shape(_skill_query, 128)
 	var new_hits := 0
+	var new_enemy_hits := 0
 	for hit in hits:
 		var target_node := hit.collider as Node3D
 		if target_node == null or not is_instance_valid(target_node):
@@ -518,8 +525,14 @@ func _skill_hits_at(center: Vector3, radius: float, damage: float, knockback: fl
 			player.deal_damage(enemy, damage * _situational_mult(enemy), push, "melee_heavy")
 		else:
 			enemy.apply_knockback_only(push)
+		if enemy:
+			new_enemy_hits += 1
 		new_hits += 1
 	if new_hits > 0:
+		_skill_sound_enemies += new_enemy_hits
+		if _skill_sound_enemies >= 2 and not _skill_multi_hit_sounded:
+			_skill_multi_hit_sounded = true
+			Audio.sfx("axe_multi_hit", "sounds/sfx/axe_multi_hit.wav")
 		FX.hitstop(heavy_hitstop * (def.hitstop_mult if def else 1.0))
 		var h := view_hand()
 		if h:
@@ -528,6 +541,8 @@ func _skill_hits_at(center: Vector3, radius: float, damage: float, knockback: fl
 		hit_landed.emit(new_hits, stage)
 
 func _finish_weapon_skill() -> void:
+	_skill_sound_enemies = 0
+	_skill_multi_hit_sounded = false
 	if player:
 		player.weapon_skill_speed_mult = 1.0
 		if _skill_mode == "lunge":
@@ -595,6 +610,8 @@ func _begin_stage(s: int, is_heavy: bool = false) -> void:
 	_queued = false
 	_hit_ids.clear()
 	_hits_this_swing = 0
+	_sound_enemies_this_swing = 0
+	_multi_hit_sounded = false
 	_enemies_hit = 0
 	var p: Array = _pose()
 	var h := view_hand()
@@ -676,6 +693,7 @@ func _do_hitbox() -> void:
 	var strong := heavy or is_finisher()
 	var max_t := def.max_targets if def else 0
 	var new_hits := 0
+	var new_enemy_hits := 0
 	for i in hitbox.get_collision_count():
 		var c: Object = hitbox.get_collider(i)
 		if c == null or c == player:
@@ -700,6 +718,8 @@ func _do_hitbox() -> void:
 				continue
 			_hit_ids[id] = true
 			_enemies_hit += 1
+			if c is Enemy and not (c as Enemy).is_dead:
+				new_enemy_hits += 1
 			var dmg := _stage_damage() * _situational_mult(c)
 			# Через игрока: множители тела (пассивка/изъян) и берсерка, хук on_hit
 			player.deal_damage(c, dmg, knock, _source())
@@ -714,6 +734,7 @@ func _do_hitbox() -> void:
 			new_hits += 1
 	if new_hits > 0:
 		_hits_this_swing += new_hits
+		_sound_enemies_this_swing += new_enemy_hits
 		var hs_mult := def.hitstop_mult if def else 1.0
 		FX.hitstop((heavy_hitstop if heavy else stage_hitstop[slot]) * hs_mult)
 		var h := view_hand()
@@ -721,7 +742,10 @@ func _do_hitbox() -> void:
 			# Отдача от попадания: рука вздрагивает назад (в hit-stop замирает — «вязнет» в цели)
 			h.kick(Vector3(0, 0, 0.25), Vector3(_tuning().hit_recoil * (1.6 if strong else 1.0), 0, 0))
 		player.camera_fx.add_trauma(heavy_shake if heavy else stage_shake[slot])
-		if strong:
+		if _sound_enemies_this_swing >= 2 and not _multi_hit_sounded:
+			_multi_hit_sounded = true
+			Audio.sfx("axe_multi_hit", "sounds/sfx/axe_multi_hit.wav")
+		elif strong:
 			Audio.play("sounds/sfx/axe_finisher.wav")
 		else:
 			Audio.play("sounds/sfx/axe_hit_1.wav, sounds/sfx/axe_hit_2.wav, sounds/sfx/axe_hit_3.wav")
