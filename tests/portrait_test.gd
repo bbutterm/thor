@@ -3,9 +3,16 @@ extends Node
 ## нет эмоции — neutral, нет арта — процедурная заглушка (пустой путь).
 ## godot --headless --path . res://tests/portrait_test.tscn
 
+class WarmupGameStub extends Node:
+	var tutorial: Tutorial
+	var room: Node
+
 func _ready() -> void:
 	var fails := 0
 	var ok := 0
+	var warmup_results := _test_room_speakers()
+	ok += warmup_results[0]
+	fails += warmup_results[1]
 	for sp in ["thor", "odin", "loki", "sif", "freya", "hild", "hel", "skadi", "heimdall", "jarl", "hugin", "munin", "sven"]:
 		for emo in ["neutral", "happy", "angry", "shocked", "smug"]:
 			var p := Portrait.texture_path(sp, emo)
@@ -139,3 +146,85 @@ func _ready() -> void:
 	Portrait.prefetch(PackedStringArray())
 	print("=== ИТОГ PORTRAITS: %d OK, %d FAIL ===" % [ok, fails])
 	get_tree().quit(0 if fails == 0 else 1)
+
+## Изолированная проверка выбора реальных говорящих: reward, пул диалога и загрузка портрета.
+func _test_room_speakers() -> Array[int]:
+	var totals: Array[int] = [0, 0]
+	var previous_rewards := Run.room_rewards.duplicate()
+	var previous_order := Run.room_order.duplicate()
+	var previous_index := Run.room_index
+	var previous_minibosses := Run.miniboss_rooms.duplicate()
+	Run.room_index = 0
+	Run.room_order.assign(["res://rooms/room_01.tscn"])
+	Run.room_rewards.assign(["anvil"])
+	Run.miniboss_rooms = PackedInt32Array()
+	var warmup := ShaderWarmup.new()
+
+	# Эти данные реально использует RewardFlow._offer_anvil; имя пула отличается от имени говорящего.
+	var lines := Dialogue.pool_lines("dwarves.eitri")
+	_room_speaker_check(not lines.is_empty() and str(lines[0].get("speaker", "")) == "eitri",
+		"реплика наковальни говорит голосом Эйтри", totals)
+	var speakers := warmup._room_speakers()
+	_room_speaker_check(speakers.size() == 2 and "thor" in speakers and "eitri" in speakers,
+		"наковальня: прогреваются Тор и Эйтри", totals)
+	Portrait.prefetch(speakers)
+	for emotion in ["neutral", "happy", "embarrassed"]:
+		var path := Portrait.texture_path("eitri", emotion)
+		_room_speaker_check(path.ends_with("eitri_%s.webp" % emotion) and path in Portrait.prefetched(),
+			"наковальня: портрет Эйтри %s запрошен" % emotion, totals)
+
+	# Бой и остальные награды не должны держать портрет Эйтри; старые хозяева сохраняются.
+	for pair in [["combat", ""], ["elite", ""], ["trial", ""],
+			["rest", "odin"], ["loki", "loki"], ["freya", "freya"]]:
+		Run.room_rewards[0] = pair[0]
+		speakers = warmup._room_speakers()
+		var host: String = pair[1]
+		var expected_size := 1 if host == "" else 2
+		_room_speaker_check(speakers.size() == expected_size and "thor" in speakers
+			and not "eitri" in speakers and (host == "" or host in speakers),
+			"награда %s: нужный ведущий без лишнего Эйтри" % pair[0], totals)
+	Run.room_rewards[0] = "combat"
+	Portrait.prefetch(warmup._room_speakers())
+	_room_speaker_check(not Portrait.texture_path("eitri", "neutral") in Portrait.prefetched(),
+		"после выхода из наковальни портрет Эйтри освобождён", totals)
+
+	# Не ломаем ни стандартные, ни переопределённые пулы испытания при добавлении хозяина награды.
+	var game := WarmupGameStub.new()
+	var room := Node.new()
+	game.room = room
+	game.add_child(room)
+	var trial := TrialRunner.new()
+	trial.name = "Trial"
+	trial.def = TrialDef.new()
+	trial.def.host = "loki"
+	room.add_child(trial)
+	warmup.game_node = game
+	speakers = warmup._room_speakers()
+	_room_speaker_check(speakers.count("loki") == 1 and not "eitri" in speakers,
+		"стандартные пулы Локи дают одного ведущего и не добавляют Эйтри", totals)
+	trial.def.win_pool = "freya.blessing"
+	trial.def.fail_pool = "hild.trial_fail"
+	speakers = warmup._room_speakers()
+	_room_speaker_check("loki" in speakers and "freya" in speakers and "hild" in speakers
+		and not "eitri" in speakers, "стандартный и переопределённые пулы испытания прогреваются", totals)
+	Run.room_rewards[0] = "anvil"
+	speakers = warmup._room_speakers()
+	_room_speaker_check("eitri" in speakers and "loki" in speakers and "freya" in speakers and "hild" in speakers,
+		"ведущий наковальни не вытесняет ведущих пулов испытания", totals)
+
+	warmup.free()
+	game.free()
+	Portrait.prefetch(PackedStringArray())
+	Run.room_rewards.assign(previous_rewards)
+	Run.room_order.assign(previous_order)
+	Run.room_index = previous_index
+	Run.miniboss_rooms = previous_minibosses
+	return totals
+
+func _room_speaker_check(condition: bool, description: String, totals: Array[int]) -> void:
+	if condition:
+		totals[0] += 1
+		print("  [OK] ", description)
+	else:
+		totals[1] += 1
+		print("  [FAIL] ", description)

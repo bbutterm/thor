@@ -263,7 +263,8 @@ func _warm_ui_glyphs() -> void:
 		box.add_child(UIStyle.label(text, spec[0], Color.WHITE, spec[1]))
 
 ## Кто может заговорить в бою пузырём с портретом: Хугин (обучение), босс/мини-босс, ведущий испытания,
-## хозяин двери-награды (Один на привале, Локи, Фрейя); Тор — в каждом зале. У говорящего до шести эмоций в памяти.
+## хозяин двери-награды (Один на привале, Локи, Фрейя, Эйтри на наковальне); Тор — в каждом зале.
+## У говорящего до шести эмоций в памяти.
 func _room_speakers() -> PackedStringArray:
 	# Тор может заговорить о тяжёлом ранении в любом бою; прогреваем все его эмоции заранее.
 	var out := PackedStringArray(["thor"])
@@ -284,8 +285,9 @@ func _room_speakers() -> PackedStringArray:
 			var trial_speaker := trial.def.pool(which).get_slice(".", 0)
 			if trial_speaker != "" and not trial_speaker in out:
 				out.append(trial_speaker)
-	# Хозяин двери-награды: привал — Один (портрет в выборе), сделка — Локи, благословение — Фрейя
-	var host: String = {"rest": "odin", "loki": "loki", "freya": "freya"}.get(Run.current_reward(), "")
+	# Хозяин двери-награды: привал — Один, сделка — Локи, благословение — Фрейя, наковальня — Эйтри.
+	# dwarves.eitri — имя пула, но сам говорящий в его репликах именно eitri.
+	var host: String = {"rest": "odin", "loki": "loki", "freya": "freya", "anvil": "eitri"}.get(Run.current_reward(), "")
 	if host != "":
 		out.append(host)
 	return out
