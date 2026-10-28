@@ -494,24 +494,75 @@ func _texts(n: Node) -> Array[String]:
 		out.append_array(_texts(c))
 	return out
 
+func _eitri_barks() -> int:
+	var count := 0
+	for line in Dialogue.history:
+		if str(line.get("speaker", "")) == "eitri":
+			count += 1
+	return count
+
 func _test_anvil_flow() -> void:
 	print("-- Наковальня Эйтри: награда зала")
 	_set_traits([])
 	while Run.room_rewards.size() <= Run.room_index:
 		Run.room_rewards.append("")
 	var was: String = Run.room_rewards[Run.room_index]
+	var old_rerolls := Run.trait_rerolls
 	Run.room_rewards[Run.room_index] = "anvil"
 	game.rewards._granted = false
+	var before := _eitri_barks()
 	game.rewards.grant()
 	var tp := game.trait_pick
 	check(tp.visible and tp._title.text.contains("НАКОВАЛЬНЯ"), "после зачистки — выбор стихии у наковальни")
 	check(tp._choices.all(func(t: MjolnirTrait) -> bool: return t.is_element()), "в выборе только стихии")
+	check(_eitri_barks() == before, "при открытых карточках Эйтри ещё не говорит")
+	Run.trait_rerolls = 1
+	game.rewards._on_trait_reroll()
+	check(tp.visible and _eitri_barks() == before and game.rewards._anvil_pick,
+		"переброс сохраняет выбор наковальни и не вызывает реплику")
 	tp._open_time = -10.0
 	tp.choose(0)
-	await wait(0.8)
+	check(not tp.visible and _eitri_barks() == before + 1, "после подтверждения и закрытия карточек — одна реплика Эйтри")
+	tp.choose(0)
+	check(_eitri_barks() == before + 1, "повторный выбор закрытого окна не повторяет реплику")
+	await wait(0.35)
+	var bubble := Dialogue.bubble()
+	check(not tp.visible and not game.rune_pick.visible and bubble._name.text == str(Dialogue.speakers["eitri"].name).to_upper()
+		and bubble._text.text != "" and bubble._panel.modulate.a > 0.5,
+		"пузырь Эйтри виден после выбора и не закрыт карточками")
+	await wait(0.45)
 	check(Run.owned_element() != null, "стихия взята: %s" % (str(Run.owned_element().id) if Run.owned_element() else "—"))
 	check(not game.rune_pick.visible and not tp.visible, "после наковальни — без руны (награда выдана)")
 	check(not game.rewards._anvil_pick, "признак наковальни сброшен")
+
+	# Когда стихия исчерпана, наковальня сохраняет обычный запасной выбор руны и не вызывает реплику.
+	_set_traits(_lv(&"fire", 4))
+	game.rewards._granted = false
+	before = _eitri_barks()
+	game.rewards.grant()
+	check(not tp.visible and game.rune_pick.visible and not game.rewards._anvil_pick and _eitri_barks() == before,
+		"пустой выбор стихии: запасная руна без реплики Эйтри")
+	if game.rune_pick.visible:
+		game.rune_pick._open_time = -10.0
+		game.rune_pick.choose(0)
+	await wait(0.3)
+
+	# Обычный выбор после мини-босса не связан с наковальней.
+	_set_traits([])
+	Run.room_rewards[Run.room_index] = "combat"
+	game.rewards._granted = false
+	before = _eitri_barks()
+	var choices: Array[MjolnirTrait] = [_find(&"fire")]
+	tp.open(choices)
+	tp._open_time = -10.0
+	tp.choose(0)
+	check(not tp.visible and _eitri_barks() == before, "обычный выбор трейта не вызывает Эйтри")
+	await wait(0.8)
+	if game.rune_pick.visible:
+		game.rune_pick._open_time = -10.0
+		game.rune_pick.choose(0)
+	await wait(0.2)
+	Run.trait_rerolls = old_rerolls
 	Run.room_rewards[Run.room_index] = was
 	get_tree().paused = false
 	_set_traits([])
