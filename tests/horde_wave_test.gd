@@ -63,6 +63,17 @@ func _run() -> void:
 	room.max_alive = 0
 	room._physics_process(0.2)
 	check(room.alive_count() == 4 and room.pending_spawns() == 0, "нулевой лимит оставляет поведение ручных арен без изменений")
+	# П3, F6 «старое / новое» (FeelSwitch enemy_count): старое — корм ×legacy_fodder_mult и лимит legacy_max_alive
+	room.max_alive = 2
+	check(room._has_spawn_capacity() == false, "новое: лимит зала (%d)" % room.max_alive)
+	FeelSwitch.set_old(&"enemy_count", true)
+	room._spawn_wave(0)
+	check(room._wave_size == 1 + roundi(4 * room.legacy_fodder_mult) and room._has_spawn_capacity(), "старое: корм ×%.1f (%d в волне), лимит %d" % [room.legacy_fodder_mult, room._wave_size, room.legacy_max_alive])
+	FeelSwitch.set_old(&"enemy_count", false)
+	room._spawn_queue.clear()
+	room._spawn_wave(0)
+	check(room._wave_size == 5 and not room._has_spawn_capacity(), "по умолчанию — новое (%d в волне)" % room._wave_size)
+	room._spawn_queue.clear()
 	room.queue_free()
 	await get_tree().process_frame
 	print("=== ИТОГ HORDE WAVE: %d FAIL ===" % failures)

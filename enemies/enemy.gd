@@ -207,6 +207,25 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var body_color: Color = Color(0.32, 0.45, 0.33)
 @export var model_scale: float = 1.0
 
+@export_group("Мясо корма (П3)")
+## Корм при смерти разлетается на куски (enemies/parts/fodder_gibs.gd): торс — тело, голова/руки/ноги — куски
+@export var gib_on_death: bool = true
+## Общий лимит кусков (без торсов) в зале: сверх — самые старые исчезают сразу
+@export var gib_limit: int = 40
+## Сколько секунд кусок лежит, прежде чем провалиться в пол
+@export var gib_life: float = 4.0
+@export var gib_sink_time: float = 0.6
+## Скорость кусков по удару: доля силы отброса (не меньше 4 м/с) и предел, м/с
+@export var gib_knock_ratio: float = 0.9
+@export var gib_knock_max: float = 14.0
+## Разлёт кусков от центра тела, вверх и вращение
+@export var gib_outward: float = 5.5
+## Куски появляются уже разнесёнными от центра на столько метров (× масштаб модели)
+@export var gib_burst_offset: float = 0.25
+@export var gib_up: float = 4.5
+@export var gib_spin: float = 12.0
+
+
 @export_group("Модель")
 @export var model_body: String = "base/Superhero_Male_FullBody.gltf"
 @export var model_outfit: String = ""
@@ -960,6 +979,8 @@ func _die(source: String) -> void:
 		player.heal(player.kill_heal(source))
 	Loot.on_enemy_died(self, source)
 	Audio.sfx("zombie_death" if FX.is_undead(self) and kind != Kind.BLOATED else "", "sounds/enemy_destroy.ogg")
+	if kind == Kind.FODDER and gib_on_death:
+		Audio.play(GIB_SOUNDS)  # П3: хрусткий звук мяса
 	if kind != Kind.BLOATED:
 		visual._spawn_debris()
 	died.emit(self)
@@ -979,6 +1000,8 @@ static func fade_debris(rb: RigidBody3D, vis: Node3D, delay: float = 0.0) -> voi
 # --- Вид ---
 
 const FLASH_MATERIAL := preload("res://shaders/hit_flash.tres")
+## П3: хруст при разрыве корма (tools/make_sfx.py, случайный из трёх)
+const GIB_SOUNDS := "sounds/sfx/gib_crunch_1.wav,sounds/sfx/gib_crunch_2.wav,sounds/sfx/gib_crunch_3.wav"
 const FLASH_GL_SHADER := preload("res://shaders/hit_flash_gl.gdshader")
 const FLASH_MATERIAL_GL := preload("res://shaders/hit_flash_gl.tres")
 

@@ -36,12 +36,15 @@ const BIG_PRIORITY := 1000
 @export var cooldown: float = 1.1
 ## Не больше стольких слов на экране одновременно
 @export var max_on_screen: int = 3
-## Окно мульти-килла, с
-@export var multikill_window: float = 0.5
+## Окно мульти-килла, с (П3: 3+ за 0.3 с — слово, тряска, бас-удар)
+@export var multikill_window: float = 0.3
 ## Сколько убийств в окне дают слово
 @export var multikill_count: int = 3
 ## ...и сколько — крупное слово на весь экран
 @export var multikill_big_count: int = 8
+## Тряска камеры (trauma) на мульти-килле и крупном мульти-килле; бас-удар — sounds/sfx/multikill_bass.wav
+@export var multikill_shake: float = 0.4
+@export var multikill_big_shake: float = 0.6
 ## Обычные (не крупные) слова: шанс показать, если событие не «важное» (priority < important_priority) — реже, чтобы не мельтешили
 @export_range(0.0, 1.0) var routine_chance: float = 0.45
 @export var important_priority: int = 50

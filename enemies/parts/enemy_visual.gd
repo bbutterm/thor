@@ -55,6 +55,20 @@ func _spawn_debris() -> void:
 	var old := enemy.get_tree().get_nodes_in_group("debris").filter(func(n: Node) -> bool: return not n.is_queued_for_deletion())
 	for k in maxi(0, old.size() - enemy.max_debris + 1):
 		old[k].queue_free()
+	var room := enemy.get_parent()
+	# П3: корм — мясо, разлетается на куски; торс остаётся «телом» (лимит трупов, учёт волны)
+	if enemy.kind == Enemy.Kind.FODDER and enemy.gib_on_death and not enemy.has_meta("elite"):
+		_set_overlay(0.0, 0.0)
+		var knock_gib := enemy._last_knock if enemy._last_knock.length() > 0.5 else -enemy.global_transform.basis.z * 4.0
+		var gib := FodderGibs.spawn(enemy, knock_gib)
+		if not gib.is_empty():
+			enemy._visual.visible = false
+			var body := gib.body as RigidBody3D
+			var mesh := gib.visual as Node3D
+			if room and room.has_method("keep_fodder_corpse") and bool(room.call("keep_fodder_corpse", enemy, body, mesh)):
+				return
+			Enemy.fade_debris(body, mesh, enemy.debris_lifetime)
+			return
 	var rb := RigidBody3D.new()
 	rb.add_to_group("debris")
 	rb.collision_layer = 1 << 6
@@ -85,7 +99,6 @@ func _spawn_debris() -> void:
 		rb.apply_central_impulse((knock * 1.1 + Vector3.UP * 4.0) * rb.mass)
 		rb.apply_torque_impulse(Vector3(randf_range(-3, 3), randf_range(-2, 2), randf_range(-3, 3)) * rb.mass)
 	# Корм в активной волне остаётся до её полного завершения; вне волн — старый таймер.
-	var room := enemy.get_parent()
 	if enemy.kind == Enemy.Kind.FODDER and room and room.has_method("keep_fodder_corpse") \
 			and bool(room.call("keep_fodder_corpse", enemy, rb, vis)):
 		return

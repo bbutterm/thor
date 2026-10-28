@@ -46,12 +46,21 @@ func on_enemy_killed(enemy: Node3D, source: String) -> void:
 		cf._multi_level = 2
 		FX.hitstop(FX.cfg().multikill_big_hitstop)
 		cf._request("multikill", pos, true)
+		_multikill_punch(enemy, cf.multikill_big_shake)
 	elif recent.size() >= cf.multikill_count and cf._multi_level < 1:
 		cf._multi_level = 1
 		FX.hitstop(FX.cfg().multikill_hitstop)
 		cf._request("multikill", pos, false)
+		_multikill_punch(enemy, cf.multikill_shake)
 	if _is_finisher(source):
 		cf._request(_melee_style(enemy), pos, false, cf.finisher_kill_scale, 10)
+
+## П3: мульти-килл ощущается — тряска камеры сильнее и короткий бас-удар.
+func _multikill_punch(enemy: Node3D, shake: float) -> void:
+	var p := enemy.get("player") as Player if enemy else null
+	if p and is_instance_valid(p) and p.camera_fx:
+		p.camera_fx.add_trauma(shake)
+	Audio.play("sounds/sfx/multikill_bass.wav")
 
 ## Мьёльнир попал во врага (mjolnir_projectile.gd → _on_hit). Слово — на возврате или после рикошета.
 func on_hammer_hit(_target: Object, pos: Vector3, returning: bool, bounces: int) -> void:

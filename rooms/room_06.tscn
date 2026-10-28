@@ -313,511 +313,488 @@ _surfaces = [{
 "vertex_data": PackedByteArray("AADwwc3MTL1SuE5BAADwQc3MTL1SuE5BAADwQc3MTL0AAPBBAADwwc3MTL1SuE5BAADwQc3MTL0AAPBBAADwwc3MTL0AAPBBAADwwc3MTL0AAPDBAADwQc3MTL0AAPDBAADwQc3MTL1mZpbBAADwwc3MTL0AAPDBAADwQc3MTL1mZpbBAADwwc3MTL1mZpbBAADwwc3MTL1mZpbBUrhOwc3MTL1mZpbBUrhOwc3MTL1SuE5BAADwwc3MTL1mZpbBUrhOwc3MTL1SuE5BAADwwc3MTL1SuE5BUrhOQc3MTL1mZpbBAADwQc3MTL1mZpbBAADwQc3MTL1SuE5BUrhOQc3MTL1mZpbBAADwQc3MTL1SuE5BUrhOQc3MTL1SuE5BUrhOwc3MTL1mZpbBMzMTwM3MTL1mZpbBMzMTwM3MTL1SuE7BUrhOwc3MTL1mZpbBMzMTwM3MTL1SuE7BUrhOwc3MTL1SuE7BMzMTQM3MTL1mZpbBUrhOQc3MTL1mZpbBUrhOQc3MTL1SuE7BMzMTQM3MTL1mZpbBUrhOQc3MTL1SuE7BMzMTQM3MTL1SuE7B/3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+/")
 }]
 
-[node name="Room06" type="Node3D" unique_id=624158501]
+[node name="Room06" type="Node3D" unique_id=734521963]
 script = ExtResource("1_fe6ro")
 room_title = "Склад медовухи"
 visual_map = ExtResource("2_mga6l")
-max_alive = 60
+max_alive = 20
 
-[node name="Geometry" type="Node3D" parent="." unique_id=530537222]
+[node name="Geometry" type="Node3D" parent="." unique_id=1360978454]
 
-[node name="Floor" type="StaticBody3D" parent="Geometry" unique_id=441971182]
+[node name="Floor" type="StaticBody3D" parent="Geometry" unique_id=899673305]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Floor" unique_id=695165577]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Floor" unique_id=1029658297]
 shape = SubResource("BoxShape3D_bbfve")
 
-[node name="WallN_L" type="StaticBody3D" parent="Geometry" unique_id=161004343]
+[node name="WallN_L" type="StaticBody3D" parent="Geometry" unique_id=884500918]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 12, -13.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_L" unique_id=731078939]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_L" unique_id=394877138]
 shape = SubResource("BoxShape3D_f413k")
 
-[node name="WallN_R" type="StaticBody3D" parent="Geometry" unique_id=2063494551]
+[node name="WallN_R" type="StaticBody3D" parent="Geometry" unique_id=82420984]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 12, -13.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_R" unique_id=264723468]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_R" unique_id=1153738156]
 shape = SubResource("BoxShape3D_af2p1")
 
-[node name="WallS" type="StaticBody3D" parent="Geometry" unique_id=598372429]
+[node name="WallS" type="StaticBody3D" parent="Geometry" unique_id=1234154567]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 13.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallS" unique_id=1786804657]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallS" unique_id=381396787]
 shape = SubResource("BoxShape3D_mtcbu")
 
-[node name="WallW" type="StaticBody3D" parent="Geometry" unique_id=1994563815]
+[node name="WallW" type="StaticBody3D" parent="Geometry" unique_id=259161175]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 12, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallW" unique_id=751759463]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallW" unique_id=341259290]
 shape = SubResource("BoxShape3D_wt0ti")
 
-[node name="WallE" type="StaticBody3D" parent="Geometry" unique_id=489214981]
+[node name="WallE" type="StaticBody3D" parent="Geometry" unique_id=546400875]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 12, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallE" unique_id=1225825860]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallE" unique_id=1745968583]
 shape = SubResource("BoxShape3D_vukq4")
 
-[node name="WallModels" type="Node3D" parent="Geometry" unique_id=289157364]
+[node name="WallModels" type="Node3D" parent="Geometry" unique_id=590482559]
 
-[node name="CL_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=416314143 instance=ExtResource("3_tsyos")]
+[node name="CL_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1258664485 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -14.333333)
 
-[node name="CL_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1995456106 instance=ExtResource("3_tsyos")]
+[node name="CL_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1715477773 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -16)
 
-[node name="CL_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=963405720 instance=ExtResource("3_tsyos")]
+[node name="CL_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=395933932 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -17.666666)
 
-[node name="CL_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=278710115 instance=ExtResource("3_tsyos")]
+[node name="CL_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1448647998 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 3.12, -14.333333)
 
-[node name="CL_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1181799540 instance=ExtResource("3_tsyos")]
+[node name="CL_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=110955264 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 3.12, -16)
 
-[node name="CL_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1788019971 instance=ExtResource("3_tsyos")]
+[node name="CL_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=789647072 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 3.12, -17.666666)
 
-[node name="CR_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=784502998 instance=ExtResource("3_tsyos")]
+[node name="CR_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=596383930 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -17.666666)
 
-[node name="CR_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=649343510 instance=ExtResource("3_tsyos")]
+[node name="CR_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1346661345 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -16)
 
-[node name="CR_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=334693395 instance=ExtResource("3_tsyos")]
+[node name="CR_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1806414603 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -14.333334)
 
-[node name="CR_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=821146065 instance=ExtResource("3_tsyos")]
+[node name="CR_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1062690104 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 3.12, -17.666666)
 
-[node name="CR_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=809918269 instance=ExtResource("3_tsyos")]
+[node name="CR_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1552674112 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 3.12, -16)
 
-[node name="CR_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=834412786 instance=ExtResource("3_tsyos")]
+[node name="CR_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=100551398 instance=ExtResource("3_tsyos")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 3.12, -14.333334)
 
-[node name="CE_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=798062675 instance=ExtResource("3_tsyos")]
+[node name="CE_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=848665519 instance=ExtResource("3_tsyos")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -18.6)
 
-[node name="CE_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1848587247 instance=ExtResource("3_tsyos")]
+[node name="CE_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1891588119 instance=ExtResource("3_tsyos")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -18.6)
 
-[node name="CE_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=816707902 instance=ExtResource("3_tsyos")]
+[node name="CE_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1274321998 instance=ExtResource("3_tsyos")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -18.6)
 
-[node name="CE_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=19346465 instance=ExtResource("3_tsyos")]
+[node name="CE_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1222869663 instance=ExtResource("3_tsyos")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 3.12, -18.6)
 
-[node name="CE_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1633791835 instance=ExtResource("3_tsyos")]
+[node name="CE_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1468230817 instance=ExtResource("3_tsyos")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.12, -18.6)
 
-[node name="CE_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1401423969 instance=ExtResource("3_tsyos")]
+[node name="CE_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=552496915 instance=ExtResource("3_tsyos")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 3.12, -18.6)
 
-[node name="CorridorFloor" type="StaticBody3D" parent="Geometry" unique_id=1404043065]
+[node name="CorridorFloor" type="StaticBody3D" parent="Geometry" unique_id=1139275641]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -16)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorFloor" unique_id=607333772]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorFloor" unique_id=1716695717]
 shape = SubResource("BoxShape3D_tdvlb")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/CorridorFloor" unique_id=1229218078]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CorridorFloor" unique_id=898388712]
 material_override = ExtResource("4_v580r")
 mesh = SubResource("BoxMesh_oho0p")
 
-[node name="CorridorL" type="StaticBody3D" parent="Geometry" unique_id=157369010]
+[node name="CorridorL" type="StaticBody3D" parent="Geometry" unique_id=1783607208]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 3, -16)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorL" unique_id=1808981708]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorL" unique_id=749525591]
 shape = SubResource("BoxShape3D_764jr")
 
-[node name="CorridorR" type="StaticBody3D" parent="Geometry" unique_id=701099105]
+[node name="CorridorR" type="StaticBody3D" parent="Geometry" unique_id=687686282]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 3, -16)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorR" unique_id=1681780205]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorR" unique_id=1155853468]
 shape = SubResource("BoxShape3D_hjtrn")
 
-[node name="CorridorEnd" type="StaticBody3D" parent="Geometry" unique_id=1072595975]
+[node name="CorridorEnd" type="StaticBody3D" parent="Geometry" unique_id=1548901131]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -19)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorEnd" unique_id=278993555]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorEnd" unique_id=423189269]
 shape = SubResource("BoxShape3D_3lelk")
 
-[node name="Portal" type="Node3D" parent="Geometry" unique_id=345127254]
+[node name="Portal" type="Node3D" parent="Geometry" unique_id=1336180460]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, -18.45)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Portal" unique_id=1107106076]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Portal" unique_id=646845696]
 material_override = SubResource("StandardMaterial3D_nncso")
 mesh = SubResource("BoxMesh_nkifs")
 
-[node name="Block0" type="StaticBody3D" parent="Geometry" unique_id=1868791083]
+[node name="Block0" type="StaticBody3D" parent="Geometry" unique_id=1913934412]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 1, -5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Block0" unique_id=158250787]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Block0" unique_id=132934665]
 shape = SubResource("BoxShape3D_ev5pk")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block0" unique_id=1530602119]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block0" unique_id=714290035]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("ArrayMesh_tk0dl")
 
-[node name="Block1" type="StaticBody3D" parent="Geometry" unique_id=46576144]
+[node name="Block1" type="StaticBody3D" parent="Geometry" unique_id=2070678606]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 1, 1)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Block1" unique_id=1396624632]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Block1" unique_id=696427695]
 shape = SubResource("BoxShape3D_h8a24")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block1" unique_id=1616528794]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block1" unique_id=736861816]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("ArrayMesh_6q8kv")
 
-[node name="Watchtower0" type="Node3D" parent="Geometry" unique_id=231612264]
+[node name="Watchtower0" type="Node3D" parent="Geometry" unique_id=2096531119]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -4)
 
-[node name="Deck" type="StaticBody3D" parent="Geometry/Watchtower0" unique_id=737626017]
+[node name="Deck" type="StaticBody3D" parent="Geometry/Watchtower0" unique_id=538261848]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.61, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Watchtower0/Deck" unique_id=1237790230]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Watchtower0/Deck" unique_id=1299842362]
 shape = SubResource("BoxShape3D_kh4rl")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Deck" unique_id=424621613]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Deck" unique_id=292106715]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_irnwu")
 
-[node name="Post_-1_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1684845516]
+[node name="Post_-1_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1471301775]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.18, 1.7, -1.18)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Post_-1_-1" unique_id=650821366]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Post_-1_-1" unique_id=995324192]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_rexrc")
 
-[node name="Post_-1_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1598333455]
+[node name="Post_-1_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=469246767]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.18, 1.7, 1.18)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Post_-1_1" unique_id=173441800]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Post_-1_1" unique_id=1494850163]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_af8rx")
 
-[node name="Post_1_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1250486676]
+[node name="Post_1_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=2032669400]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.18, 1.7, -1.18)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Post_1_-1" unique_id=1950588003]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Post_1_-1" unique_id=1074670904]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_sx282")
 
-[node name="Post_1_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1208047033]
+[node name="Post_1_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1020683879]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.18, 1.7, 1.18)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Post_1_1" unique_id=460767484]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Post_1_1" unique_id=608814725]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_shgnc")
 
-[node name="Step0" type="StaticBody3D" parent="Geometry/Watchtower0" unique_id=2145497123]
+[node name="Step0" type="StaticBody3D" parent="Geometry/Watchtower0" unique_id=711895464]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, -4.8)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Watchtower0/Step0" unique_id=1780605910]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Watchtower0/Step0" unique_id=1660117488]
 shape = SubResource("BoxShape3D_ytto0")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Step0" unique_id=272322143]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Step0" unique_id=838555778]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_bw4q6")
 
-[node name="StepPost0_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=976502921]
+[node name="StepPost0_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1772048380]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62, 0.375, -4.8)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost0_-1" unique_id=958902555]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost0_-1" unique_id=734108284]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_4i8av")
 
-[node name="StepPost0_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=2003470407]
+[node name="StepPost0_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=427067968]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.375, -4.8)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost0_1" unique_id=1173027423]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost0_1" unique_id=1530297213]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_1t48c")
 
-[node name="Step1" type="StaticBody3D" parent="Geometry/Watchtower0" unique_id=242522295]
+[node name="Step1" type="StaticBody3D" parent="Geometry/Watchtower0" unique_id=180211118]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.41, -3.8)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Watchtower0/Step1" unique_id=1874386791]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Watchtower0/Step1" unique_id=2069739354]
 shape = SubResource("BoxShape3D_nykaw")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Step1" unique_id=250629215]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Step1" unique_id=1024730452]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_1mtik")
 
-[node name="StepPost1_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=2076468277]
+[node name="StepPost1_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=717647508]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62, 0.75, -3.8)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost1_-1" unique_id=1886163255]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost1_-1" unique_id=788537591]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_boq14")
 
-[node name="StepPost1_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1390416904]
+[node name="StepPost1_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1666187897]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.75, -3.8)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost1_1" unique_id=520072379]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost1_1" unique_id=1930305574]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_wek2v")
 
-[node name="Step2" type="StaticBody3D" parent="Geometry/Watchtower0" unique_id=1389391002]
+[node name="Step2" type="StaticBody3D" parent="Geometry/Watchtower0" unique_id=212021688]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.16, -2.8)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Watchtower0/Step2" unique_id=197461206]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Watchtower0/Step2" unique_id=489928983]
 shape = SubResource("BoxShape3D_pjgnx")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Step2" unique_id=1898148171]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Step2" unique_id=1511189130]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_15hcg")
 
-[node name="StepPost2_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=995563396]
+[node name="StepPost2_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=688668303]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62, 1.125, -2.8)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost2_-1" unique_id=447653185]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost2_-1" unique_id=594316019]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_63ij2")
 
-[node name="StepPost2_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1604147272]
+[node name="StepPost2_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=557108833]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 1.125, -2.8)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost2_1" unique_id=1686285489]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost2_1" unique_id=471661112]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_memai")
 
-[node name="Step3" type="StaticBody3D" parent="Geometry/Watchtower0" unique_id=1925484695]
+[node name="Step3" type="StaticBody3D" parent="Geometry/Watchtower0" unique_id=511141272]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.91, -1.8)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Watchtower0/Step3" unique_id=1526689730]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Watchtower0/Step3" unique_id=770506688]
 shape = SubResource("BoxShape3D_h2ulv")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Step3" unique_id=2073784374]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Step3" unique_id=2111797547]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_ds71f")
 
-[node name="StepPost3_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1860908668]
+[node name="StepPost3_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1397638184]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62, 1.5, -1.8)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost3_-1" unique_id=94022284]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost3_-1" unique_id=1301087065]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_gue0g")
 
-[node name="StepPost3_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=375293888]
+[node name="StepPost3_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1233710713]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 1.5, -1.8)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost3_1" unique_id=298373610]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/StepPost3_1" unique_id=1154000739]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_wjxf5")
 
-[node name="Rail_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=1715385888]
+[node name="Rail_-1" type="Node3D" parent="Geometry/Watchtower0" unique_id=452248624]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.32, 4.35, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Rail_-1" unique_id=1182800225]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Rail_-1" unique_id=270015662]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_wh53u")
 
-[node name="Rail_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=103200354]
+[node name="Rail_1" type="Node3D" parent="Geometry/Watchtower0" unique_id=893951452]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.32, 4.35, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Rail_1" unique_id=65286275]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/Rail_1" unique_id=771537693]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_5rggs")
 
-[node name="RailSouth" type="Node3D" parent="Geometry/Watchtower0" unique_id=1887747464]
+[node name="RailSouth" type="Node3D" parent="Geometry/Watchtower0" unique_id=1816865616]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.35, 1.32)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/RailSouth" unique_id=602852624]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Watchtower0/RailSouth" unique_id=579190523]
 material_override = ExtResource("5_wwogs")
 mesh = SubResource("BoxMesh_wpppx")
 
-[node name="Pillar0" type="StaticBody3D" parent="Geometry" unique_id=635308696]
+[node name="Pillar0" type="StaticBody3D" parent="Geometry" unique_id=2075476303]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -4)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar0" unique_id=1146200796]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar0" unique_id=826343703]
 shape = SubResource("CylinderShape3D_vhk4t")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar0" unique_id=200494548]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar0" unique_id=1462845566]
 material_override = ExtResource("6_dnol0")
 mesh = SubResource("CylinderMesh_p14kr")
 
-[node name="PillarBase0" type="StaticBody3D" parent="Geometry" unique_id=169373426]
+[node name="PillarBase0" type="StaticBody3D" parent="Geometry" unique_id=1189274566]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, -4)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase0" unique_id=900976515]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase0" unique_id=724290540]
 shape = SubResource("CylinderShape3D_g5cpq")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase0" unique_id=1750344824]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase0" unique_id=1536495964]
 material_override = ExtResource("6_dnol0")
 mesh = SubResource("CylinderMesh_ii7dl")
 
-[node name="PillarCap0" type="StaticBody3D" parent="Geometry" unique_id=142201137]
+[node name="PillarCap0" type="StaticBody3D" parent="Geometry" unique_id=1949376406]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.8, -4)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap0" unique_id=673955431]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap0" unique_id=1216447599]
 shape = SubResource("CylinderShape3D_4j1c1")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap0" unique_id=152808657]
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap0" unique_id=562648596]
 material_override = ExtResource("6_dnol0")
 mesh = SubResource("CylinderMesh_vbvcf")
 
-[node name="Door" type="StaticBody3D" parent="." unique_id=940173509]
+[node name="Door" type="StaticBody3D" parent="." unique_id=1798653450]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -13.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Door" unique_id=651711907]
+[node name="Shape" type="CollisionShape3D" parent="Door" unique_id=2005719316]
 shape = SubResource("BoxShape3D_qus7y")
 
-[node name="Mesh" type="MeshInstance3D" parent="Door" unique_id=1988549555]
+[node name="Mesh" type="MeshInstance3D" parent="Door" unique_id=1469374812]
 material_override = SubResource("StandardMaterial3D_n71oh")
 mesh = SubResource("BoxMesh_m8no0")
 
-[node name="Rune" type="Node3D" parent="Door" unique_id=325712930]
+[node name="Rune" type="Node3D" parent="Door" unique_id=330088290]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.33)
 
-[node name="Mesh" type="MeshInstance3D" parent="Door/Rune" unique_id=1508277323]
+[node name="Mesh" type="MeshInstance3D" parent="Door/Rune" unique_id=225436432]
 material_override = SubResource("StandardMaterial3D_fu1b7")
 mesh = SubResource("BoxMesh_1tu64")
 
-[node name="RuneBar" type="Node3D" parent="Door" unique_id=751312850]
+[node name="RuneBar" type="Node3D" parent="Door" unique_id=1768885575]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.33)
 
-[node name="Mesh" type="MeshInstance3D" parent="Door/RuneBar" unique_id=815847030]
+[node name="Mesh" type="MeshInstance3D" parent="Door/RuneBar" unique_id=2113527004]
 material_override = SubResource("StandardMaterial3D_fu1b7")
 mesh = SubResource("BoxMesh_dlqcr")
 
-[node name="Exit" type="Area3D" parent="." unique_id=1225314410]
+[node name="Exit" type="Area3D" parent="." unique_id=1050074019]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -17)
 collision_layer = 32
 collision_mask = 2
 
-[node name="Shape" type="CollisionShape3D" parent="Exit" unique_id=274111805]
+[node name="Shape" type="CollisionShape3D" parent="Exit" unique_id=1056338054]
 shape = SubResource("BoxShape3D_xxopf")
 
-[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=1904965130]
+[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=467723272]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 10.5)
 
-[node name="Spawns" type="Node3D" parent="." unique_id=1607090167]
+[node name="Spawns" type="Node3D" parent="." unique_id=1276656323]
 
-[node name="grunt_0" type="Marker3D" parent="Spawns" unique_id=165307973]
+[node name="grunt_0" type="Marker3D" parent="Spawns" unique_id=1012136458]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.05, -9.5)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="grunt_1" type="Marker3D" parent="Spawns" unique_id=700825994]
+[node name="grunt_1" type="Marker3D" parent="Spawns" unique_id=903097355]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.05, -11)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="bloated_2" type="Marker3D" parent="Spawns" unique_id=364273284]
+[node name="bloated_2" type="Marker3D" parent="Spawns" unique_id=1784776069]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.05, -9)
 metadata/kind = "bloated"
 metadata/wave = 0
 
-[node name="merc_3" type="Marker3D" parent="Spawns" unique_id=525505857]
+[node name="merc_3" type="Marker3D" parent="Spawns" unique_id=514149060]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.05, -9)
 metadata/kind = "merc"
 metadata/wave = 0
 
-[node name="grunt_4" type="Marker3D" parent="Spawns" unique_id=402302293]
+[node name="grunt_4" type="Marker3D" parent="Spawns" unique_id=691778491]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.05, 4)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="fodder_5" type="Marker3D" parent="Spawns" unique_id=1826189636]
+[node name="fodder_5" type="Marker3D" parent="Spawns" unique_id=1327430384]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.05, -8)
 metadata/kind = "fodder"
 metadata/wave = 0
-metadata/count = 10
-metadata/spread = 2.25
+metadata/count = 6
+metadata/spread = 1.75
 
-[node name="thrower_6" type="Marker3D" parent="Spawns" unique_id=676676304]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2.1499999, -5)
-metadata/kind = "thrower"
+[node name="fodder_6" type="Marker3D" parent="Spawns" unique_id=1448642096]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0.05, -10)
+metadata/kind = "fodder"
+metadata/wave = 0
+metadata/count = 5
+metadata/spread = 1.625
+
+[node name="shaman_7" type="Marker3D" parent="Spawns" unique_id=312444229]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 2.1499999, -5.5)
+metadata/kind = "shaman"
 metadata/wave = 1
 
-[node name="thrower_7" type="Marker3D" parent="Spawns" unique_id=1775665583]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2.1499999, 1)
-metadata/kind = "thrower"
+[node name="shieldbearer_8" type="Marker3D" parent="Spawns" unique_id=815392700]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -9)
+metadata/kind = "shieldbearer"
 metadata/wave = 1
 
-[node name="grunt_8" type="Marker3D" parent="Spawns" unique_id=287834861]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.05, 4)
+[node name="grunt_9" type="Marker3D" parent="Spawns" unique_id=705949514]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.05, -9)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="grunt_9" type="Marker3D" parent="Spawns" unique_id=182356269]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.05, -6)
-metadata/kind = "grunt"
-metadata/wave = 1
-
-[node name="grunt_10" type="Marker3D" parent="Spawns" unique_id=156320338]
+[node name="grunt_10" type="Marker3D" parent="Spawns" unique_id=1632264774]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.05, -9)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="fodder_11" type="Marker3D" parent="Spawns" unique_id=1633346872]
+[node name="grunt_11" type="Marker3D" parent="Spawns" unique_id=533702134]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.05, -6)
+metadata/kind = "grunt"
+metadata/wave = 1
+
+[node name="fodder_12" type="Marker3D" parent="Spawns" unique_id=29127390]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.05, 7.5)
+metadata/kind = "fodder"
+metadata/wave = 1
+metadata/count = 6
+metadata/spread = 1.75
+
+[node name="fodder_13" type="Marker3D" parent="Spawns" unique_id=2100271515]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0.05, -10)
 metadata/kind = "fodder"
 metadata/wave = 1
-metadata/count = 11
-metadata/spread = 2
+metadata/count = 5
+metadata/spread = 1.625
 
-[node name="shaman_12" type="Marker3D" parent="Spawns" unique_id=1580825248]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 2.1499999, -5.5)
-metadata/kind = "shaman"
-metadata/wave = 2
+[node name="Props" type="Node3D" parent="." unique_id=424603585]
 
-[node name="shieldbearer_13" type="Marker3D" parent="Spawns" unique_id=323983100]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -9)
-metadata/kind = "shieldbearer"
-metadata/wave = 2
-
-[node name="grunt_14" type="Marker3D" parent="Spawns" unique_id=557714120]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.05, -9)
-metadata/kind = "grunt"
-metadata/wave = 2
-
-[node name="grunt_15" type="Marker3D" parent="Spawns" unique_id=2074026847]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.05, -9)
-metadata/kind = "grunt"
-metadata/wave = 2
-
-[node name="grunt_16" type="Marker3D" parent="Spawns" unique_id=408066891]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.05, -9.5)
-metadata/kind = "grunt"
-metadata/wave = 2
-
-[node name="grunt_17" type="Marker3D" parent="Spawns" unique_id=812846661]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.05, -6)
-metadata/kind = "grunt"
-metadata/wave = 2
-
-[node name="fodder_18" type="Marker3D" parent="Spawns" unique_id=1229637809]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.05, 7.5)
-metadata/kind = "fodder"
-metadata/wave = 2
-metadata/count = 12
-metadata/spread = 2.5
-
-[node name="Props" type="Node3D" parent="." unique_id=280272063]
-
-[node name="crate_0" type="RigidBody3D" parent="Props" unique_id=138849333 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_0" type="RigidBody3D" parent="Props" unique_id=468625725 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(-0.67422205, 0, -0.73852867, 0, 1, 0, 0.73852867, 0, -0.67422205, -3, 0.02, 3)
 collision_layer = 8
 collision_mask = 79
@@ -829,7 +806,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_1" type="RigidBody3D" parent="Props" unique_id=1769746340 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_1" type="RigidBody3D" parent="Props" unique_id=487169803 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(-0.94529057, 0, 0.32622966, 0, 1, 0, -0.32622966, 0, -0.94529057, -2.05, 0.02, 3)
 collision_layer = 8
 collision_mask = 79
@@ -841,7 +818,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_2" type="RigidBody3D" parent="Props" unique_id=418682219 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_2" type="RigidBody3D" parent="Props" unique_id=1278507589 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(0.7674078, 0, -0.64115936, 0, 1, 0, 0.64115936, 0, 0.7674078, -2.55, 0.94, 3)
 collision_layer = 8
 collision_mask = 79
@@ -853,7 +830,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_3" type="RigidBody3D" parent="Props" unique_id=2068446055 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_3" type="RigidBody3D" parent="Props" unique_id=1974774578 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(0.8727675, 0, -0.48813608, 0, 1, 0, 0.48813608, 0, 0.8727675, -3, 0.02, 3.95)
 collision_layer = 8
 collision_mask = 79
@@ -865,7 +842,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_4" type="RigidBody3D" parent="Props" unique_id=871102439 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_4" type="RigidBody3D" parent="Props" unique_id=1315491783 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(0.30574325, 0, 0.952114, 0, 1, 0, -0.952114, 0, 0.30574325, 3, 0.02, -8)
 collision_layer = 8
 collision_mask = 79
@@ -877,7 +854,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_5" type="RigidBody3D" parent="Props" unique_id=1580398460 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_5" type="RigidBody3D" parent="Props" unique_id=88266952 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(0.9701196, 0, -0.24262728, 0, 1, 0, 0.24262728, 0, 0.9701196, 3.95, 0.02, -8)
 collision_layer = 8
 collision_mask = 79
@@ -889,7 +866,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_6" type="RigidBody3D" parent="Props" unique_id=1956254774 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_6" type="RigidBody3D" parent="Props" unique_id=1297290480 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(0.513073, 0, -0.858345, 0, 1, 0, 0.858345, 0, 0.513073, 3.45, 0.94, -8)
 collision_layer = 8
 collision_mask = 79
@@ -901,7 +878,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_7" type="RigidBody3D" parent="Props" unique_id=470465894 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_7" type="RigidBody3D" parent="Props" unique_id=2011356731 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(-0.5397389, 0, 0.84183246, 0, 1, 0, -0.84183246, 0, -0.5397389, 3, 0.02, -7.05)
 collision_layer = 8
 collision_mask = 79
@@ -913,7 +890,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_8" type="RigidBody3D" parent="Props" unique_id=1625388347 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_8" type="RigidBody3D" parent="Props" unique_id=664401960 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(-0.88590133, 0, -0.4638737, 0, 1, 0, 0.4638737, 0, -0.88590133, -9, 0.02, 5)
 collision_layer = 8
 collision_mask = 79
@@ -925,7 +902,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_9" type="RigidBody3D" parent="Props" unique_id=33792111 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_9" type="RigidBody3D" parent="Props" unique_id=2142360627 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(-0.676347, 0, -0.7365832, 0, 1, 0, 0.7365832, 0, -0.676347, -8.05, 0.02, 5)
 collision_layer = 8
 collision_mask = 79
@@ -937,7 +914,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_10" type="RigidBody3D" parent="Props" unique_id=291699488 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_10" type="RigidBody3D" parent="Props" unique_id=61160171 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(-0.21143761, 0, -0.9773915, 0, 1, 0, 0.9773915, 0, -0.21143761, -8.55, 0.94, 5)
 collision_layer = 8
 collision_mask = 79
@@ -949,7 +926,7 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_11" type="RigidBody3D" parent="Props" unique_id=973763529 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_11" type="RigidBody3D" parent="Props" unique_id=1288406019 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(-0.6885152, 0, -0.72522193, 0, 1, 0, 0.72522193, 0, -0.6885152, -9, 0.02, 5.95)
 collision_layer = 8
 collision_mask = 79
@@ -961,35 +938,35 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="barrel_12" type="RigidBody3D" parent="Props" unique_id=178860471 groups=["props"] instance=ExtResource("12_0d62r")]
+[node name="barrel_12" type="RigidBody3D" parent="Props" unique_id=542515848 groups=["props"] instance=ExtResource("12_0d62r")]
 transform = Transform3D(-0.5232137, 0, 0.8522015, 0, 1, 0, -0.8522015, 0, -0.5232137, 9, 0.02, 8)
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
 script = ExtResource("11_ikl1u")
 
-[node name="barrel_13" type="RigidBody3D" parent="Props" unique_id=1705997879 groups=["props"] instance=ExtResource("12_0d62r")]
+[node name="barrel_13" type="RigidBody3D" parent="Props" unique_id=669798884 groups=["props"] instance=ExtResource("12_0d62r")]
 transform = Transform3D(-0.41702926, 0, -0.90889305, 0, 1, 0, 0.90889305, 0, -0.41702926, 10, 0.02, 7)
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
 script = ExtResource("11_ikl1u")
 
-[node name="barrel_14" type="RigidBody3D" parent="Props" unique_id=786111120 groups=["props"] instance=ExtResource("12_0d62r")]
+[node name="barrel_14" type="RigidBody3D" parent="Props" unique_id=1958267374 groups=["props"] instance=ExtResource("12_0d62r")]
 transform = Transform3D(-0.63525134, 0, 0.7723055, 0, 1, 0, -0.7723055, 0, -0.63525134, -10, 0.02, -10)
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
 script = ExtResource("11_ikl1u")
 
-[node name="barrel_15" type="RigidBody3D" parent="Props" unique_id=911878235 groups=["props"] instance=ExtResource("12_0d62r")]
+[node name="barrel_15" type="RigidBody3D" parent="Props" unique_id=440489901 groups=["props"] instance=ExtResource("12_0d62r")]
 transform = Transform3D(-0.10478625, 0, 0.9944948, 0, 1, 0, -0.9944948, 0, -0.10478625, -11.9, 0.02, -11.9)
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
 script = ExtResource("11_ikl1u")
 
-[node name="crate_16" type="RigidBody3D" parent="Props" unique_id=236574981 groups=["props"] instance=ExtResource("10_gnkbj")]
+[node name="crate_16" type="RigidBody3D" parent="Props" unique_id=676706745 groups=["props"] instance=ExtResource("10_gnkbj")]
 transform = Transform3D(0.32473984, 0, -0.9458034, 0, 1, 0, 0.9458034, 0, 0.32473984, 11.9, 0.02, 11.9)
 collision_layer = 8
 collision_mask = 79
@@ -1001,466 +978,466 @@ wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="Torches" type="Node3D" parent="." unique_id=996410103]
+[node name="Torches" type="Node3D" parent="." unique_id=1841156888]
 
-[node name="Torch0" type="Node3D" parent="Torches" unique_id=1334807491]
+[node name="Torch0" type="Node3D" parent="Torches" unique_id=1563300845]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -12.8, 3.2, -6.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch0" unique_id=2056680834 instance=ExtResource("13_ov0td")]
+[node name="Model" type="Node3D" parent="Torches/Torch0" unique_id=640147972 instance=ExtResource("13_ov0td")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch0" unique_id=869361977]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch0" unique_id=935310443]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_w0npu")
 mesh = SubResource("CylinderMesh_66str")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch0" unique_id=86119633]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch0" unique_id=1194221320]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch1" type="Node3D" parent="Torches" unique_id=362389802]
+[node name="Torch1" type="Node3D" parent="Torches" unique_id=1396246018]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.55, 2.8, -8.8)
 
-[node name="Model" type="Node3D" parent="Torches/Torch1" unique_id=448201090 instance=ExtResource("13_ov0td")]
+[node name="Model" type="Node3D" parent="Torches/Torch1" unique_id=179933329 instance=ExtResource("13_ov0td")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch1" unique_id=234110250]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch1" unique_id=611800043]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_w0npu")
 mesh = SubResource("CylinderMesh_yrui5")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch1" unique_id=371123605]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch1" unique_id=1370384167]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch2" type="Node3D" parent="Torches" unique_id=53465558]
+[node name="Torch2" type="Node3D" parent="Torches" unique_id=42576806]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -12.8, 3.2, 6.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch2" unique_id=519322149 instance=ExtResource("13_ov0td")]
+[node name="Model" type="Node3D" parent="Torches/Torch2" unique_id=800003785 instance=ExtResource("13_ov0td")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch2" unique_id=649905972]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch2" unique_id=1444037231]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_w0npu")
 mesh = SubResource("CylinderMesh_ytwp2")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch2" unique_id=822502254]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch2" unique_id=136539944]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch3" type="Node3D" parent="Torches" unique_id=1658407706]
+[node name="Torch3" type="Node3D" parent="Torches" unique_id=1850947055]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 12.8, 3.2, 6.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch3" unique_id=1618664102 instance=ExtResource("13_ov0td")]
+[node name="Model" type="Node3D" parent="Torches/Torch3" unique_id=1602130795 instance=ExtResource("13_ov0td")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch3" unique_id=2109757060]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch3" unique_id=681152753]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_w0npu")
 mesh = SubResource("CylinderMesh_lifro")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch3" unique_id=468895102]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch3" unique_id=319838892]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch4" type="Node3D" parent="Torches" unique_id=1230374574]
+[node name="Torch4" type="Node3D" parent="Torches" unique_id=735468964]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2, 3.6, -12.9)
 
-[node name="Model" type="Node3D" parent="Torches/Torch4" unique_id=757184747 instance=ExtResource("13_ov0td")]
+[node name="Model" type="Node3D" parent="Torches/Torch4" unique_id=293111139 instance=ExtResource("13_ov0td")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch4" unique_id=463409155]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch4" unique_id=1702062345]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_w0npu")
 mesh = SubResource("CylinderMesh_jpiq4")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch4" unique_id=96543865]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch4" unique_id=321254548]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch5" type="Node3D" parent="Torches" unique_id=256349678]
+[node name="Torch5" type="Node3D" parent="Torches" unique_id=90093300]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 3.6, -12.9)
 
-[node name="Model" type="Node3D" parent="Torches/Torch5" unique_id=136883717 instance=ExtResource("13_ov0td")]
+[node name="Model" type="Node3D" parent="Torches/Torch5" unique_id=658723657 instance=ExtResource("13_ov0td")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch5" unique_id=1726803589]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch5" unique_id=8966507]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
 material_override = SubResource("StandardMaterial3D_w0npu")
 mesh = SubResource("CylinderMesh_q2djd")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch5" unique_id=1465865782]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch5" unique_id=553073302]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Banners" type="Node3D" parent="." unique_id=1351616199]
+[node name="Banners" type="Node3D" parent="." unique_id=1956458514]
 
-[node name="BannerW-3" type="Node3D" parent="Banners" unique_id=1205194292]
+[node name="BannerW-3" type="Node3D" parent="Banners" unique_id=355666471]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -12.97, 4.35, -3.25)
 script = ExtResource("14_evlyx")
 art = "banner_axes"
 height = 2.3
 
-[node name="BannerE-3" type="Node3D" parent="Banners" unique_id=1354961269]
+[node name="BannerE-3" type="Node3D" parent="Banners" unique_id=1450386515]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 12.97, 4.35, -3.25)
 script = ExtResource("14_evlyx")
 art = "banner_lightning"
 height = 2.3
 
-[node name="BannerW5" type="Node3D" parent="Banners" unique_id=1165955043]
+[node name="BannerW5" type="Node3D" parent="Banners" unique_id=1759707014]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -12.97, 4.35, 5.25)
 script = ExtResource("14_evlyx")
 art = "banner_bear"
 height = 2.3
 
-[node name="BannerE5" type="Node3D" parent="Banners" unique_id=1653671778]
+[node name="BannerE5" type="Node3D" parent="Banners" unique_id=1913014551]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 12.97, 4.35, 5.25)
 script = ExtResource("14_evlyx")
 art = "banner_raven"
 height = 2.3
 
-[node name="ShieldW-9" type="Node3D" parent="Banners" unique_id=748446154]
+[node name="ShieldW-9" type="Node3D" parent="Banners" unique_id=391972754]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -12.97, 4.55, -9.75)
 script = ExtResource("14_evlyx")
 art = "shield_raven"
 height = 1.05
 
-[node name="ShieldE-9" type="Node3D" parent="Banners" unique_id=1536258557]
+[node name="ShieldE-9" type="Node3D" parent="Banners" unique_id=2083944580]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 12.97, 4.55, -9.75)
 script = ExtResource("14_evlyx")
 art = "shield_triangles"
 height = 1.05
 
-[node name="ShieldW9" type="Node3D" parent="Banners" unique_id=647614246]
+[node name="ShieldW9" type="Node3D" parent="Banners" unique_id=75661760]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -12.97, 4.55, 9.75)
 script = ExtResource("14_evlyx")
 art = "shield_spiral"
 height = 1.05
 
-[node name="ShieldE9" type="Node3D" parent="Banners" unique_id=1834465743]
+[node name="ShieldE9" type="Node3D" parent="Banners" unique_id=169574202]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 12.97, 4.55, 9.75)
 script = ExtResource("14_evlyx")
 art = "shield_waves"
 height = 1.05
 
-[node name="ShieldW1" type="Node3D" parent="Banners" unique_id=260201428]
+[node name="ShieldW1" type="Node3D" parent="Banners" unique_id=389134240]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -12.97, 4.55, 1)
 script = ExtResource("14_evlyx")
 height = 1.05
 
-[node name="ShieldE1" type="Node3D" parent="Banners" unique_id=1037744391]
+[node name="ShieldE1" type="Node3D" parent="Banners" unique_id=1891351631]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 12.97, 4.55, 1)
 script = ExtResource("14_evlyx")
 art = "shield_crossed_stripes"
 height = 1.05
 
-[node name="BannerN-1" type="Node3D" parent="Banners" unique_id=889021430]
+[node name="BannerN-1" type="Node3D" parent="Banners" unique_id=1491174224]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.6, 4.2, -12.97)
 script = ExtResource("14_evlyx")
 art = "banner_serpent"
 height = 2.1
 
-[node name="BannerN1" type="Node3D" parent="Banners" unique_id=1937840532]
+[node name="BannerN1" type="Node3D" parent="Banners" unique_id=1918748904]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 4.2, -12.97)
 script = ExtResource("14_evlyx")
 art = "banner_tree"
 height = 2.1
 
-[node name="ShieldS-1" type="Node3D" parent="Banners" unique_id=1401194670]
+[node name="ShieldS-1" type="Node3D" parent="Banners" unique_id=1410274447]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -6.5, 4.3, 12.97)
 script = ExtResource("14_evlyx")
 art = "shield_waves"
 height = 1.15
 
-[node name="ShieldS1" type="Node3D" parent="Banners" unique_id=457974161]
+[node name="ShieldS1" type="Node3D" parent="Banners" unique_id=1127417164]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6.5, 4.3, 12.97)
 script = ExtResource("14_evlyx")
 art = "shield_crossed_stripes"
 height = 1.15
 
-[node name="WantedPoster_0" type="Node3D" parent="Banners" unique_id=1065324444]
+[node name="WantedPoster_0" type="Node3D" parent="Banners" unique_id=77152805]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -12.97, 1.9, 1)
 script = ExtResource("14_evlyx")
 art = "wanted_poster"
 height = 1.5
 
-[node name="BannerHammer_1" type="Node3D" parent="Banners" unique_id=1306901217]
+[node name="BannerHammer_1" type="Node3D" parent="Banners" unique_id=352617609]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.55, 2, -8.8)
 script = ExtResource("14_evlyx")
 art = "banner_hammer"
 height = 1.5
 
-[node name="Decals" type="Node3D" parent="." unique_id=80710505]
+[node name="Decals" type="Node3D" parent="." unique_id=621071396]
 
-[node name="PuddleMead_0" type="Node3D" parent="Decals" unique_id=1311881594]
+[node name="PuddleMead_0" type="Node3D" parent="Decals" unique_id=1870039576]
 transform = Transform3D(0.76604444, 0, 0.6427876, 0, 1, 0, -0.6427876, 0, 0.76604444, 9.5, 0, 6.5)
 script = ExtResource("15_pul2y")
 art = "puddle_mead"
 size = 2.6
 
-[node name="PuddleMead_1" type="Node3D" parent="Decals" unique_id=1579147825]
+[node name="PuddleMead_1" type="Node3D" parent="Decals" unique_id=338218031]
 transform = Transform3D(-0.9396926, 0, -0.34202015, 0, 1, 0, 0.34202015, 0, -0.9396926, -1.5, 0, 5)
 script = ExtResource("15_pul2y")
 art = "puddle_mead"
 size = 1.8
 
-[node name="PortalLight" type="OmniLight3D" parent="." unique_id=1775088367]
+[node name="PortalLight" type="OmniLight3D" parent="." unique_id=2084731627]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -17.5)
 light_color = Color(0.45, 0.8, 1, 1)
 light_energy = 2.5
 omni_range = 7.0
 
-[node name="Dress" type="Node3D" parent="." unique_id=1547613615]
+[node name="Dress" type="Node3D" parent="." unique_id=1525390658]
 
-[node name="FloorVisual" type="MeshInstance3D" parent="Dress" unique_id=952612858]
+[node name="FloorVisual" type="MeshInstance3D" parent="Dress" unique_id=203695430]
 material_override = ExtResource("4_v580r")
 mesh = SubResource("ArrayMesh_nikda")
 
-[node name="Decals" type="Node3D" parent="Dress" unique_id=1553436172]
+[node name="Decals" type="Node3D" parent="Dress" unique_id=1893947499]
 
-[node name="Scorch_1" type="Node3D" parent="Dress/Decals" unique_id=944271788]
+[node name="Scorch_1" type="Node3D" parent="Dress/Decals" unique_id=1460101365]
 transform = Transform3D(0.61447686, 0, -0.7889349, 0, 1, 0, 0.7889349, 0, 0.61447686, 11.493911, 0.004, -7.1076293)
 script = ExtResource("15_pul2y")
 size = 2.4157581
 
-[node name="Scorch_2" type="Node3D" parent="Dress/Decals" unique_id=573108452]
+[node name="Scorch_2" type="Node3D" parent="Dress/Decals" unique_id=1684005049]
 transform = Transform3D(0.9512704, 0, -0.30835795, 0, 1, 0, 0.30835795, 0, 0.9512704, -7.5495114, 0.008, 9.094697)
 script = ExtResource("15_pul2y")
 size = 1.8607742
 
-[node name="Scorch_3" type="Node3D" parent="Dress/Decals" unique_id=221875465]
+[node name="Scorch_3" type="Node3D" parent="Dress/Decals" unique_id=586084520]
 transform = Transform3D(-0.014822882, 0, -0.99989015, 0, 1, 0, 0.99989015, 0, -0.014822882, 8.385634, 0.012, -9.820782)
 script = ExtResource("15_pul2y")
 size = 1.9933238
 
-[node name="SlamCrackMedium_4" type="Node3D" parent="Dress/Decals" unique_id=1145994892]
+[node name="SlamCrackMedium_4" type="Node3D" parent="Dress/Decals" unique_id=1217725730]
 transform = Transform3D(0.91494393, 0, 0.403581, 0, 1, 0, -0.403581, 0, 0.91494393, -2.7138996, 0, -5.8141885)
 script = ExtResource("15_pul2y")
 art = "slam_crack_medium"
 size = 2.5117512
 
-[node name="SlamCrackSmall_5" type="Node3D" parent="Dress/Decals" unique_id=974536861]
+[node name="SlamCrackSmall_5" type="Node3D" parent="Dress/Decals" unique_id=1741077895]
 transform = Transform3D(0.0451421, 0, -0.9989806, 0, 1, 0, 0.9989806, 0, 0.0451421, -7.1744275, 0.004, -2.521491)
 script = ExtResource("15_pul2y")
 art = "slam_crack_small"
 size = 1.9955626
 
-[node name="IchorSplat02_6" type="Node3D" parent="Dress/Decals" unique_id=1314913620]
+[node name="IchorSplat02_6" type="Node3D" parent="Dress/Decals" unique_id=1633950006]
 transform = Transform3D(-0.4907775, 0, -0.87128496, 0, 1, 0, 0.87128496, 0, -0.4907775, -4.6562185, 0.008, -10.585456)
 script = ExtResource("15_pul2y")
 art = "ichor_splat_02"
 size = 1.3150944
 
-[node name="SlamCrackSmall_7" type="Node3D" parent="Dress/Decals" unique_id=908069900]
+[node name="SlamCrackSmall_7" type="Node3D" parent="Dress/Decals" unique_id=516477393]
 transform = Transform3D(-0.27955896, 0, -0.96012855, 0, 1, 0, 0.96012855, 0, -0.27955896, 9.402808, 0.012, -1.2510996)
 script = ExtResource("15_pul2y")
 art = "slam_crack_small"
 size = 1.4218034
 
-[node name="SlamCrackMedium_8" type="Node3D" parent="Dress/Decals" unique_id=1856792096]
+[node name="SlamCrackMedium_8" type="Node3D" parent="Dress/Decals" unique_id=1531414515]
 transform = Transform3D(-0.39176843, 0, 0.92006385, 0, 1, 0, -0.92006385, 0, -0.39176843, -11.023539, 0, 11.353818)
 script = ExtResource("15_pul2y")
 art = "slam_crack_medium"
 size = 2.3982337
 
-[node name="Scorch_9" type="Node3D" parent="Dress/Decals" unique_id=2118840421]
+[node name="Scorch_9" type="Node3D" parent="Dress/Decals" unique_id=334741484]
 transform = Transform3D(-0.18036391, 0, -0.98359996, 0, 1, 0, 0.98359996, 0, -0.18036391, -0.06951618, 0.004, -6.494407)
 script = ExtResource("15_pul2y")
 size = 2.5431352
 
-[node name="SlamCrackMedium_10" type="Node3D" parent="Dress/Decals" unique_id=189264379]
+[node name="SlamCrackMedium_10" type="Node3D" parent="Dress/Decals" unique_id=1301778178]
 transform = Transform3D(0.72032994, 0, 0.69363153, 0, 1, 0, -0.69363153, 0, 0.72032994, -9.681757, 0.008, 3.4136963)
 script = ExtResource("15_pul2y")
 art = "slam_crack_medium"
 size = 1.8454849
 
-[node name="SlamCrackSmall_11" type="Node3D" parent="Dress/Decals" unique_id=1945113074]
+[node name="SlamCrackSmall_11" type="Node3D" parent="Dress/Decals" unique_id=594458512]
 transform = Transform3D(0.9746976, 0, -0.22352767, 0, 1, 0, 0.22352767, 0, 0.9746976, 7.86777, 0.012, -3.7739162)
 script = ExtResource("15_pul2y")
 art = "slam_crack_small"
 size = 1.5582703
 
-[node name="SlamCrackSmall_12" type="Node3D" parent="Dress/Decals" unique_id=1220046802]
+[node name="SlamCrackSmall_12" type="Node3D" parent="Dress/Decals" unique_id=678388643]
 transform = Transform3D(-0.55253404, 0, 0.8334903, 0, 1, 0, -0.8334903, 0, -0.55253404, 7.849992, 0, 11.470389)
 script = ExtResource("15_pul2y")
 art = "slam_crack_small"
 size = 1.213893
 
-[node name="SlamCrackLarge_13" type="Node3D" parent="Dress/Decals" unique_id=1780729137]
+[node name="SlamCrackLarge_13" type="Node3D" parent="Dress/Decals" unique_id=1760814815]
 transform = Transform3D(0.9739056, 0, 0.22695333, 0, 1, 0, -0.22695333, 0, 0.9739056, -7.8293357, 0.004, 11.462243)
 script = ExtResource("15_pul2y")
 art = "slam_crack_large"
 size = 2.7822037
 
-[node name="IchorSplat04_14" type="Node3D" parent="Dress/Decals" unique_id=1854295169]
+[node name="IchorSplat04_14" type="Node3D" parent="Dress/Decals" unique_id=1730629032]
 transform = Transform3D(0.99217147, 0, 0.12488324, 0, 1, 0, -0.12488324, 0, 0.99217147, -11.513453, 0.008, -0.045698166)
 script = ExtResource("15_pul2y")
 art = "ichor_splat_04"
 size = 1.3089302
 
-[node name="Bones" type="Node3D" parent="Dress" unique_id=1347192261]
+[node name="Bones" type="Node3D" parent="Dress" unique_id=1856786565]
 
-[node name="Skulls" type="Node3D" parent="Dress/Bones" unique_id=2061146894 instance=ExtResource("16_kmv7f")]
+[node name="Skulls" type="Node3D" parent="Dress/Bones" unique_id=188297086 instance=ExtResource("16_kmv7f")]
 transform = Transform3D(0.08737872, 0, 0.17990264, 0, 0.2, 0, -0.17990264, 0, 0.08737872, 12, 0.06, -12)
 
-[node name="Ribs" type="Node3D" parent="Dress/Bones" unique_id=240339801 instance=ExtResource("17_bl4y0")]
+[node name="Ribs" type="Node3D" parent="Dress/Bones" unique_id=414597092 instance=ExtResource("17_bl4y0")]
 transform = Transform3D(-0.19791417, 0, 0.13575707, 0, 0.24, 0, -0.13575707, 0, -0.19791417, -12, 0.0288, 12)
 
-[node name="Scatter" type="Node3D" parent="Dress" unique_id=2045312399]
+[node name="Scatter" type="Node3D" parent="Dress" unique_id=1772700547]
 
-[node name="Post_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=859742851]
+[node name="Post_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1551292768]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(1.4246054, 0, 0.07810201, -9.4, 0, 0.68, 0, -0.01999998, -0.08905162, 0, 1.2494386, -6.4, 1.4249458, 0, 0.07316917, -9.4, 0, 0.68, 0, -0.01999998, -0.08342722, 0, 1.2497371, -3.6, -4.5754877e-08, 0, 0.91804326, -12.97, 0, 1.5833334, 0, 2.3841858e-07, -1.0467496, 0, -4.0128945e-08, -3.2500002)
 
-[node name="Post_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1225940324]
+[node name="Post_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1170667929]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(1.4264473, 0, -0.04539326, -4.6, 0, 0.68, 0, -0.01999998, 0.051757228, 0, 1.251054, -6.4, 1.4257708, 0, 0.05953694, -4.6, 0, 0.68, 0, -0.01999998, -0.067883804, 0, 1.2504607, -3.6)
 
-[node name="Post_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1897857006]
+[node name="Post_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1332842880]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(1.4267055, 0, 0.0386508, 4.6, 0, 0.68, 0, -0.01999998, -0.0440695, 0, 1.2512805, -0.4)
 
-[node name="Post_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2090429928]
+[node name="Post_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=679449784]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(1.4266096, 0, 0.041281193, 4.6, 0, 0.68, 0, -0.01999998, -0.047068667, 0, 1.2511965, 2.4)
 
-[node name="Post_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1006210191]
+[node name="Post_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=242796402]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(1.4273694, 0, 0.0060401373, 9.4, 0, 0.68, 0, -0.01999998, -0.006886943, 0, 1.2518628, -0.4, -4.5754877e-08, 0, -0.91804326, 12.97, 0, 1.5833334, 0, 2.3841858e-07, 1.0467496, 0, -4.0128945e-08, -3.2499998)
 
-[node name="Post_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=706568087]
+[node name="Post_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=626619807]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(1.425003, 0, -0.07230612, 9.4, 0, 0.68, 0, -0.01999998, 0.08244317, 0, 1.2497874, 2.4, -4.5754877e-08, 0, -0.91804326, 12.97, 0, 1.5833334, 0, 2.3841858e-07, 1.0467496, 0, -4.0128945e-08, 5.25, -4.5754877e-08, 0, -0.91804326, 12.97, 0, 1.6500001, 0, 2.3841858e-07, 1.0467496, 0, -4.0128945e-08, 1.0000001)
 
-[node name="Post_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1307936660]
+[node name="Post_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1263392920]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(-4.5754877e-08, 0, 0.91804326, -12.97, 0, 1.5833334, 0, 2.3841858e-07, -1.0467496, 0, -4.0128945e-08, 5.25, -4.5754877e-08, 0, 0.91804326, -12.97, 0, 1.6500001, 0, 2.3841858e-07, -1.0467496, 0, -4.0128945e-08, 0.9999999, -4.5754877e-08, 0, 0.91804326, -12.97, 0, 0.76666665, 0, 1.1920929e-07, -1.0467496, 0, -4.0128945e-08, 0.9999999)
 
-[node name="Post_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=181815297]
+[node name="Post_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1466132686]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(-4.5754877e-08, 0, 0.91804326, -12.97, 0, 1.6500001, 0, 2.3841858e-07, -1.0467496, 0, -4.0128945e-08, -9.75)
 
-[node name="Post_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=159547901]
+[node name="Post_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2058709293]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(-4.5754877e-08, 0, -0.91804326, 12.97, 0, 1.6500001, 0, 2.3841858e-07, 1.0467496, 0, -4.0128945e-08, -9.75)
 
-[node name="Post_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1058123768]
+[node name="Post_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1950248598]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(-4.5754877e-08, 0, 0.91804326, -12.97, 0, 1.6500001, 0, 2.3841858e-07, -1.0467496, 0, -4.0128945e-08, 9.75)
 
-[node name="Post_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=78929397]
+[node name="Post_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=843013881]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(-4.5754877e-08, 0, -0.91804326, 12.97, 0, 1.6500001, 0, 2.3841858e-07, 1.0467496, 0, -4.0128945e-08, 9.75)
 
-[node name="Post_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1268875526]
+[node name="Post_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1249735376]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(1.0467496, 0, 0, -5.6, 0, 1.5333333, 0, 2.3841858e-07, 0, 0, 0.91804326, -12.97)
 
-[node name="Post_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=114353977]
+[node name="Post_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1557735612]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(1.0467496, 0, 0, 5.6, 0, 1.5333333, 0, 2.3841858e-07, 0, 0, 0.91804326, -12.97)
 
-[node name="Post_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1933049678]
+[node name="Post_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=746932874]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(-1.0467496, 0, -8.025789e-08, -6.5, 0, 1.5666667, 0, 2.3841858e-07, 9.1509754e-08, 0, -0.91804326, 12.97)
 
-[node name="Post_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=390324680]
+[node name="Post_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=462092579]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("20_dtr1v")
 xforms = PackedFloat32Array(-1.0467496, 0, -8.025789e-08, 6.5, 0, 1.5666667, 0, 2.3841858e-07, 9.1509754e-08, 0, -0.91804326, 12.97)
 
-[node name="Beam_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=169543188]
+[node name="Beam_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1157086216]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("21_8e4d5")
 xforms = PackedFloat32Array(-1.2749918, -0.0037746117, -8.7553914e-08, -8.265, -0.0045976774, 1.0467457, 0, 1.893953, 1.11463315e-07, 3.2998704e-10, -1.0015, -7.4215, 1.2749919, 0.0037356587, 0, -5.735, -0.00455023, 1.0467458, 0, 1.8865001, 0, 0, 1.0015, -5.4185, -1.2749689, 0.0073087937, -8.7553914e-08, -8.265, 0.0089024985, 1.046727, 0, 1.8934778, 1.1146132e-07, -6.38955e-10, -1.0015, -4.5815, -1.2749996, -0.00070553867, -8.7553914e-08, -5.7350006, -0.0008593835, 1.0467522, 0, 1.8784975, 1.1146401e-07, 6.168015e-11, -1.0015, -4.5815, -3.007286e-08, -2.8313785e-10, 1.0015, -8.4185, -0.004257432, 1.0467324, 0, 1.8754158, -0.68798685, -0.0064774384, -4.3776957e-08, -4.322, -3.007092e-08, 5.9169786e-10, 1.0015, -8.4185, 0.008897129, 1.046665, 0, 1.8775656, -0.6879425, 0.01353647, -4.3776957e-08, -5.678, 8.204315e-09, 1.1907888e-11, -1.0015, -5.5815, -0.0006563344, 1.046752, 0, 1.8946861, 0.68799967, 0.000998575, 1.1942768e-08, -4.322, 8.203965e-09, 1.1594927e-10, -1.0015, -5.5815, -0.0063908473, 1.0467073, 0, 1.8816267, 0.68797034, 0.009723306, 1.1942768e-08, -5.678, 1.2749523, 0.009882039, 0, -8.265, -0.011033778, 1.141869, 0, 0.1120207, 0, 0, 1.0015, -5.4185, 1.2749488, -0.010228075, 0, -5.735, 0.011420143, 1.141866, 0, 0.110711254, 0, 0, 1.0015, -5.4185, -1.2749995, 0.0009266227, -8.7553914e-08, -8.265, 0.0010346193, 1.1419114, 0, 0.12777413, 1.11464004e-07, -8.100793e-11, -1.0015, -4.5815, 1.274957, -0.009383544, 0, -5.735, 0.010477183, 1.1418732, 0, 0.11203537, 0, 0, 1.0015, -2.5784998, -3.0070883e-08, -6.503083e-10, 1.0015, -8.4185, -0.008963562, 1.1418148, 0, 0.123072505, -0.6879416, -0.014877319, -4.3776957e-08, -4.322, -3.0073434e-08, -2.2158367e-11, 1.0015, -3.5784998, -0.00030542113, 1.1419116, 0, 0.1156745, -0.68799996, -0.00050692435, -4.3776957e-08, -4.322, -3.007206e-08, 4.780161e-10, 1.0015, -3.5784998, 0.0065887626, 1.1418594, 0, 0.13204028, -0.6879685, 0.010935734, -4.3776957e-08, -5.678)
 
-[node name="Beam_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=482461550]
+[node name="Beam_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1338738250]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("21_8e4d5")
 xforms = PackedFloat32Array(8.204298e-09, -3.0832642e-11, -1.0015, -10.4215, 0.0015578032, 1.1419088, 0, 0.13102558, 0.68799824, -0.0025855724, 1.1942768e-08, -5.678)
 
-[node name="Beam_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=998334433]
+[node name="Beam_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1235879679]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("21_8e4d5")
 xforms = PackedFloat32Array(-1.2749261, 0.011274442, -8.7553914e-08, 5.7349997, 0.013732867, 1.0466918, 0, 1.8947302, 1.1145757e-07, -9.85643e-10, -1.0015, -1.4215002, -1.2749921, 0.004005995, -8.7553914e-08, 5.7349997, 0.0044728885, 1.1419047, 0, 0.13284227, 1.1146335e-07, -3.5021525e-10, -1.0015, -1.4215002, -1.2748793, 0.015709639, -8.7553914e-08, 8.265, 0.017540576, 1.1418036, 0, 0.13110165, 1.1145348e-07, -1.3733802e-09, -1.0015, -1.4215002)
 
-[node name="Beam_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1629177053]
+[node name="Beam_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1602924836]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("21_8e4d5")
 xforms = PackedFloat32Array(1.2749991, -0.0012119983, 0, 8.265, 0.0014762782, 1.0467517, 0, 1.8775148, 0, 0, 1.0015, 0.5815003, -1.2749393, -0.010217621, -8.7553914e-08, 5.735, -0.0124456035, 1.0467026, 0, 1.8918592, 1.1145873e-07, 8.9325275e-10, -1.0015, 1.4184998, -1.2749612, -0.0081635, -8.7553914e-08, 8.265, -0.009943576, 1.0467206, 0, 1.8910314, 1.1146065e-07, 7.1367584e-10, -1.0015, 1.4184998, 8.203662e-09, 1.5787191e-10, -1.0015, 3.5784998, -0.008701524, 1.0466688, 0, 1.8966082, 0.687945, 0.013238867, 1.1942768e-08, 1.6780001, -3.0072435e-08, -3.7357895e-10, 1.0015, 5.5815, -0.00561736, 1.0467175, 0, 1.8993353, -0.6879771, -0.00854649, -4.3776957e-08, 0.3219999, 8.20369e-09, 1.5445933e-10, -1.0015, 8.4185, -0.00851343, 1.0466722, 0, 1.8758537, 0.68794733, 0.012952694, 1.1942768e-08, 1.6780001, 1.2749591, 0.009145896, 0, 5.735, -0.0102118375, 1.1418751, 0, 0.122376226, 0, 0, 1.0015, 3.4215002, -1.2749993, -0.0011826649, -8.7553914e-08, 8.265, -0.0013205028, 1.1419111, 0, 0.12703688, 1.11463976e-07, 1.0339185e-10, -1.0015, 1.4184998, 8.203575e-09, 1.8329266e-10, -1.0015, 3.5784998, -0.009260766, 1.1418083, 0, 0.1295773, 0.6879377, 0.015370606, 1.1942768e-08, 1.6780001, 8.204161e-09, 8.4274095e-11, -1.0015, 3.5784998, -0.004257905, 1.1418899, 0, 0.1115248, 0.68798685, 0.0070670806, 1.1942768e-08, 0.32200012, 8.204318e-09, 2.6736716e-13, -1.0015, 8.4185, -1.3508586e-05, 1.1419117, 0, 0.13229719, 0.688, 2.2420949e-05, 1.1942768e-08, 1.6780001, 8.204233e-09, -6.193679e-11, -1.0015, 8.4185, 0.0031293244, 1.1419, 0, 0.12773927, 0.6879929, -0.005193913, 1.1942768e-08, 0.32200012)
 
-[node name="Beam_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1811994539]
+[node name="Beam_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1966413106]
 material_override = ExtResource("18_5iuac")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("21_8e4d5")
 xforms = PackedFloat32Array(-3.0073434e-08, 2.1778166e-11, 1.0015, 10.4215, 0.00032746975, 1.0467523, 0, 1.8796338, -0.68799996, 0.0004982264, -4.3776957e-08, 0.3219999)
 
-[node name="Rock1_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1556301270]
+[node name="Rock1_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=132076428]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1468,7 +1445,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("23_ts6p1")
 xforms = PackedFloat32Array(0.49216804, -0.021879908, -0.35994834, -6.580599, 0, 0.47267962, -0.047622576, -0.048831835, 0.36104888, 0.029825853, 0.49066782, -6.6956487, 0.4477572, 0.041011702, 0.3147405, -6.1995473, 0, 0.50256395, -0.076652944, -0.04392844, -0.31785274, 0.05777294, 0.44337302, -6.8219624)
 
-[node name="Rock1_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=898473208]
+[node name="Rock1_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=584848742]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1476,7 +1453,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("23_ts6p1")
 xforms = PackedFloat32Array(-0.7151367, -0.0007773685, 0.004689616, 4.1797056, 0, 0.57484716, 0.1416913, -0.057212215, -0.004784462, 0.116193786, -0.70096, 2.2906446)
 
-[node name="Rock1_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1588113316]
+[node name="Rock1_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2093727424]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1484,7 +1461,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("23_ts6p1")
 xforms = PackedFloat32Array(-0.4592933, 0.016571725, -0.18602404, 0.20919201, 0, 0.36695042, 0.058891088, -0.039682742, 0.1873491, 0.0406262, -0.45604488, -2.5614138, -0.073564745, -0.036439784, -0.5479542, 0.7746917, 0, 0.42658988, -0.047644287, -0.04439068, 0.54998535, -0.0048740995, -0.07329306, -2.7466555)
 
-[node name="Rock1_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1236707825]
+[node name="Rock1_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=470205730]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1492,7 +1469,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("23_ts6p1")
 xforms = PackedFloat32Array(-1.7789221, 0, 2.4700685, -4.8740454, 0, 1.777876, 0, 0.25660938, -3.283579, 0, -1.338192, 15.446833)
 
-[node name="Rock1_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1942906795]
+[node name="Rock1_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=150201052]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1500,7 +1477,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("23_ts6p1")
 xforms = PackedFloat32Array(-1.599735, 0, -1.8807913, -15.440321, 0, 1.4130721, 0, 0.18343638, 2.5002248, 0, -1.203399, -11.70157)
 
-[node name="Rock1_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1404800765]
+[node name="Rock1_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=30214791]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1508,7 +1485,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("23_ts6p1")
 xforms = PackedFloat32Array(2.0286644, 0, 0.49802843, -13.998901, 0, 1.0159123, 0, 0.10377341, -0.66205275, 0, 1.5260605, -8.073954)
 
-[node name="Rock1_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=112930863]
+[node name="Rock1_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1900253211]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1516,7 +1493,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("23_ts6p1")
 xforms = PackedFloat32Array(2.5705457, 0, 1.2135687, 15.197418, 0, 1.4447953, 0, 0.18979946, -1.6132545, 0, 1.9336897, -7.0407567)
 
-[node name="Rock1_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=317694018]
+[node name="Rock1_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1968019097]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1524,7 +1501,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("23_ts6p1")
 xforms = PackedFloat32Array(-2.0819042, 0, 1.2683471, 14.602773, 0, 1.2753992, 0, 0.15582174, -1.6860738, 0, -1.5661101, 0.08834432)
 
-[node name="Brick4_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=419874661]
+[node name="Brick4_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=859530292]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1532,7 +1509,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("24_cdwe4")
 xforms = PackedFloat32Array(-0.55478895, -0.0675631, 1.6601293, -5.847494, -0.21175802, 1.7388339, 0, 0.07006723, -1.6479541, -0.20069052, -0.55888784, -7.023306, -0.9777904, -0.2305142, -1.1331713, -6.5006113, -0.34748495, 1.4739547, 0, 0.060574427, 1.1029361, 0.2600173, -1.0045949, -7.1293545, 0.8022916, 0.1289884, -0.84654087, -5.937374, -0.18626638, 1.1585534, 0, 0.046937257, 0.83580756, 0.13437691, 0.81259453, -3.277077, -1.4825737, -0.31247562, -0.038085975, -5.697854, -0.31257433, 1.483042, 0, 0.06062496, 0.037267227, 0.007854651, -1.5151454, -2.7894526)
 
-[node name="Brick4_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=112288001]
+[node name="Brick4_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=790340196]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1540,7 +1517,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("24_cdwe4")
 xforms = PackedFloat32Array(-1.250883, 0.0051435544, -0.243908, 0.35291082, 0.005240421, 1.2744404, 0, 0.050978046, 0.24390593, -0.0010029264, -1.2508935, -2.6504383)
 
-[node name="Brick1_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1219464099]
+[node name="Brick1_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=796576907]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1548,7 +1525,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("25_0tu6x")
 xforms = PackedFloat32Array(1.3157299, 0.24185516, -0.90493405, -6.416979, -0.29199257, 1.5884851, 0, 0.064603955, 0.89002246, 0.16360238, 1.3377738, -7.158686, -0.061080232, -0.017247135, 1.440967, -6.7648335, -0.3919523, 1.3880877, 0, 0.057694566, -1.3867432, -0.39157265, -0.06346856, -6.725952)
 
-[node name="Brick1_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=369569560]
+[node name="Brick1_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1597701930]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1556,7 +1533,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("25_0tu6x")
 xforms = PackedFloat32Array(-0.62907124, 0.15391287, -1.0627024, 0.64293146, 0.29576173, 1.2088346, 0, 0.04977961, 1.032255, -0.2525586, -0.6476263, -2.919057, -0.69328535, 0.09051204, -0.9525721, 0.18685192, 0.1529688, 1.1716788, 0, 0.04726488, 0.9445563, -0.123316765, -0.6991688, -2.1847436)
 
-[node name="Rock3_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=550634395]
+[node name="Rock3_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=741593947]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1564,7 +1541,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("26_hu4nd")
 xforms = PackedFloat32Array(0.5587516, -0.077821486, -0.48391703, -5.6362824, 0, 0.47580975, -0.17865822, -0.059894275, 0.4983132, 0.08726014, 0.5426094, -3.1953502)
 
-[node name="Rock3_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=165149417]
+[node name="Rock3_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=299706003]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1572,7 +1549,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("26_hu4nd")
 xforms = PackedFloat32Array(-0.50620556, 0.02930445, 0.15191533, 4.34796, 0, 0.39052364, -0.13031702, -0.042393044, -0.15672849, -0.09464823, -0.49065983, 1.3406354)
 
-[node name="Rock3_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1357186660]
+[node name="Rock3_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1617947483]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1580,7 +1557,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("26_hu4nd")
 xforms = PackedFloat32Array(-0.6305896, 0.005742765, -0.048228603, 0.403452, 0, 0.506285, 0.09208672, -0.05059768, 0.048748076, 0.07428659, -0.6238699, -2.8448424, 0.319671, 0.04050576, -0.3153319, 0.7028061, 0, 0.4427285, 0.058008857, -0.0360708, 0.31797448, -0.04072187, 0.3170143, -2.903964)
 
-[node name="Rock3_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1190752184]
+[node name="Rock3_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=914720341]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1588,7 +1565,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("26_hu4nd")
 xforms = PackedFloat32Array(-2.3718076, 0, -0.6876773, -5.1928277, 0, 1.268246, 0, -0.15069553, 0.72561073, 0, -2.2478144, -14.287598)
 
-[node name="Rock3_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1310332073]
+[node name="Rock3_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=747411720]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1596,7 +1573,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("26_hu4nd")
 xforms = PackedFloat32Array(0.78100395, 0, -3.0424473, 7.6313663, 0, 1.689368, 0, -0.16752902, 3.210274, 0, 0.74017465, -13.453196)
 
-[node name="Brick2_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=729243248]
+[node name="Brick2_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2066249602]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1604,7 +1581,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("27_7wsx3")
 xforms = PackedFloat32Array(-1.4392965, -0.16171691, 0.53449446, -4.880568, -0.17237745, 1.5341763, 0, 0.061753202, -0.53115225, -0.059679363, -1.4483532, -2.601421, 1.1807699, 0.35304478, 0.6773985, -4.6290917, -0.40286016, 1.3473791, 0, 0.05625267, -0.6490092, -0.19405079, 1.2324196, -3.0291553, -1.1182199, 0.06409891, -0.8174565, -7.8985496, 0.07935487, 1.3843635, 0, 0.05546544, 0.81611675, -0.046781674, -1.1200554, -2.7911227)
 
-[node name="Brick2_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1741541680]
+[node name="Brick2_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1178994124]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1612,7 +1589,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("27_7wsx3")
 xforms = PackedFloat32Array(-1.1676638, 0.06039519, -0.9096893, 4.200556, 0.07652162, 1.4794476, 0, 0.05925701, 0.9084749, -0.04698914, -1.1692246, 2.0644906, -1.49226, 0.1616211, 0.7838959, 4.1269894, 0.18233474, 1.6835105, 0, 0.067734234, -0.7793383, 0.08440722, -1.5009867, 1.7768947)
 
-[node name="Brick2_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=232836513]
+[node name="Brick2_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=245297204]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1620,7 +1597,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("27_7wsx3")
 xforms = PackedFloat32Array(0.50896853, -0.047774453, -1.3370914, 0.26656646, 0.13377848, 1.4252187, 0, 0.05725934, 1.3312397, -0.12495712, 0.51120585, -2.3418279, -0.22630173, 0.043919604, -1.3130571, 0.3655507, 0.25399044, 1.3087204, 0, 0.053325567, 1.289006, -0.2501644, -0.23052421, -2.2501683)
 
-[node name="Rock4_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1347998532]
+[node name="Rock4_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=622096300]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1628,7 +1605,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("28_qyy0k")
 xforms = PackedFloat32Array(-0.1907572, -0.020508291, 0.82630026, -8.790698, 0, 0.7875421, 0.02266355, -0.06786566, -0.8265953, 0.0047327927, -0.19068912, -3.302245, 0.88694096, -0.0054039266, -0.058421716, -8.756192, 0, 0.6587628, -0.10926771, -0.071111396, 0.058868177, 0.08141859, 0.88021433, -3.3539956)
 
-[node name="Rock4_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1786808361]
+[node name="Rock4_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=316836670]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1636,7 +1613,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("28_qyy0k")
 xforms = PackedFloat32Array(-0.2682968, -0.06381715, -0.26720467, 0.42766395, 0, 0.3711268, -0.08974159, -0.030725092, 0.27481213, -0.062304154, -0.2608697, -2.8783648)
 
-[node name="Rock4_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1692207925]
+[node name="Rock4_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=469141242]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1644,7 +1621,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("28_qyy0k")
 xforms = PackedFloat32Array(-1.2900661, 0, -0.926326, -9.325698, 0, 0.7856183, 0, -0.1351245, 1.2604536, 0, -0.94808865, 15.168252)
 
-[node name="Rock4_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=764796986]
+[node name="Rock4_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2127940305]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1652,7 +1629,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("28_qyy0k")
 xforms = PackedFloat32Array(0.4320989, 0, 1.4019608, 0.9973134, 0, 0.85198534, 0, -0.13809174, -1.9076508, 0, 0.31755587, 15.161636, -1.4633285, 0, 0.97839767, 4.9250903, 0, 0.8617137, 0, -0.13852671, -1.3313076, 0, -1.0754217, 15.103392)
 
-[node name="Rock4_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1740988705]
+[node name="Rock4_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1917854960]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1660,7 +1637,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("28_qyy0k")
 xforms = PackedFloat32Array(1.6740367, 0, 1.0294424, -13.86401, 0, 0.950778, 0, -0.1425087, -1.4007645, 0, 1.2302743, -3.8271198)
 
-[node name="Rock4_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=701838941]
+[node name="Rock4_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1066727141]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1668,7 +1645,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("28_qyy0k")
 xforms = PackedFloat32Array(2.3420722, 0, 1.2318428, 15.598705, 0, 1.2545066, 0, -0.1560882, -1.6761708, 0, 1.7212236, 5.8386188, -0.3116069, 0, -1.703345, 15.423723, 0, 1.0186481, 0, -0.14554316, 2.3177447, 0, -0.22900455, 8.833926)
 
-[node name="Brick3_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1122437156]
+[node name="Brick3_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2056777206]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1676,7 +1653,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("29_5wgtk")
 xforms = PackedFloat32Array(-0.9416847, -0.1862801, 1.2173553, -8.3722, -0.30084375, 1.5208279, 0, 0.062011924, -1.1942141, -0.23623438, -0.95993245, -2.9038694)
 
-[node name="Brick3_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=982427169]
+[node name="Brick3_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=96422375]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1684,7 +1661,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("29_5wgtk")
 xforms = PackedFloat32Array(0.47116342, 0.11821896, -1.6123729, 4.090067, -0.4098166, 1.6333301, 0, 0.06735835, 1.5638965, 0.3923951, 0.48576817, 2.6119785)
 
-[node name="Brick3_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1705305889]
+[node name="Brick3_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1436223286]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1692,56 +1669,56 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("29_5wgtk")
 xforms = PackedFloat32Array(0.7281099, 0.1750945, 1.4263732, 0.9812321, -0.3766735, 1.5663524, 0, 0.06444027, -1.3868366, -0.33350387, 0.7488672, -2.3494081, 1.0267628, -0.22495414, 1.3751161, 0.047022164, 0.37042373, 1.6907326, 0, 0.06923341, -1.3432553, 0.29429471, 1.0511167, -2.6041622, 1.5989879, 0.13497089, 0.7125371, 1.1511488, -0.14767876, 1.749537, 0, 0.07023035, -0.71001214, -0.05993227, 1.6046743, -2.9080548)
 
-[node name="Pilaster_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1141981677]
+[node name="Pilaster_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2069580201]
 material_override = ExtResource("6_dnol0")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("30_matyp")
 xforms = PackedFloat32Array(0.71428573, 0, 0, -2.38, 0, 6.24, 0, 0, 0, 0, 0.71428573, -13.1, 0.4107143, 0, 0, -3.2, 0, 3.75, 0, 0, 0, 0, 0.4107143, -12.9)
 
-[node name="Pilaster_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1519090071]
+[node name="Pilaster_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=986549936]
 material_override = ExtResource("6_dnol0")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("30_matyp")
 xforms = PackedFloat32Array(0.71428573, 0, 0, 2.38, 0, 6.24, 0, 0, 0, 0, 0.71428573, -13.1, 0.4107143, 0, 0, 3.2, 0, 3.75, 0, 0, 0, 0, 0.4107143, -12.9)
 
-[node name="Pilaster_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=408186243]
+[node name="Pilaster_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=886529970]
 material_override = ExtResource("6_dnol0")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("30_matyp")
 xforms = PackedFloat32Array(0.4107143, 0, 0, -12.8, 0, 3.3500001, 0, 0, 0, 0, 0.4107143, -6.5)
 
-[node name="Pilaster_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1035368239]
+[node name="Pilaster_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2946204]
 material_override = ExtResource("6_dnol0")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("30_matyp")
 xforms = PackedFloat32Array(0.4107143, 0, 0, 11.55, 0, 2.95, 0, 0, 0, 0, 0.4107143, -8.8)
 
-[node name="Pilaster_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1308698885]
+[node name="Pilaster_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=73397311]
 material_override = ExtResource("6_dnol0")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("30_matyp")
 xforms = PackedFloat32Array(0.4107143, 0, 0, -12.8, 0, 3.3500001, 0, 0, 0, 0, 0.4107143, 6.5)
 
-[node name="Pilaster_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=17620894]
+[node name="Pilaster_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1539315492]
 material_override = ExtResource("6_dnol0")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("30_matyp")
 xforms = PackedFloat32Array(0.4107143, 0, 0, 12.8, 0, 3.3500001, 0, 0, 0, 0, 0.4107143, 6.5)
 
-[node name="Log" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1636211478]
+[node name="Log" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1675969050]
 material_override = ExtResource("31_rf08s")
 gi_mode = 0
 script = ExtResource("19_x7yqq")
 mesh = ExtResource("32_okmor")
 xforms = PackedFloat32Array(5.7, 0, 0, 0, 0, 0.18, 0, 6.24, 0, 0, 0.18, -13)
 
-[node name="Rock5_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1661114775]
+[node name="Rock5_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1115762898]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1749,7 +1726,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("33_lv8ji")
 xforms = PackedFloat32Array(-0.9844999, 0, -1.4381597, 9.952688, 0, 0.8833191, 0, 0.12416511, 1.9358364, 0, -0.73139864, 15.550472)
 
-[node name="Rock5_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=514571012]
+[node name="Rock5_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1451189401]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1757,7 +1734,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("33_lv8ji")
 xforms = PackedFloat32Array(-2.731427, 0, 0.6146186, -10.184618, 0, 1.1607734, 0, 0.19457632, -0.827308, 0, -2.0292149, -15.347704)
 
-[node name="Rock5_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1639952962]
+[node name="Rock5_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1858053976]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1765,7 +1742,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("33_lv8ji")
 xforms = PackedFloat32Array(-0.50079155, 0, 1.6420879, -14.710181, 0, 0.9217783, 0, 0.13392514, -2.2103343, 0, -0.37204495, -0.6100899)
 
-[node name="Rock5_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=889288382]
+[node name="Rock5_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=635663418]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1773,7 +1750,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("33_lv8ji")
 xforms = PackedFloat32Array(1.6305678, 0, -2.216981, -14.929675, 0, 1.3830974, 0, 0.2509968, 2.9841695, 0, 1.2113714, 5.0839915)
 
-[node name="Rock5_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=454338574]
+[node name="Rock5_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2082983594]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1781,7 +1758,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("33_lv8ji")
 xforms = PackedFloat32Array(3.8638148, 0, -0.69258636, -15.000659, 0, 1.6165968, 0, 0.31025335, 0.9322566, 0, 2.8704817, 9.991648)
 
-[node name="Rock5_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=784257984]
+[node name="Rock5_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=37676798]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1789,7 +1766,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("33_lv8ji")
 xforms = PackedFloat32Array(-3.5221658, 0, -1.9213879, 14.72546, 0, 1.7772676, 0, 0.35102773, 2.5862863, 0, -2.6166658, -10.328489)
 
-[node name="Rock5_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=594939795]
+[node name="Rock5_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=188930347]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1797,7 +1774,7 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("33_lv8ji")
 xforms = PackedFloat32Array(-1.0781543, 0, 2.3423338, 14.374773, 0, 1.3552593, 0, 0.2439322, -3.1529007, 0, -0.8009758, -3.347605)
 
-[node name="Rock2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=20907212]
+[node name="Rock2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1824218295]
 material_override = ExtResource("22_t74j8")
 cast_shadow = 0
 gi_mode = 0
@@ -1805,9 +1782,9 @@ script = ExtResource("19_x7yqq")
 mesh = ExtResource("34_bvadi")
 xforms = PackedFloat32Array(-2.6646552, 0, 0.15809293, 4.166193, 0, 0.81033707, 0, -0.13178432, -0.21302564, 0, -1.9775233, -14.525289)
 
-[node name="GroundSkirt" type="MeshInstance3D" parent="Dress" unique_id=1660257114]
+[node name="GroundSkirt" type="MeshInstance3D" parent="Dress" unique_id=1882772221]
 material_override = ExtResource("35_pimau")
 cast_shadow = 0
 mesh = SubResource("ArrayMesh_6mtjb")
 
-[node name="Backdrop" type="Node3D" parent="Dress" unique_id=1632614543 instance=ExtResource("36_b33b4")]
+[node name="Backdrop" type="Node3D" parent="Dress" unique_id=1721754935 instance=ExtResource("36_b33b4")]

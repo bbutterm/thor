@@ -52,6 +52,8 @@ func _load_room(idx: int = 0) -> void:
 	await frames(30)
 	game = get_tree().current_scene as Game
 	room = game.room
+	# П3: в залах до 20 врагов на экране; проверки ставят врагов сверх волн больше лимита
+	room.max_alive = 0
 	p = game.player
 	_hurts.clear()
 	p.hurt.connect(func(a: float) -> void: _hurts.append(a))
@@ -282,6 +284,21 @@ func _test_horde_glory_and_corpses() -> void:
 	var layers_ok := bodies.all(func(n: Node) -> bool:
 		return n is RigidBody3D and n.collision_layer == 1 << 6 and n.collision_mask == (1 | (1 << 3) | (1 << 6)))
 	check(layers_ok, "тела на слое 7, сталкиваются с миром, пропсами и другими телами")
+	# П3: корм — мясо: 3–5 кусков на смерть из общих мешей, общий лимит, тот же слой
+	var pieces: Array = FodderGibs._pieces.get("res://enemies/fodder.tscn", [])
+	check(pieces.size() >= 3 and pieces.size() <= 5, "корм режется на 3–5 кусков (%d)" % pieces.size())
+	var gibs := get_tree().get_nodes_in_group(FodderGibs.GROUP).filter(func(n: Node) -> bool: return not n.is_queued_for_deletion())
+	var limit := int((load("res://enemies/enemy.gd") as Script).get_property_default_value("gib_limit"))
+	check(gibs.size() > 0 and gibs.size() <= limit, "куски корма разлетелись и не больше лимита (%d ≤ %d)" % [gibs.size(), limit])
+	check(gibs.all(func(n: Node) -> bool: return n is RigidBody3D and n.collision_layer == 1 << 6 and n.get_node_or_null("Mesh") != null),
+		"куски — физтела на слое 7 с мешем")
+	var shared := true
+	for n in gibs:
+		var mi := (n as Node).get_node_or_null("Mesh") as MeshInstance3D
+		shared = shared and mi != null and mi.mesh in FodderGibs.cached_meshes() and mi.material_override == null
+	check(shared, "у кусков общие меши и материалы модели (без новых материалов)")
+	check(FodderGibs.cached_meshes().size() == pieces.size(), "меши кусков нарезаны один раз на вид (%d)" % FodderGibs.cached_meshes().size())
+	check(p.camera_fx.trauma > 0.0, "мульти-килл корма трясёт камеру")
 	await frames(1)
 	var moving := bodies.any(func(n: Node) -> bool:
 		return is_instance_valid(n) and (n as RigidBody3D).linear_velocity.x > 1.0)
@@ -665,6 +682,11 @@ func _test_waves() -> void:
 	check(not room._is_cleared, "зал не зачищен, пока жив враг прошлой волны")
 	# Таймаут: волна 3 через next_wave_timeout, даже если все живы
 	await wait_until(3.0, func() -> bool: return room.pending_spawns() == 0)
+	# П3: в залах по две волны — для проверки таймаута добавим третью
+	if not room._waves.has(2):
+		var extra := Marker3D.new()
+		extra.set_meta("kind", "grunt")
+		room.add_wave([extra])
 	room.next_wave_timeout = 1.0
 	ok = await wait_until(4.0, func() -> bool: return room._wave_index == 2)
 	check(ok, "следующая волна по таймауту (25 с в игре)")

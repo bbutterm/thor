@@ -49,7 +49,7 @@ func _run() -> void:
 			var definition: Dictionary = matches[0] if matches.size() == 1 else {}
 			var expected: Array = definition.get("enemies", [])
 			var markers := inst.get_node("Spawns").get_children()
-			var same: bool = markers.size() == expected.size() and inst.max_alive == 60 and definition.get("max_alive", 0) == 60
+			var same: bool = markers.size() == expected.size() and inst.max_alive == 20 and definition.get("max_alive", 0) == 20
 			var wave_totals := {}
 			for i in mini(markers.size(), expected.size()):
 				var marker := markers[i] as Node3D
@@ -84,7 +84,7 @@ func _run() -> void:
 						if k == "fodder":
 							wave_totals[wave].fodder += n
 							wave_totals[wave].packs += 1
-							same = same and n >= 10 and n <= 20
+							same = same and n >= 5 and n <= 8
 						elif k != "grunt":
 							wave_totals[wave].special += n
 					continue
@@ -92,7 +92,7 @@ func _run() -> void:
 				if kind == "fodder":
 					wave_totals[wave].fodder += amount
 					wave_totals[wave].packs += 1
-					same = same and amount >= 10 and amount <= 20 and spread > 0.0
+					same = same and amount >= 5 and amount <= 8 and spread > 0.0
 				elif kind != "grunt":
 					wave_totals[wave].special += amount
 			for wave in wave_totals:

@@ -78,6 +78,7 @@ func _run() -> void:
 	a._set_overlay(1.0, 0.0)
 	check(Outline.is_flash(mesh_a.material_overlay), "вспышка попадания работает на новом меше")
 	var visual := a._visual
+	a.gib_on_death = false  # П3: проверяем путь «целого трупа»; у корма по умолчанию куски (FodderGibs, enemy_test)
 	a.take_hit(9999.0, Vector3.ZERO, "test")
 	check(a.is_dead and visual.get_parent() is RigidBody3D, "смерть передаёт одетое тело физическому трупу")
 	check(mesh_a.material_overlay == Outline.overlay(), "после смерти вспышка очищается, обводка сохраняется")

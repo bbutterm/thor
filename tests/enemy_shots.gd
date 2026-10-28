@@ -82,6 +82,19 @@ func _run() -> void:
 	await wait(2.5)
 	await shot("03_horde")
 	await _clear_room()
+	# П3: мясо корма — пачка разлетается на куски (удар от Тора), брызги и пятна
+	var pack: Array[Enemy] = []
+	for i in 6:
+		pack.append(game.room.spawn_extra("fodder", base + Vector3((i - 2.5) * 1.0, 0.05, 2.0 - (i % 2) * 0.8)))
+	await wait(1.8)
+	for e in pack:
+		if is_instance_valid(e) and not e.is_dead:
+			e.take_hit(999.0, Vector3((e.global_position.x - p.global_position.x) * 0.5, 2.0, -9.0), "melee")
+	await wait(0.12)
+	await shot("03b_gibs_burst")
+	await wait(0.9)
+	await shot("03c_gibs_landed")
+	await _clear_room()
 	# Элиты (блок У): по одной с каждым модификатором
 	var mods := Loot.elite_modifiers()
 	var k := 0

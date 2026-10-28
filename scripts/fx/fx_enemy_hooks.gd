@@ -49,8 +49,16 @@ static func enemy_died(enemy: Node3D, _source: String) -> void:
 	var c := FXSpriteKit.cfg()
 	var parent := enemy.get_parent()
 	var ms := minf(_model_scale(enemy), 2.0)
-	FXImpacts.splat(parent, enemy.global_position, randf_range(c.splat_size.x, c.splat_size.y) * c.splat_death_mult * ms)
-	FXImpacts.ichor_splash(parent, enemy.global_position + Vector3(0, 0.9 * ms, 0), c.ichor_splash_size.y * 1.3 * ms)
+	# П3: корм разлетается на куски — брызги и пятно крупнее, ещё пара брызг вокруг
+	var meat: bool = enemy.get("kind") == Enemy.Kind.FODDER and bool(enemy.get("gib_on_death"))
+	var splat_mult := c.fodder_death_splat_mult if meat else 1.0
+	var splash_mult := c.fodder_death_splash_mult if meat else 1.0
+	FXImpacts.splat(parent, enemy.global_position, randf_range(c.splat_size.x, c.splat_size.y) * c.splat_death_mult * splat_mult * ms)
+	FXImpacts.ichor_splash(parent, enemy.global_position + Vector3(0, 0.9 * ms, 0), c.ichor_splash_size.y * 1.3 * splash_mult * ms)
+	if meat:
+		for k in maxi(0, c.fodder_death_extra_splashes):
+			var off := Vector3(randf_range(-0.6, 0.6), randf_range(0.3, 1.3), randf_range(-0.6, 0.6)) * ms
+			FXImpacts.ichor_splash(parent, enemy.global_position + off, randf_range(c.ichor_splash_size.x, c.ichor_splash_size.y) * ms)
 
 static func _model_scale(enemy: Node) -> float:
 	var s: Variant = enemy.get("model_scale")

@@ -7,7 +7,7 @@ const K = preload("res://tools/rooms/room_kit.gd")
 static func def() -> Dictionary:
 	# 11. Башня: бой на четырёх уровнях, соединённых пологими маршами.
 	return {
-		"file": "room_11", "title": "Башня над фьордом", "w": 36.0, "d": 40.0, "max_alive": 60,
+		"file": "room_11", "title": "Башня над фьордом", "w": 36.0, "d": 40.0, "max_alive": 20,
 		"tutorial_vertical": true,
 		"floor_tex": "dirt_straw",
 		# Требуют описанных в патче общих расширений генератора/Room.
@@ -66,31 +66,28 @@ static func def() -> Dictionary:
 			"Summit": Vector3(4, 19.5, -14),
 		},
 		"enemies": [
-			# 10 / 15, 66.7 %: вход со двора, стрелок на первом ярусе.
-			["fodder", Vector3(12, 0, 10), 0, 10, 2.0, {"entry_mode": "edge", "entry_target": Vector3(12, 0.05, 6), "spread_axes": Vector2(1.6, 0.2), "entry_batch": 1}],
-			["grunt", Vector3(-4, 0, 5), 0], ["grunt", Vector3(3, 0, 2), 0], ["grunt", Vector3(12, 0, -4), 0],
+			# П3: 12 + 12 + 12 + 16 (было 15 + 17 + 18 + 33); ярусы башни — по волне, финал на вершине.
+			# 8 / 12, 66.7 %: вход со двора, стрелок на первом ярусе.
+			["fodder", Vector3(12, 0, 10), 0, 8, 2.0, {"entry_mode": "edge", "entry_target": Vector3(12, 0.05, 6), "spread_axes": Vector2(1.6, 0.2), "entry_batch": 1}],
+			["grunt", Vector3(-4, 0, 5), 0], ["grunt", Vector3(3, 0, 2), 0],
 			["merc", Vector3(10, 0, -8), 0], ["thrower", Vector3(-6, 6.5, -12), 0],
 
-			# 11 / 17, 64.7 %: снизу лезут новые кормовые, шаман на помосте, стрелок на мосту.
-			["fodder", Vector3(10, 0, -14), 1, 11, 2.0, {"entry_batch": 1}],
-			["grunt", Vector3(-2, 0, 1), 1], ["grunt", Vector3(5, 0, -4), 1],
+			# 8 / 12: снизу лезут новые кормовые, шаман на помосте, стрелок на мосту.
+			["fodder", Vector3(10, 0, -14), 1, 8, 2.0, {"entry_batch": 1}],
 			["grunt", Vector3(-10, 6.5, -12), 1], ["grunt", Vector3(-5.8, 6.5, -12), 1],
 			["shaman", Vector3(-8.5, 6.5, -12), 1], ["thrower", Vector3(3, 6.5, -12), 1],
 
-			# 12 / 18, 66.7 %: корм выходит с первого яруса; второй мост занял стрелок.
-			["fodder", Vector3(-8, 6.5, -12), 2, 12, 1.2, {"entry_batch": 1}],
-			["grunt", Vector3(9, 0, -11), 2], ["grunt", Vector3(12, 0, -9), 2],
+			# 8 / 12: корм выходит с первого яруса; второй мост занял стрелок.
+			["fodder", Vector3(-8, 6.5, -12), 2, 8, 1.2, {"entry_batch": 1}],
 			["grunt", Vector3(-4, 13, 12), 2], ["grunt", Vector3(0, 13, 12), 2],
 			["shaman", Vector3(-10, 6.5, -13), 2], ["thrower", Vector3(8, 13, 12), 2],
 
-			# 22 / 33, 66.7 %: ядро финала на вершине и живая цель для прыжка на дворе.
-			["fodder", Vector3(3, 19.5, -14.5), 3, 12, 2.0, {"entry_batch": 1}],
+			# 11 / 16, 68.8 %: ядро финала на вершине и живая цель для прыжка на дворе.
+			["fodder", Vector3(3, 19.5, -14.5), 3, 6, 2.0, {"entry_batch": 1}],
 			["grunt", Vector3(-3, 19.5, -17), 3], ["grunt", Vector3(8, 19.5, -17), 3],
-			["grunt", Vector3(8, 19.5, -12), 3], ["grunt", Vector3(-3, 19.5, -12), 3],
 			["shaman", Vector3(-1, 19.5, -15), 3], ["thrower", Vector3(9, 19.5, -15), 3],
-			["fodder", Vector3(12.5, 0, -14), 3, 10, 1.5, {"entry_batch": 1}],
-			["grunt", Vector3(9.5, 0, -10), 3], ["grunt", Vector3(11, 0, -10), 3],
-			["grunt", Vector3(12.5, 0, -10), 3], ["grunt", Vector3(14, 0, -10), 3], ["grunt", Vector3(15, 0, -12), 3],
+			["fodder", Vector3(12.5, 0, -14), 3, 5, 1.5, {"entry_batch": 1}],
+			["grunt", Vector3(9.5, 0, -10), 3],
 		],
 		"props": [["barrel", Vector3(-15, 0, 15)], ["crate", Vector3(15, 0, 15)]],
 		"no_auto": ["north"],

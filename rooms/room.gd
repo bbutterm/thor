@@ -28,6 +28,10 @@ signal wave_started(index: int)
 @export var spawn_batch: int = 3
 ## 0 — без ограничения; в обычных залах враги сверх лимита ждут в очереди.
 @export var max_alive: int = 0
+## «Старое» (FeelSwitch enemy_count, F6 в «Быстрой проверке»): орда до П3 — лимит на экране и корм ×N
+## в маркерах и отрядах (пачки 5–8 → 10–16). Действует со следующей волны.
+@export var legacy_max_alive: int = 60
+@export var legacy_fodder_mult: float = 2.0
 ## Следующая волна, когда живых меньше этой доли текущей волны (GDD 12.5: 30 %)...
 @export_range(0.0, 1.0) var next_wave_fraction: float = 0.3
 ## ...или через столько секунд после её начала
@@ -210,8 +214,11 @@ func _spawn_wave(index: int) -> void:
 		else:
 			expanded.append(m)
 	markers = expanded + delayed
+	var legacy := FeelSwitch.is_old(&"enemy_count")
 	for m in markers:
 		var c := maxi(1, int(m.get_meta("count", 1)))
+		if legacy and str(m.get_meta("kind", "")) == "fodder":
+			c = maxi(1, roundi(c * legacy_fodder_mult))
 		for k in c:
 			_spawn_queue.append(m)
 		n += c
@@ -234,7 +241,12 @@ func _physics_process(delta: float) -> void:
 	for i in maxi(1, spawn_batch):
 		if _spawn_queue.is_empty() or not _has_spawn_capacity():
 			break
-		var marker := _spawn_queue.front() as Node3D
+		var front: Variant = _spawn_queue.front()
+		if not is_instance_valid(front) or (front as Node).is_queued_for_deletion():
+			# Маркер участника отряда пересобран повторным раскладом той же волны — пропускаем
+			_spawn_queue.pop_front()
+			continue
+		var marker := front as Node3D
 		if float(marker.get_meta("not_before", 0.0)) > _wave_time:
 			break  # засада отряда ещё не вышла
 		var marker_batch := clampi(int(marker.get_meta("entry_batch", spawn_batch)), 1, maxi(1, spawn_batch))
@@ -326,7 +338,10 @@ func release_navigation_jump(enemy: Enemy) -> void:
 	_nav_jump_holders.erase(enemy.get_instance_id())
 
 func _has_spawn_capacity() -> bool:
-	return max_alive <= 0 or _alive.size() < max_alive
+	var limit := max_alive
+	if limit > 0 and FeelSwitch.is_old(&"enemy_count"):
+		limit = maxi(limit, legacy_max_alive)
+	return limit <= 0 or _alive.size() < limit
 
 ## Враг сверх волн (Шаман поднимает корм, элита-Призыватель): сразу в зал, считается в зачистке.
 func spawn_extra(kind: String, global_pos: Vector3) -> Enemy:

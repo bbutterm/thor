@@ -37,8 +37,9 @@ func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var shift := int(args[0]) if not args.is_empty() and args[0].is_valid_int() else 0
 	await _check_gate()
-	await _check_room("res://rooms/room_01.tscn", "edge", 10, Vector3(0, 0.05, 6), 11 + shift)
-	await _check_room("res://rooms/room_05.tscn", "balcony", 14, Vector3(2, 0.05, 3), 23 + shift)
+	# П3: пачки корма 5–8 (было 10 и 14) — размер берётся из маркера
+	await _check_room("res://rooms/room_01.tscn", "edge", 6, Vector3(0, 0.05, 6), 11 + shift)
+	await _check_room("res://rooms/room_05.tscn", "balcony", 6, Vector3(2, 0.05, 3), 23 + shift)
 	print("=== ИТОГ HORDE ENTRY: %d OK, %d FAIL ===" % [passes, failures])
 	get_tree().quit(0 if failures == 0 else 1)
 
