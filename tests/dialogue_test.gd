@@ -38,6 +38,7 @@ func _run() -> void:
 	_test_selection()
 	_test_shop_greeting_history()
 	_test_visit_outcomes()
+	_test_heimdall_visit_history()
 	_test_content()
 	_test_finale_gating()
 	_test_loki_finale_branches()
@@ -247,6 +248,77 @@ func _test_visit_outcomes() -> void:
 				if sample.is_empty() or str(sample[0].get("id", "")) == line_id:
 					visits_ok = false
 			check(visits_ok, "%s/%s: выбор других визитов работает после победы" % [pool_name, language])
+	Dialogue.pools = saved_pools
+	TranslationServer.set_locale(saved_locale)
+	Dialogue.refresh_locale()
+	Save.reset()
+
+## Хеймдалль знакомится и при победах без смертей, но о смерти говорит только после неё.
+func _test_heimdall_visit_history() -> void:
+	print("-- Хеймдалль и история смертей")
+	var saved_pools: Dictionary = Dialogue.pools
+	var saved_locale := TranslationServer.get_locale()
+	var pool_name := "heimdall.visit"
+	var line_id := "heimdall.visit.01_01"
+	var target: Dictionary = {}
+	for item in saved_pools.get(pool_name, []):
+		if str(item.lines[0].get("id", "")) == line_id:
+			target = item
+			break
+	check(not target.is_empty(), "реплика Хеймдалля найдена")
+	if target.is_empty():
+		return
+	var loc_data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/dialogues/en/heimdall.json"))
+	var loc_lines: Dictionary = (loc_data as Dictionary).get("lines", {}) if loc_data is Dictionary else {}
+	var translation: Dictionary = loc_lines.get(line_id, {})
+	var one_pool := {}
+	one_pool[pool_name] = [target]
+	Dialogue.pools = one_pool
+	Save.reset()
+	for i in 2:
+		Save.begin_run("berserker")
+		Save.end_run({"won": true, "rooms": 7})
+	Save.begin_run("berserker")
+	Save.bump_event("run_start")
+	check(Dialogue.pick_scene("run_start").get("id", "") == "heimdall_intro", "знакомство возможно в третьем забеге без смертей")
+	Save.mark_seen("heimdall_intro")
+	Save.end_run({"won": true, "rooms": 7})
+	check(Save.deaths() == 0, "три победы не засчитываются как смерти")
+	for language in ["ru", "en"]:
+		I18n.apply(language)
+		Dialogue.refresh_locale()
+		check(Dialogue.visitor_lines().is_empty(), "%s: Хеймдалль не говорит о неслучившейся смерти" % language)
+	var full_pool := {}
+	full_pool[pool_name] = saved_pools[pool_name]
+	Dialogue.pools = full_pool
+	for language in ["ru", "en"]:
+		I18n.apply(language)
+		Dialogue.refresh_locale()
+		var other_visit := Dialogue.visitor_lines()
+		check(not other_visit.is_empty() and str(other_visit[0].get("id", "")) != line_id,
+			"%s: остальные визиты Хеймдалля доступны без смертей" % language)
+	Dialogue.pools = one_pool
+	Save.begin_run("berserker")
+	Save.end_run({"won": false, "cause": "draugr", "rooms": 1})
+	for language in ["ru", "en"]:
+		I18n.apply(language)
+		Dialogue.refresh_locale()
+		var visit := Dialogue.visitor_lines()
+		var shown: Dictionary = visit[0] if not visit.is_empty() else {}
+		var expected := str(target.lines[0].text) if language == "ru" else str(translation.get("en", ""))
+		check(shown.get("id", "") == line_id and shown.get("text", "") == expected and expected != "",
+			"%s: после первой смерти реплика доступна на выбранном языке" % language)
+	Save.begin_run("berserker")
+	Save.end_run({"won": true, "rooms": 7})
+	for language in ["ru", "en"]:
+		I18n.apply(language)
+		Dialogue.refresh_locale()
+		var visit := Dialogue.visitor_lines()
+		check(not visit.is_empty() and str(visit[0].get("id", "")) == line_id,
+			"%s: после победы реплика о прошлой смерти остаётся доступна" % language)
+	Save.reset()
+	Save.end_run({"won": false, "cause": "draugr", "rooms": 1})
+	check(Dialogue.visitor_lines().is_empty(), "смерть не обходит условие знакомства")
 	Dialogue.pools = saved_pools
 	TranslationServer.set_locale(saved_locale)
 	Dialogue.refresh_locale()
