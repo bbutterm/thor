@@ -53,6 +53,10 @@ func begin(body: CharacterBody3D, source: String, destination: Vector3, speed: f
 			return false
 		var point := start
 		var segment_start := start
+		# Взрослый враг уже стоит на настиле: допускаем контакт с одной строго
+		# определённой горизонтальной опорой лишь на первом восходящем отрезке.
+		var start_support := _grounded_flat_support(space, body, collider, start) if bool(tuning.get("allow_start_floor_contact", false)) else {}
+		var first_segment := true
 		var vy := jump_speed
 		var steps := int(ceil(flight / step))
 		var ticks_per_chord := maxi(1, int(floor(MAX_CHORD_TIME / step)))
@@ -66,8 +70,10 @@ func begin(body: CharacterBody3D, source: String, destination: Vector3, speed: f
 				# запросе покрывает отклонение и не пропускает тонкие преграды.
 				var span := float(mini(ticks_per_chord, i + 1)) * step
 				var margin := 0.005 + gravity * span * span / 8.0
-				if not _clear_segment(space, body, collider, segment_start, point, margin):
+				var allowance: Dictionary = start_support if first_segment and point.y > segment_start.y else {}
+				if not _clear_segment(space, body, collider, segment_start, point, margin, allowance):
 					return false
+				first_segment = false
 				segment_start = point
 	else:
 		if absf(start.y - destination.y) > 0.16:
@@ -134,7 +140,37 @@ func _supported(space: PhysicsDirectSpaceState3D, body: CharacterBody3D, foot: V
 	var hit := space.intersect_ray(ray)
 	return not hit.is_empty() and absf(foot.y - (hit.position as Vector3).y) <= 0.16
 
-func _clear_segment(space: PhysicsDirectSpaceState3D, body: CharacterBody3D, collider: CollisionShape3D, from: Vector3, to: Vector3, margin: float = 0.005) -> bool:
+## Опора допустима только если это плоский StaticBody/Box, капсула стоит на
+## его верхней горизонтальной грани и источник совпадает с её поверхностью.
+## Все другие формы и препятствия по-прежнему запрещают пересечение.
+func _grounded_flat_support(space: PhysicsDirectSpaceState3D, body: CharacterBody3D, collider: CollisionShape3D, foot: Vector3) -> Dictionary:
+	if not body.is_on_floor() or not (collider.shape is CapsuleShape3D):
+		return {}
+	var ray := PhysicsRayQueryParameters3D.create(foot + Vector3.UP * 0.25, foot - Vector3.UP * 0.45, FLOOR_MASK, [body.get_rid()])
+	var hit := space.intersect_ray(ray)
+	if hit.is_empty() or (hit.normal as Vector3).dot(Vector3.UP) < 0.9999:
+		return {}
+	var floor := hit.collider as StaticBody3D
+	if floor == null:
+		return {}
+	var shape_index := int(hit.shape)
+	var owner_id := floor.shape_find_owner(shape_index)
+	if floor.shape_owner_get_shape_count(owner_id) != 1:
+		return {}
+	var surface := floor.shape_owner_get_owner(owner_id) as CollisionShape3D
+	if surface == null or surface.disabled or not (surface.shape is BoxShape3D):
+		return {}
+	var floor_basis := surface.global_basis
+	var actor_basis := collider.global_basis
+	if floor_basis.y.normalized().dot(Vector3.UP) < 0.9999 or actor_basis.y.normalized().dot(Vector3.UP) < 0.9999:
+		return {}
+	var top: float = surface.global_position.y + (surface.shape as BoxShape3D).size.y * floor_basis.y.length() * 0.5
+	var bottom: float = collider.global_position.y - (collider.shape as CapsuleShape3D).height * actor_basis.y.length() * 0.5
+	if absf((hit.position as Vector3).y - top) > 0.002 or bottom < top - 0.002 or bottom > top + 0.02:
+		return {}
+	return {"rid": hit.rid, "shape": shape_index}
+
+func _clear_segment(space: PhysicsDirectSpaceState3D, body: CharacterBody3D, collider: CollisionShape3D, from: Vector3, to: Vector3, margin: float = 0.005, floor_contact: Dictionary = {}) -> bool:
 	var q := PhysicsShapeQueryParameters3D.new()
 	q.shape = collider.shape
 	q.transform = Transform3D(body.global_basis, from) * collider.transform
@@ -143,8 +179,15 @@ func _clear_segment(space: PhysicsDirectSpaceState3D, body: CharacterBody3D, col
 	q.collision_mask = OBSTACLE_MASK
 	q.exclude = [body.get_rid()]
 	q.collide_with_areas = false
-	# cast_motion не проверяет исходные пересечения, поэтому проверяем оба.
-	if not space.intersect_shape(q, 1).is_empty():
+	# cast_motion игнорирует уже пересекаемые формы. Допускаем только одну
+	# проверенную опору; второе препятствие в исходном положении не пропускаем.
+	var hits := space.intersect_shape(q, 64 if not floor_contact.is_empty() else 1)
+	if floor_contact.is_empty() and not hits.is_empty():
 		return false
+	if hits.size() >= 64:
+		return false
+	for hit in hits:
+		if hit.rid != floor_contact.get("rid") or int(hit.shape) != int(floor_contact.get("shape", -1)):
+			return false
 	var fraction := space.cast_motion(q)
 	return fraction.size() >= 1 and fraction[0] >= 0.999

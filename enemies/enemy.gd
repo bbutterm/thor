@@ -13,6 +13,7 @@ signal died(enemy: Enemy)
 signal struck_player(amount: float)
 
 const SpawnEntry = preload("res://enemies/spawn_entry.gd")
+const TierNavigation = preload("res://rooms/enemy_navigation.gd")
 
 ## Новые виды — только в конец (номера сохранены в сценах).
 ## FODDER — драугр-корм, BLOATED — Раздутый, SHIELD — Щитоносец, SHAMAN — Шаман, MERC — Наёмник Локи (GDD 12.1)
@@ -39,6 +40,8 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 
 @export_group("Атака")
 @export var attack_range: float = 2.0
+## Разница высот ног, в пределах которой обычная ближняя атака может достать Тора.
+@export var melee_vertical_reach: float = 1.6
 @export var attack_damage: float = 12.0
 @export var windup_time: float = 0.6
 ## До какой доли замаха запоздавший звук ещё оставляет время среагировать.
@@ -163,6 +166,8 @@ var state: State = State.SPAWNING
 var knockback_velocity: Vector3 = Vector3.ZERO
 ## Создаётся только для маркера с активным входом.
 var _spawn_entry: SpawnEntry
+## Только при наличии у зала настроенной навигации между ярусами.
+var _tier_navigation: TierNavigation
 var player: Player
 ## Каждый враг запоминает обнаруженного игрока до смерти или смены игрока.
 var _notice_player_id: int = 0
@@ -297,6 +302,13 @@ func begin_spawn_entry(mode: String, target: Vector3, tuning: Dictionary = {}) -
 		_humanoid.play(anim_move, 0.1)
 	return ok
 
+## Room регистрирует и обычные волны, и призывы через одну точку.
+func enable_tier_navigation(root: Node3D, settings: Dictionary) -> void:
+	if root == null or _tier_navigation != null:
+		return
+	_tier_navigation = TierNavigation.new()
+	_tier_navigation.setup(self, root, settings)
+
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
@@ -313,8 +325,19 @@ func _physics_process(delta: float) -> void:
 			elif _state_time >= _spawn_time:
 				_set_state(State.CHASE)
 		State.CHASE:
-			if _notice_tick(delta):
-				move_dir = _think_chase_lod(delta)
+			if _tier_navigation != null and _tier_navigation.is_jumping():
+				move_dir = _tier_navigation.jump_direction(move_speed, accel)
+			elif _tier_navigation != null and _tier_navigation.is_waiting_for_landing():
+				move_dir = Vector3.ZERO
+			elif _notice_tick(delta):
+				if _tier_navigation != null:
+					if _tier_navigation.step(player):
+						_fodder_lod_move_valid = false
+					_tier_navigation.try_jump(move_speed, gravity)
+				if _tier_navigation != null and _tier_navigation.is_jumping():
+					move_dir = _tier_navigation.jump_direction(move_speed, accel)
+				elif _tier_navigation == null or not _tier_navigation.has_pending_jump():
+					move_dir = _think_chase_lod(delta)
 			else:
 				_fodder_lod_move_valid = false
 		State.WINDUP:
@@ -338,12 +361,16 @@ func _physics_process(delta: float) -> void:
 	_apply_movement(move_dir, delta)
 	if _spawn_entry != null:
 		_spawn_entry.after_step(self, delta)
+	if _tier_navigation != null:
+		_tier_navigation.after_move(delta)
 	_update_special(delta)
 	_update_visual_feedback(delta)
 	_update_animation(delta)
 	_update_fodder_animation_lod(delta)
 
 func _set_state(s: State) -> void:
+	if s != State.CHASE and _tier_navigation != null:
+		_tier_navigation.interrupt_jump()
 	if s != State.SPAWNING and _spawn_entry != null:
 		_spawn_entry.cancel()
 	state = s
@@ -396,7 +423,10 @@ func _think_chase_lod(delta: float) -> Vector3:
 		_fodder_lod_move = _think_chase()
 		_fodder_lod_move_valid = true
 	else:
-		_face_player(delta)
+		if _tier_navigation != null and _tier_navigation.is_active():
+			_face_dir(_tier_navigation.direction(), delta)
+		else:
+			_face_player(delta)
 	return _fodder_lod_move
 
 ## У дальнего корма обновляем именно позу анимации, а не просто повторный вызов play().
@@ -482,13 +512,13 @@ func _think_chase() -> Vector3:
 			if kind == Kind.BOSS and dist > 5.0 and _cooldown <= 0.0 and randf() < boss_far_slam_chance:
 				_begin_windup(true)
 				return Vector3.ZERO
-			if dist <= reach and _cooldown <= 0.0:
+			if dist <= reach and _cooldown <= 0.0 and (kind == Kind.BOSS or _can_reach_melee_target()):
 				_begin_windup(kind == Kind.BOSS and _attack_count % 3 == 2)
 				return Vector3.ZERO
 			move = dir
 		Kind.BLOATED:
 			# Бежит к Тору; вплотную — фитиль (телеграф-диск радиусом взрыва), потом взрыв
-			if dist <= bloat_trigger_range and _cooldown <= 0.0 and _state_time > 0.2:
+			if dist <= bloat_trigger_range and _cooldown <= 0.0 and _state_time > 0.2 and _can_reach_melee_target():
 				_begin_windup(true)
 				return Vector3.ZERO
 			move = dir
@@ -510,7 +540,16 @@ func _think_chase() -> Vector3:
 			if _cooldown <= 0.0 and dist < keep_max_dist + 6.0 and _has_line_of_sight():
 				_begin_windup(false)
 				return Vector3.ZERO
-	if _detour_left > 0.0 and move != Vector3.ZERO:
+	if _tier_navigation != null and _tier_navigation.is_active():
+		# Стрелок с видимой целью может продолжать бой с балкона; пока ждёт
+		# перезарядку, не отступает вслепую через край. Шаман сохраняет обряд выше.
+		if kind in [Kind.THROWER, Kind.MERC] and dist < keep_max_dist + 6.0 and _has_line_of_sight():
+			return Vector3.ZERO
+		move = _tier_navigation.direction()
+		if move == Vector3.ZERO:
+			return Vector3.ZERO  # нет проверенного пути: не толкаем себя к краю
+		_face_dir(move, get_physics_process_delta_time())
+	elif _detour_left > 0.0 and move != Vector3.ZERO:
 		move = (_detour_dir + move * 0.35).normalized()
 	return (move + _separation()).normalized() if move != Vector3.ZERO else _separation()
 
@@ -532,6 +571,9 @@ func _separation() -> Vector3:
 			continue
 		var other := e as Node3D
 		var d := global_position - other.global_position
+		# На отдельном этаже чужая капсула не должна сдвигать нас с настила.
+		if _tier_navigation != null and absf(d.y) > melee_vertical_reach * model_scale:
+			continue
 		d.y = 0
 		var l := d.length()
 		var min_d := 1.4 * model_scale
@@ -543,6 +585,12 @@ func _has_line_of_sight() -> bool:
 	var space := get_world_3d().direct_space_state
 	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 1.2, 0), player.global_position + Vector3(0, 1.0, 0), 1)
 	return space.intersect_ray(q).is_empty()
+
+## Не бить сквозь настил и не начинать замах по цели на другом ярусе.
+func _can_reach_melee_target() -> bool:
+	return player != null and is_instance_valid(player) and not player.is_dead \
+		and absf(player.global_position.y - global_position.y) <= melee_vertical_reach * model_scale \
+		and _has_line_of_sight()
 
 func _face_dir(dir: Vector3, delta: float) -> void:
 	if dir.length() < 0.01:
@@ -630,7 +678,7 @@ func _do_melee() -> void:
 	var to_p := player.global_position - global_position
 	to_p.y = 0
 	var reach := attack_range * 1.35 + 0.3
-	if to_p.length() <= reach and fwd.dot(to_p.normalized()) > 0.25:
+	if to_p.length() <= reach and fwd.dot(to_p.normalized()) > 0.25 and (kind == Kind.BOSS or _can_reach_melee_target()):
 		_hit_player(attack_damage, to_p.normalized() * 6.0 + Vector3.UP * 2.5, true)
 	FX.burst(get_parent(), global_position + fwd * attack_range * 0.8 + Vector3(0, 1, 0), 0.5 * model_scale, Color(1, 0.3, 0.2, 0.5), 0.15)
 	Audio.play("sounds/enemy_attack.ogg")
@@ -803,7 +851,7 @@ func _do_shield_bash() -> void:
 	if player and not player.is_dead:
 		var to_p := player.global_position - global_position
 		to_p.y = 0
-		if to_p.length() <= attack_range * 1.35 + 0.3 and fwd.dot(to_p.normalized()) > 0.25:
+		if to_p.length() <= attack_range * 1.35 + 0.3 and fwd.dot(to_p.normalized()) > 0.25 and _can_reach_melee_target():
 			_hit_player(attack_damage, to_p.normalized() * shove_force + Vector3.UP * shove_up, true)
 	FX.burst(get_parent(), global_position + fwd * attack_range * 0.8 + Vector3(0, 1, 0), 0.6 * model_scale, Color(0.8, 0.85, 1.0, 0.5), 0.15)
 	Audio.play("sounds/sfx/wall_splat.wav")
@@ -941,6 +989,8 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	Perf.mark("enemy_hit")
 	if is_dead:
 		return
+	if _tier_navigation != null:
+		_tier_navigation.interrupt_jump()
 	if _spawn_entry != null:
 		_spawn_entry.cancel()
 	# Даже блок щитом или поглощение брони сообщает врагу о присутствии игрока.
@@ -987,6 +1037,8 @@ func apply_knockback_only(knockback: Vector3) -> Vector3:
 	if is_dead:
 		return Vector3.ZERO
 	if knockback.length_squared() > 0.0001:
+		if _tier_navigation != null:
+			_tier_navigation.interrupt_jump()
 		if _spawn_entry != null:
 			_spawn_entry.cancel()
 		alert_to_player()
@@ -1050,8 +1102,16 @@ func _apply_movement(move_dir: Vector3, delta: float) -> void:
 	_check_wall_splat(pre)
 	_check_fall()
 	_update_stuck(move_dir, delta)
-	if global_position.y < -30.0:
+	if _below_fall_limit():
 		_die("fall")
+
+## Залы с ямой могут задать локальную границу, не меняя другие арены.
+func _below_fall_limit() -> bool:
+	if global_position.y < -30.0:
+		return true
+	var room := get_parent() as Node3D
+	return room != null and room.has_meta("enemy_fall_y") \
+		and room.to_local(global_position).y < float(room.get_meta("enemy_fall_y"))
 
 ## Сброшенный с высоты враг (GDD 8): корм — насмерть, остальные — fall_damage. Босса не касается.
 func _check_fall() -> void:

@@ -38,10 +38,10 @@ static func for_enemy(enemy: Enemy) -> int:
 		return 0
 	return randi_range(mini(d.silver_min, d.silver_max), maxi(d.silver_min, d.silver_max))
 
-static func on_enemy_died(enemy: Enemy) -> void:
+static func on_enemy_died(enemy: Enemy, pos: Vector3 = Vector3.INF) -> void:
 	if enemy.kind == Enemy.Kind.BOSS and not enemy.has_meta("miniboss"):
 		return
-	drop(enemy.get_parent(), enemy.global_position, for_enemy(enemy))
+	drop(enemy.get_parent(), enemy.global_position if pos == Vector3.INF else pos, for_enemy(enemy))
 
 ## Серебро из бочки.
 static func barrel_amount() -> int:

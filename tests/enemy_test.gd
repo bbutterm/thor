@@ -142,6 +142,7 @@ func _run() -> void:
 	await _test_horde_glory_and_corpses()
 	await _test_waves()
 	await _test_fall_and_reflect()
+	await _test_vertical_melee()
 	_finish()
 
 func _test_fodder() -> void:
@@ -716,6 +717,29 @@ func _test_fall_and_reflect() -> void:
 	pr.process_mode = Node.PROCESS_MODE_ALWAYS  # выбор руны после зачистки ставит паузу
 	await wait_until(1.5, func() -> bool: return d.health < 500.0)
 	check(absf((500.0 - d.health) - 18.0) < 0.5, "отражённый снаряд — ×1.8 урона (%.1f)" % (500.0 - d.health))
+	await _clear()
+
+func _test_vertical_melee() -> void:
+	print("-- Ближний бой на разных ярусах")
+	var e := await _ready_enemy("grunt", Vector3(0, 0, -1.5))
+	e.set_physics_process(false)
+	var origin := p.global_position
+	var toward := origin - e.global_position
+	e.rotation.y = atan2(toward.x, toward.z)
+	p.health = p.max_health
+	p._invuln_left = 0.0
+	p.global_position = origin + Vector3.UP * 3.0
+	e._set_state(Enemy.State.CHASE)
+	e._cooldown = 0.0
+	e._think_chase()
+	check(e.state == Enemy.State.CHASE, "враг не замахивается на Тора этажом выше")
+	var hp := p.health
+	e._do_melee()
+	check(is_equal_approx(p.health, hp), "удар не проходит между ярусами")
+	p.global_position = origin
+	p._invuln_left = 0.0
+	e._do_melee()
+	check(p.health < hp, "на одном уровне обычный удар по-прежнему попадает")
 	await _clear()
 
 func _finish() -> void:

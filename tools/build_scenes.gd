@@ -955,6 +955,123 @@ func room_defs() -> Array:
 		# Плакаты на южных стенах домов (лицевая сторона модулей — z = −2.31): «Разыскивается» и Один «Качайся!»
 		"decor": [["wanted_poster", Vector3(-11, 1.75, -2.31 + WALL_INSET), 0.0, 1.4], ["odin_poster", Vector3(11, 1.75, -2.31 + WALL_INSET), 0.0, 1.4]],
 	})
+	r.append({
+		"file": "room_10", "title": "Двор частокола", "w": 30.0, "d": 30.0, "max_alive": 60,
+		"floor_tex": "dirt_straw",
+		"blocks": [
+			# Постоянные помосты: верх 3.0 м; толщина > 0.5, поэтому это не ломаемые мосты.
+			[Vector3(-9, 2.7, -4), Vector3(6, 0.6, 6), "wood"],
+			[Vector3(9, 2.7, -4), Vector3(6, 0.6, 6), "wood"],
+			# Верхний западный помост: верх 6.75 м.
+			[Vector3(-6.5, 6.45, 11.5), Vector3(6, 0.6, 5), "wood"],
+			# Мост y=3: _is_wood_deck создаёт Balcony со slam_breakable=true.
+			# Нахлёст на постоянные помосты — 0.1 м.
+			[Vector3(0, 2.85, -4), Vector3(12.2, 0.3, 2), "wood"],
+		],
+		"pillars": [],
+		# Без ступеней: восточная вышка соединена с помостом пологим маршем.
+		"watchtowers": [[Vector3(9, 3, 1.4), false]],
+		"jump_pads": [[Vector3(-2.2, 0, 7), 10.0]],
+
+		# Явные поверхности и соединения для ходовой навигации; координаты локальны залу.
+		"enemy_navigation": {
+			"clearance": 0.55,
+			# Проекция участка нижнего марша, под которым недостаточно места для тела.
+			"ground_exclusions": [[Vector2(-10, 5.35), Vector2(3, 7.5)]],
+			"regions": [
+				["MidWest", [_nav_quad(Vector3(-11.45, 3, -6.45), Vector3(-6.55, 3, -1.55))]],
+				# Обход центрального участка наклонного марша; под высоким концом есть проход.
+				["MidEast", [
+					_nav_quad(Vector3(6.55, 3, -6.45), Vector3(7.05, 3, -5.8)),
+					_nav_quad(Vector3(7.05, 3, -6.45), Vector3(10.95, 3, -5.8)),
+					_nav_quad(Vector3(10.95, 3, -6.45), Vector3(11.45, 3, -5.8)),
+					_nav_quad(Vector3(6.55, 3, -5.8), Vector3(7.05, 3, -2.3)),
+					_nav_quad(Vector3(10.95, 3, -5.8), Vector3(11.45, 3, -2.3)),
+					_nav_quad(Vector3(6.55, 3, -2.3), Vector3(7.05, 3, -1.55)),
+					_nav_quad(Vector3(7.05, 3, -2.3), Vector3(10.95, 3, -1.55)),
+					_nav_quad(Vector3(10.95, 3, -2.3), Vector3(11.45, 3, -1.55)),
+				]],
+				["RampLow", [_nav_quad(Vector3(-10.95, 2.865, -0.55), Vector3(-9.05, 0.135, 8.55))]],
+				["RampHigh", [_nav_quad(Vector3(-7.75, 3.16875, -0.55), Vector3(-5.85, 6.58125, 8.55))]],
+				["Upper", [_nav_quad(Vector3(-8.95, 6.75, 9.55), Vector3(-4.05, 6.75, 13.45))]],
+				["RampTower", [_nav_quad(Vector3(8.15, 3.290948, -5.35), Vector3(9.85, 6.459052, -0.45))]],
+				["TowerTop", [_nav_quad(Vector3(8.15, 6.75, 0.55), Vector3(9.85, 6.75, 2.25))]],
+				["Bridge", [_nav_quad(Vector3(-5.55, 3, -4.45), Vector3(5.55, 3, -3.55))], NodePath("Geometry/Block3")],
+			],
+			# Переходы по маршруту StairGuides и в обоих концах моста.
+			"links": [
+				["StairFoot", Vector3(-10, 0, 9.8), Vector3(-10, 0.135, 8.55)],
+				["StairMiddle", Vector3(-10, 2.865, -0.55), Vector3(-10, 3, -1.6)],
+				["StairUpper", Vector3(-6.8, 3, -1.6), Vector3(-6.8, 3.16875, -0.55)],
+				["StairTop", Vector3(-6.8, 6.58125, 8.55), Vector3(-6.8, 6.75, 9.8)],
+				["TowerFoot", Vector3(9, 3, -6.35), Vector3(9, 3.290948, -5.35)],
+				["TowerLanding", Vector3(9, 6.459052, -0.45), Vector3(9, 6.75, 0.65)],
+				["BridgeWest", Vector3(-6.8, 3, -4), Vector3(-5.3, 3, -4), NodePath("Geometry/Block3")],
+				["BridgeEast", Vector3(5.3, 3, -4), Vector3(6.8, 3, -4), NodePath("Geometry/Block3")],
+				["JumpWest", Vector3(-11, 3, -6.35), Vector3(-11, 0, -9.05), {"traverse": "jump", "layers": 2, "bidirectional": false}],
+				["JumpEast", Vector3(11, 3, -6.35), Vector3(11, 0, -9.05), {"traverse": "jump", "layers": 2, "bidirectional": false}],
+			],
+		},
+
+		# Коллизия + вид — одна повёрнутая коробка WORLD. Небольшой заход в площадки.
+		"ramps": [
+			[Vector3(-10, 1.38506, 3.96552), Vector3(3, 0.24, 10.64911), 16.69924, "wood"],
+			[Vector3(-6.8, 4.76264, 4.04213), Vector3(3, 0.24, 10.89360), -20.55605, "wood"],
+			[Vector3(9, 4.77423, -2.83485), Vector3(2.8, 0.24, 7.14486), -32.88476, "wood"],
+		],
+
+		# Проём ниже уровня двора: вид и физический пол используют те же границы.
+		"floor_openings": [[Vector2(12.5, 1.5), Vector2(3, 3)]],
+		# Высота гибели врага относительно зала; в остальных залах действует обычный предел.
+		"enemy_fall_y": -0.5,
+
+		# Существующий механизм `markers` добавляет +0.05 м к каждому значению.
+		# Это точки для испытаний, они не меняют поведение существующего ИИ.
+		"markers": {
+			"StairGuides": [
+				Vector3(-10, 0, 9), Vector3(-10, 3, -1.6),
+				Vector3(-8, 3, -1.6), Vector3(-6.8, 3, -1.6),
+				Vector3(-6.8, 6.75, 9.8),
+			],
+			"TowerStart": Vector3(9, 3, -5.8),
+			"UpperLanding": Vector3(-6.5, 6.75, 11.5),
+			"BridgeCenter": Vector3(0, 3, -4),
+			"FallEdge": Vector3(11.4, 3, -1.7),
+		},
+
+		"enemies": [
+			# 10/15 корма, 2 особых; стрелки на средних помостах.
+			["fodder", Vector3(0, 0, -11.5), 0, 10, 2.25, {"entry_mode": "edge", "entry_target": Vector3(0, 0.05, -8), "spread_axes": Vector2(2, 0.2), "entry_batch": 1}],
+			["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(4, 0, -6), 0],
+			["grunt", Vector3(0, 0, 0), 0],
+			["merc", Vector3(11, 3, -5.8), 0], ["thrower", Vector3(-10, 3, -3.5), 0],
+
+			# 11/17 корма, 2 особых; один стрелок на верхнем ярусе.
+			["fodder", Vector3(0, 0, -11.5), 1, 11, 2.375, {"entry_mode": "edge", "entry_target": Vector3(0, 0.05, -8), "spread_axes": Vector2(2, 0.2), "entry_batch": 1}],
+			["grunt", Vector3(-4, 0, -6), 1], ["grunt", Vector3(4, 0, -6), 1],
+			["grunt", Vector3(-4, 0, 0), 1], ["grunt", Vector3(4, 0, 0), 1],
+			["shaman", Vector3(11, 3, -5.8), 1], ["thrower", Vector3(-6.5, 6.75, 11.5), 1],
+
+			# 12/18 корма, 2 особых.
+			["fodder", Vector3(0, 0, -11.5), 2, 12, 2.5, {"entry_mode": "edge", "entry_target": Vector3(0, 0.05, -8), "spread_axes": Vector2(2, 0.2), "entry_batch": 1}],
+			["grunt", Vector3(-4, 0, -6), 2], ["grunt", Vector3(4, 0, -6), 2],
+			["grunt", Vector3(-4, 0, 0), 2], ["grunt", Vector3(4, 0, 0), 2],
+			["shieldbearer", Vector3(4, 0, -8), 2], ["merc", Vector3(11, 3, -5.8), 2],
+		],
+		"models": [
+			["res://assets/quaternius/props/Cauldron.gltf", Vector3(-12.2, 0, -8.5), 0.0, 1.0],
+			["res://assets/quaternius/props/Table_Large.gltf", Vector3(12.2, 0, 6.8), 90.0, 1.0],
+			["res://assets/quaternius/props/Book_Stack_1.gltf", Vector3(12.2, 0.82, 6.8), 20.0, 1.0],
+			["res://assets/quaternius/props/Cage_Small.gltf", Vector3(13.2, 0, 9), 15.0, 1.0],
+		],
+		"props": [["barrel", Vector3(-12, 0, -11)], ["crate", Vector3(12, 0, -11)]],
+		# Не ставить случайные угловые пропсы и декали поверх проектного проёма.
+		"dress": {"corner_props": false, "decals": 0, "palisade_rows": [
+			[Vector3(-13, 0, -12), Vector3(-13, 0, -7)],
+			[Vector3(13, 0, -11), Vector3(13, 0, -6)],
+			[Vector3(-13, 0, 8), Vector3(-13, 0, 12)],
+		]},
+	})
 	return r
 
 ## Блок — деревянный настил над полом: материал "wood", толщина ≤ 0.5 м, низ выше 1 м (мост деревни, Биврёст).
@@ -1001,8 +1118,85 @@ func _block_style(d: Dictionary, i: int) -> String:
 		return "none"
 	return "wood" if b[2] == "wood" else "stone"
 
+## Открытые прямоугольники в координатах пола X/Z. Центр и размер берём из данных зала.
+## Запас 0.1 м у края не даёт рамке земли снаружи зала закрыть проём.
+func _floor_opening_rects(specs: Variant, width: float, depth: float) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	if not (specs is Array):
+		push_error("floor_openings: нужен массив пар [центр Vector2, размер Vector2]")
+		return out
+	for pair in specs:
+		if not (pair is Array) or pair.size() != 2 or not (pair[0] is Vector2) or not (pair[1] is Vector2):
+			push_error("floor_openings: нужна пара [центр Vector2, размер Vector2]")
+			continue
+		var center: Vector2 = pair[0]
+		var size: Vector2 = pair[1]
+		if not is_finite(center.x) or not is_finite(center.y) or not is_finite(size.x) or not is_finite(size.y) or size.x <= 0.0 or size.y <= 0.0:
+			push_error("floor_openings: координаты должны быть конечными, размеры — положительными")
+			continue
+		var rect := Rect2(center - size * 0.5, size)
+		var end := rect.end
+		if rect.position.x < -width * 0.5 + 0.1 or end.x > width * 0.5 - 0.1 or rect.position.y < -depth * 0.5 + 0.1 or end.y > depth * 0.5 - 0.1:
+			push_error("floor_openings: проём должен быть внутри видимого пола с отступом 0.1 м")
+			continue
+		out.append(rect)
+	return out
+
+func _floor_opening_contains(openings: Array[Rect2], p: Vector2) -> bool:
+	for rect in openings:
+		if rect.has_point(p):
+			return true
+	return false
+
+## Сначала исходные края, потом ВСЕ точные края проёмов; близкие границы не сливать.
+func _floor_cut_lines(openings: Array[Rect2], lo: float, hi: float, axis: int) -> PackedFloat32Array:
+	var lines := PackedFloat32Array([lo, hi])
+	for rect in openings:
+		lines.append(rect.position[axis])
+		lines.append(rect.end[axis])
+	lines.sort()
+	var result := PackedFloat32Array()
+	for v in lines:
+		if result.is_empty() or v > result[result.size() - 1]:
+			result.append(v)
+	return result
+
+## Один StaticBody WORLD, вместо исходной формы — горизонтальные полосы вокруг объединения отверстий.
+## Метаданные — общий источник границ для RoomDresser при повторном одевании.
+func _cut_floor(floor: Node3D, openings: Array[Rect2], width: float, depth: float) -> void:
+	floor.set_meta("floor_openings", openings)
+	var old := floor.get_node("Shape")
+	floor.remove_child(old)
+	old.free()
+	var xs := _floor_cut_lines(openings, -width * 0.5 - 1.0, width * 0.5 + 1.0, 0)
+	var zs := _floor_cut_lines(openings, -depth * 0.5 - 1.0, depth * 0.5 + 1.0, 1)
+	var shape_id := 0
+	for iz in zs.size() - 1:
+		var z0 := zs[iz]
+		var z1 := zs[iz + 1]
+		var open_run := false
+		var x0 := 0.0
+		for ix in xs.size() - 1:
+			var mid := Vector2((xs[ix] + xs[ix + 1]) * 0.5, (z0 + z1) * 0.5)
+			var solid := not _floor_opening_contains(openings, mid)
+			if solid and not open_run:
+				x0 = xs[ix]
+				open_run = true
+			if open_run and (not solid or ix == xs.size() - 2):
+				var x1 := xs[ix] if not solid else xs[ix + 1]
+				var shape := CollisionShape3D.new()
+				shape.name = "Shape%d" % shape_id
+				var box := BoxShape3D.new()
+				box.size = Vector3(x1 - x0, 1.0, z1 - z0)
+				shape.shape = box
+				# Floor уже расположен в y = -0.5, поэтому локальная высота равна нулю.
+				shape.position = Vector3((x0 + x1) * 0.5, 0.0, (z0 + z1) * 0.5)
+				floor.add_child(shape)
+				shape_id += 1
+				open_run = false
+
 ## Бочка и ящик в свободных углах зала (не больше двух): углы не пустые, а пропсы — разрушаемые.
-func _corner_props(d: Dictionary) -> Array:
+func _corner_props(d: Dictionary, openings: Array[Rect2] = []) -> Array:
 	var out: Array = []
 	var hw: float = d.w * 0.5 - 1.1
 	var hd: float = d.d * 0.5 - 1.1
@@ -1011,6 +1205,9 @@ func _corner_props(d: Dictionary) -> Array:
 		if out.size() >= 2:
 			break
 		var ok := true
+		for opening in openings:
+			if opening.grow(1.2).has_point(Vector2(c.x, c.z)):
+				ok = false
 		for b in d.blocks:
 			var bc: Vector3 = b[0]
 			var bs: Vector3 = b[1]
@@ -1036,7 +1233,7 @@ func build_rooms() -> void:
 
 ## Открытая вышка 3.75 м. Четыре ступени с северной стороны дают пройти наверх
 ## обычными прыжками; видимые опоры/перила не меняют физику и не закрывают обзора.
-func _watchtower(parent: Node, name: String, center: Vector3, mat: Material) -> void:
+func _watchtower(parent: Node, name: String, center: Vector3, mat: Material, with_steps: bool = true) -> void:
 	var tower := Node3D.new()
 	tower.name = name
 	tower.position = center
@@ -1045,16 +1242,119 @@ func _watchtower(parent: Node, name: String, center: Vector3, mat: Material) -> 
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
 			_box(tower, "Post_%d_%d" % [int(sx), int(sz)], Vector3(sx * 1.18, 1.7, sz * 1.18), Vector3(0.22, 3.4, 0.22), mat, false)
-	for i in 4:
-		var top := 0.75 * (i + 1)
-		var z := -4.8 + i
-		_box(tower, "Step%d" % i, Vector3(0, top - 0.09, z), Vector3(1.5, 0.18, 0.95), mat)
-		for sx in [-1.0, 1.0]:
-			_box(tower, "StepPost%d_%d" % [i, int(sx)], Vector3(sx * 0.62, top * 0.5, z), Vector3(0.14, top, 0.14), mat, false)
+	if with_steps:
+		for i in 4:
+			var top := 0.75 * (i + 1)
+			var z := -4.8 + i
+			_box(tower, "Step%d" % i, Vector3(0, top - 0.09, z), Vector3(1.5, 0.18, 0.95), mat)
+			for sx in [-1.0, 1.0]:
+				_box(tower, "StepPost%d_%d" % [i, int(sx)], Vector3(sx * 0.62, top * 0.5, z), Vector3(0.14, top, 0.14), mat, false)
 	# Перила — только вид; северная сторона открыта для выхода со ступеней.
 	for sx in [-1.0, 1.0]:
 		_box(tower, "Rail_%d" % int(sx), Vector3(sx * 1.32, 4.35, 0), Vector3(0.12, 0.12, 2.5), mat, false)
 	_box(tower, "RailSouth", Vector3(0, 4.35, 1.32), Vector3(2.5, 0.12, 0.12), mat, false)
+
+## Пологие проходы: [центр, размер, наклон X, материал, необязательный поворот Y], углы в градусах.
+func _build_ramps(parent: Node, ramps: Array, mats: Dictionary) -> void:
+	if ramps.is_empty():
+		return
+	var plank: Material
+	for i in ramps.size():
+		var spec: Array = ramps[i]
+		var kind := str(spec[3])
+		var material: Material = null
+		if kind != "none":
+			material = mats.get(kind, mats.stone_dark) as Material
+		if kind == "wood":
+			# Общий материал настилов; при отсутствии — штатное дерево генератора.
+			if plank == null:
+				plank = load("res://rooms/materials/surface_plank.tres") as Material
+			if plank != null:
+				material = plank
+		var ramp := _box(parent, "Ramp%d" % i, spec[0], spec[1], material)
+		var yaw := float(spec[4]) if spec.size() > 4 else 0.0
+		ramp.rotation_degrees = Vector3(float(spec[2]), yaw, 0.0)
+
+## Четырёхугольник: две диагональные точки, высота линейно меняется по Z.
+func _nav_quad(a: Vector3, b: Vector3) -> PackedVector3Array:
+	return PackedVector3Array([a, Vector3(a.x, b.y, b.z), b, Vector3(b.x, a.y, a.z)])
+
+## Поверхность задаётся полигонами, общие вершины получают общие индексы.
+func _nav_region(parent: Node3D, spec: Array) -> void:
+	var verts := PackedVector3Array()
+	var index := {}
+	var faces: Array[PackedInt32Array] = []
+	for poly in spec[1]:
+		var face := PackedInt32Array()
+		for point in poly:
+			var v: Vector3 = point
+			if not index.has(v):
+				index[v] = verts.size()
+				verts.append(v)
+			face.append(int(index[v]))
+		faces.append(face)
+	var mesh := NavigationMesh.new()
+	mesh.set_vertices(verts)
+	for face in faces:
+		mesh.add_polygon(face)
+	var region := NavigationRegion3D.new()
+	region.name = spec[0]
+	region.navigation_layers = 1
+	region.navigation_mesh = mesh
+	if spec.size() > 2:
+		region.set_meta("break_with", spec[2])
+	parent.add_child(region)
+
+## Необязательная навигация: пол с физическими проёмами, дополнительные полигоны и связи.
+func _build_enemy_navigation(root: Node3D, d: Dictionary, openings: Array[Rect2], width: float, depth: float) -> void:
+	if not d.has("enemy_navigation"):
+		return
+	var data: Dictionary = d.enemy_navigation
+	var clearance := maxf(0.0, float(data.get("clearance", 0.55)))
+	var bounds := Rect2(Vector2(-width * 0.5 + clearance, -depth * 0.5 + clearance), Vector2(width - clearance * 2, depth - clearance * 2))
+	if not bounds.has_area():
+		push_error("EnemyNavigation: недостаточный размер пола")
+		return
+	var excluded: Array[Rect2] = []
+	var raw := _floor_opening_rects(data.get("ground_exclusions", []), width, depth)
+	for value in openings + raw:
+		var rect: Rect2 = value
+		var clipped: Rect2 = rect.grow(clearance).intersection(bounds)
+		if clipped.has_area():
+			excluded.append(clipped)
+	var xs := _floor_cut_lines(excluded, bounds.position.x, bounds.end.x, 0)
+	var zs := _floor_cut_lines(excluded, bounds.position.y, bounds.end.y, 1)
+	var floor_faces: Array = []
+	for iz in zs.size() - 1:
+		for ix in xs.size() - 1:
+			var mid := Vector2((xs[ix] + xs[ix + 1]) * 0.5, (zs[iz] + zs[iz + 1]) * 0.5)
+			if not _floor_opening_contains(excluded, mid):
+				floor_faces.append(_nav_quad(Vector3(xs[ix], 0, zs[iz]), Vector3(xs[ix + 1], 0, zs[iz + 1])))
+	var nav := Node3D.new()
+	nav.name = "EnemyNavigation"
+	root.add_child(nav)
+	_nav_region(nav, ["Floor", floor_faces])
+	for spec in data.get("regions", []):
+		_nav_region(nav, spec)
+	for spec in data.get("links", []):
+		var link := NavigationLink3D.new()
+		link.name = spec[0]
+		link.navigation_layers = 1
+		link.bidirectional = true
+		link.start_position = spec[1]
+		link.end_position = spec[2]
+		if spec.size() > 3:
+			if spec[3] is Dictionary:
+				var options: Dictionary = spec[3]
+				link.navigation_layers = int(options.get("layers", 1))
+				link.bidirectional = bool(options.get("bidirectional", true))
+				if options.has("traverse"):
+					link.set_meta("traverse", options.traverse)
+				if options.has("break_with"):
+					link.set_meta("break_with", options.break_with)
+			else:
+				link.set_meta("break_with", spec[3])
+		nav.add_child(link)
 
 func _build_room(d: Dictionary, boss: bool) -> void:
 	# Случайные повороты пропсов — одни и те же при каждом запуске генератора (меньше шума в .tscn)
@@ -1064,6 +1364,8 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	root.set_script(load("res://rooms/room.gd"))
 	root.set("room_title", d.title)
 	root.set("max_alive", int(d.get("max_alive", 0)))
+	if d.has("enemy_fall_y"):
+		root.set_meta("enemy_fall_y", float(d.enemy_fall_y))
 	var w: float = d.w
 	var dep: float = d.d
 	var h := 6.0
@@ -1082,7 +1384,10 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	var geo := Node3D.new()
 	geo.name = "Geometry"
 	root.add_child(geo)
-	_box(geo, "Floor", Vector3(0, -0.5, 0), Vector3(w + 2, 1, dep + 2), floor_mat)
+	var openings := _floor_opening_rects(d.get("floor_openings", []), w, dep)
+	var floor := _box(geo, "Floor", Vector3(0, -0.5, 0), Vector3(w + 2, 1, dep + 2), floor_mat)
+	if not openings.is_empty():
+		_cut_floor(floor, openings, w, dep)
 	# Стены (дверной проём 4 м по центру северной стены, z = -d/2)
 	var gap := 4.0
 	var side_w := (w - gap) / 2.0
@@ -1120,10 +1425,16 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 			continue
 		# "none" — только коллизия (вид даёт декоративная модель из "models", например корпус корабля)
 		_box(geo, "Block%d" % i, b[0], b[1], null if b[2] == "none" else mats.get(b[2], mats.stone_dark))
+	var ramps: Array = d.get("ramps", [])
+	_build_ramps(geo, ramps, mats)
 	# Небольшие наблюдательные вышки: реальные ступени и настил, декоративные опоры.
 	var towers: Array = d.get("watchtowers", [])
 	for i in towers.size():
-		_watchtower(geo, "Watchtower%d" % i, towers[i], mats.wood)
+		var spec: Variant = towers[i]
+		if spec is Array:
+			_watchtower(geo, "Watchtower%d" % i, spec[0], mats.wood, bool(spec[1]))
+		else:
+			_watchtower(geo, "Watchtower%d" % i, spec, mats.wood)
 	for i in d.pillars.size():
 		var pp: Vector3 = d.pillars[i]
 		_cyl(geo, "Pillar%d" % i, pp + Vector3(0, h / 2, 0), 0.8, h, pillar_mat)
@@ -1251,7 +1562,7 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	props.name = "Props"
 	root.add_child(props)
 	var prop_scenes := {}
-	var all_props: Array = d.props + (_corner_props(d) if (d.get("dress", {}) as Dictionary).get("corner_props", true) else [])
+	var all_props: Array = d.props + (_corner_props(d, openings) if (d.get("dress", {}) as Dictionary).get("corner_props", true) else [])
 	for i in all_props.size():
 		var pr: Array = all_props[i]
 		# "barrel", "crate", "barrel_explosive" → props/<вид>.tscn
@@ -1340,6 +1651,7 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	if d.get("floor_tex", "") == "dirt_straw":
 		opts["floor"] = "dirt"
 	RoomDresser.new(hash(d.file)).dress_room(root, opts)
+	_build_enemy_navigation(root, d, openings, w, dep)
 	_save(root, "res://rooms/%s.tscn" % d.file)
 
 ## Графика стен зала (assets/decor/*): знамёна по центру боковых стен (там, где были знамёна-модели), щиты

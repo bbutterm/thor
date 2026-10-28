@@ -193,6 +193,9 @@ func _run() -> void:
 	await _climb("res://rooms/room_08.tscn", Vector3(-11, 2.1, -3), 0.0, 3.9, "колизей: терраса → ложа 4 м")
 	await _climb("res://rooms/room_09.tscn", Vector3(-3, 0.1, 6), PI / 2, 2.9, "деревня: ящик → крыша дома 3 м")
 	await _climb("res://rooms/room_09.tscn", Vector3(-5, 0.1, 1.5), 0.0, 2.9, "деревня: ящик → крыша дома с мостом 3 м")
+	await _walk_room10_ramp(Vector3(-10, 0.1, 10.4), 0.0, 2.9, "яма → средний ярус")
+	await _walk_room10_ramp(Vector3(-6.8, 3.1, -1.6), PI, 6.5, "средний → верхний помост")
+	await _walk_room10_ramp(Vector3(9, 3.1, -6.4), PI, 6.5, "средний ярус → вышка")
 	FX.reset_time()
 	get_tree().quit(1 if fails > 0 else 0)
 
@@ -226,5 +229,29 @@ func _climb(room: String, local: Vector3, yaw: float, min_y: float, what: String
 	Input.action_release("jump")
 	await frames(5)
 	print("[%s] %s: макс. y=%.2f" % ["OK" if ok else "FAIL", what, top])
+	if not ok:
+		fails += 1
+
+## Проходим каждый марш нового зала обычным движением, без искусственного подъёма.
+func _walk_room10_ramp(start: Vector3, yaw: float, min_y: float, what: String) -> void:
+	var g := await _start("res://rooms/room_10.tscn")
+	g.room.set_physics_process(false)
+	var p := g.player
+	p.global_position = g.room.to_global(start)
+	p.velocity = Vector3.ZERO
+	p.rotation_target = Vector2(0, yaw)
+	await frames(10)
+	Input.action_press("move_forward")
+	var ok := false
+	var top := 0.0
+	for i in 240:
+		await get_tree().physics_frame
+		var y := g.room.to_local(p.global_position).y
+		top = maxf(top, y)
+		if p.is_on_floor() and y >= min_y:
+			ok = true
+			break
+	Input.action_release("move_forward")
+	print("[%s] частокол: %s (y=%.2f)" % ["OK" if ok else "FAIL", what, top])
 	if not ok:
 		fails += 1

@@ -40,6 +40,21 @@ signal wave_started(index: int)
 @export_range(1.0, 30.0, 0.5) var entry_max_distance: float = 10.0
 @export_range(0.05, 1.0, 0.01) var entry_arrival_tolerance: float = 0.18
 
+@export_group("Навигация ярусов")
+## Участвует только зал с узлом EnemyNavigation. Частота распределена между врагами.
+@export_range(0.05, 2.0, 0.05) var nav_refresh_interval: float = 0.3
+@export_range(0.05, 3.0, 0.05) var nav_target_move: float = 0.75
+@export_range(0.05, 2.0, 0.05) var nav_point_distance: float = 0.35
+@export_range(0.05, 2.0, 0.05) var nav_target_distance: float = 0.65
+@export_range(0.1, 5.0, 0.1) var nav_surface_tolerance: float = 1.2
+## Ходовые регионы/связи и отдельный слой односторонних прыжков.
+@export var nav_walk_layers: int = 1
+@export var nav_jump_layers: int = 2
+## Одновременно занятых прыжков в зале, включая прерванных до посадки.
+@export_range(1, 8, 1) var nav_max_simultaneous_jumps: int = 1
+## Только расчётная точка посадки; фактическое тело не перемещается.
+@export_range(0.01, 0.15, 0.01) var nav_jump_landing_clearance: float = 0.05
+
 @export_group("Оружие и элита")
 ## Шанс, что враг (не босс) появится элитой: светится, ×2.5 HP, роняет оружие
 @export_range(0.0, 1.0) var elite_chance: float = 0.1
@@ -75,12 +90,17 @@ var _last_death_pos: Vector3 = Vector3.INF
 var _wave_size: int = 0
 var _wave_time: float = 0.0
 var _advance_pending: bool = false
+var _nav_jump_holders: Dictionary = {}  # instance id → WeakRef
+var _nav_supported_parts: Dictionary = {}  # instance id настила → регионы и связи
 
 @onready var spawns: Node3D = $Spawns
 @onready var door: Node3D = get_node_or_null("Door")
 @onready var exit_area: Area3D = get_node_or_null("Exit")
+@onready var enemy_navigation: Node3D = get_node_or_null("EnemyNavigation") as Node3D
 
 func _ready() -> void:
+	if enemy_navigation != null:
+		_bind_navigation_breakables()
 	if exit_area:
 		exit_area.body_entered.connect(_on_exit_body_entered)
 	for m in spawns.get_children():
@@ -88,6 +108,35 @@ func _ready() -> void:
 		if not _waves.has(w):
 			_waves[w] = []
 		_waves[w].append(m)
+
+## Связь/регион с break_with перестаёт участвовать в путях при обрушении настила.
+## NodePath задаётся относительно Room; неверная зависимость закрывает сегмент.
+func _bind_navigation_breakables() -> void:
+	for part in enemy_navigation.find_children("*", "", true, false):
+		if not (part is NavigationRegion3D or part is NavigationLink3D) or not part.has_meta("break_with"):
+			continue
+		var value: Variant = part.get_meta("break_with")
+		var balcony: Balcony
+		if value is NodePath:
+			balcony = get_node_or_null(value) as Balcony
+		if balcony == null:
+			part.set("enabled", false)
+			push_error("EnemyNavigation: break_with у %s не указывает на Balcony" % part.name)
+		elif balcony.is_broken:
+			part.set("enabled", false)
+		else:
+			var id := balcony.get_instance_id()
+			if not _nav_supported_parts.has(id):
+				_nav_supported_parts[id] = []
+				balcony.broken.connect(_on_navigation_support_broken, CONNECT_ONE_SHOT)
+			(_nav_supported_parts[id] as Array).append(part)
+
+func _on_navigation_support_broken(balcony: Balcony) -> void:
+	var id := balcony.get_instance_id()
+	for part in _nav_supported_parts.get(id, []):
+		if is_instance_valid(part):
+			part.set("enabled", false)
+	_nav_supported_parts.erase(id)
 
 func get_spawn_transform() -> Transform3D:
 	var spawn := get_node_or_null("PlayerSpawn") as Node3D
@@ -184,11 +233,37 @@ func _make_enemy(kind: String) -> Enemy:
 
 func _register(enemy: Enemy) -> void:
 	enemy.player = _player
+	if enemy_navigation != null and enemy.kind != Enemy.Kind.BOSS:
+		enemy.enable_tier_navigation(enemy_navigation, {
+			"refresh_interval": nav_refresh_interval, "target_move": nav_target_move,
+			"point_distance": nav_point_distance, "target_distance": nav_target_distance,
+			"surface_tolerance": nav_surface_tolerance, "walk_layers": nav_walk_layers,
+			"jump_layers": nav_jump_layers, "jump_speed": entry_jump_speed,
+			"timeout": entry_timeout, "min_drop": entry_min_drop, "max_drop": entry_max_drop,
+			"max_distance": entry_max_distance, "arrival_tolerance": entry_arrival_tolerance,
+			"landing_clearance": nav_jump_landing_clearance, "allow_start_floor_contact": true})
 	enemy.died.connect(_on_enemy_died)
 	_alive.append(enemy)
 	if enemy.kind == Enemy.Kind.BOSS:
 		boss_spawned.emit(enemy)
 	enemy_count_changed.emit(_alive.size() + _spawn_queue.size())
+
+## Пачка не проверяет десятки траекторий и не прыгает в одну точку за один кадр.
+func try_navigation_jump(enemy: Enemy) -> bool:
+	for holder_id in _nav_jump_holders.keys():
+		var holder := (_nav_jump_holders[holder_id] as WeakRef).get_ref() as Enemy
+		if not is_instance_valid(holder) or holder.is_dead or not holder.is_inside_tree():
+			_nav_jump_holders.erase(holder_id)
+	var id := enemy.get_instance_id()
+	if _nav_jump_holders.has(id):
+		return true
+	if _nav_jump_holders.size() >= maxi(1, nav_max_simultaneous_jumps):
+		return false
+	_nav_jump_holders[id] = weakref(enemy)
+	return true
+
+func release_navigation_jump(enemy: Enemy) -> void:
+	_nav_jump_holders.erase(enemy.get_instance_id())
 
 func _has_spawn_capacity() -> bool:
 	return max_alive <= 0 or _alive.size() < max_alive
@@ -252,10 +327,17 @@ func pending_spawns() -> int:
 	return _spawn_queue.size()
 
 func _on_enemy_died(enemy: Enemy) -> void:
+	release_navigation_jump(enemy)
 	_alive.erase(enemy)
-	_last_death_pos = enemy.global_position
+	_last_death_pos = safe_drop_position(enemy.global_position)
 	enemy_count_changed.emit(_alive.size() + _spawn_queue.size())
 	_check_clear()
+
+## Если враг погиб в пропасти, награды остаются на доступном полу у входа.
+func safe_drop_position(pos: Vector3) -> Vector3:
+	if has_meta("enemy_fall_y") and to_local(pos).y < float(get_meta("enemy_fall_y")):
+		return Loot.floor_point(self, get_spawn_transform().origin)
+	return pos
 
 func _check_clear() -> void:
 	if _is_cleared or not _alive.is_empty() or not _spawn_queue.is_empty() or _advance_pending:

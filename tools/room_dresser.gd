@@ -286,6 +286,8 @@ var _aabb: Dictionary = {}
 var _blocks: Array = []
 ## Колонны: [центр на полу, радиус]
 var _pillars: Array = []
+## Проёмы в полу из метаданных Geometry/Floor, в координатах X/Z.
+var _floor_openings: Array[Rect2] = []
 ## Точки, рядом с которыми не кладём обломки и декали: [точка, радиус]
 var _avoid: Array = []
 var _mats: Dictionary = {}
@@ -316,6 +318,7 @@ func dress_room(root_: Node3D, opts_: Dictionary) -> void:
 		_block(b)
 	_pillar_dress(geo)
 	_walls(geo)
+	_palisade_rows()
 	_decals()
 	if opts.get("bones", true):
 		_bones()
@@ -328,6 +331,12 @@ func dress_room(root_: Node3D, opts_: Dictionary) -> void:
 
 ## Габариты зала, блоки, колонны и запретные точки — по узлам сцены.
 func _read_layout(geo: Node) -> void:
+	_floor_openings.clear()
+	var floor := geo.get_node_or_null("Floor")
+	if floor:
+		for rect in floor.get_meta("floor_openings", []):
+			if rect is Rect2:
+				_floor_openings.append(rect)
 	var we := geo.get_node("WallE") as Node3D
 	var ws := geo.get_node("WallS") as Node3D
 	w = (we.position.x - 0.5) * 2.0
@@ -379,7 +388,15 @@ func _box_size(n: Node, shape_name: String = "Shape") -> Vector3:
 	return Vector3.ONE
 
 ## Свободна ли точка пола (вне блоков, прыжковых рун, пропсов, проёма; r — свой радиус).
+func _near_floor_opening(p: Vector3, r: float = 0.0) -> bool:
+	for rect in _floor_openings:
+		if rect.grow(r).has_point(Vector2(p.x, p.z)):
+			return true
+	return false
+
 func _free(p: Vector3, r: float = 0.0) -> bool:
+	if _near_floor_opening(p, r):
+		return false
 	for a in _avoid:
 		var c: Vector3 = a[0]
 		if a.size() > 2:
@@ -474,11 +491,25 @@ func _floor(geo: Node) -> void:
 		cf.material_override = mat
 	var xs := _grid_lines(w * 0.5, 0)
 	var zs := _grid_lines(dep * 0.5, 2)
+	# Добавляем после объединения близких линий: каждая граница точно сохранится.
+	for rect in _floor_openings:
+		xs.append(rect.position.x)
+		xs.append(rect.end.x)
+		zs.append(rect.position.y)
+		zs.append(rect.end.y)
+	xs = _unique_floor_lines(xs)
+	zs = _unique_floor_lines(zs)
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var ao_cache := {}
 	for iz in zs.size() - 1:
 		for ix in xs.size() - 1:
+			# Совпавшие линии допустимы, но нулевые ячейки не рисуем.
+			if xs[ix + 1] <= xs[ix] or zs[iz + 1] <= zs[iz]:
+				continue
+			var mid := Vector3((xs[ix] + xs[ix + 1]) * 0.5, 0, (zs[iz] + zs[iz + 1]) * 0.5)
+			if _near_floor_opening(mid):
+				continue
 			var q := [Vector3(xs[ix], 0, zs[iz]), Vector3(xs[ix + 1], 0, zs[iz]), Vector3(xs[ix + 1], 0, zs[iz + 1]), Vector3(xs[ix], 0, zs[iz + 1])]
 			var cs: Array = []
 			for v in q:
@@ -489,12 +520,42 @@ func _floor(geo: Node) -> void:
 				cs.append(ao_cache[key])
 			_tri(st, q[0], q[1], q[2], Vector3.UP, cs[0], cs[1], cs[2])
 			_tri(st, q[0], q[2], q[3], Vector3.UP, cs[0], cs[2], cs[3])
+			# Видимые внутренние грани толщины исходного пола, без дополнительных узлов.
+			if ix > 0 and _near_floor_opening(Vector3((xs[ix - 1] + xs[ix]) * 0.5, 0, mid.z)):
+				_floor_cut_face(st, q[0], q[3], Vector3.LEFT)
+			if ix < xs.size() - 2 and _near_floor_opening(Vector3((xs[ix + 1] + xs[ix + 2]) * 0.5, 0, mid.z)):
+				_floor_cut_face(st, q[1], q[2], Vector3.RIGHT)
+			if iz > 0 and _near_floor_opening(Vector3(mid.x, 0, (zs[iz - 1] + zs[iz]) * 0.5)):
+				_floor_cut_face(st, q[0], q[1], Vector3.FORWARD)
+			if iz < zs.size() - 2 and _near_floor_opening(Vector3(mid.x, 0, (zs[iz + 1] + zs[iz + 2]) * 0.5)):
+				_floor_cut_face(st, q[3], q[2], Vector3.BACK)
 	st.index()
 	var mi := MeshInstance3D.new()
 	mi.name = "FloorVisual"
 	mi.mesh = st.commit()
 	mi.material_override = mat
 	dress.add_child(mi)
+
+## Объединять только равные границы: близкий край проёма нельзя потерять.
+func _unique_floor_lines(lines: PackedFloat32Array) -> PackedFloat32Array:
+	lines.sort()
+	var result := PackedFloat32Array()
+	for v in lines:
+		if result.is_empty() or v > result[result.size() - 1]:
+			result.append(v)
+	return result
+
+func _floor_cut_face(st: SurfaceTool, a: Vector3, b: Vector3, normal: Vector3) -> void:
+	var aa := _floor_ao(a)
+	var ab := _floor_ao(b)
+	var top_a := Color(aa, aa, aa)
+	var top_b := Color(ab, ab, ab)
+	var low_a := Color(aa * 0.7, aa * 0.7, aa * 0.7)
+	var low_b := Color(ab * 0.7, ab * 0.7, ab * 0.7)
+	var a_low := a + Vector3.DOWN
+	var b_low := b + Vector3.DOWN
+	_tri(st, a, b, b_low, normal, top_a, top_b, low_b)
+	_tri(st, a, b_low, a_low, normal, top_a, low_b, low_a)
 
 ## Линии сетки пола по оси (0 — X, 2 — Z): края, сгущение у стен и у краёв блоков/колонн, остальное ~2.5 м.
 func _grid_lines(half: float, axis: int) -> PackedFloat32Array:
@@ -733,7 +794,7 @@ func _rubble_cluster(p: Vector3, outn: Vector3, scale: float) -> void:
 	var rocks := rng.randi_range(1, 2)
 	for i in rocks:
 		var q := p + outn * rng.randf_range(0.12, 0.45) + side * rng.randf_range(-0.6, 0.6)
-		if not _free_wall(q, 0.2):
+		if _near_floor_opening(q, 1.2) or not _free_wall(q, 0.2):
 			continue
 		var sc := rng.randf_range(0.45, 1.0) * scale
 		var b := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.RIGHT, rng.randf_range(-0.25, 0.25)) * Basis.from_scale(Vector3(sc, sc * rng.randf_range(0.6, 1.0), sc))
@@ -741,7 +802,7 @@ func _rubble_cluster(p: Vector3, outn: Vector3, scale: float) -> void:
 		_add("rock_%d" % [1, 3, 4, 5][rng.randi() % 4], Transform3D(b, q))
 	for i in rng.randi_range(2, 4):
 		var q2 := p + outn * rng.randf_range(0.1, 0.9) + side * rng.randf_range(-0.9, 0.9)
-		if not _free_wall(q2, 0.1):
+		if _near_floor_opening(q2, 1.2) or not _free_wall(q2, 0.1):
 			continue
 		var sc2 := rng.randf_range(1.1, 1.9)
 		var b2 := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.FORWARD, rng.randf_range(-0.3, 0.3)) * Basis.from_scale(Vector3.ONE * sc2)
@@ -750,6 +811,8 @@ func _rubble_cluster(p: Vector3, outn: Vector3, scale: float) -> void:
 
 ## Точка у стены/блока свободна от прыжковых рун, пропсов и проёма (блоки не мешают — кучка у их основания).
 func _free_wall(p: Vector3, r: float) -> bool:
+	if _near_floor_opening(p, r):
+		return false
 	for a in _avoid:
 		if a.size() > 2:
 			continue
@@ -1013,8 +1076,23 @@ func _not_in_block(p: Vector3) -> bool:
 				return false
 	return true
 
+## Короткие декоративные ряды частокола: пары конечных точек [Vector3, Vector3].
+## Точки одной высоты, вдоль X или Z; y — основание кола. Коллизии нет.
+func _palisade_rows() -> void:
+	for row in opts.get("palisade_rows", []):
+		if not (row is Array) or row.size() != 2 or not (row[0] is Vector3) or not (row[1] is Vector3):
+			push_error("palisade_rows: нужна пара конечных точек Vector3")
+			continue
+		var a: Vector3 = row[0]
+		var b: Vector3 = row[1]
+		var delta := b - a
+		if not is_finite(a.x) or not is_finite(a.y) or not is_finite(a.z) or not is_finite(b.x) or not is_finite(b.y) or not is_finite(b.z) or absf(delta.y) > 0.001 or (absf(delta.x) > 0.001 and absf(delta.z) > 0.001) or Vector2(delta.x, delta.z).length() < 0.34:
+			push_error("palisade_rows: ряд должен быть горизонтальным, вдоль X или Z и длиной не меньше 0.34 м")
+			continue
+		_palisade((a + b) * 0.5, Vector3(absf(delta.x), 0, absf(delta.z)), a.y)
+
 ## Частокол на верху стены-коробки (центр, размер): колья разной высоты и наклона по осевой линии.
-func _palisade(center: Vector3, size: Vector3) -> void:
+func _palisade(center: Vector3, size: Vector3, base_y: float = WALL_TOP - 0.3) -> void:
 	var along_x := size.x >= size.z
 	var length := maxf(size.x, size.z)
 	var step := 0.34
@@ -1022,7 +1100,7 @@ func _palisade(center: Vector3, size: Vector3) -> void:
 	for i in n:
 		var t := (i + 0.5) * length / n - length * 0.5
 		var p := center + (Vector3(t, 0, 0) if along_x else Vector3(0, 0, t))
-		p.y = WALL_TOP - 0.3
+		p.y = base_y
 		var r := rng.randf_range(0.13, 0.17)
 		var h := rng.randf_range(1.0, 1.6)
 		var lean := Basis(Vector3.RIGHT, deg_to_rad(rng.randf_range(-4, 4))) * Basis(Vector3.FORWARD, deg_to_rad(rng.randf_range(-4, 4)))
@@ -1030,7 +1108,7 @@ func _palisade(center: Vector3, size: Vector3) -> void:
 		_add("stake", Transform3D(lean * b * Basis.from_scale(Vector3(r, h, r)), p))
 	# Связка: бревно вдоль частокола
 	var lp := center
-	lp.y = WALL_TOP + 0.35
+	lp.y = base_y + 0.65
 	var lb := Basis.from_scale(Vector3(length, 0.1, 0.1))
 	if not along_x:
 		lb = Basis(Vector3.UP, PI * 0.5) * lb
@@ -1118,7 +1196,7 @@ func _decals() -> void:
 		var spec: Array = FLOOR_DECALS[key]
 		var size := rng.randf_range(spec[1], spec[2])
 		var p := Vector3(rng.randf_range(-w * 0.5 + 1.2, w * 0.5 - 1.2), 0, rng.randf_range(-dep * 0.5 + 1.2, dep * 0.5 - 1.2))
-		if not _free(p, size * 0.4):
+		if _near_floor_opening(p, size * 0.708) or not _free(p, size * 0.4):
 			continue
 		var near := false
 		for q in placed:
@@ -1153,7 +1231,7 @@ func _bones() -> void:
 		if k >= 2:
 			break
 		var p: Vector3 = corners[(start + i) % 4]
-		if not _free(p, 0.6):
+		if _near_floor_opening(p, 2.0) or not _free(p, 0.6):
 			continue
 		var skulls := k == 0
 		var inst := (load(QS + ("Environment_Skulls.gltf" if skulls else "Environment_LargeBones.gltf")) as PackedScene).instantiate() as Node3D

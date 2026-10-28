@@ -36,7 +36,7 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 	_update_visual_feedback(delta)
-	if global_position.y < -30.0:
+	if _below_fall_limit():
 		_die("fall")
 
 ## Подкласс: решить, не начать ли своё действие (вызывается каждый кадр, пока act == 0).

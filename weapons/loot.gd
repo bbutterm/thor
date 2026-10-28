@@ -234,12 +234,14 @@ static func on_enemy_died(enemy: Enemy, _source: String) -> void:
 	if parent == null:
 		return
 	var pos := enemy.global_position
+	if parent.has_method("safe_drop_position"):
+		pos = parent.call("safe_drop_position", pos)
 	var h := _holder()
 	# Наёмник Локи роняет патроны всегда (GDD 12.1)
 	if enemy.kind == Enemy.Kind.MERC:
 		spawn_ammo(parent, pos)
 	# Серебро (блок К, GDD 15.2): корм 0–1, боец 2, особый 3, элита 10
-	Silver.on_enemy_died(enemy)
+	Silver.on_enemy_died(enemy, pos)
 	if is_elite(enemy):
 		var dropped := false
 		if randf() < elite_silver_chance:

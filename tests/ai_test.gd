@@ -144,6 +144,49 @@ func _run() -> void:
 		", ".join(specials.keys().map(func(k: int) -> String: return FatSven.Act.keys()[k]))])
 	if not sok:
 		fails += 1
+	if not await _room10_ascent():
+		fails += 1
 	FX.reset_time()
 	print("=== ИТОГ AI: %d FAIL ===" % fails)
 	get_tree().quit(1 if fails > 0 else 0)
+
+## Враг добирается по обоим маршам от пола до верхнего помоста сам, без переноса.
+func _room10_ascent() -> bool:
+	Run.start_run("berserker")
+	Run.room_order.assign(["res://rooms/room_10.tscn", Run.BOSS_SCENE])
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await frames(90)
+	var game := get_tree().current_scene as Game
+	var room := game.room
+	room.set_physics_process(false)
+	room._spawn_queue.clear()
+	for e in room.alive_enemies().duplicate():
+		e.queue_free()
+	room._alive.clear()
+	var p := game.player
+	p.input_enabled = false
+	p.global_position = room.to_global(Vector3(-6.5, 6.8, 11.5))
+	p.velocity = Vector3.ZERO
+	room._player = p
+	var enemy := room.spawn_extra("fodder", room.to_global(Vector3(-10, 0.05, 10.4)))
+	if enemy == null:
+		print("[FAIL] частокол: корм не появился")
+		return false
+	enemy._set_state(Enemy.State.CHASE)
+	enemy.alert_to_player()
+	var middle := false
+	var reached := false
+	for i in 2400:
+		await get_tree().physics_frame
+		p.health = p.max_health
+		if not is_instance_valid(enemy) or enemy.is_dead:
+			break
+		var local := room.to_local(enemy.global_position)
+		if enemy.is_on_floor() and local.y > 2.6 and local.y < 3.5:
+			middle = true
+		if enemy.is_on_floor() and local.y > 6.3 and enemy.global_position.distance_to(p.global_position) < 3.0:
+			reached = true
+			break
+	var ok := middle and reached
+	print("[%s] частокол: корм прошёл средний и верхний ярусы" % ["OK" if ok else "FAIL"])
+	return ok
