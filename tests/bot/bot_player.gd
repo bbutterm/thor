@@ -293,7 +293,10 @@ func _tick() -> void:
 # --- Учёт залов ---
 
 func _track_room(p: Player) -> void:
-	if game.room != _room_obj:
+	# Во время барьера Game.room временно отсутствует: это не начало нового зала.
+	if not is_instance_valid(game.room):
+		return
+	if not is_instance_valid(_room_obj) or game.room != _room_obj:
 		_close_room()
 		_room_obj = game.room
 		_room_index = Run.room_index
