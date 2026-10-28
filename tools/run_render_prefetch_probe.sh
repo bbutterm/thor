@@ -4,6 +4,7 @@ project=${1:-}
 out=${2:-}
 if [[ -z "$project" || -z "$out" || $# != 2 || -e "$out" ]]; then echo 'Usage: run-gl-probe.sh <project> <new-output-dir>' >&2; exit 2; fi
 project=$(cd "$project" && pwd -P)
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 mkdir -p "$out" || exit 2
 out=$(cd "$out" && pwd -P)
 mkdir "$out/data" "$out/cache" "$out/config"
@@ -51,9 +52,12 @@ if (( ready != 1 )); then echo 'X server failed' >&2; exit 2; fi
 export XDG_DATA_HOME="$out/data" XDG_CACHE_HOME="$out/cache" XDG_CONFIG_HOME="$out/config"
 timeout --signal=TERM --kill-after=15s 600 stdbuf -oL -eL godot --path "$project" --fixed-fps 60 --audio-driver Dummy --rendering-method gl_compatibility --resolution 320x180 res://tests/render_prefetch_probe.tscn 2>&1 | stdbuf -i0 -o0 head -c 50000000 > "$out/godot.log"
 rc=$?
-runtime=$(sed '/^RENDER PREFETCH RESULT:/,$d' "$out/godot.log" | grep -cE '^(ERROR:|SCRIPT ERROR:)' || true)
-cleanup_errors=$(sed -n '/^RENDER PREFETCH RESULT:/,$p' "$out/godot.log" | grep -cE '^ERROR:' || true)
-printf 'commit=%s\nasset_cache_load=threaded\nexit_code=%d\nruntime_errors=%d\ncleanup_errors=%d\n' \
-  "$(git -C "$project" rev-parse HEAD)" "$rc" "$runtime" "$cleanup_errors" | tee "$out/metadata.txt"
+if ! stats=$(python3 "$script_dir/godot_log_check.py" render "$out/godot.log" "$out"); then
+  echo 'Could not classify the Godot log.' >&2
+  exit 1
+fi
+read -r runtime cleanup_errors cleanup_unexpected <<< "$stats"
+printf 'commit=%s\nasset_cache_load=threaded\nexit_code=%d\nruntime_errors=%d\ncleanup_errors=%d\ncleanup_unexpected=%d\n' \
+  "$(git -C "$project" rev-parse HEAD)" "$rc" "$runtime" "$cleanup_errors" "$cleanup_unexpected" | tee "$out/metadata.txt"
 grep -E '^RENDER PREFETCH:|^REQUESTS:|^BODY:|^PORTRAIT:|^RENDER PREFETCH RESULT:' "$out/godot.log" || true
-if (( rc != 0 || runtime != 0 )) || ! grep -q '^RENDER PREFETCH RESULT: PASS$' "$out/godot.log" || grep -qE 'SCRIPT ERROR|Parse Error' "$out/godot.log"; then exit 1; fi
+if (( rc != 0 || runtime != 0 || cleanup_unexpected != 0 )) || ! grep -q '^RENDER PREFETCH RESULT: PASS$' "$out/godot.log" || grep -qE 'SCRIPT ERROR|Parse Error' "$out/godot.log"; then exit 1; fi

@@ -63,18 +63,20 @@ for trace in 0 1; do
       fi
       # The resource-at-exit ERROR is the measurement, not a script failure.
       validation_status=0
-      python3 - "$case_dir" "$trace" "$teardown" > "$case_dir/validation.log" 2>&1 <<'PY' || validation_status=$?
+      python3 -B - "$case_dir" "$trace" "$teardown" "$project_dir/tools" > "$case_dir/validation.log" 2>&1 <<'PY' || validation_status=$?
 import json
-import re
 import sys
 from pathlib import Path
 
 case = Path(sys.argv[1])
-trace, teardown = sys.argv[2:]
+trace, teardown = sys.argv[2:4]
+sys.path.insert(0, sys.argv[4])
+from godot_log_check import classify, write_lines
+
 log = (case / "combined.log").read_text(errors="replace")
-unexpected = [line for line in log.splitlines()
-              if (line.startswith("SCRIPT ERROR:") or line.startswith("ERROR:"))
-              and not re.match(r"^ERROR: \d+ resources still in use at exit", line)]
+expected, unexpected, resources = classify(log)
+write_lines(case / "expected-errors.log", expected)
+write_lines(case / "unexpected-errors.log", unexpected)
 if unexpected:
     sys.exit("Unexpected engine/script error; retain the log and stop: " + unexpected[0])
 lines = (case / "result.jsonl").read_text().splitlines()
@@ -87,10 +89,9 @@ if (not row.get("valid") or row.get("body") != "thrall" or row.get("seed") != 11
 marker = "FIXED TEARDOWN: game_freed=true room_freed=true bot_freed=true stayed_paused=true"
 if (teardown == "1" and log.count(marker) != 1) or (teardown == "0" and "FIXED TEARDOWN:" in log):
     sys.exit("Missing or unexpected teardown verification")
-leak = re.search(r"^ERROR: (\d+) resources still in use at exit", log, re.M)
 print("  outcome=%s spawned=%d/%d exit_resources=%s" %
       (row.get("outcome"), len(row.get("spawned", [])), len(row.get("planned", [])),
-       leak.group(1) if leak else "none"))
+       ",".join(map(str, resources)) if resources else "none"))
 PY
       cat "$case_dir/validation.log"
       if (( validation_status != 0 )); then

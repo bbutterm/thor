@@ -141,7 +141,7 @@ if (( rc == 0 )) && { ! grep -Eq '^Пройдено залов: ([1-9][0-9]*) и
     echo 'В журнале нет полного итога сценария.' >&2
     rc=1
 fi
-if (( rc == 0 )) && grep -Eq '^ERROR:|SCRIPT ERROR|Parse Error|HITCH FAIL' "$out/godot.log"; then
+if (( rc == 0 )) && ! python3 "$root/tools/godot_log_check.py" hitch "$out/godot.log" "$out/godot-errors.log"; then
     echo 'В журнале есть ошибка Godot, сценария или разбора.' >&2
     rc=1
 fi

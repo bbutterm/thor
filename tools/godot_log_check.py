@@ -8,6 +8,7 @@ from pathlib import Path
 
 ERROR_MARKER = re.compile(r"SCRIPT ERROR|ERROR:|Parse Error")
 RESOURCE_ERROR = re.compile(r"^ERROR: (\d+) resources still in use at exit(?=$|[.\s])")
+RESULT_MARKER = "RENDER PREFETCH RESULT:"
 
 
 def _markers(line):
@@ -51,22 +52,79 @@ def classify(text, scene=""):
     return expected, unexpected, resources
 
 
+def render_classify(text):
+    """Separate errors before the result marker and expected cleanup messages."""
+    runtime, cleanup_expected, cleanup_unexpected = [], [], []
+    runtime_count = cleanup_count = cleanup_unexpected_count = 0
+    result_seen = False
+    for line in text.splitlines():
+        result_pos = line.find(RESULT_MARKER) if not result_seen else -1
+        has_runtime = has_expected = has_unexpected = False
+        for pos, message in _markers(line):
+            cleanup = result_seen or (result_pos >= 0 and pos > result_pos)
+            if not cleanup:
+                has_runtime = True
+            else:
+                if _expected(message, ""):
+                    has_expected = True
+                else:
+                    has_unexpected = True
+        if has_runtime:
+            runtime_count += 1
+            runtime.append(line)
+        if has_expected:
+            cleanup_expected.append(line)
+        if has_unexpected:
+            cleanup_unexpected.append(line)
+            cleanup_unexpected_count += 1
+        if has_expected or has_unexpected:
+            cleanup_count += 1
+        if result_pos >= 0:
+            result_seen = True
+    return (runtime, cleanup_expected, cleanup_unexpected,
+            runtime_count, cleanup_count, cleanup_unexpected_count)
+
+
+def hitch_errors(text):
+    return [line for line in text.splitlines()
+            if ERROR_MARKER.search(line) or "HITCH FAIL" in line]
+
+
 def write_lines(path, lines):
     Path(path).write_text("".join(line + "\n" for line in lines), encoding="utf-8")
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=["suite"])
-    parser.add_argument("log")
-    parser.add_argument("scene")
-    parser.add_argument("expected")
-    parser.add_argument("unexpected")
+    modes = parser.add_subparsers(dest="mode", required=True)
+    suite = modes.add_parser("suite")
+    suite.add_argument("log")
+    suite.add_argument("scene")
+    suite.add_argument("expected")
+    suite.add_argument("unexpected")
+    render = modes.add_parser("render")
+    render.add_argument("log")
+    render.add_argument("output_dir")
+    hitch = modes.add_parser("hitch")
+    hitch.add_argument("log")
+    hitch.add_argument("errors")
     args = parser.parse_args()
     text = Path(args.log).read_text(encoding="utf-8", errors="replace")
-    expected, unexpected, _ = classify(text, args.scene)
-    write_lines(args.expected, expected)
-    write_lines(args.unexpected, unexpected)
+    if args.mode == "suite":
+        expected, unexpected, _ = classify(text, args.scene)
+        write_lines(args.expected, expected)
+        write_lines(args.unexpected, unexpected)
+    elif args.mode == "render":
+        runtime, expected, unexpected, n_runtime, n_cleanup, n_unexpected = render_classify(text)
+        out = Path(args.output_dir)
+        write_lines(out / "runtime-errors.log", runtime)
+        write_lines(out / "cleanup-expected-errors.log", expected)
+        write_lines(out / "cleanup-unexpected-errors.log", unexpected)
+        print(n_runtime, n_cleanup, n_unexpected)
+    else:
+        errors = hitch_errors(text)
+        write_lines(args.errors, errors)
+        return 1 if errors else 0
     return 0
 
 
