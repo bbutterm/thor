@@ -27,8 +27,8 @@ msgid "ЯРЛ БЬОРН МЁРТВЫЙ"
 msgstr "JARL BJORN THE DEAD"
 
 #: enemies/defs/bloated.tres (description)
-msgid "Бежит и взрывается: 2 У в радиусе 3 м, бьёт и своих"
-msgstr "Runs at you and explodes: 2 dmg in a 3 m radius, hits its own too"
+msgid "Бежит и взрывается: 44 урона в радиусе 3 м, бьёт и своих"
+msgstr "Runs at you and explodes: 44 damage in a 3 m radius, hits allies too"
 
 #: enemies/defs/bloated.tres (title)
 msgid "Раздутый"
@@ -147,8 +147,8 @@ msgid "Шаман"
 msgstr "Shaman"
 
 #: enemies/defs/shieldbearer.tres (description)
-msgid "Щит спереди блокирует всё, теснит к краю"
-msgstr "Front shield blocks everything, pushes you to the edge"
+msgid "Щит спереди блокирует обычные удары, теснит к краю"
+msgstr "Blocks ordinary attacks from the front and pushes you toward the edge"
 
 #: enemies/defs/shieldbearer.tres (title)
 msgid "Щитоносец"
@@ -398,24 +398,24 @@ msgid "Прыгун"
 msgstr "Jumper"
 
 #: run/movement/nimble.tres (description)
-msgid "Три коротких рывка, перезарядка 0.8 с."
-msgstr "Three short dashes, 0.8 s recharge."
+msgid "Короткие рывки. Базовое восстановление руны: %s с на земле."
+msgstr "Short dashes. Base rune recharge: %s s on the ground."
 
 #: run/movement/nimble.tres (title)
 msgid "Шустрый"
 msgstr "Nimble"
 
 #: run/movement/nimble_plus.tres (description)
-msgid "Три рывка, перезарядка 0.6 с — быстрее всех удирает."
-msgstr "Three dashes, 0.6 s recharge — the best at running away."
+msgid "Быстрые рывки. Базовое восстановление руны: %s с на земле — быстрее всех."
+msgstr "Fast dashes. Base rune recharge: %s s on the ground — the fastest."
 
 #: run/movement/nimble_plus.tres (title)
 msgid "Шустрый+"
 msgstr "Nimble+"
 
 #: run/movement/ram.tres (description)
-msgid "Один длинный рывок сквозь врагов: 0.7 У каждому, отбрасывает, раскидывает бочки. Перезарядка 1.6 с."
-msgstr "One long dash through enemies: 0.7 dmg each, knocks back, scatters barrels. 1.6 s recharge."
+msgid "Длинный рывок сквозь врагов (0.7 У): отбрасывает и раскидывает бочки. Руна: %s с на земле (базово)."
+msgstr "Long dash through enemies (0.7 dmg): knocks back and scatters barrels. Rune: %s s on the ground (base)."
 
 #: run/movement/ram.tres (title)
 msgid "Таран"
@@ -438,16 +438,12 @@ msgid "Удар в спину"
 msgstr "Backstab"
 
 #: run/passives/berserker_flaw.tres (description)
-msgid "Лечение −50%, враги замечают издалека"
-msgstr "Healing −50%, enemies notice you from afar"
+msgid "Лечение −50%, иногда орёт после убийства"
+msgstr "Healing −50%; may yell after a kill"
 
 #: run/passives/berserker_flaw.tres (title)
 msgid "Орёт и плохо лечится"
 msgstr "Yells and heals poorly"
-
-#: run/passives/berserker_flaw.tres (todo)
-msgid "«Орёт» — пока только звук: враги и так всегда видят Тора"
-msgstr "“Yells” is just a sound for now: enemies always see Thor anyway"
 
 #: run/passives/blood_rage.tres (description)
 msgid "+1% урона за каждый 1% потерянного HP (до +50%)"
@@ -550,16 +546,12 @@ msgid "Мудрость предков"
 msgstr "Wisdom of the Ancestors"
 
 #: run/passives/smith_level.tres (description)
-msgid "Оружие сразу +1 уровень, заточка у Эйтри −50%"
-msgstr "Weapon starts +1 level, sharpening at Eitri's −50%"
+msgid "Старт: оружие +1 уровень; заточка у Эйтри −50%"
+msgstr "Starting weapons +1 level; Eitri sharpening −50%"
 
 #: run/passives/smith_level.tres (title)
 msgid "Своя наковальня"
 msgstr "His Own Anvil"
-
-#: run/passives/smith_level.tres (todo)
-msgid "Заточка у Эйтри — когда появится ларёк"
-msgstr "Sharpening at Eitri's — once the stall exists"
 
 #: run/passives/social_lift.tres (description)
 msgid "Слава ×2"
@@ -2033,8 +2025,8 @@ msgid "ЗАКРЫТО · %d ᛟ\n"
 msgstr "LOCKED · %d ᛟ\n"
 
 #: ui/body_select.gd:406
-msgid "HP %d  ·  скорость %s  ·  рывков %d"
-msgstr "HP %d  ·  speed %s  ·  dashes %d"
+msgid "HP %d  ·  скорость %s  ·  рун %d"
+msgstr "HP %d  ·  speed %s  ·  runes %d"
 
 #: ui/body_select.gd:411
 msgid "Старт: %s"
@@ -3118,8 +3110,8 @@ msgid "Огонь"
 msgstr "Fire"
 
 #: weapons/mjolnir_traits/hammer_dive.tres (description)
-msgid "В воздухе брось молот вниз — Тор летит за ним и бьёт ударом-приземлением с бонусом высоты +4 м."
-msgstr "Throw the hammer down while airborne — Thor follows it into a ground slam with a +4 m height bonus."
+msgid "При доступном ударе-приземлении брось молот вниз и лети за ним (+4 м высоты)."
+msgstr "When a slam is available, throw the hammer down: Thor follows (+4 m slam height)."
 
 #: weapons/mjolnir_traits/hammer_dive.tres (description_lvl2)
 msgid "Бонус высоты +7 м."
@@ -3130,12 +3122,12 @@ msgid "Пике молотом"
 msgstr "Hammer Dive"
 
 #: weapons/mjolnir_traits/hammer_step.tres (description)
-msgid "Воткнутый в стену молот — ступенька: встань на него и прыгни — прыжок в 1.5 раза выше. Молот ждёт ПКМ 6 с."
-msgstr "A hammer stuck in a wall is a step: stand on it and jump — 1.5× higher. The hammer waits for RMB for 6 s."
+msgid "Молот в стене — ступенька: прыгни с неё со скоростью вверх ×1.5. Ждёт ПКМ 6 с."
+msgstr "A hammer in a wall is a step. Jump off at ×1.5 upward speed. RMB to recall within 6s."
 
 #: weapons/mjolnir_traits/hammer_step.tres (description_lvl2)
-msgid "Прыжок в 1.85 раза выше, молот ждёт 10 с."
-msgstr "Jump 1.85× higher, the hammer waits 10 s."
+msgid "Скорость вверх ×1.85; молот ждёт 10 с."
+msgstr "Jump speed ×1.85; the hammer waits 10 s."
 
 #: weapons/mjolnir_traits/hammer_step.tres (title)
 msgid "Молот-ступенька"

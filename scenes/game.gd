@@ -20,7 +20,57 @@ var tutorial: Tutorial
 var rewards: RewardFlow
 var _after_run_started: bool = false
 
+# Прогрев следующего зала ждёт удаления предыдущего: скрытые shader instance
+# могут занимать буфер GL до уничтожения узла, даже после снятия материала.
+var _room_load_active: bool = false
+var _exit_pending: bool = false
+var _room_load_epoch: int = 0
+var _pending_room_release: Array[WeakRef] = []
+var _waiting_player_mode: int = -1
+var _waiting_loading_screen: LoadingScreen
+var _waiting_loading_mode: int = -1
+
+func _hold_loading_screen() -> void:
+	# Экран загрузки обычно обрабатывается и при паузе. В этом коротком окне
+	# заморозим и его safety-таймер, чтобы пауза не открыла пустую сцену.
+	var ls := LoadingScreen._inst
+	if _waiting_loading_mode < 0 and ls and is_instance_valid(ls) and LoadingScreen.is_showing():
+		_waiting_loading_screen = ls
+		_waiting_loading_mode = ls.process_mode
+		ls.process_mode = Node.PROCESS_MODE_PAUSABLE
+
+func _hold_room_load() -> void:
+	# Между удалением старой геометрии и установкой новой нельзя дать игроку
+	# сделать физический шаг в пустоту.
+	if player and is_instance_valid(player):
+		_waiting_player_mode = player.process_mode
+		player.process_mode = Node.PROCESS_MODE_DISABLED
+	_hold_loading_screen()
+
+func _release_room_hold() -> void:
+	if _waiting_player_mode >= 0 and player and is_instance_valid(player):
+		player.process_mode = _waiting_player_mode
+	_waiting_player_mode = -1
+	if _waiting_loading_screen and is_instance_valid(_waiting_loading_screen) and _waiting_loading_mode >= 0:
+		_waiting_loading_screen.process_mode = _waiting_loading_mode
+	_waiting_loading_screen = null
+	_waiting_loading_mode = -1
+
+func _cancel_room_load() -> bool:
+	var was_active := _room_load_active or _exit_pending
+	_room_load_epoch += 1
+	_room_load_active = false
+	_exit_pending = false
+	_pending_room_release.clear()
+	set_process(false)
+	_release_room_hold()
+	return was_active
+
+func _exit_tree() -> void:
+	_cancel_room_load()
+
 func _ready() -> void:
+	set_process(false)
 	FX.reset_time()
 	get_tree().paused = false
 	if Run.body == null or Run.room_order.is_empty():
@@ -62,14 +112,45 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _load_room() -> void:
+	if _room_load_active or _ending or not is_inside_tree():
+		return
+	_room_load_active = true
+	_room_load_epoch += 1
 	Perf.mark("room_load")
-	if room and is_instance_valid(room):
-		level.remove_child(room)
-		room.queue_free()
+	var previous: Room = room if room and is_instance_valid(room) else null
+	_pending_room_release.clear()
+	if previous:
+		_hold_room_load()
+		_pending_room_release.append(weakref(previous))
+		level.remove_child(previous)
+		previous.queue_free()
+		room = null
 	for c in get_children():
 		# Убираем «мусор» прошлого зала (снаряды, огонь), оставляя постоянные узлы
 		if c.has_meta("transient") or c is Area3D or (c.get_script() and c.get_script().resource_path.ends_with("fire_zone.gd")):
+			_pending_room_release.append(weakref(c))
 			c.queue_free()
+	if previous:
+		# Не приостанавливаем корутину на Game: его могут удалить во время перехода.
+		# _process проверит освобождение слабых ссылок и продолжит только после него.
+		set_process(true)
+		return
+	_finish_room_load()
+
+func _process(_delta: float) -> void:
+	if not _room_load_active or _ending or is_queued_for_deletion():
+		_cancel_room_load()
+		return
+	if get_tree().paused:
+		return
+	for ref in _pending_room_release:
+		if ref.get_ref() != null:
+			return
+	_pending_room_release.clear()
+	set_process(false)
+	_finish_room_load()
+
+func _finish_room_load() -> void:
 	var path := Run.current_room_path()
 	var scene: PackedScene
 	if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
@@ -91,6 +172,7 @@ func _load_room() -> void:
 	player.rotation_target = Vector2(0.0, t.basis.get_euler().y)
 	player.mjolnir.force_return_instant()
 	player.on_room_start()  # пассивки тела «на зал» (скальд: первый удар не ранит)
+	_release_room_hold()
 	room.cleared.connect(_on_room_cleared)
 	room.exit_reached.connect(_on_exit_reached)
 	room.boss_spawned.connect(hud.show_boss)
@@ -113,14 +195,20 @@ func _load_room() -> void:
 	if Run.is_boss_room() and not Dialogue.on_boss_intro():
 		Odin.say("boss_start")
 	# Даём осмотреться полсекунды
+	var loaded_room: WeakRef = weakref(room)
 	get_tree().create_timer(0.6, false).timeout.connect(func() -> void:
-		if is_instance_valid(room) and not player.is_dead:
-			rewards.start_room(room, player))
+		var started_room := loaded_room.get_ref() as Room
+		if not _exit_pending and is_instance_valid(started_room) and room == started_room and not player.is_dead:
+			rewards.start_room(started_room, player))
+	_room_load_active = false
+	_exit_pending = false
 
 func _on_room_cleared() -> void:
 	Run.add_glory(Run.glory_room_clear)
-	# Следующий зал грузим в фоне, пока игрок выбирает руну
-	if Run.room_index + 1 < Run.room_order.size():
+	# Следующий зал грузим в фоне, пока игрок выбирает руну. Dummy-рендерер может
+	# повреждать RID при одновременной загрузке и создании ресурсов; в headless
+	# сцена будет загружена обычным load при входе.
+	if DisplayServer.get_name() != "headless" and Run.room_index + 1 < Run.room_order.size():
 		ResourceLoader.load_threaded_request(Run.room_order[Run.room_index + 1], "", true)
 	if Run.is_boss_room():
 		Run.won = true
@@ -164,6 +252,9 @@ func _on_trait_picked(t: MjolnirTrait) -> void:
 	hud.toast("%s %s — %s" % [t.glyph, tr(t.title), tr("уровень %d") % lv if lv > 1 else (tr("стихия") if t.is_element() else tr("приём"))])
 	# Наковальня Эйтри: выбор стихии и был наградой зала — дальше двери; мини-босс — дальше руна
 	var anvil := rewards.take_anvil_pick()
+	if anvil:
+		# Выбор уже закрылся: короткую реплику Эйтри больше не заслоняют карточки.
+		Dialogue.bark_pool("dwarves.eitri")
 	get_tree().create_timer(0.5, false).timeout.connect(func() -> void:
 		if player.is_dead:
 			return
@@ -202,13 +293,19 @@ func _after_reward() -> void:
 		hud.toast(tr("Дверь открыта — вперёд!"))
 
 func _on_exit_reached() -> void:
-	if _ending:
+	if _ending or _exit_pending or _room_load_active:
 		return
+	_exit_pending = true
 	if Run.advance_room():
 		hud.fade_out(0.25)
 		LoadingScreen.transition(get_tree(), 0.25)
-		get_tree().create_timer(0.25, false).timeout.connect(_load_room)
+		_hold_loading_screen()
+		var exit_epoch := _room_load_epoch
+		get_tree().create_timer(0.25, false).timeout.connect(func() -> void:
+			if is_inside_tree() and not is_queued_for_deletion() and not _ending and _exit_pending and exit_epoch == _room_load_epoch:
+				_load_room())
 	else:
+		_exit_pending = false
 		Run.won = true
 		_show_end(true)
 
@@ -216,6 +313,8 @@ func _on_player_died() -> void:
 	if _ending:
 		return
 	_ending = true
+	if _cancel_room_load():
+		LoadingScreen.finish(get_tree())
 	var result := tracker.finish(false)
 	ScreenArt.prefetch_between_runs()  # фоны дивана, портреты тел — пока идёт страница и итог
 	# «Страница комикса» (ui/comic_page.gd): стоп-кадр смерти ~2 с, потом сразу итог
@@ -244,6 +343,8 @@ func _on_kill_streak(_count: int) -> void:
 
 func _show_end(victory: bool) -> void:
 	_ending = true
+	if _cancel_room_load():
+		LoadingScreen.finish(get_tree())
 	tracker.finish(victory)
 	FX.reset_time()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -277,6 +378,7 @@ func _after_run() -> void:
 
 ## Новый забег. body_id — тело (пусто — то же тело, что сейчас: «Заново» из паузы).
 func restart_run(body_id: String = "") -> void:
+	_cancel_room_load()
 	FX.reset_time()
 	get_tree().paused = false
 	if body_id == "" and Run.body:
@@ -286,6 +388,8 @@ func restart_run(body_id: String = "") -> void:
 	get_tree().reload_current_scene()
 
 func go_to_menu() -> void:
+	if _cancel_room_load():
+		LoadingScreen.finish(get_tree())
 	FX.reset_time()
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

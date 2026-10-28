@@ -1,8 +1,8 @@
 extends Control
 class_name Portrait
-## Портрет персонажа для диалогов. Картинка: sprites/portraits/<speaker>_<emotion>.png;
-## нет эмоции — <speaker>_neutral.png; нет файла — процедурная заглушка (силуэт в цвете персонажа,
-## инициал и простое лицо по эмоции). Владелец подкладывает PNG — код не меняется.
+## Портрет персонажа для диалогов: sprites/portraits/<speaker>_<emotion>.png или .webp;
+## нет эмоции — <speaker>_neutral, нет файла — процедурная заглушка (силуэт в цвете персонажа,
+## инициал и простое лицо по эмоции).
 
 const DIR := "res://sprites/portraits/"
 
@@ -32,8 +32,7 @@ func _init() -> void:
 	add_child(_tex_rect)
 
 ## Один спрайт на двоих: Хугин и Мунин нарисованы вместе
-## Толстый Свен (мини-босс) — пока портрет драугра
-const ALIASES := {"munin": "hugin", "sven": "draugr"}
+const ALIASES := {"munin": "hugin"}
 const EXTS := ["png", "webp"]
 ## Точки лица (центр глаз) на холсте исходника — для крупного плана в пузыре (data/portrait_faces.json)
 const FACES_PATH := "res://data/portrait_faces.json"
@@ -42,7 +41,7 @@ const FACES_PATH := "res://data/portrait_faces.json"
 
 static var _faces: Dictionary = {}
 
-const EMOTIONS := ["neutral", "happy", "angry", "shocked", "smug"]
+const EMOTIONS := ["neutral", "happy", "angry", "shocked", "smug", "embarrassed"]
 ## Портреты, которые держим в памяти (prefetch): путь → текстура; и ещё грузящиеся в фоне
 static var _held: Dictionary = {}
 static var _pending: PackedStringArray = []
@@ -70,7 +69,8 @@ static func prefetch(speakers: PackedStringArray) -> void:
 	for p in want:
 		if _held.has(p):
 			continue
-		if ResourceLoader.has_cached(p):
+		# Dummy может повредить RID, если текстуры грузятся параллельно созданию ресурсов.
+		if DisplayServer.get_name() == "headless" or ResourceLoader.has_cached(p):
 			_held[p] = load(p)
 		elif ResourceLoader.load_threaded_request(p) == OK:
 			_pending.append(p)

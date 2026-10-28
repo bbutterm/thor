@@ -280,7 +280,7 @@ func _test_loading() -> void:
 	game._on_exit_reached()
 	await wait(0.1)
 	check(LoadingScreen.is_showing() and LoadingScreen.shown_count == before + 2, "переход между залами — картинка под затемнением")
-	var moved := await wait_until(func() -> bool: return game.room.get_instance_id() != room_id and not LoadingScreen.is_showing(), 3.0)
+	var moved := await wait_until(func() -> bool: return is_instance_valid(game) and is_instance_valid(game.room) and game.room.get_instance_id() != room_id and not LoadingScreen.is_showing(), 3.0)
 	check(moved, "следующий зал загружен, экран убран")
 	await wait(0.8)
 	check(not LoadingScreen._inst.visible, "картинка исчезла совсем")

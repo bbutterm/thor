@@ -3,6 +3,10 @@ class_name Player
 ## Тор в теле смертного. Движение: бег, двойной прыжок, рывок, удар-приземление, супер-прыжок.
 ## Все «ощущенческие» числа — в группах @export ниже (см. TUNING.md).
 
+## Слои поверхностей: мир (1) и предметы (4), на которые игрок тоже может приземлиться.
+## Врагов намеренно не учитываем: высота удара считается относительно земли/предметов, а не головы.
+const SLAM_SURFACE_MASK := 1 | (1 << 3)
+
 signal health_changed(current: float, maximum: float)
 signal dash_charges_changed(current: int, maximum: int, recharge_progress: float)
 signal died
@@ -165,6 +169,8 @@ var _dash_hit: Dictionary = {}
 var _jumps_left: int = 1
 ## Разрешение после воздушного прыжка, супер-прыжка, руны или отскока; сбрасывается при посадке.
 var _slam_ready: bool = false
+## Меняется при настоящей посадке и завершении залезания. Для пике: разрешение действует только в этом полёте.
+var _slam_ground_contacts: int = 0
 var _slam_hint_left: float = 0.0
 var _coyote_left: float = 0.0
 var _jump_buffer_left: float = 0.0
@@ -297,7 +303,7 @@ func recalc_from_runes(run: Node, full_heal: bool = false) -> void:
 
 func _emit_all() -> void:
 	health_changed.emit(health, max_health)
-	dash_charges_changed.emit(dash_charges, dash_charges_max, 0.0)
+	dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
 
 # --- Ввод мышью ---
 
@@ -415,7 +421,7 @@ func _update_timers(delta: float) -> void:
 		if _dash_recharge_timer >= dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult:
 			_dash_recharge_timer = 0.0
 			dash_charges += 1
-		dash_charges_changed.emit(dash_charges, dash_charges_max, _dash_recharge_timer / (dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult))
+		dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
 	elif dash_charges >= dash_charges_max:
 		_dash_recharge_timer = 0.0
 
@@ -539,13 +545,17 @@ func restore_mjolnir_runes(amount: int) -> void:
 	dash_charges = mini(dash_charges_max, dash_charges + maxi(0, amount))
 	if dash_charges >= dash_charges_max:
 		_dash_recharge_timer = 0.0
+	dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
+
+## В воздухе таймер приостановлен, но его сохранённая доля остаётся видимой в HUD.
+func _rune_recharge_progress() -> float:
 	var duration := maxf(dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult, 0.001)
-	dash_charges_changed.emit(dash_charges, dash_charges_max, _dash_recharge_timer / duration)
+	return clampf(_dash_recharge_timer / duration, 0.0, 1.0)
 
 func _spend_dash_charge() -> void:
 	dash_charges -= 1
 	_dash_recharge_timer = 0.0 if dash_charges == dash_charges_max - 1 else _dash_recharge_timer
-	dash_charges_changed.emit(dash_charges, dash_charges_max, 0.0)
+	dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
 
 func _start_dash(wish: Vector3) -> void:
 	_spend_dash_charge()
@@ -689,15 +699,22 @@ func can_start_slam() -> bool:
 		return false
 	if _slam_ready:
 		return true
-	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + Vector3.DOWN * slam_min_height, 1, [get_rid()])
-	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
+	return slam_surface_hit(slam_min_height).is_empty()
 
-func _start_slam() -> bool:
+## Ближайшая поверхность под ногами для проверки удара и его шкалы в HUD.
+func slam_surface_hit(distance: float) -> Dictionary:
+	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + Vector3.DOWN * distance,
+		collision_mask & SLAM_SURFACE_MASK, [get_rid()])
+	return get_world_3d().direct_space_state.intersect_ray(q)
+
+## allow_latched — уже разрешённое при броске пике в том же полёте; само оно не обходит проверку смерти/посадки.
+func _start_slam(allow_latched: bool = false) -> bool:
 	if not can_start_slam():
-		if _slam_hint_left <= 0.0:
-			_slam_hint_left = slam_hint_cooldown
-			slam_unavailable.emit()
-		return false
+		if not allow_latched or is_dead or is_on_floor() or is_climbing or is_slamming:
+			if _slam_hint_left <= 0.0:
+				_slam_hint_left = slam_hint_cooldown
+				slam_unavailable.emit()
+			return false
 	# Пике (GDD 7.2): сразу после рывка в воздухе — наклонно по направлению взгляда
 	is_diving = (_dash_time_left > 0.0 and _dash_in_air) or _dive_window_left > 0.0
 	_dive_window_left = 0.0
@@ -729,6 +746,7 @@ func _on_landed() -> void:
 	# Контакт с головой врага может считаться полом в тот же кадр: это отскок, а не посадка.
 	if _stomp_cooldown > 0.0 and velocity.y > 0.0:
 		return
+	_slam_ground_contacts += 1
 	_slam_ready = false
 	var fall := maxf(0.0, _air_peak_y - global_position.y)
 	if is_slamming:
@@ -958,6 +976,7 @@ func _process_climb(delta: float) -> void:
 		global_position = _climb_mid.lerp(_climb_to, (k - 0.6) / 0.4)
 	if k >= 1.0:
 		is_climbing = false
+		_slam_ground_contacts += 1
 		_climb_check_cooldown = 0.3
 		var fwd := -global_transform.basis.z
 		fwd.y = 0

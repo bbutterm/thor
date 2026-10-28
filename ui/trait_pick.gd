@@ -18,7 +18,7 @@ const CARD_HOVER := Color(0.1, 0.18, 0.3, 0.99)
 const REPLACE := Color(1.0, 0.5, 0.4)
 const NEW := Color(0.55, 1.0, 0.65)
 ## Видимая ширина карточки (высота — по пропорциям card_trait)
-@export var card_width: float = 300.0
+@export var card_width: float = 340.0
 const TITLE_DEFAULT := "ᛗ  МЬЁЛЬНИР ЖАЖДЕТ СИЛЫ  ᛗ"
 ## Римские цифры уровней (HUD, журнал, карточки)
 const ROMAN := ["", "I", "II", "III", "IV", "V"]
@@ -122,9 +122,31 @@ func _make_card(t: MjolnirTrait, index: int) -> Button:
 	b.add_text(tr(t.level_description(lv + 1)), 13, UIStyle.TEXT, 3)
 	var st := _status(t)
 	var s := b.add_text(st[0], 15, st[1], 4)
+	_fit_card_text(b)
 	_status_labels.append(s)
 	b.pressed.connect(func() -> void: choose(index))
 	return b
+
+## Подгоняем текст под окно иллюстрации: длинное описание или подтверждение замены
+## не должны выталкивать статус на рамку. Размер меняется только при необходимости.
+func _fit_card_text(card: SkinCard) -> void:
+	var labels := card.body.get_children()
+	var floors := [14, 10, 9, 10]
+	var width := SkinCard.TEXT_BOX.size.x * card_width / SkinCard.VISIBLE.size.x
+	var height := SkinCard.TEXT_BOX.size.y * card_width / SkinCard.VISIBLE.size.x
+	card.body.add_theme_constant_override("separation", 2)
+	for step in 12:
+		var total := float(maxi(0, labels.size() - 1) * 2)
+		for i in labels.size():
+			var label := labels[i] as Label
+			var preferred := int(label.get_meta("preferred_font_size"))
+			label.label_settings.font_size = maxi(mini(floors[i], preferred), preferred - step)
+			var settings := label.label_settings
+			var extent := settings.font.get_multiline_string_size(label.text, HORIZONTAL_ALIGNMENT_CENTER,
+				width, settings.font_size)
+			total += extent.y + settings.outline_size * 2
+		if total <= height - 8.0:
+			break
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
@@ -150,6 +172,7 @@ func choose(index: int, confirmed: bool = false) -> void:
 		var l := _status_labels[index]
 		l.text = tr("Ещё раз — заменить «%s»") % tr(old.title)
 		l.label_settings.font_color = REPLACE
+		_fit_card_text(l.get_parent().get_parent() as SkinCard)
 		return
 	visible = false
 	get_tree().paused = false

@@ -88,6 +88,16 @@ func present(c: MjolnirTrait) -> void:
 func is_showing() -> bool:
 	return visible
 
+## Границы плашки с учётом декоративной рамки и анимации масштаба (в координатах окна).
+func visual_rect() -> Rect2:
+	if not visible or not is_instance_valid(_panel):
+		return Rect2()
+	var panel_style := _panel.get_theme_stylebox("panel") as SkinStyleBox
+	var rect := Rect2(Vector2.ZERO, _panel.size)
+	if panel_style:
+		rect = panel_style._draw_rect_of(rect)
+	return _panel.get_global_transform_with_canvas() * rect
+
 func _icon(t: MjolnirTrait) -> Control:
 	var tex := UISkin.trait_icon(str(t.id)) if t else null
 	if tex:

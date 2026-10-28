@@ -26,6 +26,8 @@ func on_throw(proj: MjolnirProjectile) -> void:
 	if p.get_aim_forward().y > -sin(deg_to_rad(min_down_angle)):
 		return
 	proj.data["dive"] = true
+	# Если Тор спустится ниже 3 м до попадания, разрешение броска действует до следующей посадки.
+	proj.data["dive_ground_contacts"] = p._slam_ground_contacts
 	proj.vel *= throw_speed_mult
 	proj._sticks = true
 	proj.bounces_left = 0
@@ -37,7 +39,10 @@ func on_hit_world(proj: MjolnirProjectile, _pos: Vector3, normal: Vector3, stuck
 	var p := hand.player
 	if p == null or p.is_dead or p.is_on_floor():
 		return
-	if not p._start_slam():
+	# Даже если в следующем прыжке удар снова доступен, этот бросок уже устарел.
+	if int(proj.data.get("dive_ground_contacts", -1)) != p._slam_ground_contacts:
+		return
+	if not p._start_slam(true):
 		return
 	_proj = proj
 	_t = 0.0

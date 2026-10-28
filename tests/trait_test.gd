@@ -76,6 +76,7 @@ func _run() -> void:
 	_test_rules()
 	_test_doors()
 	await _test_pick_ui()
+	await _test_card_layout()
 	await _test_anvil_flow()
 	await _test_base()
 	await _test_environment()
@@ -341,6 +342,23 @@ func _test_pick_ui() -> void:
 	check(not tp.visible and Run.mjolnir_trait_level(&"storm") == 1, "Буря взята")
 	var ann := game.get_node_or_null("ComboAnnounce") as ComboAnnounce
 	check(ann != null and ann.visible and ann.combo and ann.combo.id == &"fire_tornado", "объявление связки на экране")
+	if ann:
+		var bubble := Dialogue.bubble()
+		var text_scale := GameSettings.text_scale()
+		GameSettings.set_value("text", "text_scale", 1.6, false)
+		bubble.show_line("hugin", "neutral", "Кар! Прыгни дважды и жми удар-приземление. С высокой площадки можно и без второго прыжка.")
+		await frames(4)
+		game.hud._position_odin_notice()
+		var odin := _visual_rect(game.hud._odin_panel)
+		var raven := bubble.visual_rect()
+		var banner := ann.visual_rect()
+		check(not banner.intersects(odin) and not banner.intersects(raven) and not raven.intersects(odin), "плашка, подсказка ворона и реплика Одина не перекрывают друг друга")
+		await _test_combo_word_layout(ann, bubble)
+		GameSettings.set_value("text", "text_scale", text_scale, false)
+		ann.visible = false
+		await frames(3)
+		game.hud._position_odin_notice()
+		check(is_zero_approx(bubble._combo_shift) and is_equal_approx(game.hud._odin_panel.offset_left, -340.0), "после плашки подсказки возвращаются на обычные места")
 	var hud_icons: int = game.hud._mjolnir_traits._icons.get_child_count()
 	check(hud_icons == 3, "HUD: стихия, приём и связка (%d иконки)" % hud_icons)
 	if game.rune_pick.visible:
@@ -359,6 +377,12 @@ func _test_pick_ui() -> void:
 	tp._open_time = -10.0
 	tp.choose(0)
 	check(tp.visible and got.is_empty(), "замена приёма требует подтверждения")
+	await frames(3)
+	var status := tp._status_labels[0]
+	var body := status.get_parent() as Control
+	var text_height := SkinCard.TEXT_BOX.size.y * tp.card_width / SkinCard.VISIBLE.size.x
+	check(body.size.y <= text_height + 1.0 and status.position.y + status.size.y <= text_height + 1.0,
+		"подтверждение замены помещается в текстовое окно")
 	tp.choose(0)
 	check(not tp.visible and got.size() == 1, "второе нажатие — выбрано")
 	tp.picked.disconnect(cb)
@@ -366,6 +390,117 @@ func _test_pick_ui() -> void:
 	check(not get_tree().paused, "пауза снята")
 	await frames(5)
 	_set_traits([])
+
+## Длинные описания, переводы и статус остаются внутри текстового окна карточки.
+func _test_card_layout() -> void:
+	print("-- Длинные описания карточек")
+	var tp := game.trait_pick
+	tp.visible = true
+	var compact := SkinCard.make("card_trait", 200.0, Color.WHITE)
+	var heading := compact.add_text("Ураганный рывок", 19, Color.WHITE, 5)
+	var word_width := heading.label_settings.font.get_string_size("Ураганный", HORIZONTAL_ALIGNMENT_LEFT, -1,
+		heading.label_settings.font_size).x
+	check(word_width + heading.label_settings.outline_size * 2 <= compact.text_width(), "длинное слово заголовка целиком помещается на узкой карточке")
+	compact.free()
+	for lang in ["ru", "en"]:
+		GameSettings.set_value("text", "language", lang, false)
+		var overflow: Array[String] = []
+		for t in Run.all_mjolnir_traits:
+			var card := tp._make_card(t, 0) as SkinCard
+			tp._root.add_child(card)
+			await frames(3)
+			var limit := SkinCard.TEXT_BOX.size.y * tp.card_width / SkinCard.VISIBLE.size.x
+			var bottom := 0.0
+			for child in card.body.get_children():
+				var label := child as Label
+				bottom = maxf(bottom, label.position.y + label.size.y)
+			if card.body.size.y > limit + 1.0 or bottom > limit + 1.0:
+				overflow.append(str(t.id))
+			card.queue_free()
+		check(overflow.is_empty(), "%s: описания и статусы внутри рамки (%s)" % [lang, ", ".join(overflow)])
+		# Первый проход проверяет новые приёмы; отдельно проверяем карточки их второго уровня.
+		for id in [&"hammer_dive", &"hammer_step"]:
+			var technique: MjolnirTrait = _find(id)
+			_set_traits([technique])
+			var upgrade: SkinCard = tp._make_card(technique, 0) as SkinCard
+			tp._root.add_child(upgrade)
+			await frames(3)
+			var limit: float = SkinCard.TEXT_BOX.size.y * tp.card_width / SkinCard.VISIBLE.size.x
+			var bottom: float = 0.0
+			for child in upgrade.body.get_children():
+				var label: Label = child as Label
+				bottom = maxf(bottom, label.position.y + label.size.y)
+			check(upgrade.body.size.y <= limit + 1.0 and bottom <= limit + 1.0,
+				"%s: %s ур. 2 внутри рамки" % [lang, id])
+			upgrade.queue_free()
+			_set_traits([])
+	GameSettings.set_value("text", "language", "ru", false)
+	tp.visible = false
+	tp._status_labels.clear()
+
+func _test_combo_word_layout(ann: ComboAnnounce, bubble: BarkBubble) -> void:
+	var old_size: Vector2i = get_viewport().size
+	var old_language: String = GameSettings.get_value("text", "language")
+	var old_scale := GameSettings.text_scale()
+	var old_enabled := GameSettings.comic_enabled
+	var old_comic_scale := GameSettings.comic_scale
+	GameSettings.comic_enabled = true
+	for viewport_size in [Vector2i(1280, 720), Vector2i(1280, 800)]:
+		get_viewport().size = viewport_size
+		await frames(2)
+		for language in ["ru", "en"]:
+			GameSettings.set_value("text", "language", language, false)
+			for scale in [1.0, 1.6]:
+				GameSettings.set_value("text", "text_scale", scale, false)
+				for comic_scale in [1.0, 1.6]:
+					GameSettings.comic_scale = comic_scale
+					var line := "Связка! Молот и стихия договорились. Тебе бы так с диваном." if language == "ru" else "A fusion! Hammer and element agreed. If only you and the couch could do that."
+					game.hud.show_odin_line(line)
+					bubble.show_line("hugin", "neutral", line)
+					ComicFX.reset_state()
+					ComicFX.pop("combo", Vector3.ZERO, true)
+					await frames(5)
+					game.hud._position_odin_notice()
+					await frames(2)
+					var word: Variant = null
+					for w in ComicFX._pool:
+						if w.active and w.event == "combo" and not w.preview:
+							word = w
+					var odin := _visual_rect(game.hud._odin_panel)
+					var tag := "%dx%d %s text=%.1f word=%.1f" % [viewport_size.x, viewport_size.y, language, scale, comic_scale]
+					check(word != null, "%s: слово связки активно" % tag)
+					if word:
+						var letters: Rect2 = word.label.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, word.label.size)
+						check(not odin.intersects(letters), "%s: реплика не перекрывает слово связки" % tag)
+					var label := game.hud._odin_label
+					var text_rect: Rect2 = label.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, label.size)
+					var contained := odin.encloses(text_rect)
+					var extent := label.label_settings.font.get_multiline_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, label.size.x, label.label_settings.font_size)
+					check(contained and label.size.y >= extent.y + label.label_settings.outline_size * 2.0,
+						"%s: текст реплики помещается в рамке целиком" % tag)
+					check(not odin.intersects(ann.visual_rect()) and not odin.intersects(bubble.visual_rect()),
+						"%s: реплика отдельно от плашки и ворона" % tag)
+					check(not odin.intersects(game.hud._hammer_icon.get_global_rect()) and not odin.intersects(game.hud._mjolnir_traits.get_global_rect()),
+						"%s: реплика не закрывает молот и трейты (трейты %s)" % [tag, game.hud._mjolnir_traits.get_global_rect()])
+					var narrow := game.hud._odin_panel.offset_right - game.hud._odin_panel.offset_left
+					ComicFX.reset_state()
+					await frames(2)
+					game.hud._position_odin_notice()
+					check(game.hud._odin_panel.offset_right - game.hud._odin_panel.offset_left > narrow + 100.0,
+						"%s: после слова возвращается обычная ширина реплики" % tag)
+	GameSettings.comic_enabled = old_enabled
+	GameSettings.comic_scale = old_comic_scale
+	GameSettings.set_value("text", "language", old_language, false)
+	GameSettings.set_value("text", "text_scale", old_scale, false)
+	get_viewport().size = old_size
+	await frames(2)
+
+func _visual_rect(control: Control) -> Rect2:
+	var rect := Rect2(Vector2.ZERO, control.size)
+	var style := control.get_theme_stylebox("panel") as SkinStyleBox
+	if style:
+		rect = style._draw_rect_of(rect)
+	return control.get_global_transform_with_canvas() * rect
 
 func _texts(n: Node) -> Array[String]:
 	var out: Array[String] = []
@@ -375,24 +510,103 @@ func _texts(n: Node) -> Array[String]:
 		out.append_array(_texts(c))
 	return out
 
+func _eitri_barks() -> int:
+	var count := 0
+	for line in Dialogue.history:
+		if str(line.get("speaker", "")) == "eitri":
+			count += 1
+	return count
+
 func _test_anvil_flow() -> void:
 	print("-- Наковальня Эйтри: награда зала")
 	_set_traits([])
 	while Run.room_rewards.size() <= Run.room_index:
 		Run.room_rewards.append("")
 	var was: String = Run.room_rewards[Run.room_index]
+	var old_rerolls := Run.trait_rerolls
 	Run.room_rewards[Run.room_index] = "anvil"
 	game.rewards._granted = false
+	var before := _eitri_barks()
 	game.rewards.grant()
 	var tp := game.trait_pick
 	check(tp.visible and tp._title.text.contains("НАКОВАЛЬНЯ"), "после зачистки — выбор стихии у наковальни")
 	check(tp._choices.all(func(t: MjolnirTrait) -> bool: return t.is_element()), "в выборе только стихии")
+	check(_eitri_barks() == before, "при открытых карточках Эйтри ещё не говорит")
+	Run.trait_rerolls = 1
+	game.rewards._on_trait_reroll()
+	check(tp.visible and _eitri_barks() == before and game.rewards._anvil_pick,
+		"переброс сохраняет выбор наковальни и не вызывает реплику")
 	tp._open_time = -10.0
 	tp.choose(0)
-	await wait(0.8)
+	check(not tp.visible and _eitri_barks() == before + 1, "после подтверждения и закрытия карточек — одна реплика Эйтри")
+	tp.choose(0)
+	check(_eitri_barks() == before + 1, "повторный выбор закрытого окна не повторяет реплику")
+	await wait(0.35)
+	var bubble := Dialogue.bubble()
+	check(not tp.visible and not game.rune_pick.visible and bubble._name.text == str(Dialogue.speakers["eitri"].name).to_upper()
+		and bubble._text.text != "" and bubble._panel.modulate.a > 0.5,
+		"пузырь Эйтри виден после выбора и не закрыт карточками")
+	await wait(0.45)
 	check(Run.owned_element() != null, "стихия взята: %s" % (str(Run.owned_element().id) if Run.owned_element() else "—"))
 	check(not game.rune_pick.visible and not tp.visible, "после наковальни — без руны (награда выдана)")
 	check(not game.rewards._anvil_pick, "признак наковальни сброшен")
+
+	# При разрешённой смене стихии первая попытка только просит подтверждение.
+	var old_swap := Run.rules().element_swap
+	Run.rules().element_swap = true
+	_set_traits([_find(&"fire")])
+	game.rewards._granted = false
+	before = _eitri_barks()
+	game.rewards.grant()
+	var swap_index := -1
+	for i in tp._choices.size():
+		if tp._choices[i].id != &"fire":
+			swap_index = i
+			break
+	check(tp.visible and swap_index >= 0, "наковальня предлагает замену стихии")
+	if tp.visible and swap_index >= 0:
+		tp._open_time = -10.0
+		tp.choose(swap_index)
+		check(tp.visible and tp._confirm_index == swap_index and _eitri_barks() == before,
+			"первое нажатие просит подтверждение без реплики Эйтри")
+		tp.choose(swap_index)
+		check(not tp.visible and _eitri_barks() == before + 1 and Run.owned_element().id != &"fire",
+			"подтверждённая замена закрывает окно и вызывает одну реплику Эйтри")
+		await wait(0.8)
+	else:
+		tp.visible = false
+		get_tree().paused = false
+		game.rewards.take_anvil_pick()
+	Run.rules().element_swap = old_swap
+
+	# Когда стихия исчерпана, наковальня сохраняет обычный запасной выбор руны и не вызывает реплику.
+	_set_traits(_lv(&"fire", 4))
+	game.rewards._granted = false
+	before = _eitri_barks()
+	game.rewards.grant()
+	check(not tp.visible and game.rune_pick.visible and not game.rewards._anvil_pick and _eitri_barks() == before,
+		"пустой выбор стихии: запасная руна без реплики Эйтри")
+	if game.rune_pick.visible:
+		game.rune_pick._open_time = -10.0
+		game.rune_pick.choose(0)
+	await wait(0.3)
+
+	# Обычный выбор после мини-босса не связан с наковальней.
+	_set_traits([])
+	Run.room_rewards[Run.room_index] = "combat"
+	game.rewards._granted = false
+	before = _eitri_barks()
+	var choices: Array[MjolnirTrait] = [_find(&"fire")]
+	tp.open(choices)
+	tp._open_time = -10.0
+	tp.choose(0)
+	check(not tp.visible and _eitri_barks() == before, "обычный выбор трейта не вызывает Эйтри")
+	await wait(0.8)
+	if game.rune_pick.visible:
+		game.rune_pick._open_time = -10.0
+		game.rune_pick.choose(0)
+	await wait(0.2)
+	Run.trait_rerolls = old_rerolls
 	Run.room_rewards[Run.room_index] = was
 	get_tree().paused = false
 	_set_traits([])

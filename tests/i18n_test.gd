@@ -277,6 +277,12 @@ func _test_dialogues() -> void:
 	var lines := Dialogue.pool_lines("ravens.tutorial_jump")
 	var tt := Tutorial.keys_in(str(lines[0].get("text", ""))) if not lines.is_empty() else ""
 	check(tt.contains("Space") and not tt.contains("{key_"), "обучение воронов на en, клавиши подставлены: «%s»" % tt)
+	var melee_lines := Dialogue.pool_lines("ravens.tutorial_attack")
+	var melee_template := str(melee_lines[0].get("text", "")) if not melee_lines.is_empty() else ""
+	var melee_keys := Tutorial.keys_in(melee_template)
+	var melee_key := Tutorial.key_name("attack")
+	check(melee_template.count("{key_attack}") == 2 and melee_key != "" and melee_keys.count(melee_key) == 2 and not melee_keys.contains("{key_"),
+		"в английской подсказке атаки обе клавиши подставлены")
 	var sc := {}
 	for s in Dialogue.scenes:
 		if s.get("id", "") == "odin_intro":
@@ -400,6 +406,16 @@ func _test_screens() -> void:
 	check(_find_text(menu, "Start Run") and not _find_text(menu, "Начать забег"), "главное меню перестроилось на en")
 	menu.queue_free()
 	await wait(0.1)
+	var bs := BodySelect.new()
+	get_tree().root.add_child(bs)
+	bs.open("Назад", "hunter")
+	check(bs._stats_label.text.contains("runes 3"), "общий запас рун переведён в выборе тела")
+	for pair in [["hunter", "1.67"], ["courier", "1.25"], ["berserker", "3.33"]]:
+		bs.select(pair[0])
+		check(bs._move_desc.text.contains(pair[1]) and bs._move_desc.text.contains("ground") and not bs._move_desc.text.contains("%s"),
+			"%s: описание руны и её время переведены (%s)" % [pair[0], bs._move_desc.text])
+	bs.close("")
+	bs.queue_free()
 
 # --- В бою: HUD, пауза, Один ---
 

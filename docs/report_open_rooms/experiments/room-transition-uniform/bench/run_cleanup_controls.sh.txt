@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -uo pipefail
+project=/workspace/thor-transition-probe
+out=/workspace/thor-artifacts/room-transition-headless
+ulimit -c 0
+ulimit -f 48828
+
+restore() {
+    cp "$out/game-current.gd" "$project/scenes/game.gd"
+}
+trap restore EXIT
+
+for version in baseline candidate; do
+    if [[ "$version" == baseline ]]; then
+        cp /workspace/thor-artifacts/room-transition-gl/game-original.gd "$project/scenes/game.gd"
+    else
+        cp "$out/game-current.gd" "$project/scenes/game.gd"
+    fi
+    for mode in start transition cancel free_wait cancel_wait restart_wait all; do
+        label="${version}_${mode}"
+        mkdir -p "$out/user-$label"
+        printf 'START %s %s\n' "$label" "$(date -u +%FT%TZ)"
+        if timeout --signal=TERM --kill-after=10s 120 env XDG_DATA_HOME="$out/user-$label" godot --headless --verbose --path "$project" --fixed-fps 60 --audio-driver Dummy res://tests/room_transition_cleanup_probe.tscn -- "$mode" > "$out/$label.log" 2>&1; then
+            rc=0
+        else
+            rc=$?
+        fi
+        printf 'END %s rc=%d ' "$label" "$rc"
+        rg -c 'Pages in use exist at exit' "$out/$label.log" || true
+        if [[ "$rc" != 0 ]] || ! rg -q "END_CLEANUP_CONTROL mode=$mode" "$out/$label.log" || rg -q 'SCRIPT ERROR|Parse Error|CLEANUP CONTROL FAIL' "$out/$label.log"; then
+            printf 'Control %s failed; see full log\n' "$label" >&2
+            exit 1
+        fi
+    done
+    label="${version}_vfx_standard"
+    mkdir -p "$out/user-$label"
+    if timeout --signal=TERM --kill-after=10s 120 env XDG_DATA_HOME="$out/user-$label" godot --headless --verbose --path "$project" --fixed-fps 60 --audio-driver Dummy res://tests/vfx_test.tscn > "$out/$label.log" 2>&1; then
+        rc=0
+    else
+        rc=$?
+    fi
+    printf 'END %s rc=%d ' "$label" "$rc"
+    rg -c 'Pages in use exist at exit' "$out/$label.log" || true
+    if [[ "$rc" != 0 ]] || ! rg -q 'ИТОГ VFX: 64 OK, 0 FAIL' "$out/$label.log"; then
+        printf 'Standard VFX control %s failed; see full log\n' "$label" >&2
+        exit 1
+    fi
+done

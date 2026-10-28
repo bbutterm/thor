@@ -266,6 +266,11 @@ func reset_state() -> void:
 	_last_pop = -100.0
 	for w in _pool:
 		_release(w)
+	# reset_state может быть вызван между кадрами, пока слово связки ещё в пуле.
+	if _layer:
+		_layer.layer = 6
+	if _vignette:
+		_vignette.visible = false
 	for k in stats.keys():
 		stats[k] = 0
 	history.clear()
@@ -276,6 +281,13 @@ func active_count() -> int:
 		if w.active:
 			n += 1
 	return n
+
+## HUD использует это, чтобы реплика и крупное слово связки не закрывали друг друга.
+func combo_word_active() -> bool:
+	for w in _pool:
+		if w.active and w.event == "combo" and not w.preview:
+			return true
+	return false
 
 # --- Очередь и показ ---
 
@@ -475,15 +487,20 @@ func _process(delta: float) -> void:
 	_flush()
 	var vig := 0.0
 	var preview := false
+	var combo_word := false
 	for w in _pool:
-		if w.active and w.preview:
-			preview = true
 		if w.active:
 			_animate(w, real, game)
+			if w.active and w.preview:
+				preview = true
+			if w.active and w.event == "combo" and not w.preview:
+				combo_word = true
 			if w.active and w.big:
 				vig = maxf(vig, w.modulate.a * clampf(w.anim_scale, 0.0, 1.0))
-	# Образец из настроек — поверх меню паузы/настроек, иначе его не видно
-	_layer.layer = 25 if preview else 6
+	# Образец — поверх меню. Слово связки и его виньетка — под HUD: одновременно
+	# звучит Один, и большое FUSION! иначе закрывает его реплику. После слова
+	# возвращаем обычный слой для всех других боевых эффектов.
+	_layer.layer = 25 if preview else (4 if combo_word else 6)
 	_vignette.visible = vig > 0.01 and vignette_alpha > 0.0
 	_vignette.color = Color(0, 0, 0, vig * vignette_alpha)
 	if _glyph_warm_frames > 0:
@@ -537,9 +554,20 @@ func _place(w: ComicWord, rise: float, off: Vector2, rot: float) -> void:
 	var sc := w.base_scale * w.anim_scale * GameSettings.comic_scale
 	w.scale = Vector2.ONE * maxf(sc, 0.001)
 	w.rotation = w.tilt + rot
+	var combo_lane := w.event == "combo" and w.big and not w.preview
+	var combo_lane_start := vp.x * lerpf(0.4, 0.5, clampf((GameSettings.text_scale() - 1.0) / 0.6, 0.0, 1.0))
+	if combo_lane:
+		# Левую часть занимает реплика Одина. Ограничиваем только слово связки,
+		# учитывая наклон и overshoot, чтобы буквы и всплеск помещались справа.
+		var lane_half := maxf((vp.x - screen_margin_px - combo_lane_start) * 0.5 - shake_px * 1.6, 1.0)
+		var half_width := (absf(cos(w.rotation)) * w.half.x + absf(sin(w.rotation)) * w.half.y) * 1.15 * w.scale.x
+		if half_width > lane_half:
+			w.scale *= lane_half / half_width
 	var pos: Vector2
 	if w.preview:
 		pos = vp * Vector2(0.5, 0.16)
+	elif combo_lane:
+		pos = Vector2((combo_lane_start + vp.x - screen_margin_px) * 0.5, vp.y * 0.42)
 	elif w.big:
 		pos = vp * Vector2(0.5, 0.42)
 	elif w.screen:
@@ -560,6 +588,8 @@ func _place(w: ComicWord, rise: float, off: Vector2, rot: float) -> void:
 	pos += off + Vector2(0, -rise)
 	# Не даём слову уехать за край экрана
 	var h := w.half * w.base_scale * GameSettings.comic_scale
+	if combo_lane:
+		h = w.half * w.scale.x
 	var m := screen_margin_px
 	pos.x = vp.x * 0.5 if h.x * 2.0 + m * 2.0 > vp.x else clampf(pos.x, m + h.x, vp.x - m - h.x)
 	pos.y = vp.y * 0.5 if h.y * 2.0 + m * 2.0 > vp.y else clampf(pos.y, m + h.y, vp.y - m - h.y)
