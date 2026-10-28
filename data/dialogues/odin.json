@@ -725,13 +725,15 @@
 				"speaker": "odin",
 				"emotion": "angry",
 				"text": "Драугр. Обычный драугр. Он даже не целился.",
-				"id": "odin.death_draugr.01"
+				"id": "odin.death_draugr.01",
+				"conditions": ["killed_by == draugr_warrior"]
 			},
 			{
 				"speaker": "odin",
 				"emotion": "smug",
 				"text": "Тебя забил покойник. Причём уже второй раз покойник.",
-				"id": "odin.death_draugr.02"
+				"id": "odin.death_draugr.02",
+				"conditions": ["killed_by != loki_merc"]
 			},
 			{
 				"speaker": "odin",
@@ -742,19 +744,20 @@
 			{
 				"speaker": "odin",
 				"emotion": "angry",
-				"text": "Он замахивался ПОЛСЕКУНДЫ. С подсветкой! Как можно не увидеть?",
+				"text": "Он готовил атаку. А ты — место на диване?",
 				"id": "odin.death_draugr.04"
 			},
 			{
 				"speaker": "odin",
 				"emotion": "smug",
 				"text": "Драугр передавал: «Спасибо за лёгкий день».",
-				"id": "odin.death_draugr.05"
+				"id": "odin.death_draugr.05",
+				"conditions": ["killed_by != loki_merc"]
 			},
 			{
 				"speaker": "odin",
 				"emotion": "neutral",
-				"text": "Совет: бей после его замаха. Не до, не вместо, а после.",
+				"text": "Совет: следи за атакой и уходи в сторону. Не лицом в неё.",
 				"id": "odin.death_draugr.06"
 			}
 		],
