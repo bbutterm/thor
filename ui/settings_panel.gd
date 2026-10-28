@@ -20,6 +20,7 @@ var _capture_pad: bool = false
 var _key_buttons: Dictionary = {}
 var _pad_buttons: Dictionary = {}
 var _key_note: Label
+var _back_btn: Button
 ## Обновить подписи контролов после «Сбросить всё»: [секция, ключ, Callable(значение)]
 var _refreshers: Array = []
 
@@ -53,8 +54,19 @@ func _rebuild() -> void:
 	_refreshers.clear()
 	_build()
 	show_tab(tab)
-	if tab < _tab_buttons.size():
-		_tab_buttons[tab].grab_focus.call_deferred()
+	_focus_current_tab.call_deferred()
+
+## При нескольких перестройках за кадр фокус должен попасть на новые кнопки.
+func _focus_current_tab() -> void:
+	if not is_inside_tree() or _current >= _tab_buttons.size():
+		return
+	var button := _tab_buttons[_current]
+	if is_instance_valid(button) and button.is_inside_tree():
+		button.grab_focus()
+
+func _focus_back() -> void:
+	if is_inside_tree() and is_instance_valid(_back_btn) and _back_btn.is_inside_tree():
+		_back_btn.grab_focus()
 
 func _build() -> void:
 	var dim := ColorRect.new()
@@ -118,11 +130,11 @@ func _build() -> void:
 	reset.custom_minimum_size = Vector2(240, 50)
 	reset.pressed.connect(_reset_all)
 	foot.add_child(reset)
-	var back := UIStyle.button(tr("Назад"), 22)
-	back.custom_minimum_size = Vector2(260, 54)
-	back.pressed.connect(close)
-	foot.add_child(back)
-	back.grab_focus.call_deferred()
+	_back_btn = UIStyle.button(tr("Назад"), 22)
+	_back_btn.custom_minimum_size = Vector2(260, 54)
+	_back_btn.pressed.connect(close)
+	foot.add_child(_back_btn)
+	_focus_back.call_deferred()
 
 func tab_count() -> int:
 	return TABS.size()

@@ -50,6 +50,7 @@ func _run() -> void:
 	GameSettings.reset_all()
 	_test_bindings()
 	await _test_settings_capture()
+	await _test_settings_rebuild_focus()
 	await _test_card_choices()
 	await _test_trait_reroll_focus()
 	await _test_dialogue()
@@ -152,6 +153,22 @@ func _test_settings_capture() -> void:
 	panel.close()
 	await frames()
 	GameSettings.reset_pad_input()
+
+## Несколько обновлений локали могут перестроить одни и те же кнопки за кадр.
+func _test_settings_rebuild_focus() -> void:
+	print("-- Фокус после смены языка")
+	var panel := SettingsPanel.new()
+	get_tree().root.add_child(panel)
+	await frames()
+	panel.show_tab(4)
+	GameSettings.set_value("text", "language", "en")
+	GameSettings.set_value("text", "language", "ru")
+	await frames(6)
+	check(GameSettings.language() == "ru" and panel._current == 4, "после двух смен языка открыта та же вкладка")
+	check(get_viewport().gui_get_focus_owner() == panel._tab_buttons[4], "фокус перенесён на актуальную кнопку вкладки")
+	await pad_press(JOY_BUTTON_B)
+	check(not is_instance_valid(panel), "после перестроения настройки закрываются кнопкой B")
+	await frames()
 
 func _test_card_choices() -> void:
 	print("-- Карточки рун, приёмов и наград")
