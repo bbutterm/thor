@@ -16,6 +16,8 @@ const MEDIAN_WINDOW := 31
 var game: Game
 var threshold_ms: float = 50.0
 var _load_frames: Array[int] = []
+var _slam_impacts: int = 0
+var _rooms_completed: int = 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -52,6 +54,7 @@ func _run() -> void:
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 	await wait(0.3)
 	game = get_tree().current_scene as Game
+	game.player.slammed.connect(func(_power: float) -> void: _slam_impacts += 1)
 	# Руна огня — чтобы удар-приземление оставлял огонь; молот — молнии
 	for r in Run.all_runes:
 		if r.id in ["slam_fire", "hammer_power"]:
@@ -64,10 +67,22 @@ func _run() -> void:
 	Perf.record_all = true
 	var total := Run.total_rooms()
 	for i in total:
+		if Run.room_index != i:
+			printerr("HITCH FAIL: ожидался зал %d, текущий индекс %d" % [i, Run.room_index])
+			get_tree().quit(1)
+			return
 		await _play_room()
+		if not Run.is_peaceful_room() and not game.room._is_cleared:
+			printerr("HITCH FAIL: зал %d не зачищен за отведённое время" % (i + 1))
+			get_tree().quit(1)
+			return
+		_rooms_completed += 1
 		if i == total - 1:
 			break
-		await _go_next()
+		if not await _go_next():
+			printerr("HITCH FAIL: не удалось перейти из зала %d" % (i + 1))
+			get_tree().quit(1)
+			return
 	await wait(1.0)
 	Perf.record_all = false
 	_report()
@@ -134,11 +149,9 @@ func _play_room() -> void:
 				if p.mjolnir.in_hand:
 					p.mjolnir.throw_hammer()
 			2:
-				p.velocity.y = 9.0
-				await wait(0.25)
-				Input.action_press("slam")
-				await wait(0.05)
-				Input.action_release("slam")
+				# Н2: обычный прыжок не открывает удар. Делать воздушный прыжок,
+				# как игрок, либо использовать доступный с высоты/отскока удар.
+				await _jump_and_slam(p)
 		await wait(0.25)
 		# Добиваем по одному — смерть каждого врага отдельным событием. Босса и мини-босса — частями
 		# («slam» сбивает Ярла с балкона): успевают показать свои атаки и фазы (таран, лужи, балконы, обломки)
@@ -147,10 +160,36 @@ func _play_room() -> void:
 				e.take_hit(e.max_health * 0.12, Vector3(0, 1, -2), "slam")
 			else:
 				e.take_hit(9999, Vector3(0, 3, -5), "melee_finisher")
-	print("  зал зачищен: %s" % room.room_title)
+	if room._is_cleared:
+		print("  зал зачищен: %s" % room.room_title)
 
-func _go_next() -> void:
+## Страхуем запас рун в тестовой сцене, чтобы независимо от исхода предыдущих действий
+## увидеть эффекты удара в каждом прогоне. Прыжок и Ctrl отправляются через обычный ввод.
+func _jump_and_slam(p: Player) -> void:
+	if p.is_on_floor():
+		Input.action_press("jump")
+		await wait(0.05)
+		Input.action_release("jump")
+		await wait(0.12)
+	if not p.is_on_floor() and not p.can_start_slam() and p._jumps_left > 0:
+		p.restore_mjolnir_runes(p.dash_charges_max)
+		Input.action_press("jump")
+		await wait(0.05)
+		Input.action_release("jump")
+		await wait(0.05)
+	if p.can_start_slam():
+		Input.action_press("slam")
+		await wait(0.05)
+		Input.action_release("slam")
+		# Приземление и эффекты должны случиться до следующего сценария боя.
+		for i in 90:
+			if not p.is_slamming:
+				break
+			await get_tree().physics_frame
+
+func _go_next() -> bool:
 	var room := game.room
+	var previous_index := Run.room_index
 	await wait(1.2)
 	# Награда зала (трейт, руна, отдых, Локи…) → двери-награды (блок И) → входим в дверь по кругу
 	await DoorHelper.resolve_reward(get_tree(), game)
@@ -167,6 +206,7 @@ func _go_next() -> void:
 		if game.room != room:
 			break
 	_load_frames.append(_now())
+	return game.room != room and Run.room_index == previous_index + 1
 
 func _in_load_window(f: int) -> bool:
 	for lf in _load_frames:
@@ -215,10 +255,14 @@ func _report() -> void:
 	if noise > 0:
 		print("Всплесков без событий > +%d мс: %d (не считаются)" % [int(threshold_ms), noise])
 	_report_pipelines(fr)
+	print("Пройдено залов: %d из %d" % [_rooms_completed, Run.total_rooms()])
+	print("Удары-приземления с реальным приземлением: %d" % _slam_impacts)
+	if _slam_impacts == 0:
+		printerr("HITCH FAIL: удар-приземление ни разу не выполнился")
 	print("=== ИТОГ HITCH: %d фризов > +%d мс вне загрузки ===" % [bad.size(), int(threshold_ms)])
 	get_tree().paused = false
 	FX.reset_time()
-	get_tree().quit(0 if bad.is_empty() else 1)
+	get_tree().quit(0 if bad.is_empty() and _slam_impacts > 0 else 1)
 
 ## Компиляции пайплайнов (Forward+/Mobile; в GL Compatibility счётчиков нет) вне загрузки залов: сколько и
 ## после каких событий. pso_draw — компиляция прямо при отрисовке (= фриз на настоящей видеокарте).
