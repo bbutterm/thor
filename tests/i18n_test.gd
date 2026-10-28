@@ -277,6 +277,12 @@ func _test_dialogues() -> void:
 	var lines := Dialogue.pool_lines("ravens.tutorial_jump")
 	var tt := Tutorial.keys_in(str(lines[0].get("text", ""))) if not lines.is_empty() else ""
 	check(tt.contains("Space") and not tt.contains("{key_"), "обучение воронов на en, клавиши подставлены: «%s»" % tt)
+	var melee_lines := Dialogue.pool_lines("ravens.tutorial_attack")
+	var melee_template := str(melee_lines[0].get("text", "")) if not melee_lines.is_empty() else ""
+	var melee_keys := Tutorial.keys_in(melee_template)
+	var melee_key := Tutorial.key_name("attack")
+	check(melee_template.count("{key_attack}") == 2 and melee_key != "" and melee_keys.count(melee_key) == 2 and not melee_keys.contains("{key_"),
+		"в английской подсказке атаки обе клавиши подставлены")
 	var sc := {}
 	for s in Dialogue.scenes:
 		if s.get("id", "") == "odin_intro":
