@@ -959,6 +959,13 @@ func room_defs() -> Array:
 		"file": "room_10", "title": "Двор частокола", "w": 30.0, "d": 30.0, "max_alive": 60,
 		"tutorial_vertical": true,
 		"floor_tex": "dirt_straw",
+		"visual_map": "res://run/maps/midgard_slice.tres",
+		# Те же факелы: перемещены к путям, а не добавлены новые источники света.
+		"torch_overrides": [[2, Vector3(-12.3, 2.8, 8.5)], [1, Vector3(11.3, 5.6, -6.8)]],
+		"decor": [
+			["banner_hammer", Vector3(-12.3, 2.0, 8.5), 0.0, 1.5],
+			["banner_raven", Vector3(11.3, 4.6, -6.8), 0.0, 1.5],
+		],
 		"blocks": [
 			# Постоянные помосты: верх 3.0 м; толщина > 0.5, поэтому это не ломаемые мосты.
 			[Vector3(-9, 2.7, -4), Vector3(6, 0.6, 6), "wood"],
@@ -1067,7 +1074,12 @@ func room_defs() -> Array:
 		],
 		"props": [["barrel", Vector3(-12, 0, -11)], ["crate", Vector3(12, 0, -11)]],
 		# Не ставить случайные угловые пропсы и декали поверх проектного проёма.
-		"dress": {"corner_props": false, "decals": 0, "palisade_rows": [
+		"dress": {"corner_props": false, "decals": 0, "surface_materials": {
+			"surface_plank": "res://rooms/materials/slice_plank.tres",
+			"surface_wood": "res://rooms/materials/slice_wood.tres",
+			"surface_floor_dirt": "res://rooms/materials/slice_dirt.tres",
+			"surface_rock": "res://rooms/materials/slice_rock.tres",
+		}, "palisade_rows": [
 			[Vector3(-13, 0, -12), Vector3(-13, 0, -7)],
 			[Vector3(13, 0, -11), Vector3(13, 0, -6)],
 			[Vector3(-13, 0, 8), Vector3(-13, 0, 12)],
@@ -1356,7 +1368,7 @@ func _watchtower(parent: Node, name: String, center: Vector3, mat: Material, wit
 	_box(tower, "RailSouth", Vector3(0, 4.35, 1.32), Vector3(2.5, 0.12, 0.12), mat, false)
 
 ## Пологие проходы: [центр, размер, наклон X, материал, необязательный поворот Y], углы в градусах.
-func _build_ramps(parent: Node, ramps: Array, mats: Dictionary) -> void:
+func _build_ramps(parent: Node, ramps: Array, mats: Dictionary, plank_path: String = "") -> void:
 	if ramps.is_empty():
 		return
 	var plank: Material
@@ -1369,7 +1381,8 @@ func _build_ramps(parent: Node, ramps: Array, mats: Dictionary) -> void:
 		if kind == "wood":
 			# Общий материал настилов; при отсутствии — штатное дерево генератора.
 			if plank == null:
-				plank = load("res://rooms/materials/surface_plank.tres") as Material
+				var path := plank_path if plank_path != "" else "res://rooms/materials/surface_plank.tres"
+				plank = load(path) as Material
 			if plank != null:
 				material = plank
 		var ramp := _box(parent, "Ramp%d" % i, spec[0], spec[1], material)
@@ -1464,6 +1477,9 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	root.name = d.file.capitalize().replace(" ", "")
 	root.set_script(load("res://rooms/room.gd"))
 	root.set("room_title", d.title)
+	var visual_map_path := str(d.get("visual_map", ""))
+	if visual_map_path != "":
+		root.set("visual_map", load(visual_map_path) as RunMap)
 	root.set("max_alive", int(d.get("max_alive", 0)))
 	if d.get("tutorial_vertical", false):
 		root.set_meta("tutorial_vertical", true)
@@ -1534,15 +1550,20 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		# "none" — только коллизия (вид даёт декоративная модель из "models", например корпус корабля)
 		_box(geo, "Block%d" % i, b[0], b[1], null if b[2] == "none" else mats.get(b[2], mats.stone_dark))
 	var ramps: Array = d.get("ramps", [])
-	_build_ramps(geo, ramps, mats)
+	var surface_materials: Dictionary = (d.get("dress", {}) as Dictionary).get("surface_materials", {})
+	var plank_override := str(surface_materials.get("surface_plank", ""))
+	_build_ramps(geo, ramps, mats, plank_override)
 	# Небольшие наблюдательные вышки: реальные ступени и настил, декоративные опоры.
 	var towers: Array = d.get("watchtowers", [])
+	var tower_material: Material = mats.wood
+	if plank_override != "":
+		tower_material = load(plank_override) as Material
 	for i in towers.size():
 		var spec: Variant = towers[i]
 		if spec is Array:
-			_watchtower(geo, "Watchtower%d" % i, spec[0], mats.wood, bool(spec[1]))
+			_watchtower(geo, "Watchtower%d" % i, spec[0], tower_material, bool(spec[1]))
 		else:
-			_watchtower(geo, "Watchtower%d" % i, spec, mats.wood)
+			_watchtower(geo, "Watchtower%d" % i, spec, tower_material)
 	for i in d.pillars.size():
 		var pp: Vector3 = d.pillars[i]
 		_cyl(geo, "Pillar%d" % i, pp + Vector3(0, h / 2, 0), 0.8, h, pillar_mat)
@@ -1689,6 +1710,11 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	var ty := float(d.get("torch_y", 3.2))
 	var torch_pos := [Vector3(-w / 2 + 0.2, ty, -dep / 4), Vector3(w / 2 - 0.2, ty, -dep / 4), Vector3(-w / 2 + 0.2, ty, dep / 4), Vector3(w / 2 - 0.2, ty, dep / 4),
 		Vector3(-gap / 2 - 1.2, 3.6 + exit_y, -dep / 2 + 0.1), Vector3(gap / 2 + 1.2, 3.6 + exit_y, -dep / 2 + 0.1)]
+	for entry in d.get("torch_overrides", []):
+		if entry is Array and entry.size() == 2 and int(entry[0]) >= 0 and int(entry[0]) < torch_pos.size() and entry[1] is Vector3:
+			torch_pos[int(entry[0])] = entry[1]
+		else:
+			push_error("torch_overrides: нужен индекс факела и позиция Vector3")
 	var flame := _mat("flame", Color(1.0, 0.6, 0.2), 0.5, false, 5.0)
 	var holder := _mat("holder", Color(0.25, 0.22, 0.2), 0.6, false)
 	for i in torch_pos.size():

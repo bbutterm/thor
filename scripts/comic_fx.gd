@@ -659,6 +659,16 @@ func _build_resources() -> void:
 	_kit_mat.shader = KIT_BURST
 	_kit_mat.set_shader_parameter("tint_strength", kit_tint_strength)
 
+## Одна настройка трёх существующих материалов, без новых материалов на слово.
+func set_room_halftone_multiplier(multiplier: float) -> void:
+	var m := clampf(multiplier, 0.0, 2.0)
+	if _text_mat:
+		_text_mat.set_shader_parameter("dot_strength", clampf(0.22 * m, 0.0, 1.0))
+	if _text_mat_big:
+		_text_mat_big.set_shader_parameter("dot_strength", clampf(0.22 * m, 0.0, 1.0))
+	if _burst_mat:
+		_burst_mat.set_shader_parameter("dot_strength", clampf(0.4 * m, 0.0, 1.0))
+
 func _label_settings(font: Font, size: int) -> LabelSettings:
 	var ls := LabelSettings.new()
 	ls.font = font

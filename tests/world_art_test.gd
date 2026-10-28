@@ -174,6 +174,35 @@ func _run() -> void:
 	check(decor_iu == 0, "декор и атмосфера: текущих instance-материалов — 0")
 	print("   текущие instance-материалы, узлы: %d (декор и атмосфера: %d), материалов графики мира: %d" % [iu, decor_iu, WorldArt.materials_created])
 
+	print("-- Изолированный профиль вертикального среза")
+	await open("res://rooms/room_10.tscn")
+	var world_map := Run.map
+	var slice_map := game.room.visual_map
+	check(slice_map != null and slice_map != world_map and Run.map == world_map, "зал использует отдельный визуальный профиль, карту забега не меняет")
+	var slice_env := (game.get_node("WorldEnvironment") as WorldEnvironment).environment
+	var tinted := slice_env.sky.sky_material as ShaderMaterial if slice_env and slice_env.sky else null
+	check(slice_map != null and tinted != null and is_equal_approx(float(tinted.get_shader_parameter("strength")), slice_map.sky_tint_strength), "тонировка панорамы применена профилем зала")
+	var floor_visual := game.room.get_node_or_null("Dress/FloorVisual") as MeshInstance3D
+	var ramp_visual := game.room.get_node_or_null("Geometry/Ramp0/Mesh") as MeshInstance3D
+	var bridge_visual := game.room.get_node_or_null("Geometry/Block3/Mesh") as MeshInstance3D
+	check(floor_visual != null and floor_visual.material_override != null and floor_visual.material_override.resource_path == "res://rooms/materials/slice_dirt.tres", "пол использует материал среза")
+	check(ramp_visual != null and bridge_visual != null and ramp_visual.material_override != null and ramp_visual.material_override == bridge_visual.material_override and ramp_visual.material_override.resource_path == "res://rooms/materials/slice_plank.tres", "рампы и разрушаемый мост используют общий материал среза")
+	var text_mat := ComicFX.get("_text_mat") as ShaderMaterial
+	check(slice_map != null and is_equal_approx(float(Outline.material().get_shader_parameter("width_px")), Outline.cfg().width_px * slice_map.room_outline_multiplier), "профиль меняет базовую толщину общей обводки")
+	check(slice_map != null and text_mat != null and is_equal_approx(float(text_mat.get_shader_parameter("dot_strength")), 0.22 * slice_map.room_halftone_multiplier), "профиль меняет полутон общего материала слов")
+	Run.room_order.assign(["res://rooms/room_10.tscn", "res://rooms/room_09.tscn", Run.BOSS_SCENE])
+	Run.room_index = 1
+	game._load_room()
+	var restored := false
+	for i in 180:
+		await get_tree().physics_frame
+		if is_instance_valid(game.room) and game.room.scene_file_path == "res://rooms/room_09.tscn":
+			restored = true
+			break
+	var next_env := (game.get_node("WorldEnvironment") as WorldEnvironment).environment
+	check(restored and Run.map == world_map and game.room.visual_map == null and next_env != null and next_env.sky != null and next_env.sky.sky_material is PanoramaSkyMaterial, "после перехода обычный зал снова использует небо и карту мира")
+	check(restored and is_equal_approx(float(Outline.material().get_shader_parameter("width_px")), Outline.cfg().width_px) and text_mat != null and is_equal_approx(float(text_mat.get_shader_parameter("dot_strength")), 0.22), "после перехода обводка и полутон восстановлены")
+
 	print("=== ИТОГ WORLD ART: %d OK, %d FAIL ===" % [_passes, _fails.size()])
 	for f in _fails:
 		print("   FAIL: ", f)

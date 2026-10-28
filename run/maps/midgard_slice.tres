@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="RunMap" format=3]
+
+[ext_resource type="Script" path="res://run/run_map.gd" id="1_map"]
+
+[resource]
+script = ExtResource("1_map")
+world_id = "midgard"
+title = "Мидгард"
+rooms = 7
+miniboss_room = 4
+first_room_reward = "combat"
+sky = "res://assets/sky/midgard.webp"
+sky_energy = 0.95
+sky_tint = Color(0.62, 0.8, 1, 1)
+sky_tint_strength = 0.8
+ground_fog = true
+dust_motes = true
+torch_embers = true
+ambient_energy = 0.42
+ambient_sky_contribution = 0.5
+ambient_color = Color(0.5, 0.59, 0.72, 1)
+fog_color = Color(0.48, 0.59, 0.72, 1)
+fog_density = 0.011
+fog_sky_affect = 0.0
+ground_fog_color = Color(0.72, 0.8, 0.92, 0.26)
+exposure = 0.96
+sky_rotation_deg = -35.0
+sky_sun_uv = Vector2(0.5, 0.478)
+sun_elevation_deg = 50.0
+sun_color = Color(0.78, 0.86, 1, 1)
+sun_energy = 0.95
+tonemap_white = 6.0
+adjust_brightness = 1.0
+adjust_contrast = 1.04
+adjust_saturation = 1.02
+grade_shadows = Color(0.025, 0.035, 0.065, 1)
+grade_midtones = Color(0.5, 0.5, 0.51, 1)
+grade_highlights = Color(1, 0.97, 0.92, 1)
+ssao_intensity = 1.8
+ssao_radius = 1.2
+ssil_enabled = true
+ssil_intensity = 0.7
+glow_intensity = 0.65
+glow_bloom = 0.06
+volumetric_fog_density = 0.005
+volumetric_fog_albedo = Color(0.74, 0.82, 0.94, 1)
+volumetric_fog_emission = Color(0.01, 0.015, 0.025, 1)
+volumetric_fog_length = 48.0
+torch_shadows = 2
+room_outline_multiplier = 1.08
+room_halftone_multiplier = 0.85
+indoor_background = Color(0.04, 0.03, 0.025, 1)
+indoor_ambient_color = Color(0.62, 0.46, 0.34, 1)
+indoor_ambient_energy = 1.0
+indoor_fog_color = Color(0.24, 0.17, 0.12, 1)
+indoor_fog_density = 0.01
+indoor_exposure = 1.25
+indoor_volumetric_fog_density = 0.01

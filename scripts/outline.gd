@@ -26,6 +26,7 @@ const WIDTH_MAX := 2.0
 static var _material: ShaderMaterial
 static var _cfg: OutlineTuning
 static var _on: bool = true
+static var _room_width_multiplier: float = 1.0
 static var _settings_read: bool = false
 ## Прогрев (ShaderWarmup): образцы получают обводку, даже если она выключена — включение потом без компиляции
 static var warming: bool = false
@@ -49,11 +50,17 @@ static func material() -> ShaderMaterial:
 static func _push_params() -> void:
 	var c := cfg()
 	_material.set_shader_parameter("outline_color", c.color)
-	_material.set_shader_parameter("width_px", c.width_px)
+	_material.set_shader_parameter("width_px", c.width_px * _room_width_multiplier)
 	_material.set_shader_parameter("near_dist", c.near_dist)
 	_material.set_shader_parameter("min_scale", c.min_scale)
 	_material.set_shader_parameter("depth_push", c.depth_push)
 	_material.set_shader_parameter("width_scale", width_scale())
+
+## Сохраняет пользовательский width_scale: профиль зала меняет только базовую толщину.
+static func set_room_width_multiplier(multiplier: float) -> void:
+	_room_width_multiplier = clampf(multiplier, 0.5, 2.0)
+	if _material != null:
+		_material.set_shader_parameter("width_px", cfg().width_px * _room_width_multiplier)
 
 static func _read_settings() -> void:
 	if _settings_read:

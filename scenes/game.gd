@@ -10,6 +10,7 @@ class_name Game
 @onready var pause_menu: PauseMenu = $PauseMenu
 
 var room: Room
+var _active_visual_map: RunMap
 var _ending: bool = false
 ## Выбор трейта Мьёльнира после мини-босса (строится кодом, не из game.tscn)
 var trait_pick: TraitPick
@@ -68,6 +69,8 @@ func _cancel_room_load() -> bool:
 
 func _exit_tree() -> void:
 	_cancel_room_load()
+	Outline.set_room_width_multiplier(1.0)
+	ComicFX.set_room_halftone_multiplier(1.0)
 
 func _ready() -> void:
 	set_process(false)
@@ -100,6 +103,7 @@ func _ready() -> void:
 	AssetCache.finish()
 	# Небо и дымка мира (панорама из run/maps/<мир>.tres; Мидгард — закат)
 	WorldArt.apply_world(self, Run.map)
+	_active_visual_map = Run.map
 	_load_room()
 	Dialogue.on_run_start(Run.body.id if Run.body else "")
 
@@ -163,9 +167,21 @@ func _finish_room_load() -> void:
 	if player and player.mjolnir:
 		player.mjolnir.reset_cooldown()
 	# Атмосфера зала по миру: искры над факелами и очагом, пылинки, низкий туман (scripts/world_art.gd)
-	WorldArt.dress_room(room, Run.map)
+	var visual_map := room.visual_map if room.visual_map != null else Run.map
+	if visual_map != _active_visual_map:
+		if WorldArt.apply_world(self, visual_map):
+			_active_visual_map = visual_map
+		else:
+			push_warning("Не удалось применить профиль графики зала; используется карта мира")
+			visual_map = Run.map
+			WorldArt.apply_world(self, visual_map)
+			_active_visual_map = visual_map
+	if visual_map:
+		Outline.set_room_width_multiplier(visual_map.room_outline_multiplier)
+		ComicFX.set_room_halftone_multiplier(visual_map.room_halftone_multiplier)
+	WorldArt.dress_room(room, visual_map)
 	# Под крышей (Room.indoor) — свой свет без неба и солнца; тени факелов (scripts/world_art.gd, блок Б0)
-	WorldArt.apply_room(self, room, Run.map)
+	WorldArt.apply_room(self, room, visual_map)
 	var t := room.get_spawn_transform()
 	player.global_position = t.origin
 	player.velocity = Vector3.ZERO

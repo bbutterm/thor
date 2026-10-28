@@ -17,6 +17,8 @@ signal boss_spawned(boss: Enemy)
 signal wave_started(index: int)
 
 @export var room_title: String = "Зал"
+## Необязательный профиль графики: меняет только внешний вид этого зала, не Run.map и награды.
+@export var visual_map: RunMap
 ## Зал под крышей (длинный дом Ярла): без неба и солнца, свой полумрак — RunMap.indoor_*, WorldArt.apply_room
 @export var indoor: bool = false
 @export var wave_delay: float = 0.9

@@ -233,19 +233,30 @@ static func circle_for_color(col: Color) -> String:
 # ---------------- Небо мира ----------------
 
 ## Небо по панораме (одно на файл, живёт до конца игры: шейдер неба не перекомпилируется).
-static func sky_for(path: String, energy: float) -> Sky:
-	var id := "%s@%.3f" % [path, energy]
+static func sky_for(path: String, energy: float, tint: Color = Color.WHITE, strength: float = 0.0) -> Sky:
+	var id := "%s@%.3f|%s|%.3f" % [path, energy, tint, strength]
 	if _skies.has(id):
 		return _skies[id]
 	var tex := load(path) as Texture2D if path != "" and ResourceLoader.exists(path) else null
 	if tex == null:
 		return null
-	var sm := PanoramaSkyMaterial.new()
-	sm.panorama = tex
-	sm.energy_multiplier = energy
-	sm.filter = true
+	var sky_material: Material
+	if strength > 0.001:
+		var tinted := ShaderMaterial.new()
+		tinted.shader = load("res://shaders/panorama_tint.gdshader") as Shader
+		tinted.set_shader_parameter("panorama", tex)
+		tinted.set_shader_parameter("sky_tint", tint)
+		tinted.set_shader_parameter("strength", strength)
+		tinted.set_shader_parameter("energy", energy)
+		sky_material = tinted
+	else:
+		var panorama := PanoramaSkyMaterial.new()
+		panorama.panorama = tex
+		panorama.energy_multiplier = energy
+		panorama.filter = true
+		sky_material = panorama
 	var sky := Sky.new()
-	sky.sky_material = sm
+	sky.sky_material = sky_material
 	# Панорама неподвижна: рассеянный свет и отражения считаются один раз
 	sky.radiance_size = Sky.RADIANCE_SIZE_128
 	sky.process_mode = Sky.PROCESS_MODE_QUALITY
@@ -261,10 +272,12 @@ static func apply_world(game: Node, map: RunMap) -> bool:
 	var we := game.get_node_or_null("WorldEnvironment") as WorldEnvironment
 	if we == null or we.environment == null:
 		return false
-	var sky := sky_for(map.sky, map.sky_energy)
+	var sky := sky_for(map.sky, map.sky_energy, map.sky_tint, map.sky_tint_strength)
 	if sky == null:
 		return false
-	var env := we.environment.duplicate() as Environment
+	# При переходе из интерьера не переносим его отключённые отражения в новое небо.
+	var source := game.get_meta("env_outdoor") as Environment if game.has_meta("env_outdoor") else we.environment
+	var env := source.duplicate() as Environment
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.sky_rotation = Vector3(0.0, deg_to_rad(map.sky_rotation_deg), 0.0)

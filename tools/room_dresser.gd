@@ -414,7 +414,9 @@ func _free(p: Vector3, r: float = 0.0) -> bool:
 
 func _mat(key: String) -> Material:
 	if not _mats.has(key):
-		_mats[key] = load(MAT_DIR + key + ".tres")
+		var overrides: Dictionary = opts.get("surface_materials", {})
+		var path := str(overrides.get(key, MAT_DIR + key + ".tres"))
+		_mats[key] = load(path)
 	return _mats[key]
 
 func _mesh_aabb(key: String) -> AABB:

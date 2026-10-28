@@ -41,6 +41,9 @@ class_name RunMap
 ## солнце сцены ставится туда, где диск (sky_sun_uv), — поворотом выбирается сторона света (Мидгард: юго-запад)
 @export var sky_energy: float = 1.0
 @export var sky_rotation_deg: float = 0.0
+## При необходимости затонировать панораму, не меняя саму текстуру неба.
+@export var sky_tint: Color = Color.WHITE
+@export_range(0.0, 1.0) var sky_tint_strength: float = 0.0
 ## Экспозиция кадра (тонмаппинг): яркое небо-закат подсвечивает зал — подгоняем к прежней яркости
 @export var exposure: float = 1.0
 ## Рассеянный свет: яркость и доля неба в нём (остальное — ambient_color)
@@ -89,6 +92,9 @@ class_name RunMap
 @export var volumetric_fog_length: float = 48.0
 ## Тени от факелов (только Forward+): сколько факелов зала бросают тени (у выхода — первыми)
 @export var torch_shadows: int = 2
+## Художественный профиль: применяется к общим материалам и восстанавливается при смене зала.
+@export_range(0.5, 2.0) var room_outline_multiplier: float = 1.0
+@export_range(0.0, 2.0) var room_halftone_multiplier: float = 1.0
 
 @export_group("Закрытый зал (длинный дом)")
 ## Room.indoor: под крышей — без солнца и неба, тёплый полумрак факелов и очага
