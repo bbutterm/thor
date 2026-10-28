@@ -279,9 +279,11 @@ func _room_speakers() -> PackedStringArray:
 	var room := game_node.get("room") as Node if game_node else null
 	var trial := room.get_node_or_null("Trial") as TrialRunner if room else null
 	if trial and trial.def:
-		for pool in [trial.def.intro_pool, trial.def.win_pool, trial.def.fail_pool]:
-			if pool != "":
-				out.append(str(pool).get_slice(".", 0))
+		# Пустые поля означают стандартный пул ведущего (TrialDef.pool), а не отсутствие реплик.
+		for which in ["intro", "win", "fail"]:
+			var trial_speaker := trial.def.pool(which).get_slice(".", 0)
+			if trial_speaker != "" and not trial_speaker in out:
+				out.append(trial_speaker)
 	# Хозяин двери-награды: привал — Один (портрет в выборе), сделка — Локи, благословение — Фрейя
 	var host: String = {"rest": "odin", "loki": "loki", "freya": "freya"}.get(Run.current_reward(), "")
 	if host != "":
