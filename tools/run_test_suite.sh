@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+# Preserve the existing sequential implementation on Unix platforms where
+# Linux-only process supervision and desktop isolation are unavailable.
+if command -v uname >/dev/null 2>&1 && [[ $(uname -s) == Linux ]]; then
+    script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P) || exit 2
+    exec python3 "$script_dir/run_test_suite.py" "$@"
+fi
+if [[ ${THOR_TEST_JOBS:-1} != 1 ]]; then
+    printf 'THOR_TEST_JOBS other than 1 is currently supported only on Linux.\n' >&2
+    exit 2
+fi
+
 # Full suite with isolated data and capped logs. Keep intentional error diagnostics
 # visible, but fail on unexpected execution errors as well as test failures.
 set -uo pipefail
