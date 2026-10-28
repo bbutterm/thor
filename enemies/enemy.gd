@@ -11,6 +11,8 @@ class_name Enemy
 signal died(enemy: Enemy)
 ## Удар врага дошёл до Тора (amount — сколько HP снято на самом деле). Для модификаторов элиты.
 signal struck_player(amount: float)
+## По врагу прошёл урон (после щита и брони) — для черт мобов (EnemyTraitHandler.on_hit)
+signal hit_taken(damage: float, source: String)
 
 const SpawnEntry = preload("res://enemies/spawn_entry.gd")
 const TierNavigation = preload("res://rooms/enemy_navigation.gd")
@@ -315,6 +317,11 @@ var _flank_sign: float = 1.0
 var _retreated: bool = false
 var _retreat_left: float = 0.0
 var _reposition_t: float = 0.0
+## Черта моба (Трус) может на время задать направление бега вместо обычного мышления
+var _forced_move: Vector3 = Vector3.ZERO
+var _forced_move_left: float = 0.0
+## Прыжок черты «Прыгун»: пока > 0, горизонтальная скорость прыжка не гаснет (EnemyMotion)
+var _leap_left: float = 0.0
 ## Урон не меньше этого — отладочное «убить» (тесты): проходит сквозь щит и броню
 const DEBUG_KILL_DAMAGE := 9999.0
 ## Элита (GDD 12.4): обработчики модификаторов (EliteHandler, enemies/elite/) и цвет постоянного свечения
@@ -514,6 +521,10 @@ func _think_chase() -> Vector3:
 	to_player.y = 0
 	var dist := to_player.length()
 	var dir := to_player.normalized() if dist > 0.01 else Vector3.ZERO
+	if _forced_move_left > 0.0:
+		_forced_move_left -= get_physics_process_delta_time()
+		_face_dir(_forced_move, get_physics_process_delta_time())
+		return _forced_move
 	_face_dir(dir, get_physics_process_delta_time())
 	var move := Vector3.ZERO
 	match kind:
@@ -858,6 +869,7 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 			return
 	health -= damage
 	_last_hit_time = Run.combat_clock
+	hit_taken.emit(damage, source)
 	ComicFX.on_enemy_hit(self, damage, source)
 	_hurt_flash = 1.0
 	var big := source == "melee_finisher" or source == "melee_heavy" or source == "slam"

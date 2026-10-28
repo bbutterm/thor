@@ -198,6 +198,19 @@ HP / скорость / урон / Слава — из `enemies/defs/*.tres` (`E
 
 Поля `SquadDef`: `formation` (шеренга/кольцо/россыпь), `entry` (маркер/сзади/сбоку), `delay`, `spacing` 1.8 м, `row_gap` 2.5 м, `ring_radius`, `scatter_radius`, `entry_distance`. Участник (`SquadMember`): `kind`, `count`, `role`, `row` (0 перед / 1 зад / 2 центр), `speed_mult`, `anchor`. В зале (`tools/rooms/<зал>.gd`): `["squad", позиция, волна, 1, 0.0, {"squad": id | "squad_options": [id…], "squad_override": {вид: n}, "squad_anchor_pos": Vector3}]` — подгонка сохраняет число врагов и Славу зала. Сзади/сбоку нет пола или линия перекрыта — ближе (×0.6), другой бок, иначе из маркера.
 
+## Черты мобов (ночь 29.10, Н4, GDD 12.6) — `enemies/traits/*.tres` (`EnemyTraitDef`), обработчики `enemies/traits/<id>.gd`
+
+Выдача — `Room.trait_chance` 0.22 (доля бойцов и особых), `Room.max_traited` 3 на зал; корм, боссы, мини-боссы и элита — никогда. Значок — маленькая фигура над головой (`icon_shape`/`icon_scale`/`color`, общий меш и материал `glow`), прячется дальше `EnemyTraits.icon_hide_distance` 22 м, высота `EnemyTraits.icon_height` 2.35.
+
+| Черта | Поля | По умолчанию |
+|---|---|---|
+| Трус (`coward`, жёлтый шар) | `flee_hp` / `flee_time` / `call_radius` | при < 30 % HP убегает 3 с (один раз), будит соседей в 10 м |
+| Яростный (`furious`, красный клин) | `rage_speed_mult` / `rage_cooldown_mult` / `rage_time` | после попадания скорость ×1.4, перезарядка атаки ×0.6 на 4 с |
+| Ловкий (`agile`, голубое кольцо) | `dodge_interval` / `dodge_detect` / `dodge_speed` | отскок вбок от летящего Мьёльнира ближе 6 м, 11 м/с, раз в 6 с |
+| Крикун (`shouter`, оранжевая палка) | `shout_radius` | заметив Тора, будит всех в 18 м |
+| Тяжёлый (`heavy`, серый брусок) | `heavy_knock_resist` | сопротивление отбрасыванию 0.85 |
+| Прыгун (`jumper`, зелёный клин) | `leap_min` / `leap_max` / `leap_cooldown` / `leap_time` | прыжок к Тору с 6–8 м, полёт 0.6 с, раз в 5 с |
+
 ## Элита (блок У, GDD 12.4) — `enemies/elite/mods/*.tres` (`EliteModifier`), обработчики `enemies/elite/*.gd`
 
 Любой боец или особый враг (не корм, не босс) с шансом `elite_chance` зала становится элитой: ×2.5 HP, урон ×1.5, свечение цветом модификатора (общий оверлей `shaders/hit_flash.gdshader`, параметр `elite`), подпись модификатора над головой, кольцо под ногами, гарантированный дроп — оружие (60 % мили / 40 % ренж); если в игре уже есть серебро (`Run.add_silver` или автозагрузка `Silver.add`) — с шансом `Loot.elite_silver_chance` 0.4 вместо оружия `Loot.elite_silver` 10 серебра.

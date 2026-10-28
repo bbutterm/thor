@@ -195,6 +195,7 @@ func _build() -> void:
 		extra.remove_from_group("enemy_projectiles")
 		extra.set_physics_process(false)
 	HazardZone.warmup_sample(self, Vector3(0, 0.08, 0.8))
+	EnemyTraits.warmup_sample(self, Vector3(0, 1.1, 0.6))  # значки черт мобов
 	# Телеграф взрыва (Раздутый, элита «Взрывной», Свен)
 	Blast.warmup_sample(self, Vector3(0, 0.1, 0.5))
 	# Толстый Свен: плевок и лужа браги, полоса телеграфа тарана (у всех BossEnemy)

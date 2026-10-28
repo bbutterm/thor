@@ -41,9 +41,13 @@ func _apply_movement(move_dir: Vector3, delta: float) -> void:
 	# Базовая скорость стремится к цели, отбрасывание добавляется сверху
 	var base := horiz - Vector3(enemy.knockback_velocity.x, 0, enemy.knockback_velocity.z)
 	base = base.move_toward(target, enemy.accel * delta)
-	enemy.knockback_velocity = enemy.knockback_velocity.lerp(Vector3.ZERO, clampf(enemy.knock_decay * delta, 0.0, 1.0))
-	if not enemy.is_on_floor():
-		enemy.knockback_velocity = enemy.knockback_velocity.lerp(Vector3.ZERO, clampf(enemy.knock_decay * 0.3 * delta, 0.0, 1.0))
+	# Прыжок черты «Прыгун» (enemies/traits/jumper.gd): горизонталь прыжка не гаснет до конца дуги
+	if enemy._leap_left > 0.0:
+		enemy._leap_left -= delta
+	else:
+		enemy.knockback_velocity = enemy.knockback_velocity.lerp(Vector3.ZERO, clampf(enemy.knock_decay * delta, 0.0, 1.0))
+		if not enemy.is_on_floor():
+			enemy.knockback_velocity = enemy.knockback_velocity.lerp(Vector3.ZERO, clampf(enemy.knock_decay * 0.3 * delta, 0.0, 1.0))
 	var new_h := base + Vector3(enemy.knockback_velocity.x, 0, enemy.knockback_velocity.z)
 	enemy.velocity.x = new_h.x
 	enemy.velocity.z = new_h.z

@@ -71,6 +71,9 @@ signal wave_started(index: int)
 ## Шанс, что враг (не босс) появится элитой: светится, ×2.5 HP, роняет оружие
 @export_range(0.0, 1.0) var elite_chance: float = 0.1
 @export var max_elites: int = 1
+## Черты мобов (GDD 12.6, EnemyTraits): шанс бойцу/особому получить черту и не больше стольких на зал
+@export_range(0.0, 1.0) var trait_chance: float = 0.22
+@export var max_traited: int = 3
 ## Шанс сундука с оружием после зачистки (в первом зале — всегда, у босса — никогда)
 @export_range(0.0, 1.0) var chest_chance: float = 0.5
 
@@ -365,6 +368,7 @@ func _spawn_enemy(marker: Node3D) -> void:
 	enemy.rotation.y = marker.global_rotation.y - global_rotation.y
 	Loot.maybe_make_elite(self, enemy, elite_chance, max_elites)
 	add_child(enemy)
+	EnemyTraits.maybe_assign(self, enemy, trait_chance, max_traited)
 	_register(enemy)
 	if squad_marker and marker.has_meta("squad_anchor"):
 		squad_marker.set_meta("_anchor", enemy)

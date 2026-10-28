@@ -35,6 +35,9 @@
 ## Отряды (ночь 29.10, Н3, GDD 12.6)
 `squad_def.gd` (`SquadDef`) + `squad_member.gd` (`SquadMember`), данные — `squads/*.tres` (стена щитов, шаман и свита, пороховая бочка, засада Локи + вариант сбоку, стая). Маркер волны `kind = "squad"` (метаданные `squad` / `squad_options` / `squad_override` / `squad_anchor_pos`; в генераторе — ключ 6-го элемента записи `enemies`) `Room._spawn_wave` раскладывает через `SquadDef.expand` на маркеры участников (дети маркера отряда: роль, ряд, `squad_offset`, `not_before` для задержки); центр строя — `SquadDef.resolve_center` при первом участнике; роль/якорь/скорость — `Room._setup_squad_member` до `add_child`. Отряды в залах: 1 (волна 3 — стая), 2 (волна 2 — шаман и свита), 4 (волна 2 — засада, вариант), 8 (волна 3 — пороховая бочка). Тест `squad_test`; состав волн с отрядами считает `generator_test`.
 
+## Черты мобов (ночь 29.10, Н4, GDD 12.6)
+`traits/` — `EnemyTraitDef` (`enemy_trait_def.gd`, данные `traits/<id>.tres`), обработчик-узел `EnemyTraitHandler` (`enemy_trait_handler.gd`; хуки `_apply_stats`, `on_hit` ← сигнал `Enemy.hit_taken`, `_trait_tick`; прячет значок вдали), выдача и значок — `EnemyTraits` (`enemy_traits.gd`: `maybe_assign` из `Room._spawn_enemy` после элиты, `assign`, `handler_of`, `warmup_sample`). Черты: `coward` (бег через `Enemy._forced_move`), `furious`, `agile` (видит группу `mjolnir_projectiles`), `shouter`, `heavy` (`knock_resist`), `jumper` (`Enemy._leap_left` — горизонталь прыжка не гаснет в `EnemyMotion`). Новая черта — `.tres` + наследник `EnemyTraitHandler`. Метаданные врага `enemy_trait` = id. Тест `enemy_trait_test`.
+
 ## Мини-босс
 `MinibossDef` — обычный враг с переопределёнными числами и `Kind.BOSS`; добавляется последней волной (`Room.add_wave`) в залах `Run.miniboss_rooms`, после него `Game` открывает выбор трейта, потом руны.
 
@@ -53,4 +56,4 @@
 - Вспышка попадания — оверлей `shaders/hit_flash.tres` (`Enemy.FLASH_MATERIAL`), обводка — его `next_pass` (см. `scripts/CLAUDE.md`, «Комиксовая обводка»).
 
 ## Тесты
-`enemy_test` (враги Мидгарда, щит, взрыв, шаман, волны), `hazard_test` (зоны, снаряды, лимиты, роли), `squad_test` (отряды), `ai_test` (доходят и бьют во всех залах), `elite_test` (все виды × 7 модификаторов), `boss_test` (Свен, Ярл 3 фазы), `boss_charge_telegraph_test`, `enemy_flash_test`, `awareness_test`, `fodder_lod_test`, `fodder_model_test`, `horde_*_test`, `outline_test`. Кадры — `tests/enemy_shots.tscn`, `tests/boss_shots.tscn`, `tests/hazard_shots.tscn`.
+`enemy_test` (враги Мидгарда, щит, взрыв, шаман, волны), `hazard_test` (зоны, снаряды, лимиты, роли), `squad_test` (отряды), `enemy_trait_test` (черты мобов), `ai_test` (доходят и бьют во всех залах), `elite_test` (все виды × 7 модификаторов), `boss_test` (Свен, Ярл 3 фазы), `boss_charge_telegraph_test`, `enemy_flash_test`, `awareness_test`, `fodder_lod_test`, `fodder_model_test`, `horde_*_test`, `outline_test`. Кадры — `tests/enemy_shots.tscn`, `tests/boss_shots.tscn`, `tests/hazard_shots.tscn`.
