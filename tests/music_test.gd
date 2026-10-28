@@ -31,11 +31,40 @@ func _layer_db(i: int) -> float:
 	var sync := Music._player.stream as AudioStreamSynchronized
 	return sync.get_sync_stream_volume(i) if sync else -999.0
 
+## Время звукового микшера — реальное, даже при ускоренном --fixed-fps.
+func wait_audio_end(player: AudioStreamPlayer, timeout: float) -> bool:
+	var deadline := Time.get_ticks_msec() + int(ceil(timeout * 1000.0))
+	while player.playing and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+		OS.delay_msec(10)
+	await get_tree().process_frame # сигнал finished приходит после изменения playing
+	return not player.playing
+
 func _run() -> void:
 	print("=== MUSIC TEST ===")
 	for t in ["midgard", "boss", "jarl", "miniboss", "menu", "plan", "shop"]:
 		check(Music.has_track(t), "трек «%s» найден" % t)
 	check(Music._stinger.stream != null, "стингер удара-приземления загружен")
+	var st := Music._stinger.stream
+	var one_shot := (st is AudioStreamOggVorbis and not (st as AudioStreamOggVorbis).loop) \
+		or (st is AudioStreamWAV and (st as AudioStreamWAV).loop_mode == AudioStreamWAV.LOOP_DISABLED)
+	check(one_shot, "стингер не зациклен")
+	var owner_stinger := Music.OWNER_MUSIC_DIR + "stingers/slam"
+	var has_owner := ResourceLoader.exists(owner_stinger + ".ogg") or ResourceLoader.exists(owner_stinger + ".wav")
+	check(st != null and st.resource_path.begins_with(owner_stinger if has_owner else Music.MUSIC_DIR + "stingers/slam"),
+		"для стингера выбирается файл владельца, иначе запасной")
+	var finishes := [0]
+	var on_finished := func() -> void: finishes[0] += 1
+	Music._stinger.finished.connect(on_finished)
+	Music.stinger()
+	check(Music._stinger.playing, "стингер начал играть")
+	var ended := await wait_audio_end(Music._stinger, st.get_length() + 2.0) if st else false
+	check(ended and finishes[0] == 1, "стингер один раз доигрывает до конца")
+	Music._stinger.finished.disconnect(on_finished)
+	var background: AudioStream = Music._tracks.get("midgard", {}).get("base")
+	var background_loop := (background is AudioStreamOggVorbis and (background as AudioStreamOggVorbis).loop) \
+		or (background is AudioStreamWAV and (background as AudioStreamWAV).loop_mode == AudioStreamWAV.LOOP_FORWARD)
+	check(background_loop, "музыкальные петли продолжают повторяться")
 	Music.auto = false
 	Music.play_track("midgard", true)
 	await wait(0.2)
