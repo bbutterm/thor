@@ -9,6 +9,8 @@ var fails: Array[String] = []
 var runner: Node
 var done := false
 var timed_results: Array = []
+var death_driver_done := false
+var ordinary_win_driver_done := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -60,6 +62,34 @@ func open_game() -> Game:
 			game.room.set_physics_process(false)
 			return game
 	return null
+
+## Настоящая смерть и второе начисление в том же кадре, как при взрыве Свена.
+func _drive_death() -> void:
+	for i in 1800:
+		await get_tree().physics_frame
+		var game := get_tree().current_scene as Game
+		if game and is_instance_valid(runner.bot) and runner.bot.active and runner.bot.game == game:
+			game.room.set_physics_process(false)
+			runner.bot._track_room(game.player)
+			Run.add_glory(250)
+			game.player.body_handlers.clear()
+			game.player.take_damage(9999.0, Vector3.ZERO, true)
+			Run.add_glory(58)
+			death_driver_done = true
+			return
+
+## Контролируем только переход босса в победное состояние; это не балансный забег.
+func _drive_ordinary_win() -> void:
+	for i in 1800:
+		await get_tree().physics_frame
+		var game := get_tree().current_scene as Game
+		if game and is_instance_valid(runner.bot) and runner.bot.active and runner.bot.game == game:
+			game.room.set_physics_process(false)
+			Run.room_order.assign([Run.BOSS_SCENE])
+			Run.room_index = 0
+			game._on_room_cleared()
+			ordinary_win_driver_done = true
+			return
 
 func _run() -> void:
 	print("=== BOT PROGRESSION TEST ===")
@@ -129,20 +159,30 @@ func _run() -> void:
 	Save.reset()
 	Save.save_game()
 	var before := Save.data.duplicate(true)
-	var game := await open_game()
-	if game == null:
-		check(false, "контрольная игра загрузилась")
-		Save.all_unlocks.assign(originals)
-		_finish()
-		return
-	Run.add_glory(250)  # Стендовый источник, а не ручное изменение банка.
-	game.player.body_handlers.clear()
-	game.player.take_damage(9999.0, Vector3.ZERO, true)
-	check(game.player.is_dead and Save.deaths() == 1 and Save.glory_bank() == 250,
+	runner.args.time_cap = "240"
+	runner.args.room_cap = "120"
+	_drive_death.call_deferred()
+	var death_row: Dictionary = await runner.play_one("hunter", 0, 17551)
+	var game := get_tree().current_scene as Game
+	check(death_driver_done and game != null and game.player.is_dead and str(death_row.outcome) == "death"
+		and Save.deaths() == 1 and Save.glory_bank() == 250,
 		"настоящая смерть вызывает штатное начисление в Save")
+	var source_total := 0
+	for amount in death_row.glory_src.values():
+		source_total += int(amount)
+	var room_total := 0
+	for rm in death_row.rooms:
+		room_total += int(rm.glory)
+	check(int(death_row.glory) == 250 and source_total == 250 and room_total == 250
+		and int(death_row.get("glory_at_observation", -1)) == 308,
+		"итог, источники и залы содержат начисленную славу, а не события после смерти")
 	game.tracker.finish(false)
 	check(Save.deaths() == 1 and Save.glory_bank() == 250, "повтор finish не начисляет славу и смерть второй раз")
-	var death_row := {"body": "hunter", "outcome": "death"}
+	var mismatched_row := death_row.duplicate(true)
+	mismatched_row.glory = int(mismatched_row.glory) + 1
+	var mismatch_reason: String = runner._record_progression(mismatched_row, before)
+	check(mismatch_reason != "" and Save.glory_bank() == 250 and Save.data.purchases.is_empty(),
+		"несовпадающий результат не приводит к покупкам")
 	var reason: String = runner._record_progression(death_row, before)
 	var ledger: Dictionary = death_row.get("progression", {})
 	var purchases: Array = ledger.get("purchases", [])
@@ -160,10 +200,22 @@ func _run() -> void:
 		Save.all_unlocks.assign(originals)
 		_finish()
 		return
+	runner.bot.begin(game, 17552)
+	runner.bot._track_room(game.player)
+	Save.changed.emit()
+	check(runner.bot.active and runner.bot.final_result.is_empty(),
+		"обычное изменение сохранения не завершает наблюдение за текущим забегом")
 	Run.add_glory(125)
 	game.tracker.finish(true)  # Контролируем победный путь; сам босс здесь не подменяется.
+	Run.add_glory(58)  # После сохранения итог и его разбор больше не растут.
 	game.tracker.finish(true)
-	var win_row := {"body": "hunter", "outcome": "win"}
+	var win_source_total := 0
+	for amount in runner.bot.glory_src.values():
+		win_source_total += int(amount)
+	check(int(runner.bot.final_result.get("glory", -1)) == 125 and win_source_total == 125
+		and runner.bot.rooms.size() == 1 and int(runner.bot.rooms[0].glory) == 125,
+		"победа фиксирует сохранённый итог, источники и зал до поздних событий")
+	var win_row := {"body": "hunter", "outcome": "win", "glory": int(runner.bot.final_result.get("glory", -1))}
 	reason = runner._record_progression(win_row, before)
 	ledger = win_row.get("progression", {})
 	purchases = ledger.get("purchases", [])
@@ -171,6 +223,16 @@ func _run() -> void:
 		and int(ledger.get("glory_awarded", -1)) == 125 and purchases.size() == 1
 		and purchases[0].id == "c" and Save.glory_bank() == 75,
 		"следующий забег сохраняет прогрессию, победа учитывается один раз")
+
+	# Без progression раннер не ускоряет штатное сохранение победы: оно ожидает
+	# экран результата. Проверяем это на управляемом переходе, не меняя боевой исход.
+	runner.args.progression = "0"
+	var wins_before := Save.wins()
+	_drive_ordinary_win.call_deferred()
+	var ordinary_row: Dictionary = await runner.play_one("hunter", 1, 17553)
+	check(ordinary_win_driver_done and str(ordinary_row.outcome) == "win"
+		and Save.wins() == wins_before and runner.bot.final_result.is_empty(),
+		"обычная серия не записывает победу до штатного экрана результата")
 	Save.all_unlocks.assign(originals)
 	_finish()
 

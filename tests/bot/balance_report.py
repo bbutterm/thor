@@ -4,7 +4,7 @@
   python3 tests/bot/balance_report.py run.jsonl [run2.jsonl ...]            # таблицы по набору
   python3 tests/bot/balance_report.py --compare before.jsonl after.jsonl    # «до → после»
 
-Печатает Markdown в stdout. Цели (GDD 15.2, 24): Слава за забег 150–250; забег опытного игрока ~15 мин
+Печатает Markdown в stdout. Ориентиры (GDD 15.2, 24): Слава за победу 1000–1500; забег опытного игрока ~15 мин
 (перевод времени бота в человеческое — HUMAN_* ниже); Свен и Ярл проходимы, но опасны.
 """
 import json
@@ -12,7 +12,7 @@ import statistics as st
 import sys
 from collections import Counter, defaultdict
 
-GLORY_RANGE = (150, 250)
+GLORY_RANGE = (1000, 1500)
 # Перевод времени бота во время человека: бой человека медленнее (ищет врагов, промахивается, лезет на ярусы) —
 # ×HUMAN_FIGHT_MULT, плюс на каждый зал HUMAN_ROOM_OVERHEAD с (дойти до двери и лута, прочитать карточки,
 # загрузка; бот это делает мгновенно, а паузу на выборе таймер забега не считает).

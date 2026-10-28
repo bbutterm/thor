@@ -204,6 +204,8 @@ func _record_progression(res: Dictionary, before: Dictionary) -> String:
 			or int(Save.data.glory.spent) != int(before.glory.spent) \
 			or Save.data.unlocks != before.unlocks or Save.data.purchases != before.purchases:
 		return "начисление записано неверно или повторно"
+	if res.has("glory") and int(res.glory) != awarded:
+		return "слава в результате бота не совпадает с сохранённым начислением"
 	var after_award := Save.glory_bank()
 	var purchases: Array[Dictionary] = []
 	while true:
@@ -307,6 +309,9 @@ func play_one(body: String, run_no: int, seed_value: int) -> Dictionary:
 	bot._flush_glory()
 	bot.stop()
 	var tr_res: Dictionary = game.tracker.result(outcome == "win") if is_instance_valid(game) else {}
+	var has_final: bool = outcome in ["death", "win"] and not bot.final_result.is_empty()
+	if has_final:
+		tr_res = bot.final_result
 	var rooms: Array = bot.rooms.duplicate(true)
 	var dmg := 0.0
 	for rm in rooms:
@@ -321,7 +326,10 @@ func play_one(body: String, run_no: int, seed_value: int) -> Dictionary:
 		"death_scene": str(last.get("scene", "")) if outcome != "win" else "",
 		"death_reward": str(last.get("reward", "")) if outcome != "win" else "",
 		"cause": str(tr_res.get("killed_by", "")) if outcome == "death" else outcome,
-		"kills": Run.kills, "glory": Run.glory, "silver": Run.silver_earned, "best_streak": Run.best_streak,
+		"kills": int(tr_res.get("kills", Run.kills)) if has_final else Run.kills,
+		"glory": int(tr_res.get("glory", Run.glory)) if has_final else Run.glory,
+		"silver": bot.final_silver if has_final else Run.silver_earned,
+		"best_streak": int(tr_res.get("best_streak", Run.best_streak)) if has_final else Run.best_streak,
 		"glory_mult_body": Run.body.glory_mult if Run.body else 1.0,
 		"dmg_total": dmg,
 		"rank_time": Array(bot.rank_time),
@@ -333,6 +341,8 @@ func play_one(body: String, run_no: int, seed_value: int) -> Dictionary:
 		"traits": Run.mjolnir_traits.map(func(t: MjolnirTrait) -> String: return str(t.id)),
 		"rooms": rooms,
 	}
+	if has_final and Run.glory != int(res.glory):
+		res["glory_at_observation"] = Run.glory
 	if bot.telemetry_enabled and is_instance_valid(bot.telemetry):
 		res["telemetry"] = bot.telemetry.result()
 	if str(args.progression) == "1" and not outcome in ["death", "win"]:

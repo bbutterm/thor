@@ -91,6 +91,9 @@ var _was_dashing: bool = false
 ## Слава по источникам: kill (база за врага с множителями), multikill, streak, прочее по награде зала
 var glory_src: Dictionary = {}
 var _glory_prev: int = 0
+## Снимок результата в момент штатного сохранения, до последующих событий того же кадра.
+var final_result: Dictionary = {}
+var final_silver: int = 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -133,6 +136,9 @@ func begin(g: Game, seed_value: int) -> void:
 	_was_dashing = false
 	_known.clear()
 	_dodged.clear()
+	final_result = {}
+	final_silver = 0
+	_pending_glory = 0
 	game.player.hurt.connect(_on_hurt)
 	game.player.mjolnir.perfect_catch.connect(func() -> void: stats.perfect += 1)
 	game.player.mjolnir.state_changed.connect(func(in_hand: bool) -> void:
@@ -162,6 +168,21 @@ func begin(g: Game, seed_value: int) -> void:
 	if not Run.glory_changed.is_connected(_on_glory):
 		Run.glory_changed.connect(_on_glory)
 		Run.kill_registered.connect(_on_kill)
+	if not Save.changed.is_connected(_on_save_changed):
+		Save.changed.connect(_on_save_changed)
+
+## Save.end_run выставляет last_run до сигнала changed. Так отделяем итог от
+## убийств и наград, которые тот же взрыв может вызвать после смерти игрока.
+func _on_save_changed() -> void:
+	if not active or not is_instance_valid(game) or not is_instance_valid(game.tracker) or not game.tracker._finished:
+		return
+	var saved: Dictionary = Save.data.get("last_run", {})
+	if saved.is_empty() or not Run.body or str(saved.get("body", "")) != Run.body.id:
+		return
+	_flush_glory()
+	final_result = saved.duplicate(true)
+	final_silver = Run.silver_earned
+	stop()
 
 ## Слава пришла: копим как «прочее», убийство (kill_registered сразу после) перенесёт её в kill/multikill/streak.
 var _pending_glory: int = 0
@@ -334,6 +355,8 @@ func _track_room(p: Player) -> void:
 		_trace("room_start", {"scene": cur_room.scene, "hp": p.health, "hp_max": p.max_health})
 		if _room_obj:
 			_room_obj.cleared.connect(func() -> void:
+				if not active:
+					return
 				cur_room.cleared = true
 				cur_room.t_clear = _run_time() - float(cur_room.t_start), CONNECT_ONE_SHOT)
 			_room_obj.boss_spawned.connect(_on_boss_spawned)
