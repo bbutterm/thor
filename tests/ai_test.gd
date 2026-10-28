@@ -215,14 +215,26 @@ func _room11_ascent() -> bool:
 	if enemy == null:
 		print("[FAIL] башня: корм не появился")
 		return false
+	var crowd: Array[Enemy] = [enemy]
+	for i in 5:
+		var pos := Vector3(-11.0 + (float(i % 3) - 1.0) * 0.65, 0.05, 11.7 + floorf(float(i) / 3.0) * 0.7)
+		var follower := room.spawn_extra("fodder", room.to_global(pos))
+		if follower != null:
+			follower._set_state(Enemy.State.CHASE)
+			follower.alert_to_player()
+			crowd.append(follower)
 	enemy._set_state(Enemy.State.CHASE)
 	enemy.alert_to_player()
 	var level1 := false
 	var level2 := false
 	var reached := false
+	var climbed := {}
 	for i in 4800:
 		await get_tree().physics_frame
 		p.health = p.max_health
+		for follower in crowd:
+			if is_instance_valid(follower) and not follower.is_dead and room.to_local(follower.global_position).y >= 6.3:
+				climbed[follower.get_instance_id()] = true
 		if not is_instance_valid(enemy) or enemy.is_dead:
 			break
 		var y := room.to_local(enemy.global_position).y
@@ -232,7 +244,8 @@ func _room11_ascent() -> bool:
 			level2 = true
 		if enemy.is_on_floor() and y >= 19.2 and enemy.global_position.distance_to(p.global_position) < 3.0:
 			reached = true
-			break
-	var ok := level1 and level2 and reached
-	print("[%s] башня: корм прошёл все ярусы" % ["OK" if ok else "FAIL"])
+			if climbed.size() >= 4:
+				break
+	var ok := level1 and level2 and reached and climbed.size() >= 4
+	print("[%s] башня: корм прошёл все ярусы, из пачки поднялись %d/%d" % ["OK" if ok else "FAIL", climbed.size(), crowd.size()])
 	return ok

@@ -41,6 +41,23 @@ func _on_done(results: Array) -> void:
 		return
 	var r: Dictionary = results[0]
 	print("  итог: %s, зал %d, %.0f с, Слава %d, убито %d, урон %.0f" % [r.outcome, r.rooms_reached, r.time, r.glory, r.kills, r.dmg_total])
+	if r.outcome == "room_timeout":
+		var stalled := get_tree().current_scene as Game
+		if stalled and is_instance_valid(stalled.room):
+			var remaining: Array[String] = []
+			for enemy in stalled.room.alive_enemies():
+				if is_instance_valid(enemy) and not enemy.is_dead:
+					remaining.append("%s %s hp=%.1f state=%s" % [enemy.name, stalled.room.to_local(enemy.global_position), enemy.health, enemy.state])
+			print("  где застрял: %s, волна %d, очередь %d, игрок %s, враги %s" % [
+				stalled.room.scene_file_path, stalled.room._wave_index, stalled.room.pending_spawns(),
+				stalled.room.to_local(stalled.player.global_position), remaining])
+			var debug_bot := get_tree().root.get_node_or_null("BalanceRunner/Bot")
+			if debug_bot:
+				var target := debug_bot.get("_target") as Enemy
+				print("  маршрут: цель %s, точки %s, индекс %s, движение %s, поворот %s" % [
+					stalled.room.to_local(target.global_position) if is_instance_valid(target) else "нет",
+					debug_bot.get("_route_points"), debug_bot.get("_route_index"),
+					Input.is_action_pressed("move_forward"), stalled.player.rotation_target.y])
 	# Смерть — ожидаемый исход, а не ошибка инфраструктуры бота.
 	check(r.outcome in ["stopped", "death", "win"], "забег закончился штатно (%s)" % r.outcome)
 	check(float(r.time) > 0.0 and int(r.rooms_reached) >= 1, "время и достигнутый зал записаны")
@@ -87,7 +104,64 @@ func _test_controlled_encounter() -> void:
 	check(bot.picks.any(func(s: String) -> bool: return s.begins_with("door:")), "бот выбрал настоящую дверь")
 	check(Run.room_index >= 1 and is_instance_valid(game.room) and game.room.get_instance_id() != first_room_id, "бот вошёл в следующий зал через триггер двери")
 	bot.queue_free()
+	await _test_tower_gate_route()
 	_finish()
+
+## Реальный путь от двора до вершины без телепорта и без отключения условия финальной волны.
+func _test_tower_gate_route() -> void:
+	print("-- Подъём бота к финалу башни")
+	get_tree().paused = false
+	FX.reset_time()
+	Run.start_run("berserker")
+	Run.room_order.assign(["res://rooms/room_11.tscn", Run.BOSS_SCENE])
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	var game: Game = null
+	for i in 120:
+		await get_tree().physics_frame
+		game = get_tree().current_scene as Game
+		if game and game.is_node_ready() and game.room:
+			break
+	if game == null or not game.is_node_ready() or game.room == null:
+		check(false, "башня загружена")
+		return
+	# Ждём штатный отложенный старт зала, чтобы он не сбросил подготовленную волну.
+	for i in 50:
+		await get_tree().physics_frame
+	var room := game.room
+	room.set_physics_process(false)
+	room._spawn_queue.clear()
+	for enemy in room.alive_enemies().duplicate():
+		enemy.queue_free()
+	room._alive.clear()
+	room._is_cleared = false
+	room._started = true
+	room._wave_index = 2
+	room._wave_size = 1
+	room._advance_pending = false
+	room._player = game.player
+	var bot := BotPlayer.new()
+	get_tree().root.add_child(bot)
+	bot.begin(game, 773)
+	var entered := false
+	var jumped_distance := false
+	var previous := game.player.global_position
+	var peak := 0.0
+	for i in 3600:
+		await get_tree().physics_frame
+		var pos := game.player.global_position
+		if pos.distance_to(previous) > 1.0:
+			jumped_distance = true
+		previous = pos
+		peak = maxf(peak, room.to_local(pos).y)
+		if room._wave_gate_open(3):
+			entered = true
+			break
+		if game.player.is_dead:
+			break
+	bot.stop()
+	check(entered and not game.player.is_dead, "бот физически дошёл до условия финала (высота %.2f м)" % peak)
+	check(not jumped_distance and int(bot.stats.get("assists", 0)) == 0, "подъём без телепорта и подсадки")
+	bot.queue_free()
 
 func _finish() -> void:
 	print("=== ИТОГ: %d OK, %d FAIL ===" % [_passes, _fails.size()])

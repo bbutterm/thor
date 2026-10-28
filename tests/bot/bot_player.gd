@@ -75,6 +75,16 @@ var _dodged: Dictionary = {}     # instance_id телеграфа → решен
 var _progress_best: float = INF
 var _progress_t: float = 0.0
 var _stuck_tries: int = 0
+## Физический маршрут до цели по существующей навигации зала (только тестовый бот).
+var _route_goal: Vector3 = Vector3.INF
+var _route_points := PackedVector3Array()
+var _route_index := 0
+var _route_refresh := 0.0
+var _route_map_iteration := 0
+var _route_stuck_time := 0.0
+var _route_retry_delay := 0.0
+var _route_last_position := Vector3.INF
+var _tower_guide_index := -1
 var _ui_wait: float = 0.0
 var _room_index: int = -1
 var _room_obj: Room
@@ -345,6 +355,15 @@ func _track_room(p: Player) -> void:
 		_progress_best = INF
 		_progress_t = 0.0
 		_stuck_tries = 0
+		_route_goal = Vector3.INF
+		_route_points.clear()
+		_route_index = 0
+		_route_refresh = 0.0
+		_route_map_iteration = 0
+		_route_stuck_time = 0.0
+		_route_retry_delay = 0.0
+		_route_last_position = Vector3.INF
+		_tower_guide_index = -1
 		_target = null
 		_jump_plan = 0
 		_jump_t = 0.0
@@ -623,6 +642,9 @@ func _fight(p: Player, room: Room, dt: float) -> void:
 	_clock += dt
 	var enemies := room.alive_enemies().filter(func(e: Enemy) -> bool: return is_instance_valid(e) and not e.is_dead)
 	if enemies.is_empty():
+		# Следующая волна может ждать Тора на вершине, пока он никого не видит.
+		if room.pending_spawns() == 0 and _walk_to_wave_gate(p, room, dt):
+			return
 		_stop_moving()
 		return
 	if _think_t <= 0.0 or _target == null or not is_instance_valid(_target) or _target.is_dead:
@@ -636,6 +658,10 @@ func _fight(p: Player, room: Room, dt: float) -> void:
 	var flat := Vector3(to.x, 0, to.z)
 	var dist := flat.length()
 	var dy := _target.global_position.y - p.global_position.y
+	# Враги на другом ярусе: ходим по тем же поверхностям, что и они.
+	# Если связного пути нет (например, мост сломан), сохраняем прежний бой.
+	if absf(dy) > 2.2 and room.enemy_navigation != null and _walk_navigation(p, _target.global_position, dt):
+		return
 	_aim(p, to, dt)
 	_hammer(p, dist, dy, dt)
 	var holder := p.weapons
@@ -658,6 +684,128 @@ func _fight(p: Player, room: Room, dt: float) -> void:
 	elif _skill_hold_left <= 0.0:
 		hold("attack", false)
 	_slam_logic(p, enemies, dist, dy, dt)
+
+## Цель — область следующей волны. Сначала проходим пронумерованные маркеры TowerGuides.
+## Никаких телепортов: обычное движение и реальный контакт ног с платформой.
+func _walk_to_wave_gate(p: Player, room: Room, dt: float) -> bool:
+	var gates: Dictionary = room.get_meta("wave_gates", {})
+	var next_wave := room._wave_index + 1
+	if room._advance_pending or not gates.has(next_wave):
+		_tower_guide_index = -1
+		return false
+	if room._wave_gate_open(next_wave):
+		_stop_moving()
+		return true
+	var guide_root := room.get_node_or_null("TowerGuides")
+	if guide_root == null:
+		return false
+	var guides: Array = guide_root.get_children().filter(func(n: Node) -> bool: return n is Marker3D)
+	if guides.is_empty():
+		return false
+	var local_y := room.to_local(p.global_position).y
+	# После падения начать заново с действительно доступного яруса.
+	if _tower_guide_index > 0 and local_y < (guides[mini(_tower_guide_index - 1, guides.size() - 1)] as Node3D).position.y - 1.5:
+		_tower_guide_index = -1
+	if _tower_guide_index < 0:
+		var best_y := -INF
+		var best_dist := INF
+		_tower_guide_index = 0
+		for i in guides.size():
+			var guide := guides[i] as Node3D
+			var y := guide.position.y
+			if y > local_y + 0.85:
+				continue
+			var flat := guide.global_position - p.global_position
+			flat.y = 0.0
+			if y > best_y + 0.1 or (absf(y - best_y) <= 0.1 and flat.length_squared() < best_dist):
+				best_y = y
+				best_dist = flat.length_squared()
+				_tower_guide_index = i
+	while _tower_guide_index < guides.size():
+		var target := (guides[_tower_guide_index] as Node3D).global_position
+		var d := target - p.global_position
+		if Vector2(d.x, d.z).length() > 0.7 or absf(d.y) > 0.8:
+			break
+		_tower_guide_index += 1
+	var gate: Dictionary = gates[next_wave]
+	var destination: Vector3
+	if _tower_guide_index < guides.size():
+		destination = (guides[_tower_guide_index] as Node3D).global_position
+	else:
+		# Последний маркер у самой кромки зоны — идём внутрь, чтобы условие сработало.
+		var area: Rect2 = gate.get("area", Rect2())
+		var center := area.get_center()
+		var top_y := (guides[guides.size() - 1] as Node3D).position.y
+		destination = room.to_global(Vector3(center.x, top_y, center.y))
+	if not _walk_navigation(p, destination, dt):
+		_stop_moving()  # не подменять отсутствие пути телепортом
+	return true
+
+## Навигация указывает только направление; перемещение — штатный ввод игрока и его коллизии.
+func _walk_navigation(p: Player, destination: Vector3, dt: float) -> bool:
+	if _route_retry_delay > 0.0:
+		_route_retry_delay = maxf(0.0, _route_retry_delay - dt)
+		return false
+	var map := p.get_world_3d().navigation_map
+	var iteration := NavigationServer3D.map_get_iteration_id(map) if map.is_valid() else 0
+	if iteration == 0:
+		return false
+	_route_refresh -= dt
+	if iteration != _route_map_iteration or _route_refresh <= 0.0 or _route_goal.distance_to(destination) > 1.0:
+		_route_refresh = 0.25
+		_route_map_iteration = iteration
+		_route_goal = destination
+		var start: Vector3 = NavigationServer3D.map_get_closest_point(map, p.global_position)
+		var end: Vector3 = NavigationServer3D.map_get_closest_point(map, destination)
+		if start.distance_to(p.global_position) > 1.5 or end.distance_to(destination) > 1.5:
+			_route_points.clear()
+			return false
+		# Слой 1 — реальные ходовые поверхности; прыжковые связи сюда не входят.
+		_route_points = NavigationServer3D.map_get_path(map, start, end, true, 1)
+		_route_index = 0
+		if _route_points.is_empty() or _route_points[_route_points.size() - 1].distance_to(end) > 1.0:
+			_route_points.clear()
+			return false
+	if _route_points.is_empty():
+		return false
+	if _route_last_position == Vector3.INF or p.global_position.distance_to(_route_last_position) > 0.15:
+		_route_last_position = p.global_position
+		_route_stuck_time = 0.0
+	else:
+		_route_stuck_time += dt
+	if _route_stuck_time >= 2.5:
+		_route_stuck_time = 0.0
+		_route_retry_delay = 2.0
+		_route_points.clear()
+		_stop_moving()
+		return false
+	while _route_index < _route_points.size() - 1:
+		var d := _route_points[_route_index] - p.global_position
+		if Vector2(d.x, d.z).length() > 0.7 or absf(d.y) > 1.0:
+			break
+		_route_index += 1
+	var delta := _route_points[_route_index] - p.global_position
+	delta.y = 0.0
+	var distance := delta.length()
+	if distance < 0.25:
+		_stop_moving()
+		return true
+	var dir := delta / distance
+	var yaw := atan2(-dir.x, -dir.z)
+	var turn := wrapf(yaw - p.rotation_target.y, -PI, PI)
+	p.rotation_target.y += clampf(turn, -float(skill.turn_speed) * dt, float(skill.turn_speed) * dt)
+	p.rotation_target.x = move_toward(p.rotation_target.x, 0.0, float(skill.turn_speed) * dt)
+	var forward := -p.global_transform.basis.z
+	forward.y = 0.0
+	var aligned := forward.normalized().dot(dir) > 0.85
+	_skill_hold_left = 0.0
+	hold("attack", false)
+	hold("move_back", false)
+	hold("move_left", false)
+	hold("move_right", false)
+	# Слой навигации содержит только ходовые площадки и марши; физика игрока остаётся обычной.
+	hold("move_forward", aligned)
+	return true
 
 func _aimed(p: Player, min_dot: float) -> bool:
 	var to := _target.global_position + Vector3(0, 1.0 * _target.model_scale, 0) - p.get_aim_origin()

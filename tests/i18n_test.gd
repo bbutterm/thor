@@ -277,12 +277,29 @@ func _test_dialogues() -> void:
 	var lines := Dialogue.pool_lines("ravens.tutorial_jump")
 	var tt := Tutorial.keys_in(str(lines[0].get("text", ""))) if not lines.is_empty() else ""
 	check(tt.contains("Space") and not tt.contains("{key_"), "обучение воронов на en, клавиши подставлены: «%s»" % tt)
-	var melee_lines := Dialogue.pool_lines("ravens.tutorial_attack")
-	var melee_template := str(melee_lines[0].get("text", "")) if not melee_lines.is_empty() else ""
-	var melee_keys := Tutorial.keys_in(melee_template)
+	# Обычный удар и удержание приёма теперь объясняются двумя уроками.
 	var melee_key := Tutorial.key_name("attack")
-	check(melee_template.count("{key_attack}") == 2 and melee_key != "" and melee_keys.count(melee_key) == 2 and not melee_keys.contains("{key_"),
-		"в английской подсказке атаки обе клавиши подставлены")
+	for lesson in [["attack", "attack"], ["weapon_skill", "hold"]]:
+		var lesson_lines := Dialogue.pool_lines("ravens.tutorial_" + lesson[0])
+		var lesson_template := str(lesson_lines[0].get("text", "")) if not lesson_lines.is_empty() else ""
+		var rendered := Tutorial.keys_in(lesson_template)
+		check(lesson_template.count("{key_attack}") == 1 and melee_key != "" and melee_key != "—"
+			and rendered.count(melee_key) == 1 and not rendered.contains("{key_")
+			and lesson_template.to_lower().contains(lesson[1])
+			and RegEx.create_from_string("[А-Яа-яЁё]").search(lesson_template) == null,
+			"английский урок %s: смысл и клавиша удара" % lesson[0])
+	# Руны — второй новый урок: все три действия должны быть объяснены и подставлены.
+	var rune_lines := Dialogue.pool_lines("ravens.tutorial_runes")
+	var rune_template := str(rune_lines[0].get("text", "")) if not rune_lines.is_empty() else ""
+	var rune_rendered := Tutorial.keys_in(rune_template)
+	var rune_ok := not rune_rendered.contains("{key_")
+	for action in ["jump", "dash", "throw"]:
+		var key := Tutorial.key_name(action)
+		rune_ok = rune_ok and key != "" and key != "—" and rune_template.count("{key_%s}" % action) == 1 and rune_rendered.contains(key)
+	var rune_text := rune_template.to_lower()
+	rune_ok = rune_ok and rune_text.contains("jump") and rune_text.contains("dash") and rune_text.contains("rune") and rune_text.contains("catch")
+	check(rune_ok and RegEx.create_from_string("[А-Яа-яЁё]").search(rune_template) == null,
+		"английский урок рун: прыжок, рывок, бросок и восстановление с подставленными клавишами")
 	var sc := {}
 	for s in Dialogue.scenes:
 		if s.get("id", "") == "odin_intro":

@@ -59,6 +59,8 @@ signal wave_started(index: int)
 @export_range(1, 8, 1) var nav_max_simultaneous_jumps: int = 1
 ## Только расчётная точка посадки; фактическое тело не перемещается.
 @export_range(0.01, 0.15, 0.01) var nav_jump_landing_clearance: float = 0.05
+## В вертикальном зале корм не закупоривает узкие марши другими кормовыми.
+@export var nav_fodder_crowd_pass: bool = true
 
 @export_group("Оружие и элита")
 ## Шанс, что враг (не босс) появится элитой: светится, ×2.5 HP, роняет оружие
@@ -260,6 +262,11 @@ func _register(enemy: Enemy) -> void:
 		enemy.set_meta("_room_wave", _wave_index - 1 if _advance_pending else _wave_index)
 	enemy.player = _player
 	if enemy_navigation != null and enemy.kind != Enemy.Kind.BOSS:
+		if nav_fodder_crowd_pass and enemy.kind == Enemy.Kind.FODDER:
+			for other in _alive:
+				if is_instance_valid(other) and not other.is_dead and other.kind == Enemy.Kind.FODDER:
+					enemy.add_collision_exception_with(other)
+					other.add_collision_exception_with(enemy)
 		enemy.enable_tier_navigation(enemy_navigation, {
 			"refresh_interval": nav_refresh_interval, "target_move": nav_target_move,
 			"point_distance": nav_point_distance, "target_distance": nav_target_distance,
@@ -356,6 +363,10 @@ func pending_spawns() -> int:
 func _on_enemy_died(enemy: Enemy) -> void:
 	release_navigation_jump(enemy)
 	_alive.erase(enemy)
+	if enemy_navigation != null and nav_fodder_crowd_pass and enemy.kind == Enemy.Kind.FODDER:
+		for other in _alive:
+			if is_instance_valid(other) and other.kind == Enemy.Kind.FODDER:
+				other.remove_collision_exception_with(enemy)
 	var wave := int(enemy.get_meta("_room_wave", -1))
 	if _started and wave >= 0 and _wave_finished(wave):
 		_finish_wave(wave)
