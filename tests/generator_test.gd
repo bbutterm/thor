@@ -67,8 +67,28 @@ func _run() -> void:
 				var wave := int(spec[2])
 				if not wave_totals.has(wave):
 					wave_totals[wave] = {"all": 0, "fodder": 0, "special": 0, "packs": 0}
-				wave_totals[wave].all += amount
 				var kind := str(marker.get_meta("kind", "grunt"))
+				if kind == "squad":
+					# Отряд (SquadDef): считаем его состав; у всех вариантов он одинаковый
+					var ids: Array = marker.get_meta("squad_options", [marker.get_meta("squad", "")])
+					var override: Dictionary = marker.get_meta("squad_override", {})
+					var totals := {}
+					for sid in ids:
+						var sq := SquadDef.find(str(sid))
+						same = same and sq != null and (totals.is_empty() or sq.totals(override) == totals)
+						if sq:
+							totals = sq.totals(override)
+					for k in totals:
+						var n := int(totals[k])
+						wave_totals[wave].all += n
+						if k == "fodder":
+							wave_totals[wave].fodder += n
+							wave_totals[wave].packs += 1
+							same = same and n >= 10 and n <= 20
+						elif k != "grunt":
+							wave_totals[wave].special += n
+					continue
+				wave_totals[wave].all += amount
 				if kind == "fodder":
 					wave_totals[wave].fodder += amount
 					wave_totals[wave].packs += 1

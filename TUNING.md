@@ -186,6 +186,18 @@ HP / скорость / урон / Слава — из `enemies/defs/*.tres` (`E
 
 Опасная зона — `enemies/hazard_zone.gd` (`HazardZone`: круг / линия / конус; `telegraph`, `damage`, `knock`, `puddle_time`, `puddle_dps`, `puddle_slow`, `puddle_tick`).
 
+## Отряды-комбинации (ночь 29.10, Н3, GDD 12.6) — `enemies/squads/*.tres` (`SquadDef` + `SquadMember`)
+
+| Отряд | Состав | Строй / вход |
+|---|---|---|
+| Стена щитов (`shield_wall`) | 3 щитоносца (передний ряд) + 2 метателя (задний, роль «прикрытие») | шеренга, из маркера |
+| Шаман и свита (`shaman_escort`) | шаман-якорь + 10 корма (роль «свита») | кольцо `ring_radius` 3.2 м, из маркера |
+| Пороховая бочка (`powder_keg`) | 4 воина («окружение») + 2 Раздутых («засада», задний ряд) | шеренга |
+| Засада Локи (`loki_ambush`, вариант `loki_flank`) | наёмник + 3 воина (`speed_mult` 1.3, «фланг») | сзади (вариант — сбоку) на `entry_distance` 9 м, `delay` 4 с |
+| Стая (`pack`) | 15 корма + 2 воина | россыпь `scatter_radius` 3 м |
+
+Поля `SquadDef`: `formation` (шеренга/кольцо/россыпь), `entry` (маркер/сзади/сбоку), `delay`, `spacing` 1.8 м, `row_gap` 2.5 м, `ring_radius`, `scatter_radius`, `entry_distance`. Участник (`SquadMember`): `kind`, `count`, `role`, `row` (0 перед / 1 зад / 2 центр), `speed_mult`, `anchor`. В зале (`tools/rooms/<зал>.gd`): `["squad", позиция, волна, 1, 0.0, {"squad": id | "squad_options": [id…], "squad_override": {вид: n}, "squad_anchor_pos": Vector3}]` — подгонка сохраняет число врагов и Славу зала. Сзади/сбоку нет пола или линия перекрыта — ближе (×0.6), другой бок, иначе из маркера.
+
 ## Элита (блок У, GDD 12.4) — `enemies/elite/mods/*.tres` (`EliteModifier`), обработчики `enemies/elite/*.gd`
 
 Любой боец или особый враг (не корм, не босс) с шансом `elite_chance` зала становится элитой: ×2.5 HP, урон ×1.5, свечение цветом модификатора (общий оверлей `shaders/hit_flash.gdshader`, параметр `elite`), подпись модификатора над головой, кольцо под ногами, гарантированный дроп — оружие (60 % мили / 40 % ренж); если в игре уже есть серебро (`Run.add_silver` или автозагрузка `Silver.add`) — с шансом `Loot.elite_silver_chance` 0.4 вместо оружия `Loot.elite_silver` 10 серебра.

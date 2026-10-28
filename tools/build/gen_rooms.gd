@@ -274,7 +274,8 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 			m.set_meta("spread", e[4] if e.size() > 4 else 1.5)
 		if e.size() > 5:
 			var entry: Dictionary = e[5]
-			for key in ["entry_mode", "entry_target", "spread_axes", "entry_batch"]:
+			# Отряд (SquadDef, GDD 12.6): kind = "squad" + squad / squad_options / squad_override / squad_anchor_pos
+			for key in ["entry_mode", "entry_target", "spread_axes", "entry_batch", "squad", "squad_options", "squad_override", "squad_anchor_pos"]:
 				if entry.has(key):
 					m.set_meta(key, entry[key])
 		spawns.add_child(m)

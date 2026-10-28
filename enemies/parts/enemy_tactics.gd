@@ -54,7 +54,11 @@ func _anchor() -> Node3D:
 	if not enemy.has_meta("tactic_anchor"):
 		return null
 	var a: Variant = enemy.get_meta("tactic_anchor")
-	var n := a as Node3D if a is Object and is_instance_valid(a) else null
+	# Якорь (шаман) мог погибнуть и быть удалён — тогда свита идёт в бой
+	if not is_instance_valid(a):
+		enemy.remove_meta("tactic_anchor")
+		return null
+	var n := a as Node3D
 	if n == null or (n is Enemy and (n as Enemy).is_dead):
 		return null
 	return n
