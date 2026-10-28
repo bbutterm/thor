@@ -420,9 +420,9 @@ func _test_card_layout() -> void:
 		check(overflow.is_empty(), "%s: описания и статусы внутри рамки (%s)" % [lang, ", ".join(overflow)])
 		# Первый проход проверяет новые приёмы; отдельно проверяем карточки их второго уровня.
 		for id in [&"hammer_dive", &"hammer_step"]:
-				var technique: MjolnirTrait = _find(id)
-				_set_traits([technique])
-				var upgrade: SkinCard = tp._make_card(technique, 0) as SkinCard
+			var technique: MjolnirTrait = _find(id)
+			_set_traits([technique])
+			var upgrade: SkinCard = tp._make_card(technique, 0) as SkinCard
 			tp._root.add_child(upgrade)
 			await frames(3)
 			var limit: float = SkinCard.TEXT_BOX.size.y * tp.card_width / SkinCard.VISIBLE.size.x
