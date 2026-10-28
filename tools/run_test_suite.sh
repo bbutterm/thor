@@ -4,6 +4,7 @@
 set -uo pipefail
 project=${1:?project directory required}
 out=${2:?new output directory required}
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P) || exit 2
 project=$(cd "$project" && pwd -P) || exit 2
 if [[ -e "$out" ]]; then
     printf 'Output directory already exists: %s\n' "$out" >&2
@@ -13,7 +14,7 @@ mkdir -p "$out/import-data" || exit 2
 out=$(cd "$out" && pwd -P) || exit 2
 XDG_DATA_HOME="$out/import-data" godot --headless --path "$project" --import 2>&1 | head -c 50000000 > "$out/import.log"
 pipe_status=("${PIPESTATUS[@]}")
-if (( pipe_status[0] != 0 || pipe_status[1] != 0 )) || grep -En '^ERROR:|SCRIPT ERROR|Parse Error' "$out/import.log" > "$out/import-errors.log"; then
+if (( pipe_status[0] != 0 || pipe_status[1] != 0 )) || grep -En 'ERROR:|SCRIPT ERROR|Parse Error' "$out/import.log" > "$out/import-errors.log"; then
     printf 'Import failed; see %s/import.log\n' "$out" >&2
     exit 1
 fi
@@ -30,18 +31,10 @@ for scene in "$project"/tests/*_test.tscn; do
     grep -En 'SCRIPT ERROR|Parse Error|\[FAIL\]|^[[:space:]]*FAIL:|HITCH FAIL|(^|[^0-9])[1-9][0-9]*[[:space:]]+FAIL([[:space:]=]|$)' "$out/$name.log" > "$out/$name.failures" || true
     # Godot reports resources retained until exit as ERROR. Preserve these in a
     # separate file; expected corruption/refusal cases are also recorded there.
-    awk -v name="$name" -v expected="$out/$name.expected-errors" '
-        /^ERROR:/ {
-            if ($0 ~ /^ERROR: [0-9]+ resources still in use at exit/ ||
-                (name == "save_test" && $0 ~ /^ERROR: Parse JSON failed\./) ||
-                (name == "generator_test" && $0 ~ /^ERROR: build_scenes: .*ручная сцена/)) {
-                print > expected
-            } else {
-                print
-            }
-        }
-    ' "$out/$name.log" > "$out/$name.godot-errors"
-    if (( pipe_status[0] != 0 || pipe_status[1] != 0 )) || [[ -s "$out/$name.failures" || -s "$out/$name.godot-errors" ]]; then
+    parser_status=0
+    python3 "$script_dir/godot_log_check.py" suite "$out/$name.log" "$name" \
+        "$out/$name.expected-errors" "$out/$name.godot-errors" || parser_status=$?
+    if (( pipe_status[0] != 0 || pipe_status[1] != 0 || parser_status != 0 )) || [[ -s "$out/$name.failures" || -s "$out/$name.godot-errors" ]]; then
         printf 'FAIL %-30s exit=%s cap=%s\n' "$name" "${pipe_status[0]}" "${pipe_status[1]}" | tee -a "$out/summary.txt"
         failed=$((failed + 1))
     else
