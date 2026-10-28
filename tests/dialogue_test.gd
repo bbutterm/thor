@@ -39,6 +39,7 @@ func _run() -> void:
 	_test_shop_greeting_history()
 	_test_visit_outcomes()
 	_test_heimdall_visit_history()
+	_test_boss_death_reactions()
 	_test_content()
 	_test_finale_gating()
 	_test_loki_finale_branches()
@@ -320,6 +321,80 @@ func _test_heimdall_visit_history() -> void:
 	Save.end_run({"won": false, "cause": "draugr", "rooms": 1})
 	check(Dialogue.visitor_lines().is_empty(), "смерть не обходит условие знакомства")
 	Dialogue.pools = saved_pools
+	TranslationServer.set_locale(saved_locale)
+	Dialogue.refresh_locale()
+	Save.reset()
+
+## Имя Ярла в реакции соответствует точному источнику урона, а не общей категории boss.
+func _test_boss_death_reactions() -> void:
+	print("-- Реакции на Свена и Ярла")
+	var saved_pools: Dictionary = Dialogue.pools
+	var saved_locale := TranslationServer.get_locale()
+	var saved_body_chance := Dialogue.body_death_chance
+	Dialogue.body_death_chance = 0.0
+	var boss_items: Array = saved_pools.get("odin.death_boss", [])
+	var jarl_ids := ["odin.death_boss.01", "odin.death_boss.03", "odin.death_boss.06"]
+	var loc_data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/dialogues/en/odin.json"))
+	var loc_lines: Dictionary = (loc_data as Dictionary).get("lines", {}) if loc_data is Dictionary else {}
+	for source_id in ["miniboss_sven", "boss_jarl"]:
+		Save.reset()
+		Dialogue.pools = saved_pools
+		# Настоящий сигнал Player проходит через RunTracker, который сохраняет результат.
+		# Узлы вне сцены: после сигнала player отключён, чтобы не читать global_position вне дерева.
+		var actor := Player.new()
+		var tracker := RunTracker.new()
+		tracker.player = actor
+		tracker.run_time = 60.0
+		actor.hurt.connect(tracker._on_hurt)
+		var attacker := Node.new()
+		attacker.set_meta("death_source_id", source_id)
+		RunTracker.note_hit(attacker)
+		actor.hurt.emit(1.0)
+		tracker.player = null
+		var result := tracker.finish(false)
+		check(result.get("cause", "") == "boss" and result.get("killed_by", "") == source_id,
+			"%s: записаны общая категория и точный источник" % source_id)
+		Save.load_game()
+		check(Dialogue.context().get("killed_by", "") == source_id, "%s: источник дошёл из сохранения в контекст" % source_id)
+		check(Dialogue.reaction_pool(false) == "odin.death_boss", "%s: выбран общий пул смерти от босса" % source_id)
+		var named := 0
+		var generic := 0
+		for item in boss_items:
+			var id := str(item.lines[0].get("id", ""))
+			var allowed := Dialogue.check(item._conds, Dialogue.context())
+			if id in jarl_ids:
+				named += 1
+				check(allowed == (source_id == "boss_jarl"), "%s: %s доступна только для Ярла" % [source_id, id])
+				var single_pool := {}
+				single_pool["odin.death_boss"] = [item]
+				Dialogue.pools = single_pool
+				for language in ["ru", "en"]:
+					I18n.apply(language)
+					Dialogue.refresh_locale()
+					var lines := Dialogue.pool_lines("odin.death_boss")
+					var translation: Dictionary = loc_lines.get(id, {})
+					var expected := str(item.lines[0].text) if language == "ru" else str(translation.get("en", ""))
+					var valid := lines.is_empty() if source_id == "miniboss_sven" else \
+						(not lines.is_empty() and lines[0].get("id", "") == id and lines[0].get("text", "") == expected and expected != "")
+					check(valid, "%s/%s: выбор и перевод %s" % [source_id, language, id])
+			elif allowed:
+				generic += 1
+		check(named == jarl_ids.size() and generic > 0, "%s: три реплики Ярла и общие варианты на месте" % source_id)
+		Dialogue.pools = saved_pools
+		for language in ["ru", "en"]:
+			I18n.apply(language)
+			Dialogue.refresh_locale()
+			var samples_ok := true
+			for i in 20:
+				var lines := Dialogue.pool_lines("odin.death_boss")
+				if lines.is_empty() or (source_id == "miniboss_sven" and str(lines[0].get("id", "")) in jarl_ids):
+					samples_ok = false
+			check(samples_ok, "%s/%s: случайная выборка не пуста и соответствует боссу" % [source_id, language])
+		attacker.free()
+		actor.free()
+		tracker.free()
+	Dialogue.pools = saved_pools
+	Dialogue.body_death_chance = saved_body_chance
 	TranslationServer.set_locale(saved_locale)
 	Dialogue.refresh_locale()
 	Save.reset()
