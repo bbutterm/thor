@@ -159,7 +159,7 @@ def run_scene(project: Path, out: Path, shim: Path, scene: Path,
     return line, failed, bool(expected)
 
 
-def main(argv: list[str]) -> int:
+def main(argv: list[str], selected: tuple[str, ...] | None = None) -> int:
     if len(argv) < 2:
         print("Usage: run_test_suite.sh <project> <new-output-directory>", file=sys.stderr)
         return 2
@@ -180,6 +180,14 @@ def main(argv: list[str]) -> int:
             pass  # Bash likewise falls back to the C locale when unavailable.
         scenes = sorted((project / "tests").glob("*_test.tscn"),
                         key=lambda p: (locale.strxfrm(p.name), os.fsencode(p.name)))
+        if selected is not None:
+            if not selected or len(set(selected)) != len(selected):
+                raise ValueError("Selected scene names must be nonempty and unique")
+            selected_names = set(selected)
+            missing = selected_names - {scene.stem for scene in scenes}
+            if missing:
+                raise ValueError("Selected test scenes are missing: " + ", ".join(sorted(missing)))
+            scenes = [scene for scene in scenes if scene.stem in selected_names]
         if not scenes:
             raise ValueError("No *_test.tscn scenes found")
         # Do not resolve the final path first: a dangling output symlink must

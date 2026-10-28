@@ -164,6 +164,41 @@ class SuiteTest(unittest.TestCase):
                   if x.startswith("PASS ")]
         self.assertEqual(actual, expected)
 
+    def test_fast_subset_runs_only_selected_scenes(self) -> None:
+        fast_spec = importlib.util.spec_from_file_location("ci_fast", ROOT / "run_ci_fast.py")
+        assert fast_spec and fast_spec.loader
+        # The wrapper imports its sibling runner, as it does in CI.
+        sys.path.insert(0, str(ROOT))
+        try:
+            fast = importlib.util.module_from_spec(fast_spec)
+            fast_spec.loader.exec_module(fast)
+        finally:
+            sys.path.pop(0)
+        self.scenes(*fast.CI_FAST_SCENES, "z_unselected_test")
+        out = self.base / "fast subset"
+        result = subprocess.run([sys.executable, "-B", str(ROOT / "run_ci_fast.py"),
+                                 str(self.project), str(out)], env=self.env,
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("this is not the full suite", result.stdout)
+        lines = (out / "summary.txt").read_text().splitlines()
+        self.assertEqual(lines[-1], f"TOTAL {len(fast.CI_FAST_SCENES)}, FAILED 0")
+        self.assertEqual({x.split()[1] for x in lines if x.startswith("PASS ")}, set(fast.CI_FAST_SCENES))
+        events = self.events_read()
+        self.assertEqual(sum(e["kind"] == "start" and e["name"] == "import" for e in events), 1)
+        self.assertFalse(any(e["name"] == "z_unselected_test" for e in events))
+
+    def test_fast_subset_fails_closed_if_a_scene_is_missing(self) -> None:
+        self.scenes("smoke_test")
+        out = self.base / "missing fast scenes"
+        result = subprocess.run([sys.executable, "-B", str(ROOT / "run_ci_fast.py"),
+                                 str(self.project), str(out)], env=self.env,
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("Selected test scenes are missing", result.stderr)
+        self.assertFalse(out.exists())
+        self.assertFalse(self.events.exists())
+
     def test_failure_detection_and_log_cap(self) -> None:
         self.scenes("d_mixed_test", "e_assert_test", "f_exit_test", "g_overflow_test")
         out = self.base / "failures"
@@ -282,6 +317,36 @@ class SuiteTest(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertFalse(unsupported.exists())
         self.assertIn("only on Linux", result.stderr)
+
+    def test_windows_selftest_fails_closed(self) -> None:
+        wine = self.bin / "wine"
+        wine.write_text("#!/usr/bin/env python3\nimport os,sys\n"
+                        "print(os.environ['THOR_FAKE_WINE_TEXT'])\n"
+                        "sys.exit(int(os.environ.get('THOR_FAKE_WINE_EXIT', '0')))\n")
+        wine.chmod(0o700)
+        exe = self.base / "fake.exe"
+        exe.touch()
+        good = "SELFTEST OK scene=Game room=res://rooms/test.tscn enemies=3"
+        scenarios = (
+            ("good", good, "0", 0),
+            ("expected", good + "\nERROR: 2 resources still in use at exit.", "0", 0),
+            ("mixed", good + "\nERROR: surprise", "0", 1),
+            ("zero", good.replace("enemies=3", "enemies=0"), "0", 1),
+            ("no_marker", "nothing printed", "0", 1),
+            ("reported_fail", good + "\nSELFTEST FAIL: problem", "0", 1),
+            ("bad_exit", good, "7", 1),
+        )
+        for name, content, code, expected in scenarios:
+            with self.subTest(name=name):
+                out = self.base / ("wine-" + name)
+                result = subprocess.run([sys.executable, "-B", str(ROOT / "ci_windows_selftest.py"),
+                                         str(exe), str(out)], capture_output=True, text=True, timeout=15,
+                                        env={**self.env, "THOR_FAKE_WINE_TEXT": content, "THOR_FAKE_WINE_EXIT": code})
+                self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+                if name == "expected":
+                    self.assertIn("resources still in use", (out / "selftest.expected-errors").read_text())
+                if name == "mixed":
+                    self.assertIn("ERROR: surprise", (out / "selftest.godot-errors").read_text())
 
     def test_timeout(self) -> None:
         spec = importlib.util.spec_from_file_location("suite_runner", ROOT / "run_test_suite.py")
