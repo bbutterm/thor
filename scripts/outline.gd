@@ -141,6 +141,8 @@ static func _flash() -> ShaderMaterial:
 ## только у активных оверлеев и только раз на материал; при следующем включении
 ## неактивный материал синхронизируется с _flash() в Enemy._set_overlay.
 static func _sync_gl_flash_passes() -> void:
+	if RenderingServer.get_current_rendering_method() != "gl_compatibility":
+		return
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return
