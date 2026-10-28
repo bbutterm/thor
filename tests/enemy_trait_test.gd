@@ -78,6 +78,8 @@ func _spawn(kind: String, offset: Vector3, trait_id: String = "") -> Enemy:
 	return e
 
 func _run() -> void:
+	# Черты, роли и атаки врагов берут randf(): без зерна проверки иногда падали (особенно в параллельном прогоне)
+	seed(5151)
 	print("=== ENEMY TRAIT TEST ===")
 	_test_data()
 	_test_shares()

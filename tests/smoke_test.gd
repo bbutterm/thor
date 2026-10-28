@@ -41,6 +41,8 @@ func press(action: String, hold: float = 0.05) -> void:
 	await get_tree().physics_frame
 
 func _run() -> void:
+	# Черты, роли и атаки врагов берут randf(): без зерна проверки иногда падали (особенно в параллельном прогоне)
+	seed(3131)
 	print("=== SMOKE TEST ===")
 	Run.start_run("berserker")
 	# Тестовый порядок: все 6 залов + босс

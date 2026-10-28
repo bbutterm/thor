@@ -52,6 +52,8 @@ func wait(sec: float) -> void:
 	await frames(int(ceil(sec * 60.0)))
 
 func _run() -> void:
+	# Черты, роли и атаки врагов берут randf(): без зерна проверки иногда падали (особенно в параллельном прогоне)
+	seed(2929)
 	print("=== TRAIT TEST ===")
 	Run.start_run("berserker")
 	Run.room_order.assign([Run.BOSS_SCENE])

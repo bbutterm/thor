@@ -85,6 +85,8 @@ var _route_stuck_time := 0.0
 var _route_retry_delay := 0.0
 var _route_last_position := Vector3.INF
 var _tower_guide_index := -1
+## За сколько секунд до удара зоны прыгать (прыжок держит в воздухе ~0.75 с)
+var zone_jump_lead := 0.55
 var _ui_wait: float = 0.0
 var _room_index: int = -1
 var _room_obj: Room
@@ -651,6 +653,7 @@ func _fight(p: Player, room: Room, dt: float) -> void:
 		_think_t = float(skill.think)
 		_target = _choose_target(p, enemies)
 		_dodge_check(p, enemies)
+	_zone_dodge(p)
 	if _target == null:
 		return
 	var tpos := _target.global_position + Vector3(0, 1.0 * _target.model_scale, 0)
@@ -1142,6 +1145,32 @@ func _slam_logic(p: Player, enemies: Array, dist: float, dy: float, dt: float) -
 				_jump_plan = 0
 
 ## Увороты: замах рядом, таран с полосой, фитиль Раздутого, лазер наёмника, прыжок Ярла с волной.
+## Опасные зоны на полу (HazardZone, GDD 12.6): стоишь в контуре — прыгнуть так, чтобы в момент удара быть в воздухе.
+## Решение «уворачиваться или нет» — тот же навык dodge, один раз на зону.
+func _zone_dodge(p: Player) -> void:
+	if not p.is_on_floor():
+		return
+	for n in p.get_tree().get_nodes_in_group("hazard_zones"):
+		var z := n as HazardZone
+		if z == null or not is_instance_valid(z) or z.is_puddle() or z.progress() >= 1.0:
+			continue
+		var left := (1.0 - z.progress()) * z.telegraph
+		if left > zone_jump_lead or not z.contains(p.global_position):
+			continue
+		var key := z.get_instance_id()
+		if _dodged.has(key):
+			continue
+		_dodged[key] = true
+		var chose := rng.randf() < float(skill.dodge)
+		if is_instance_valid(telemetry):
+			_trace("telegraph", {"threat": key, "enemy": z.source_id, "kind": "zone", "distance": 0.0, "chose_dodge": chose, "runes": p.dash_charges})
+		if not chose:
+			continue
+		stats.dodge_attempts += 1
+		_trace("dodge_input", {"threat": key, "action": "jump", "reason": "zone", "submitted": not _held.has("jump")})
+		tap("jump", 2)
+		return
+
 func _dodge_check(p: Player, enemies: Array) -> void:
 	for e: Enemy in enemies:
 		var d := e.global_position - p.global_position
