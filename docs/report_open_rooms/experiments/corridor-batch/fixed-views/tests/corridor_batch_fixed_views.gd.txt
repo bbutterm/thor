@@ -1,0 +1,145 @@
+extends Node
+## Независимый визуальный стенд: SubViewport только с залом, камерой и светом.
+## Нет игрового HUD, оружия, врагов и атмосферных частиц. Коллизии не меняем.
+const Exp := preload("res://tests/fixtures/corridor_batch_experiment.gd")
+var out_dir := "user://corridor_batch_fixed_views"
+var failed := false
+
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		out_dir = args[0]
+	if DisplayServer.get_name() == "headless":
+		push_error("Real renderer required for visual comparison")
+		get_tree().quit(1)
+		return
+	var err := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
+	if err != OK:
+		push_error("Cannot create screenshot directory (%d)" % err)
+		get_tree().quit(1)
+		return
+	_run.call_deferred()
+
+
+func frames(n: int) -> void:
+	for i in n:
+		await get_tree().process_frame
+
+
+func _run() -> void:
+	Run.start_run("berserker")
+	get_tree().paused = true
+	# Собственная World3D исключает CanvasLayer автозагрузок, HUD, оружие игрока
+	# и посторонние источники из основного viewport. Размер texture задан напрямую.
+	var viewport := SubViewport.new()
+	viewport.name = "FixedViewport"
+	viewport.process_mode = Node.PROCESS_MODE_PAUSABLE
+	viewport.own_world_3d = true
+	viewport.size = Vector2i(640, 360)
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.msaa_3d = get_viewport().msaa_3d
+	viewport.screen_space_aa = get_viewport().screen_space_aa
+	add_child(viewport)
+	var stage := Node3D.new()
+	stage.name = "FixedStage"
+	viewport.add_child(stage)
+	var we := WorldEnvironment.new()
+	we.name = "WorldEnvironment"
+	we.environment = load("res://scenes/game_environment.tres") as Environment
+	stage.add_child(we)
+	var sun := DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.light_color = Color(1.0, 0.86, 0.7)
+	sun.light_energy = 1.15
+	sun.shadow_enabled = true
+	sun.directional_shadow_max_distance = 60.0
+	stage.add_child(sun)
+	if not WorldArt.apply_world(stage, Run.map):
+		push_error("Could not apply Midgard environment")
+		get_tree().quit(1)
+		return
+	var room := (load("res://rooms/room_01.tscn") as PackedScene).instantiate() as Node3D
+	stage.add_child(room)
+	WorldArt.apply_room(stage, room, Run.map)
+	# WorldArt.dress_room здесь намеренно не вызываем: атмосфера создаёт частицы,
+	# отличия которых не относятся к проверке неизменной геометрии и материалов.
+	var door := room.get_node_or_null("Door") as Node3D
+	if door == null:
+		push_error("Missing the real door required for visibility controls")
+		get_tree().quit(1)
+		return
+	var collisions := Exp.snapshot(room, "collision")
+	var lights := Exp.snapshot(room, "light")
+	var data: Dictionary = Exp.prepare(room)
+	if data.has("error") or not Exp.verify(data):
+		push_error("Cannot create verified batches: %s" % data.get("error", "render properties/transform mismatch"))
+		get_tree().quit(1)
+		return
+	var camera := Camera3D.new()
+	camera.name = "FixedCamera"
+	camera.fov = 85.0
+	camera.near = 0.05
+	stage.add_child(camera)
+	camera.current = true
+	await frames(30)
+	# Первая пара — отрицательный контроль: закрытая дверь у z=-12.5 закрывает
+	# всю камеру. Остальные кадры намеренно показывают коридор с разных сторон.
+	var views := [
+		{"name": "door_closed", "pos": Vector3(0, 1.7, -11), "target": Vector3(0, 1.7, -16), "door": true},
+		{"name": "door_open", "pos": Vector3(0, 1.7, -11), "target": Vector3(0, 1.7, -16), "door": false},
+		{"name": "left_inside", "pos": Vector3(-1, 1.7, -14.5), "target": Vector3(-2.1, 1.7, -14.5), "door": false},
+		{"name": "right_inside", "pos": Vector3(1, 1.7, -14.5), "target": Vector3(2.1, 1.7, -14.5), "door": false},
+		{"name": "left_torch", "pos": Vector3(-3.0, 3.7, -10), "target": Vector3(-2.0, 2.2, -14.0), "door": false},
+		{"name": "right_torch", "pos": Vector3(3.0, 3.7, -10), "target": Vector3(2.0, 2.2, -14.0), "door": false},
+		{"name": "tower", "pos": Vector3(9, 5.35, -2.5), "target": Vector3(0, 3, -15), "door": false},
+		{"name": "above", "pos": Vector3(0, 8.6, -12.5), "target": Vector3(0, 3, -16.5), "door": false},
+	]
+	for view in views:
+		door.visible = view.door
+		camera.global_position = view.pos
+		camera.look_at(view.target, Vector3.UP)
+		# Явно прогреваем каждый материал/режим после смены камеры; первый кадр
+		# не используется. Повторные оригиналы обнаруживают дрейф/мигание.
+		Exp.select(data, "original")
+		await frames(20)
+		await _capture(viewport, view.name, "orig_a")
+		await frames(12)
+		await _capture(viewport, view.name, "orig_b")
+		for item in [{"label": "rows", "mode": "rows"}, {"label": "orig_c", "mode": "original"},
+				{"label": "sides", "mode": "sides"}, {"label": "hidden", "mode": "hidden"},
+				{"label": "orig_d", "mode": "original"}]:
+			Exp.select(data, item.mode)
+			await frames(12)
+			await _capture(viewport, view.name, item.label)
+	Exp.select(data, "original")
+	if not Exp.verify(data) or not Exp.snapshots_equal(collisions, Exp.snapshot(room, "collision")) or not Exp.snapshots_equal(lights, Exp.snapshot(room, "light")):
+		push_error("Geometry, collisions or light parameters changed")
+		failed = true
+	print("FIXED VIEWS: world-only 640x360, views=%d, original/rows/sides/hidden, no HUD or particles" % views.size())
+	data.clear()
+	collisions.clear()
+	lights.clear()
+	viewport.queue_free()
+	await frames(6)
+	AssetCache.shutdown()
+	await frames(6)
+	if failed:
+		get_tree().quit(1)
+		return
+	print("FIXED VIEWS COMPLETE")
+	get_tree().quit(0)
+
+
+func _capture(viewport: SubViewport, name: String, label: String) -> void:
+	await RenderingServer.frame_post_draw
+	var img := viewport.get_texture().get_image()
+	if img == null or img.get_size() != Vector2i(640, 360):
+		push_error("Unexpected image size for %s/%s" % [name, label])
+		failed = true
+		return
+	var err := img.save_png(out_dir.path_join("%s_%s.png" % [name, label]))
+	if err != OK:
+		push_error("Cannot save %s/%s (%d)" % [name, label, err])
+		failed = true

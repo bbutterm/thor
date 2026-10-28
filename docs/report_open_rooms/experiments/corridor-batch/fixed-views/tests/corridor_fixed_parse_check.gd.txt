@@ -1,0 +1,10 @@
+extends Node
+## Проверить разбор визуального стенда с подключёнными автозагрузками проекта.
+func _ready() -> void:
+	var script := load("res://tests/corridor_batch_fixed_views.gd") as GDScript
+	if script == null or not script.can_instantiate():
+		push_error("Cannot parse fixed-views script")
+		get_tree().quit(1)
+		return
+	print("FIXED PARSE CHECK OK")
+	get_tree().quit(0)
