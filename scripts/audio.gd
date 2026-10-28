@@ -110,6 +110,16 @@ func sfx(id: String, fallback: String = "") -> void:
 	elif fallback != "":
 		play(fallback)
 
+## Сигнал, который имеет смысл только пока valid() истинна (например, предупреждение до атаки).
+## Обычный порядок очереди и общий лимит плееров сохраняются; устаревший сигнал пропускается.
+func sfx_while(id: String, fallback: String, valid: Callable) -> void:
+	var before := queue.size()
+	sfx(id, fallback)
+	if queue.size() > before:
+		var entry: Dictionary = queue[-1].duplicate()  # не изменяем общую карту звуков владельца
+		entry["_valid_while"] = valid
+		queue[-1] = entry
+
 ## Есть ли у звука (имя или путь) версия владельца.
 func has_owner(name_or_path: String) -> bool:
 	return _owner_sfx.has(name_or_path.get_file().get_basename())
@@ -126,6 +136,10 @@ func _process(_delta):
 	while not queue.is_empty() and not available.is_empty():
 		var item: Variant = queue.pop_front()
 		var e: Dictionary = item if item is Dictionary else resolve(str(item))
+		if e.has("_valid_while"):
+			var valid: Callable = e["_valid_while"]
+			if not valid.is_valid() or not valid.call():
+				continue
 		var path: String = e.path
 		var now := Time.get_ticks_msec() / 1000.0
 		if float(e.min_interval) > 0.0 and now - float(_last_played.get(path, -100.0)) < float(e.min_interval):

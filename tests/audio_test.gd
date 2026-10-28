@@ -41,6 +41,7 @@ func _run() -> void:
 	check(not data.is_empty(), "data/owner_audio.json читается")
 	_check_sfx(data)
 	await _check_sfx_play()
+	_check_sfx_conditional_queue()
 	await _check_music()
 	_check_voice_data(data)
 	await _check_voice_player()
@@ -101,6 +102,51 @@ func _check_sfx_play() -> void:
 	Audio.sfx("нет_такого", "sounds/sfx/reflect.wav")
 	await wait(0.05)
 	check(_playing_with("sfx/reflect.wav") != null, "Audio.sfx: нет звука владельца — запасной путь")
+
+func _check_sfx_conditional_queue() -> void:
+	print("-- Очередь с ограниченным ожиданием")
+	var was_processing := Audio.is_processing()
+	Audio.set_process(false)
+	Audio.queue.clear()
+	Audio.available.clear()
+	for n in Audio.get_children():
+		if n is AudioStreamPlayer and n.bus == Audio.bus:
+			n.stop()
+			n.stream = null
+			Audio.available.append(n)
+	var one: AudioStreamPlayer = Audio.available[0]
+	var two: AudioStreamPlayer = Audio.available[1]
+	Audio.play("sounds/sfx/super_jump.wav")
+	Audio.sfx_while("несуществующее_событие", "sounds/sfx/enemy_growl.wav", func() -> bool: return false)
+	Audio.play("sounds/sfx/gun_pistol.wav")
+	Audio._process(0.0)
+	check(one.stream != null and one.stream.resource_path.ends_with("/super_jump.wav") and Audio.queue.size() == 2,
+		"обычный звук сохранил FIFO и один запуск за кадр")
+	Audio._process(0.0)
+	check(two.stream != null and two.stream.resource_path.ends_with("/gun_pistol.wav") and Audio.queue.is_empty(),
+		"устаревший сигнал пропущен, следующий обычный звук сохранил порядок")
+	var original := {"path": "res://sounds/sfx/super_jump.wav", "pitch": 1.0, "db": 0.0, "min_interval": 0.0}
+	Audio._owner_sfx["test_conditional_override"] = original
+	Audio.sfx_while("test_conditional_override", "sounds/sfx/enemy_growl.wav", func() -> bool: return true)
+	check(not original.has("_valid_while") and Audio.queue.size() == 1
+		and Audio.queue[0].path == original.path,
+		"событие использует вариант владельца, не изменяя общую карту")
+	var three: AudioStreamPlayer = Audio.available[0]
+	Audio._process(0.0)
+	check(three.stream != null and three.stream.resource_path == original.path,
+		"своевременный сигнал действительно воспроизводится")
+	Audio._owner_sfx.erase("test_conditional_override")
+	var origin := Node.new()
+	var dead_condition: Callable = origin.is_inside_tree
+	origin.free()
+	var four: AudioStreamPlayer = Audio.available[0]
+	Audio.sfx_while("несуществующее_событие", "sounds/sfx/enemy_growl.wav", dead_condition)
+	Audio.play("sounds/sfx/gun_pistol.wav")
+	Audio._process(0.0)
+	check(four.stream != null and four.stream.resource_path.ends_with("/gun_pistol.wav") and Audio.queue.is_empty(),
+		"сигнал удалённого источника пропущен без сбоя и задержки обычного звука")
+	Audio.queue.clear()
+	Audio.set_process(was_processing)
 
 # --- Музыка ---
 

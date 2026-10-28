@@ -39,6 +39,8 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var attack_range: float = 2.0
 @export var attack_damage: float = 12.0
 @export var windup_time: float = 0.6
+## До какой доли замаха запоздавший звук ещё оставляет время среагировать.
+@export_range(0.05, 1.0, 0.05) var warning_deadline_fraction: float = 0.5
 @export var recover_time: float = 0.7
 @export var attack_cooldown: float = 0.9
 @export var lunge_speed: float = 7.0
@@ -171,6 +173,8 @@ var _fall_peak_y: float = 0.0
 var _fall_forced: bool = false
 var _last_knock: Vector3 = Vector3.ZERO
 var _attack_count: int = 0
+## Идентификатор замаха: прерванная атака не передаёт своё предупреждение следующей.
+var _windup_serial: int = 0
 var _doing_slam: bool = false
 var _strafe_sign: float = 1.0
 var _visual: Node3D
@@ -470,6 +474,7 @@ func _begin_windup(slam: bool) -> void:
 	alert_to_player()  # Вручную начатая атака и её оставшаяся очередь уже видят цель.
 	Perf.mark("enemy_windup")
 	_doing_slam = slam
+	_windup_serial += 1
 	_set_state(State.WINDUP)
 	if kind != Kind.THROWER and kind != Kind.MERC and (slam or randf() < (0.15 if kind == Kind.FODDER else 0.5)):
 		Audio.sfx("zombie_groan" if FX.is_undead(self) else "", "sounds/sfx/enemy_growl.wav")
@@ -477,6 +482,11 @@ func _begin_windup(slam: bool) -> void:
 		_ritual_telegraph()
 	elif kind == Kind.MERC:
 		_aim_point = player.global_position + Vector3(0, 1.0, 0) if player else global_position + global_transform.basis.z * 5.0
+		# Механический сигнал прицеливания до очереди.
+		Audio.sfx_while("merc_aim", "sounds/sfx/gun_reload.wav", _warning_is_timely.bind(_windup_serial))
+	elif kind == Kind.THROWER:
+		# Предупреждение до выпуска снаряда; ударный curse_throw остаётся отдельно.
+		Audio.sfx_while("thrower_aim", "sounds/sfx/enemy_growl.wav", _warning_is_timely.bind(_windup_serial))
 	if slam:
 		_show_slam_telegraph()
 	if _humanoid:
@@ -490,6 +500,10 @@ func _begin_windup(slam: bool) -> void:
 		var tw := create_tween()
 		tw.tween_property(_visual, "scale", Vector3(1.12, 0.88, 1.12) * model_scale, 0.15)
 		tw.tween_property(_visual, "scale", Vector3(0.95, 1.08, 0.95) * model_scale, maxf(0.05, (boss_slam_windup if slam else windup_time) - 0.15))
+
+## Сигнал нужен в начале именно этого замаха, чтобы оставалось время среагировать.
+func _warning_is_timely(serial: int) -> bool:
+	return not is_dead and state == State.WINDUP and _windup_serial == serial and _state_time < windup_time * warning_deadline_fraction
 
 func _execute_attack() -> void:
 	_attack_count += 1

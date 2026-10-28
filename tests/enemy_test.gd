@@ -10,6 +10,7 @@ var game: Game
 var room: Room
 var p: Player
 var _hurts: Array[float] = []
+const ENEMY_PROJECTILE := preload("res://enemies/enemy_projectile.gd")
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -91,6 +92,33 @@ func _clear() -> void:
 	p.velocity = Vector3.ZERO
 	_hurts.clear()
 
+## Аудио запускается асинхронно из общей очереди; учитываем и версию владельца.
+func _warning_path(event: String, fallback: String) -> String:
+	var entry: Dictionary = Audio._owner_sfx.get(event, Audio.resolve("res://" + fallback))
+	return str(entry.get("path", ""))
+
+func _warnings_queued_after(first: int, path: String) -> int:
+	var count := 0
+	for item in Audio.queue.slice(first):
+		if item is Dictionary and str(item.get("path", "")) == path:
+			count += 1
+	return count
+
+## Изолируем проверку от звуков предыдущих сцен, сохраняя штатный пул из 12 плееров.
+func _reset_sfx_pool() -> void:
+	Audio.queue.clear()
+	Audio.available.clear()
+	for n in Audio.get_children():
+		if n is AudioStreamPlayer and n.bus == Audio.bus:
+			n.stop()
+			n.stream = null
+			Audio.available.append(n)
+
+func _sfx_playing(path: String) -> bool:
+	return Audio.get_children().any(func(n: Node) -> bool:
+		return (n is AudioStreamPlayer and n.bus == Audio.bus and n.playing
+			and n.stream != null and n.stream.resource_path == path))
+
 func _run() -> void:
 	print("=== ENEMY TEST ===")
 	await _load_room(0)
@@ -100,7 +128,15 @@ func _run() -> void:
 	await _test_death_marks()
 	await _test_shield()
 	await _test_shaman()
+	await _test_thrower_warning()
 	await _test_merc()
+	await _test_warning_waits("thrower", "thrower_aim", "sounds/sfx/enemy_growl.wav")
+	await _test_warning_waits("merc", "merc_aim", "sounds/sfx/gun_reload.wav")
+	await _test_warning_saturation("thrower", "thrower_aim", "sounds/sfx/enemy_growl.wav", true)
+	await _test_warning_saturation("thrower", "thrower_aim", "sounds/sfx/enemy_growl.wav", false)
+	await _test_warning_saturation("merc", "merc_aim", "sounds/sfx/gun_reload.wav", true)
+	await _test_warning_saturation("merc", "merc_aim", "sounds/sfx/gun_reload.wav", false)
+	await _test_interrupted_warning()
 	await _test_waves()
 	await _test_fall_and_reflect()
 	_finish()
@@ -253,11 +289,63 @@ func _test_shaman() -> void:
 	check(sh.ritual_interval == 6.0, "обряд раз в 6 с")
 	await _clear()
 
+func _test_thrower_warning() -> void:
+	print("-- Предупреждение метателя")
+	var t := _spawn("thrower", Vector3(0, 0, -8))
+	var was_processing := Audio.is_processing()
+	Audio.set_process(false)  # Снимаем срез очереди до её обычного потребления.
+	_reset_sfx_pool()
+	var first: int = Audio.queue.size()
+	var path := _warning_path("thrower_aim", "sounds/sfx/enemy_growl.wav")
+	t._begin_windup(false)
+	check(t.state == Enemy.State.WINDUP and t._attack_count == 0 and _hurts.is_empty()
+		and _warnings_queued_after(first, path) == 1,
+		"метатель ставит звуковое предупреждение в очередь до выпуска снаряда")
+	Audio._process(0.0)
+	check(_sfx_playing(path) and t.state == Enemy.State.WINDUP and t._attack_count == 0,
+		"при свободном канале предупреждение метателя воспроизводится до выпуска")
+	first = Audio.queue.size()
+	await frames(10)
+	check(t.state == Enemy.State.WINDUP and t._attack_count == 0
+		and _warnings_queued_after(first, path) == 0,
+		"предупреждение метателя не повторяется каждый кадр замаха")
+	Audio.set_process(was_processing)
+	var released := await wait_until(2.0, func() -> bool: return is_instance_valid(t) and t._attack_count > 0)
+	var projectile := get_tree().get_nodes_in_group("reflectable").any(func(n: Node) -> bool:
+		return is_instance_valid(n) and n.get_script() == ENEMY_PROJECTILE and n.get("shooter") == t)
+	check(released and projectile, "после предупреждения метатель действительно выпускает снаряд")
+	for n in get_tree().get_nodes_in_group("reflectable"):
+		if is_instance_valid(n) and n.get_script() == ENEMY_PROJECTILE and n.get("shooter") == t:
+			n.queue_free()
+	await _clear()
+
 func _test_merc() -> void:
 	print("-- Наёмник Локи")
 	var m := _spawn("merc", Vector3(0, 0, -10))
 	var laser := [false]
 	var laser_t := [0.0]
+	var was_processing := Audio.is_processing()
+	Audio.set_process(false)
+	_reset_sfx_pool()
+	var first: int = Audio.queue.size()
+	var path := _warning_path("merc_aim", "sounds/sfx/gun_reload.wav")
+	m._begin_windup(false)
+	check(m.state == Enemy.State.WINDUP and m._attack_count == 0 and _hurts.is_empty()
+		and _warnings_queued_after(first, path) == 1,
+		"наёмник ставит звуковое предупреждение до первой пули")
+	Audio._process(0.0)
+	check(_sfx_playing(path) and m.state == Enemy.State.WINDUP and m._attack_count == 0,
+		"при свободном канале предупреждение наёмника воспроизводится до первой пули")
+	first = Audio.queue.size()
+	for i in 10:
+		await get_tree().physics_frame
+		if m._laser and m._laser.visible:
+			laser[0] = true
+			laser_t[0] += 1.0 / 60.0
+	check(m.state == Enemy.State.WINDUP and m._attack_count == 0 and _hurts.is_empty()
+		and _warnings_queued_after(first, path) == 0,
+		"наёмник не повторяет предупреждение каждый кадр прицеливания")
+	Audio.set_process(was_processing)
 	var mw: WeakRef = weakref(m)
 	var ok := await wait_until(10.0, func() -> bool:
 		var mm := mw.get_ref() as Enemy
@@ -272,6 +360,104 @@ func _test_merc() -> void:
 	m.take_hit(9999.0, Vector3.ZERO, "melee_finisher")
 	await frames(3)
 	check(get_tree().get_nodes_in_group("ammo_pickups").size() > ammo0, "Наёмник уронил патроны")
+	await _clear()
+
+## Если канал освободился вовремя, ожидавшее предупреждение всё-таки играет до атаки.
+func _test_warning_waits(kind: String, event: String, fallback: String) -> void:
+	print("-- Канал освободился вовремя: ", kind)
+	var e := _spawn(kind, Vector3(0, 0, -8))
+	var was_processing := Audio.is_processing()
+	Audio.set_process(false)
+	_reset_sfx_pool()
+	var path := _warning_path(event, fallback)
+	var looping: AudioStreamWAV = (load("res://sounds/sfx/enemy_growl.wav") as AudioStreamWAV).duplicate()
+	looping.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	var slots := Audio.available.duplicate()
+	for slot in slots:
+		slot.stream = looping
+		slot.play()
+	Audio.available.clear()
+	e._begin_windup(false)
+	await frames(5)
+	var slot: AudioStreamPlayer = slots[0]
+	slot.stop()
+	Audio.available.append(slot)
+	Audio._process(0.0)
+	check(_sfx_playing(path) and e.state == Enemy.State.WINDUP and e._attack_count == 0,
+		"%s дождался канала и предупредил до атаки" % kind)
+	var released := await wait_until(2.0, func() -> bool: return is_instance_valid(e) and e._attack_count > 0)
+	check(released, "%s атакует после предупредившего сигнала" % kind)
+	for n in get_tree().get_nodes_in_group("reflectable"):
+		if is_instance_valid(n) and n.get_script() == ENEMY_PROJECTILE and n.get("shooter") == e:
+			n.queue_free()
+	_reset_sfx_pool()
+	Audio.set_process(was_processing)
+	await _clear()
+
+## Все каналы реально заняты: ожидающий сигнал не должен зазвучать уже после выстрела.
+func _test_warning_saturation(kind: String, event: String, fallback: String, free_before_attack: bool) -> void:
+	print("-- Занятые каналы: ", kind, ", освободить до атаки: ", free_before_attack)
+	var e := _spawn(kind, Vector3(0, 0, -8))
+	var was_processing := Audio.is_processing()
+	Audio.set_process(false)
+	_reset_sfx_pool()
+	var path := _warning_path(event, fallback)
+	Audio._last_played.erase(path)
+	var looping: AudioStreamWAV = (load("res://sounds/sfx/enemy_growl.wav") as AudioStreamWAV).duplicate()
+	looping.loop_mode = AudioStreamWAV.LOOP_FORWARD  # только в памяти теста
+	var slots := Audio.available.duplicate()
+	for slot in slots:
+		slot.stream = looping
+		slot.play()
+	Audio.available.clear()
+	e._begin_windup(false)
+	check(slots.size() == Audio.num_players and Audio.available.is_empty()
+		and _warnings_queued_after(0, path) == 1,
+		"все каналы заняты, предупреждение %s ожидает в общей очереди" % kind)
+	if free_before_attack:
+		await frames(int(ceil(e.windup_time * 45.0)))  # 75 % замаха; время реакции уже упущено
+		check(e.state == Enemy.State.WINDUP and e._attack_count == 0
+			and e._state_time >= e.windup_time * 0.5 and _warnings_queued_after(0, path) == 1,
+			"%s ещё не атакует, но половина замаха прошла" % kind)
+	else:
+		var released := await wait_until(2.0, func() -> bool: return is_instance_valid(e) and e._attack_count > 0)
+		check(released and _warnings_queued_after(0, path) == 1,
+			"%s атакует, пока сигнал ожидает свободный канал" % kind)
+	var slot: AudioStreamPlayer = slots[0]
+	slot.stop()
+	Audio.available.append(slot)
+	Audio._process(0.0)
+	check(not Audio._last_played.has(path) and _warnings_queued_after(0, path) == 0,
+		"опоздавший сигнал %s не воспроизводится %s" % [kind, "в конце замаха" if free_before_attack else "после атаки"])
+	if free_before_attack:
+		var released := await wait_until(2.0, func() -> bool: return is_instance_valid(e) and e._attack_count > 0)
+		check(released, "%s всё же атакует после пропуска устаревшего сигнала" % kind)
+	for n in get_tree().get_nodes_in_group("reflectable"):
+		if is_instance_valid(n) and n.get_script() == ENEMY_PROJECTILE and n.get("shooter") == e:
+			n.queue_free()
+	_reset_sfx_pool()
+	Audio.set_process(was_processing)
+	await _clear()
+
+## После прерывания старая запись не принадлежит следующему замаху, даже если удара ещё не было.
+func _test_interrupted_warning() -> void:
+	print("-- Прерванное предупреждение")
+	var t := _spawn("thrower", Vector3(0, 0, -8))
+	var was_processing := Audio.is_processing()
+	Audio.set_process(false)
+	_reset_sfx_pool()
+	var path := _warning_path("thrower_aim", "sounds/sfx/enemy_growl.wav")
+	Audio._last_played.erase(path)
+	t._begin_windup(false)
+	t._set_state(Enemy.State.STUNNED)
+	t._begin_windup(false)
+	check(t._attack_count == 0 and _warnings_queued_after(0, path) == 2,
+		"после прерывания и нового замаха в очереди два разных предупреждения")
+	Audio._process(0.0)
+	check(_sfx_playing(path) and _warnings_queued_after(0, path) == 0,
+		"старый сигнал пропущен, новый зазвучал до выпуска")
+	_reset_sfx_pool()
+	Audio.set_process(was_processing)
 	await _clear()
 
 func _test_waves() -> void:
