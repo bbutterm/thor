@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import sys
 
+from check_export_decor import check_world_art_exclusions
 from export_dialogue_assets import DialogueAssets
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -62,12 +63,14 @@ def main():
     portrait_pairs = set(UI_PAIRS)
     resource_refs = []
     script_text = []
+    runtime_text = []
     for top in RUNTIME:
         for f in (ROOT / top).rglob("*"):
             if not f.is_file() or f.suffix not in {".gd", ".tscn", ".tres", ".json"}:
                 continue
             relative = str(f.relative_to(ROOT))
             text = f.read_text(encoding="utf-8")
+            runtime_text.append((relative, text))
             if f.suffix in {".tscn", ".tres"}:
                 for path in re.findall(r'\[ext_resource[^\]]*\bpath="res://([^"\n]+)"', text):
                     resource_refs.append((relative, path))
@@ -95,6 +98,7 @@ def main():
         visual_issues, visual_deferred = visuals.audit_preset(section, patterns, includes, export_filter)
         issues.extend(visual_issues)
         deferred.extend(visual_deferred)
+        issues.extend(f"{section}: {issue}" for issue in check_world_art_exclusions(ROOT, patterns, runtime_text))
         for source, path in resource_refs:
             if is_excluded(path, patterns):
                 issues.append(f"{section}: {source} ссылается на исключённый {path}")
