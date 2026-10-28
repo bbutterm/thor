@@ -163,3 +163,43 @@
 - `godot --headless --path . --import` — без ошибок; `tools/check_export_assets.py` — без новых замечаний (`tools/*` исключён из экспорта).
 - После 4.1: `generator_test`, `reach_test`, `tower_test`, `room_transition_test` — PASS. После 4.2: `python3 tools/run_tests.py --all --jobs 4` — 59 из 59 PASS за 3 мин 12 с.
 - Карта тестов: `tools/build/`, `tools/rooms/` → тесты генератора и залов.
+
+## Этап 5. Эффекты и другие крупные файлы (28.10)
+
+### Было → стало
+| Файл | Было | Стало |
+|---|---|---|
+| `scripts/fx.gd` (`FX`, статический) | 975 строк | 318: фасад — состояние, константы, `tree()`, обёртки. Модули `scripts/fx/`: `FXTime` (83), `FXBasic` (147), `FXShared` (122), `FXSpriteKit` (202), `FXImpacts` (209), `FXElements` (110), `FXEnemyHooks` (57) |
+| `scripts/dialogue_manager.gd` (`Dialogue`) | 691 | 491 + `scripts/dialogue/`: `DialogueLocale` (89), `DialogueConditions` (121), `DialogueValidator` (69) |
+| `run/run_manager.gd` (`Run`) | 655 | 493 + `run/parts/`: `RunMjolnir` (173), `RunDoors` (111) |
+| `scripts/comic_fx.gd` (`ComicFX`) | 777 | 528 + `scripts/comic/`: `ComicHooks` (88), `ComicAnimator` (106), `ComicAssets` (136) |
+| `ui/hud.gd` | 598 | не трогал: 26 функций, в основном сборка интерфейса одним куском — деление не сократило бы контекст под задачу |
+
+- `FX` — статический класс: модули тоже статические, всё состояние (`static var`) осталось в `FX` (его читают снаружи: `FX._hitstop_left`, `FX._slow_left`, `FX.INSTANCE_SLOTS_GL`…). Вызовы `FX.xxx` в игре не менялись.
+- Автозагрузкам для типизированной ссылки из компонентов даны `class_name`, отличные от имён автозагрузок: `DialogueManager`, `RunManager`, `ComicWords`. Вызовы `Dialogue.`/`Run.`/`ComicFX.` не менялись.
+- Внутренний класс `ComicWord` из компонентов — `ComicWords.ComicWord`.
+
+### Обёртки
+- `FX`: все публичные функции модулей + `_set_time_scale`, `_has_iu`, `_take` (их зовут снаружи как `FX._…`).
+- `Dialogue`, `Run`, `ComicFX`: публичные функции компонентов (`## API →`); приватных снаружи не зовут.
+- Тесты не менялись.
+
+### Найдено и не тронуто
+- Ничего нового.
+
+### Проверка
+- `godot --headless --path . --import` — без ошибок.
+- `python3 tools/run_tests.py --all --jobs 4` — 59 из 59 PASS после `FX` (3 мин 9 с) и после трёх остальных файлов (3 мин 16 с).
+- `tests/vfx_shots.tscn` под xvfb в GL Compatibility (затухание `fade`, пулы спрайтов, комикс-слова): в логе те же 3 сообщения при выходе, что и до этапа; разница кадров «после — до» на уровне разницы двух прогонов одного кода «до»; кадр удара-приземления и слова сверены глазами.
+
+## Итог рефакторинга (этапы 1–5)
+| Файл | Было | Стало |
+|---|---|---|
+| `CLAUDE.md` | 142 строки, всё в одном | карта + общие правила; подробности — `CLAUDE.md` в 10 папках |
+| `player/player.gd` | 1590 | 773 + 7 компонентов |
+| `enemies/enemy.gd` | 1479 | 894 + 7 компонентов |
+| `tools/build_scenes.gd` | 1934 | 420 + 7 сборщиков + 13 файлов данных залов |
+| `scripts/fx.gd` | 975 | 318 + 7 модулей |
+| `scripts/comic_fx.gd`, `dialogue_manager.gd`, `run/run_manager.gd` | 777 / 691 / 655 | 528 / 491 / 493 + 3 / 3 / 2 компонента |
+
+Самый большой файл логики теперь — `tools/build/gen_rooms.gd` (489 строк). Под типовую задачу: `CLAUDE.md` папки → 1–2 компонента → `python3 tools/run_tests.py --changed`. Скрипты переноса (по токенам, с обёртками) не коммитились: это разовые инструменты, логика переноса описана в разделах этапов.

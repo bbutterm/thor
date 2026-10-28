@@ -5,9 +5,9 @@
 ## Что здесь (автозагрузки помечены)
 | Файл | Класс / автозагрузка | Роль |
 |---|---|---|
-| `fx.gd` | `FX` | hit-stop, цифры урона, молнии, кольца, искры, текстурные эффекты, декали |
+| `fx.gd` + `fx/*.gd` | `FX` (фасад) + модули | hit-stop, цифры урона, молнии, кольца, искры, текстурные эффекты, декали |
 | `vfx_screen.gd`, `vfx_tuning.gd` | `VfxScreen`, `VfxTuning` | экранные эффекты; числа `data/vfx_tuning.tres` |
-| `comic_fx.gd` | `ComicFX` (авто) | комиксовые слова-удары |
+| `comic_fx.gd` + `comic/*.gd` | `ComicFX` (авто; класс `ComicWords`) | комиксовые слова-удары |
 | `music.gd` | `Music` (авто) | адаптивная музыка |
 | `audio.gd` | `Audio` | звуки, голос, подмена синтеза записями владельца |
 | `perf.gd` | `Perf` (авто) | F3-оверлей, отчёт о лаге, лог фризов |
@@ -17,11 +17,24 @@
 | `world_art.gd`, `world_art_tuning.gd` | `WorldArt` | небо, свет, атмосфера, кеш материалов декора |
 | `weapon_meshes.gd` | `WeaponMeshes` | модели оружия (см. `weapons/CLAUDE.md`) |
 | `settings.gd` | `GameSettings` | все настройки GDD 22 |
-| `dialogue_manager.gd` | `Dialogue` (авто) | сцены-новеллы и пулы реплик |
+| `dialogue_manager.gd` + `dialogue/*.gd` | `Dialogue` (авто; класс `DialogueManager`) | сцены-новеллы и пулы реплик |
 | `save_game.gd` | `Save` (авто) | сохранение |
 | `i18n.gd` | `I18n` | язык, `I18n.t()` в статических функциях |
 
 ## Эффекты (`fx.gd`)
+**Устройство** (этап 5 рефакторинга): `FX` — фасад, все вызовы в игре — `FX.xxx`; в `fx.gd` — всё состояние (`static var`), константы, `tree()` и однострочные обёртки. Реализация — статические модули `fx/` (их зовут только `FX` и друг друга):
+
+| Модуль | Что внутри |
+|---|---|
+| `fx/fx_time.gd` — `FXTime` | hit-stop, `slowmo`, `tick`, `real_delta`, `_set_time_scale`, `reset_time` |
+| `fx/fx_basic.gd` — `FXBasic` | `damage_number`, `lightning`, `burst`, `ring`, `sparks`, `make_material` |
+| `fx/fx_shared.gd` — `FXShared` | общие материалы `fx_material`/`fx_apply`, учёт instance uniform, затухание в GL (`sync_fades`), `shared_mesh` |
+| `fx/fx_sprite_kit.gd` — `FXSpriteKit` | VFX-комплект: `cfg`, `sprite_material`, прогрев, пулы `FXSprites`, параметры экземпляра, спрайты на полу |
+| `fx/fx_impacts.gd` — `FXImpacts` | `hit_flash`, `spark_star`, ихор, `smoke`, `explosion`, `shockwave`, `crack`, `scorch`, `slam_impact`… |
+| `fx/fx_elements.gd` — `FXElements` | `fire_sprites`, ленты молнии, `ice_hit` |
+| `fx/fx_enemy_hooks.gd` — `FXEnemyHooks` | `enemy_hit`, `enemy_died`, `is_undead`, `perfect_catch` |
+
+Новый эффект: функция в модуле своей темы + обёртка в `fx.gd`; новое состояние — `static var` в `fx.gd`.
 - hit-stop (тикает из `Run._process`), цифры урона, молнии, кольца, искры. Материалы эффектов — общие (`FX.fx_apply`, шейдеры `shaders/fx_*.gdshader`, цвет per-instance), меши — общие (`FX.shared_mesh`).
 - Hit-stop: `FX.real_delta(delta)` — реальная длительность кадра при `Engine.time_scale` ≠ 1 (delta кадра масштабирован значением на НАЧАЛО кадра).
 - **VFX-комплект владельца** (`sprites/vfx/*.webp`, описание `sprites/ui/README_UI_VFX.md`, `data/ui_manifest.json`): текстурные эффекты — `FX.hit_flash/spark_star/ichor_splash/splat/smoke/shockwave/crack/slam_impact/ice_hit/fire_sprites`, ленты в `FX.lightning`, звёзды в `FX.sparks`; хуки врага — `FX.enemy_hit`/`FX.enemy_died` (ихор — у нежити, `FX.is_undead`). Один шейдер `shaders/fx_sprite.gdshader` (полосы-атласы, billboard в шейдере; instance `color` = оттенок+яркость в альфе, `sprite` = кадр/billboard/поворот/fps, в GL ещё `fade`; выделенный блок экземпляра занимает 16 ячеек), материал на текстуру — `FX.sprite_material(key)` (создаёт прогрев, живут вечно). Узлы — пулы с лимитами в узле `FXSprites` (top_level, `transient`). Числа — `data/vfx_tuning.tres` (`VfxTuning`).
@@ -30,6 +43,7 @@
 - Тест `tests/vfx_test.tscn`, кадры `tests/vfx_shots.tscn` (xvfb).
 
 ## Комиксовые слова (`comic_fx.gd`, автозагрузка `ComicFX`)
+Устройство (этап 5): в `comic_fx.gd` — состояние, очередь и показ (`_request`, `_flush`, `_show`), кадр `_process`, внутренний класс `ComicWord`; компоненты `comic/`: `comic_hooks.gd` (`ComicHooks`, `ComicFX.hooks`: `pop` и хуки `on_*`), `comic_animator.gd` (`ComicAnimator`: анимация и проекция слова), `comic_assets.gd` (`ComicAssets`: данные JSON, материалы растра, шрифт, пул, прогрев глифов). Вызовы `ComicFX.pop/on_*` — обёртки.
 `ComicFX.pop(event, pos, big)` и хуки `ComicFX.on_*` (однострочные вызовы в player/enemy/mjolnir/enemy_projectile). Словарь, цвета, приоритеты — `data/comic_words.json`; рисованные «взрывы» — `sprites/comic/<событие>.png` или `burst.png` (иначе процедурные); шейдеры `shaders/comic_halftone.gdshader`, `comic_vignette.gdshader`; шрифт `fonts/Bangers-Regular.ttf`. Рисуется в 2D (CanvasLayer 6) с проекцией точки мира; пул слов, общие материалы. Реже и не всегда на весь экран: кулдаун, `routine_chance`, `important_priority`, `fullscreen_events` (остальные — крупно в мире), масштаб от расстояния. Комикс-слова всегда английские (`words_<язык>` в `data/comic_words.json` — для своего языка). Тест `comic_test`.
 
 ## Музыка и звук
@@ -57,7 +71,8 @@
 Все настройки GDD 22 в `user://settings.cfg` (секции `[audio] [controls] [video] [hud] [text] [access] [comic] [input] [pad_input]`; чужие секции сохраняются; тесты пишут в `user://test_settings.cfg`). `get_value/set_value(секция, ключ)` (set — сохраняет, применяет, шлёт `GameSettings.events.changed`), `apply_startup()` (из `Run._ready`: шины Master/Music/SFX/Voice, окно, клавиши, фильтр цветовой слепоты), `apply_to_player(p)` (из `Player._ready`: чувствительность, инверсия, FOV, тряска `CameraFX.shake_scale`, покачивание). Клавиши: `rebind` / `reset_input` — клавиатура/мышь, `rebind_pad` / `reset_pad_input` — геймпад и направления стиков независимо; Start зарезервирован, конфликтующие действия остаются доступными для переназначения. `note_input` из `Run._input` отслеживает последнее устройство, `current_binding` обновляет подсказки; A/B — подтверждение/назад в UI. Проверки — `tests/gamepad_test.tscn`, снимки 1280×800 — `tests/deck_shots.tscn`, ограничения — `docs/deck_2026-10-27/README.md`. Помощь: `aim_assist()` (`RangedWeapon.assisted_aim`), `slam_slowmo()` (`PlayerSlam._slam_assist_tick`), `catch_assist()`. UI — `ui/settings_panel.gd`.
 
 ## Диалоги (`dialogue_manager.gd`, автозагрузка `Dialogue`)
-Сцены-новеллы и пулы коротких реплик из `data/dialogues/*.json` (по файлу на персонажа, формат — `STORY.md` → «Формат данных»; `STORY.md` — сюжетная библия, черновик). Выбор: самая приоритетная непросмотренная сцена события с выполненными условиями, иначе пул. Точки входа: `on_run_start`, `on_boss_intro`, `on_boss_defeat`, `after_run`, `run_trigger(событие, пул)`, `bark(реплика)`, `speak_line`. Окна — `ui/dialogue_box.gd`, `ui/bark_bubble.gd`, Один — `run/odin.gd`. Перевод реплик — `DialogueManager.localize_line` (см. корневой `CLAUDE.md`, «Локализация»). Тест `dialogue_test`.
+Устройство (этап 5): выбор, показ и точки входа — в `dialogue_manager.gd`; компоненты `dialogue/`: `dialogue_locale.gd` (`DialogueLocale`: перевод, `localize_line`), `dialogue_conditions.gd` (`DialogueConditions`: разбор и проверка условий), `dialogue_validator.gd` (`DialogueValidator`: проверка данных для `dialogue_test`).
+Сцены-новеллы и пулы коротких реплик из `data/dialogues/*.json` (по файлу на персонажа, формат — `STORY.md` → «Формат данных»; `STORY.md` — сюжетная библия, черновик). Выбор: самая приоритетная непросмотренная сцена события с выполненными условиями, иначе пул. Точки входа: `on_run_start`, `on_boss_intro`, `on_boss_defeat`, `after_run`, `run_trigger(событие, пул)`, `bark(реплика)`, `speak_line`. Окна — `ui/dialogue_box.gd`, `ui/bark_bubble.gd`, Один — `run/odin.gd`. Перевод реплик — `Dialogue.localize_line` (`DialogueLocale`) (см. корневой `CLAUDE.md`, «Локализация»). Тест `dialogue_test`.
 
 ## Сохранение (`save_game.gd`, автозагрузка `Save`)
 `user://save.json` с версией и миграцией. Тесты (`res://tests/*`) и `--selftest` пишут в `user://test_save.json`. `Save.is_in_pool(kind, id)`, `Save.target_exists`, `Save.perk(id)`, `Save.apply_permanent_to_body()` (см. `run/CLAUDE.md`, «Открытия»). Тест `save_test`.
