@@ -164,6 +164,9 @@ func _on_trait_picked(t: MjolnirTrait) -> void:
 	hud.toast("%s %s — %s" % [t.glyph, tr(t.title), tr("уровень %d") % lv if lv > 1 else (tr("стихия") if t.is_element() else tr("приём"))])
 	# Наковальня Эйтри: выбор стихии и был наградой зала — дальше двери; мини-босс — дальше руна
 	var anvil := rewards.take_anvil_pick()
+	if anvil:
+		# Выбор уже закрылся: короткую реплику Эйтри больше не заслоняют карточки.
+		Dialogue.bark_pool("dwarves.eitri")
 	get_tree().create_timer(0.5, false).timeout.connect(func() -> void:
 		if player.is_dead:
 			return

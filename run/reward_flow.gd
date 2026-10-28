@@ -152,7 +152,6 @@ func _offer_anvil() -> void:
 		_offer_runes("rune")
 		return
 	_anvil_pick = true
-	Dialogue.bark_pool("dwarves.eitri")
 	game.trait_pick.open(choices, tr("НАКОВАЛЬНЯ ЭЙТРИ — СТИХИЯ МОЛОТА"))
 
 ## Выбор трейта был наградой наковальни (тогда после него — двери, а не руна). Сбрасывает признак.
