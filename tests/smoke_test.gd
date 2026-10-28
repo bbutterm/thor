@@ -250,6 +250,7 @@ func _make_dummy(p: Player, dist: float) -> Enemy:
 
 func _clear_room_and_exit(is_last: bool, door_pick: int = 0) -> bool:
 	var room := game.room
+	var room_id := room.get_instance_id()
 	var reward := Run.current_reward()
 	_visited.append(reward)
 	print("-- Зал %d: %s [награда: %s]" % [Run.room_index + 1, room.room_title, reward])
@@ -323,9 +324,10 @@ func _clear_room_and_exit(is_last: bool, door_pick: int = 0) -> bool:
 	var idx_before := Run.room_index
 	var took := await DoorHelper.take_door(get_tree(), game, door_pick)
 	check(Run.room_index == idx_before + 1, "переход в следующий зал через дверь «%s» (%d)" % [took, Run.room_index + 1])
-	check(game.room != room, "загружен новый зал")
+	var moved := is_instance_valid(game.room) and game.room.get_instance_id() != room_id
+	check(moved, "загружен новый зал")
 	check(Run.current_reward() == took, "награда зала = награда двери (%s)" % took)
-	return game.room != room
+	return moved
 
 func _has_chest() -> bool:
 	for c in game.room.get_children():

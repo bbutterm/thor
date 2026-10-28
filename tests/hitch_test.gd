@@ -188,7 +188,7 @@ func _jump_and_slam(p: Player) -> void:
 			await get_tree().physics_frame
 
 func _go_next() -> bool:
-	var room := game.room
+	var room_id := game.room.get_instance_id()
 	var previous_index := Run.room_index
 	await wait(1.2)
 	# Награда зала (трейт, руна, отдых, Локи…) → двери-награды (блок И) → входим в дверь по кругу
@@ -203,10 +203,10 @@ func _go_next() -> bool:
 	game.player.velocity = Vector3(0, 0, -2)
 	for i in 120:
 		await get_tree().physics_frame
-		if game.room != room:
+		if is_instance_valid(game.room) and game.room.get_instance_id() != room_id and not game._room_load_active:
 			break
 	_load_frames.append(_now())
-	return game.room != room and Run.room_index == previous_index + 1
+	return is_instance_valid(game.room) and game.room.get_instance_id() != room_id and not game._room_load_active and Run.room_index == previous_index + 1
 
 func _in_load_window(f: int) -> bool:
 	for lf in _load_frames:

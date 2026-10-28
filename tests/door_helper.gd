@@ -46,14 +46,20 @@ static func take_door(tree: SceneTree, game: Game, index: int) -> String:
 		return ""
 	var d := doors[index % doors.size()]
 	var id := d.reward_id
+	if not is_instance_valid(game.room):
+		return ""
+	var room_id := game.room.get_instance_id()
 	# Ждём, пока арка поднимется из пола
 	await wait(tree, 0.9)
 	game.player.global_position = d.trigger_position()
 	game.player.velocity = Vector3(0, 0, -2)
-	var room := game.room
+	var moved := false
 	for i in 120:
 		await tree.physics_frame
-		if game.room != room:
+		if is_instance_valid(game.room) and game.room.get_instance_id() != room_id and not game._room_load_active:
+			moved = true
 			break
+	if not moved:
+		return ""
 	await wait(tree, 0.3)
 	return id
