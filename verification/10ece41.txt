@@ -1,0 +1,18 @@
+Источник: 10ece416f82c1619c6e6814ff04c6697baba69ce; runtime совпадает с полным набором 3d390a0.
+ZIP: 94 798 579 байт; SHA-256: 0516a7021a2e52be127e9498098dc8aa29e587b5261469b59db1416dfb241002.
+EXE: 171 091 856 байт; SHA-256: 36ea9944c0bc7ee061f3da90f68b8d2b14725ccc40bb45c1068fa10ab931701e.
+CRC ZIP и хеш EXE из распакованного потока проверены; размер ZIP меньше лимита на 201 421 байт.
+Импорт и экспорт: без предупреждений, ERROR, SCRIPT ERROR и Parse Error.
+Wine headless selftest: три запуска exit 0, SELFTEST OK, по 3 врага. В одном обычном запуске при выходе WARNING ObjectDB и ERROR об удержании 4 ресурсов; имена не указаны. Два повтора с --verbose завершились без этих сообщений. В предыдущей версии 1042ae4 verbose определил звуковые потоки walking.ogg и menu/base.ogg и их OggPacketSequence. Графика Windows не проверена.
+Н3: регрессия относительно прежних залов в программном GL; нужна проверка на GPU. Графические прогоны фризов ещё не закончены. Физический Steam Deck и Proton не проверены.
+
+Wine headless selftest, стандартный вывод:
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+SELFTEST bodies=9 runes=28 odin=true
+AssetCache: 471 ресурсов, 1 мс
+SELFTEST OK scene=Game room=res://rooms/room_09.tscn enemies=3
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 4 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)
