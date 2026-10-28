@@ -374,7 +374,7 @@ func _test_boss_death_reactions() -> void:
 					var lines := Dialogue.pool_lines("odin.death_boss")
 					var translation: Dictionary = loc_lines.get(id, {})
 					var expected := str(item.lines[0].text) if language == "ru" else str(translation.get("en", ""))
-					var valid := lines.is_empty() if source_id == "miniboss_sven" else \
+					var valid: bool = lines.is_empty() if source_id == "miniboss_sven" else \
 						(not lines.is_empty() and lines[0].get("id", "") == id and lines[0].get("text", "") == expected and expected != "")
 					check(valid, "%s/%s: выбор и перевод %s" % [source_id, language, id])
 			elif allowed:
