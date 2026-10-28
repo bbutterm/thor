@@ -9,12 +9,12 @@
 ## Публичный API
 - `player.equip(def)`, `current_weapon()`, `current_melee_style()` (узел `Player/Weapons` = `weapon_holder.gd`: 2 слота мили/ренж, свитч, подбор по E, патроны).
 - Источники урона: `melee` / `melee_finisher` / `melee_heavy` / `ranged`. Весь урон по врагу — `player.deal_damage` (см. `player/CLAUDE.md`).
-- `MjolnirHand`: сигналы `perfect_catch`, `catch_timing(result, offset)`, `throw_blocked(left)`; `throw_cooldown`, `reset_cooldown()`, `perfect_window_left()`, `effective_perfect_window()`, `catch_runes`; `hand.traits` + `hand.combo_traits`, `hand.element_handler()`, `hand.trait_handler(id)`, `hand.begin_hold/release_hold`, `hand.next_throw`.
+- `MjolnirHand`: сигналы `perfect_catch`, `catch_timing(result, offset)`, `throw_blocked(left)`; `catch_cooldown`/`perfect_catch_cooldown`, `cooldown_left`/`cooldown_total`, `effective_cooldown(perfect)`, `reset_cooldown()`, `perfect_window_left()`, `effective_perfect_window()`, `catch_runes`; `hand.traits` + `hand.combo_traits`, `hand.element_handler()`, `hand.trait_handler(id)`, `hand.begin_hold/release_hold`, `hand.next_throw`.
 - `MjolnirProjectile.catch_eta()`, `MjolnirProjectile.pierce` → `Enemy.armor_pierce_hit`.
 - `Loot.make_elite`, `Loot.on_enemy_died`.
 
 ## Перезарядка броска Мьёльнира
-`MjolnirHand.throw_cooldown` (7 с от броска) и `perfect_cooldown_refund` (идеальный хват −5 с); качается — трейт `modify(&"throw_cooldown"/"perfect_cooldown_refund")`, тело/перк `player.modify_stat("hammer_cooldown_mult")`. Бросок на перезарядке — осечка (`throw_blocked`, звук, HUD «ПЕРЕЗАРЯДКА …» красным); новый зал — сброс (`reset_cooldown` в `Game._load_room`). Тесты, где важны броски подряд, ставят `hand.throw_cooldown = 0`; сама перезарядка — в `catch_test`.
+Перезарядка начинается **при поимке** (GDD 26.4, П1): `MjolnirHand.catch_cooldown` (1.5 с после обычной поимки, ставит `on_caught`) и `perfect_catch_cooldown` (0 — идеальный хват снимает перезарядку в `_grant_perfect`, бросай сразу); в полёте перезарядки нет. Качается — трейт `modify(&"catch_cooldown"/"perfect_catch_cooldown")`, тело/перк `player.modify_stat("hammer_cooldown_mult")` (`effective_cooldown(perfect)`). Бросок на перезарядке — осечка (`throw_blocked`, звук, полоска у молота в HUD краснеет); служебный возврат `force_return_instant` (новый зал, смена трейтов) — без перезарядки. Тесты, где важны броски подряд, ставят `hand.catch_cooldown = 0`; сама перезарядка — в `catch_test`.
 
 Подсказка идеального хвата — `ui/catch_assist.gd` (см. `ui/CLAUDE.md`), по `MjolnirProjectile.catch_eta()` (прокрутка того же возврата вперёд; точно до кадра) и `MjolnirHand.perfect_window_left()`.
 

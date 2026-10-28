@@ -294,7 +294,7 @@ func _test_reflect_all() -> void:
 func _test_orb_knocked_by_hammer() -> void:
 	print("-- Мьёльнир сбивает сферу")
 	var hand := p.mjolnir
-	hand.throw_cooldown = 0.0
+	hand.catch_cooldown = 0.0
 	hand.reset_cooldown()
 	var aim := p.get_aim_origin() + p.get_aim_forward() * 7.0
 	var orb := _fire(EnemyProjectile.Kind.ORB, aim, -p.get_aim_forward() * 2.0, func(pr: EnemyProjectile) -> void:

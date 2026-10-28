@@ -3,7 +3,7 @@
 Всё строится кодом, `.tscn` — пустые обёртки со скриптом (генерирует `tools/build_scenes.gd`). Русские строки — только через `tr()` (проверяет `i18n_test`, см. корневой `CLAUDE.md`, «Локализация»).
 
 ## Что здесь
-- HUD: `hud.gd` (+ `RuneHammer` — `rune_hammer.gd`, состояние молота, «ПЕРЕЗАРЯДКА …», `HUD._retranslate`), `style_hud.gd` (`StyleHUD.attach`), `weapon_hud.gd`, `silver_hud.gd`, `mjolnir_traits_hud.gd`, `trial_hud.gd`, `skin_bar.gd`, `hud_icon.gd`, `boss_bar.gd`, `offscreen_indicators.gd`, `catch_assist.gd`.
+- HUD: `hud.gd` (+ `RuneHammer` — `rune_hammer.gd`: руны на бойке, шкала высоты в рукояти, полоска перезарядки броска по низу бойка `set_cooldown`; состояние молота, `HUD._retranslate`), `style_hud.gd` (`StyleHUD.attach`), `weapon_hud.gd`, `silver_hud.gd`, `mjolnir_traits_hud.gd`, `trial_hud.gd`, `skin_bar.gd`, `hud_icon.gd`, `boss_bar.gd`, `offscreen_indicators.gd`, `catch_assist.gd`.
 - Выбор: `rune_pick.gd`, `trait_pick.gd`, `choice_pick.gd`, `body_select.gd`, `training_plan.gd`, `shop.gd` (`ShopScreen`), `combo_announce.gd`.
 - Меню и экраны: `main_menu.gd`, `pause_menu.gd`, `end_screen.gd`, `settings_panel.gd`, `loading_screen.gd`, `screen_art.gd`, `comic_insert.gd`, `boss_card.gd`, `comic_page.gd`.
 - Диалоги: `dialogue_box.gd`, `portrait.gd`, `bark_bubble.gd`.

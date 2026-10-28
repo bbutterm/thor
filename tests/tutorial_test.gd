@@ -91,7 +91,7 @@ func _run() -> void:
 	p.mjolnir.state_changed.emit(true)
 	game._room_load_active = false
 	check(Save.event_count("tutorial_step_runes") == 0, "служебный возврат при смене зала не засчитывает поимку")
-	p.mjolnir.throw_cooldown = 0.0
+	p.mjolnir.catch_cooldown = 0.0
 	p.mjolnir.throw_hammer()
 	await wait(0.1)
 	p.mjolnir.request_throw_or_recall()

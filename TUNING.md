@@ -54,6 +54,7 @@
 ## Мьёльнир — узел **Mjolnir** (`weapons/mjolnir_hand.gd`)
 
 База по GDD 10: `throw_speed` 32, `base_damage` 33 (1.5 У), `max_range` 25 м (дальше — возврат), `auto_return_after` 1.5 с (полёт без попадания в стену), `sticks_to_world` вкл. (втыкается в стену/пол), `stuck_auto_return` 0.8 с (сколько воткнутый молот ждёт ПКМ; трейты «на воткнутый» продлевают до 3–5 с; 0 — ждёт всегда), `return_speed` 36, `return_turn_accel` 140 (дуга возврата), `max_wall_bounces` 0 (было 2: теперь отскоки даёт Рикошет), `chain_targets` 0 (базовой молнии нет — это стихия «Молния»), `chain_damage_ratio` 0.5, `chain_radius` 7, `hit_hitstop` 0.04.
+Перезарядка броска — **от поимки** (П1, GDD 26.4): `catch_cooldown` 1.5 с после обычной поимки, `perfect_catch_cooldown` 0 после идеального хвата (бросай сразу); в полёте перезарядки нет, служебный возврат (новый зал) — без перезарядки. Качается: трейт `modify(&"catch_cooldown"/"perfect_catch_cooldown")`, тело/перк `hammer_cooldown_mult`. HUD — полоска по низу бойка `RuneHammer` (красная при осечке).
 Без молота: `dash_recharge_bonus` 0.2 (руны на земле восстанавливаются на 20 % быстрее); `catch_runes` 1 — обычная поимка возвращает руну и, в воздухе, прыжки; идеальный хват заполняет запас. Перехват в воздухе: `restore_dash` / `restore_dash_lvl2` 1 / 2 дополнительных руны, `hop_lvl2` 5 м/с. Идеальный хват: `perfect_window` 0.15 с (ПКМ до или после поимки), `perfect_damage_mult` 2.
 
 ## Трейты Мьёльнира (блок Б4: стихии × приёмы) — `weapons/mjolnir_traits/*.tres`, связки — `combos/*.tres`
@@ -662,11 +663,18 @@ HUD (`ui/style_hud.gd`): `bar_width` 340, `caption_height` 58, `burst_size` 210�
 | `CatchAssist.feedback_time` | 0.7 с | сколько висит «ИДЕАЛЬНО!/РАНО/ПОЗДНО» |
 | `MjolnirHand.catch_feedback_range` | 0.6 с | промах дальше этого — обычное нажатие, без «РАНО/ПОЗДНО» |
 
+## Плейтест владельца 28.10 (вечер, GDD 26.4)
+| Число | Было → стало | Зачем |
+|---|---|---|
+| `MjolnirHand.catch_cooldown` (было `throw_cooldown`) | 7 с от броска → 1.5 с от поимки | «было веселее без КД, но это имба»: умеешь ловить — кидаешь без остановки |
+| `MjolnirHand.perfect_catch_cooldown` (было `perfect_cooldown_refund` −5 с) | → 0 с | идеальный хват — бросай сразу |
+| HUD перезарядки | надпись «ПЕРЕЗАРЯДКА … · ПОЙМАЙ ИДЕАЛЬНО — БЫСТРЕЕ» → полоска у молота + короткое «ПЕРЕЗАРЯДКА» | не перекрывает бой |
+
 ## Плейтест владельца 27.10 (вечер)
 | Число | Было → стало | Зачем |
 |---|---|---|
-| `MjolnirHand.throw_cooldown` | — → 7 с | молот спамился; бросок — решение, а не кнопка «всегда» |
-| `MjolnirHand.perfect_cooldown_refund` | — → 5 с | идеальный хват — способ бросать чаще |
+| `MjolnirHand.throw_cooldown` | — → 7 с (**отменено 28.10**: `catch_cooldown` 1.5 с от поимки) | молот спамился; бросок — решение, а не кнопка «всегда» |
+| `MjolnirHand.perfect_cooldown_refund` | — → 5 с (**отменено 28.10**: идеальный хват — перезарядка 0) | идеальный хват — способ бросать чаще |
 | `ComicFX.cooldown` | 0.4 → 1.1 с | слова мельтешили |
 | `ComicFX.routine_chance` | — → 0.45 | обычные слова (priority < `important_priority` 50) — через раз |
 | `ComicFX.fullscreen_events` | любое big → boss_kill, slam (≥ 10 м), rank_4, combo | остальные «big» — крупное слово у места удара (`world_big_scale` 1.6) |

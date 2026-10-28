@@ -49,7 +49,7 @@ bot_test, bot_control_test, bot_*_test       # бот-плейтест
 ## Соглашения в тестах
 - Тесты (`res://tests/*`) и `--selftest` пишут сохранение в `user://test_save.json`, настройки — в `user://test_settings.cfg`; язык в тестах всегда ru.
 - Порядок залов — `Run.room_order` (после `Run.start_run`), наборы дверей — `Run.forced_offers`, испытание — `Run.forced_trial = "<id>"`, `Run.doors_enabled = false` — старая одна дверь после руны. Общие шаги — `door_helper.gd` (`resolve_reward`, `take_door`).
-- Где важны броски подряд — `hand.throw_cooldown = 0`.
+- Где важны броски подряд — `hand.catch_cooldown = 0` (перезарядка — от поимки).
 - Вставки на паузе (заставка босса, страница комикса) в тестах выключены (`ScreenArt.pauses_in_tests`, как `Dialogue.in_run_scenes`).
 - Окна мультикилла/попадания/шмяка — по `Run.combat_clock`; не заменяй системными часами.
 

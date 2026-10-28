@@ -205,8 +205,8 @@ func _run() -> void:
 	p.rotation_target = Vector2(0.7, p.rotation_target.y)
 	var hand := p.mjolnir
 	# Кольца и окно хвата — без перезарядки (она проверяется в конце)
-	var saved_cd := hand.throw_cooldown
-	hand.throw_cooldown = 0.0
+	var saved_cd := hand.catch_cooldown
+	hand.catch_cooldown = 0.0
 	hand.catch_timing.connect(func(r: StringName, off: float) -> void: _results.append([r, off]))
 	var assist := game.find_child("CatchAssist", true, false) as CatchAssist
 	check(assist != null, "подсказка хвата есть в сцене игры")
@@ -299,35 +299,44 @@ func _run() -> void:
 	await _wait_caught(hand)
 	GameSettings.set_value("access", "catch_assist", true)
 
-	print("-- Перезарядка броска")
-	hand.throw_cooldown = saved_cd
+	print("-- Перезарядка броска (начинается при поимке, П1)")
+	hand.catch_cooldown = saved_cd
 	hand.reset_cooldown()
 	var blocked := [0]
 	hand.throw_blocked.connect(func(_l: float) -> void: blocked[0] += 1)
+	check(is_equal_approx(saved_cd, 1.5) and is_equal_approx(hand.perfect_catch_cooldown, 0.0),
+		"перезарядка: обычная поимка %.1f с, идеальный хват %.1f с" % [saved_cd, hand.perfect_catch_cooldown])
+	_results.clear()
 	proj = await _throw_and_recall(hand, 0.6)
-	check(hand.cooldown_left > saved_cd - 1.0, "после броска перезарядка ~%.0f с (%.1f)" % [saved_cd, hand.cooldown_left])
+	check(hand.cooldown_left == 0.0, "в полёте перезарядки нет (%.1f)" % hand.cooldown_left)
 	await _wait_caught(hand)
-	await wait(0.3)
+	await get_tree().physics_frame
 	var left := hand.cooldown_left
-	check(left > 0.5, "поймал без идеального хвата — перезарядка ещё идёт (%.1f с)" % left)
+	check(left > saved_cd - 0.2 and left <= saved_cd, "обычная поимка — перезарядка ~%.1f с (%.2f с)" % [saved_cd, left])
+	await wait(0.3)
 	hand.request_throw_or_recall()
 	await get_tree().physics_frame
 	check(hand.in_hand and blocked[0] == 1, "бросок на перезарядке не проходит (осечка)")
 	await get_tree().process_frame
-	check(game.hud._hammer_state == "cooldown", "HUD: «ПЕРЕЗАРЯДКА …» (%s)" % game.hud._hammer_label.text)
+	check(game.hud._hammer_state == "cooldown" and game.hud._rune_hammer.cooldown > 0.0,
+		"HUD: полоска перезарядки у молота (%.2f), «%s»" % [game.hud._rune_hammer.cooldown, game.hud._hammer_label.text])
 	await grab("06_cooldown")
-	hand.reset_cooldown()
+	await wait(saved_cd)
+	check(hand.cooldown_left == 0.0 and game.hud._hammer_state == "hand" and game.hud._rune_hammer.cooldown == 0.0,
+		"через %.1f с после поимки — снова можно бросать, полоски нет" % saved_cd)
 	_results.clear()
 	proj = await _throw_and_recall(hand, 1.0)
-	var before := hand.cooldown_left
 	await _wait_eta(proj, hand.perfect_window * 0.5)
 	hand.request_throw_or_recall()
 	await _wait_caught(hand)
 	check(not _results.is_empty() and _results[-1][0] == &"perfect", "идеальный хват")
-	var after := hand.cooldown_left
-	check(after < before - hand.perfect_cooldown_refund,
-		"идеальный хват снял %.0f с перезарядки (%.1f с на возврате → %.1f с после поимки)" % [hand.perfect_cooldown_refund, before, after])
-	hand.throw_cooldown = 0.0
+	check(hand.cooldown_left == 0.0, "идеальный хват — перезарядки нет (%.2f с)" % hand.cooldown_left)
+	hand.request_throw_or_recall()
+	check(not hand.in_hand and blocked[0] == 1, "после идеального хвата бросок сразу")
+	await wait(0.2)
+	hand.force_return_instant()
+	check(hand.in_hand and hand.cooldown_left == 0.0, "служебный возврат (новый зал) — молот в руке без перезарядки")
+	hand.catch_cooldown = 0.0
 	hand.reset_cooldown()
 	await _test_catch_perk(hand, assist)
 

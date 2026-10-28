@@ -18,11 +18,12 @@ signal traits_changed
 
 @export_group("Бросок")
 @export var throw_speed: float = 32.0
-## Перезарядка броска (с): считается от броска, бросить снова можно, когда молот в руке и перезарядка 0.
-## Качается: трейт modify(&"throw_cooldown"), тело/перк — player.modify_stat("hammer_cooldown_mult")
-@export var throw_cooldown: float = 7.0
-## Идеальный хват снимает столько секунд перезарядки (трейт — modify(&"perfect_cooldown_refund"))
-@export var perfect_cooldown_refund: float = 5.0
+## Перезарядка броска (с) — начинается при поимке (П1, GDD 26.4): после обычной поимки столько секунд
+## нельзя бросить. Умеешь ловить — кидаешь без остановки. Качается: трейт modify(&"catch_cooldown"),
+## тело/перк — player.modify_stat("hammer_cooldown_mult")
+@export var catch_cooldown: float = 1.5
+## Перезарядка после идеального хвата (0 — бросай сразу); трейт — modify(&"perfect_catch_cooldown")
+@export var perfect_catch_cooldown: float = 0.0
 ## 1.5 У (GDD 10)
 @export var base_damage: float = 33.0
 ## Дальше этого молот не летит — начинает возврат
@@ -230,9 +231,10 @@ func _blocked_by_cooldown() -> bool:
 	throw_blocked.emit(cooldown_left)
 	return true
 
-## Длина перезарядки с учётом трейтов и тела
-func effective_cooldown() -> float:
-	var cd := float(trait_modify(&"throw_cooldown", throw_cooldown))
+## Длина перезарядки после поимки с учётом трейтов и тела (perfect — после идеального хвата)
+func effective_cooldown(perfect: bool = false) -> float:
+	var cd := float(trait_modify(&"perfect_catch_cooldown", perfect_catch_cooldown)) if perfect \
+		else float(trait_modify(&"catch_cooldown", catch_cooldown))
 	if player:
 		cd *= float(player.modify_stat(&"hammer_cooldown_mult", 1.0))
 	return maxf(cd, 0.0)
@@ -246,8 +248,6 @@ func throw_hammer() -> void:
 	if not in_hand:
 		return
 	in_hand = false
-	cooldown_total = effective_cooldown()
-	cooldown_left = cooldown_total
 	_catch_attempted = false
 	var proj := MjolnirProjectile.new()
 	player.get_parent().add_child(proj)
@@ -276,6 +276,9 @@ func on_caught() -> void:
 	# Нажал раньше окна — «поздний» хват после поимки тоже не засчитывается
 	_perfect_open = not _catch_attempted
 	var perfect := now - _recall_press_time <= effective_perfect_window()
+	# Перезарядка начинается при поимке; идеальный хват (ниже или в окне после поимки) её снимает
+	cooldown_total = effective_cooldown()
+	cooldown_left = cooldown_total
 	if player and not player.is_dead:
 		player.restore_mjolnir_runes(catch_runes)
 		if not player.is_on_floor() and not player.is_climbing:
@@ -412,7 +415,7 @@ func _grant_perfect() -> void:
 	perfect_ready = true
 	if player and not player.is_dead:
 		player.restore_mjolnir_runes(player.dash_charges_max)
-	cooldown_left = maxf(cooldown_left - float(trait_modify(&"perfect_cooldown_refund", perfect_cooldown_refund)), 0.0)
+	cooldown_left = minf(cooldown_left, effective_cooldown(true))
 	Audio.play("sounds/sfx/perfect_catch.wav")
 	var p := hand_point() + player.get_aim_forward() * 0.7
 	FX.burst(player.get_parent(), p, 0.3, Color(1.0, 0.85, 0.4, 0.8), 0.16)
@@ -458,6 +461,8 @@ func force_return_instant() -> void:
 		projectile.queue_free()
 	if not in_hand:
 		on_caught()
+	# Служебный возврат (смена зала, трейтов) — не поимка: перезарядки нет
+	reset_cooldown()
 
 # --- Трейты ---
 

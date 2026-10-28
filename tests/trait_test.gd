@@ -63,7 +63,7 @@ func _run() -> void:
 	p = game.player
 	hand = p.mjolnir
 	# Перезарядку броска проверяет catch_test; здесь броски подряд
-	hand.throw_cooldown = 0.0
+	hand.catch_cooldown = 0.0
 	game.room.set_physics_process(false)
 	await wait(1.0)
 	game.room._spawn_queue.clear()

@@ -247,9 +247,12 @@ func _test_hud() -> void:
 		await get_tree().physics_frame
 		t += 1
 	check(hud._hammer_state in ["stuck", "return"], "Мьёльнир воткнулся / возвращается: %s" % hud._hammer_state)
-	p.mjolnir.force_return_instant()
+	# Перезарядка начинается при поимке (П1): ловим по-настоящему, служебный возврат её не ставит
+	if p.mjolnir.projectile:
+		p.mjolnir.projectile.catch()
 	await wait(0.05)
-	check(hud._hammer_state == "cooldown" and hud._hammer_label.text.begins_with("ПЕРЕЗАРЯДКА"), "снова в руке, перезарядка броска: «%s»" % hud._hammer_label.text)
+	check(hud._hammer_state == "cooldown" and hud._hammer_label.text.begins_with("ПЕРЕЗАРЯДКА") and hud._rune_hammer.cooldown > 0.0,
+		"снова в руке, перезарядка броска — полоска у молота: «%s»" % hud._hammer_label.text)
 	p.mjolnir.reset_cooldown()
 	await wait(0.05)
 	check(hud._hammer_state == "hand", "перезарядка кончилась — «В РУКЕ»")
