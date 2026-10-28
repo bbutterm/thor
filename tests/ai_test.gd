@@ -18,34 +18,36 @@ func frames(n: int) -> void:
 
 func _run() -> void:
 	var fails := 0
-	for room in Run.ROOM_SCENES + [Run.BOSS_SCENE]:
-		Run.start_run("berserker")
-		Run.room_order.assign([room, Run.BOSS_SCENE])
-		get_tree().change_scene_to_file("res://scenes/game.tscn")
-		await frames(20)
-		var g := get_tree().current_scene as Game
-		var p := g.player
-		var hits := [0]
-		var dmg := [0.0]
-		p.hurt.connect(func(a: float) -> void:
-			hits[0] += 1
-			dmg[0] += a)
-		var projectiles := 0
-		for i in 60 * 15:
-			await get_tree().physics_frame
-			p.health = p.max_health
-			if i % 30 == 0:
-				for n in g.room.get_children():
-					if n.is_in_group("reflectable"):
-						projectiles += 1
-		var stuck := 0
-		for e in g.room.alive_enemies():
-			if e.kind != Enemy.Kind.THROWER and e.global_position.distance_to(p.global_position) > 6.0:
-				stuck += 1
-		var ok: bool = hits[0] > 0
-		print("[%s] %s: попаданий по игроку %d (урон %.0f за 15 с), снарядов в воздухе (сэмплы) %d, грунтов далеко от игрока %d" % ["OK" if ok else "FAIL", room.get_file(), hits[0], dmg[0], projectiles, stuck])
-		if not ok:
-			fails += 1
+	# Обе крайние дальности слуха: обычное тело и громкий Берсерк.
+	for body_id in ["hunter", "berserker"]:
+		for room in Run.ROOM_SCENES + [Run.BOSS_SCENE]:
+			Run.start_run(body_id)
+			Run.room_order.assign([room, Run.BOSS_SCENE])
+			get_tree().change_scene_to_file("res://scenes/game.tscn")
+			await frames(20)
+			var g := get_tree().current_scene as Game
+			var p := g.player
+			var hits := [0]
+			var dmg := [0.0]
+			p.hurt.connect(func(a: float) -> void:
+				hits[0] += 1
+				dmg[0] += a)
+			var projectiles := 0
+			for i in 60 * 15:
+				await get_tree().physics_frame
+				p.health = p.max_health
+				if i % 30 == 0:
+					for n in g.room.get_children():
+						if n.is_in_group("reflectable"):
+							projectiles += 1
+			var stuck := 0
+			for e in g.room.alive_enemies():
+				if e.kind != Enemy.Kind.THROWER and e.global_position.distance_to(p.global_position) > 6.0:
+					stuck += 1
+			var ok: bool = hits[0] > 0
+			print("[%s] %s / %s: попаданий по игроку %d (урон %.0f за 15 с), снарядов в воздухе (сэмплы) %d, грунтов далеко от игрока %d" % ["OK" if ok else "FAIL", body_id, room.get_file(), hits[0], dmg[0], projectiles, stuck])
+			if not ok:
+				fails += 1
 	# Враги Мидгарда (GDD 12.1) по одному в пустом зале: доходят и бьют / стреляют / взрываются;
 	# Шаман сам не бьёт — поднимает корм, и корм доходит и бьёт
 	for kind in ["fodder", "bloated", "shieldbearer", "merc", "shaman"]:
@@ -143,4 +145,5 @@ func _run() -> void:
 	if not sok:
 		fails += 1
 	FX.reset_time()
+	print("=== ИТОГ AI: %d FAIL ===" % fails)
 	get_tree().quit(1 if fails > 0 else 0)

@@ -29,6 +29,12 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export_range(0.0, 1.0) var knock_resist: float = 0.0
 @export var knock_decay: float = 5.0
 
+@export_group("Обнаружение")
+## Расстояние, на котором враг замечает обычного Тора (только по горизонтали).
+@export var notice_radius: float = 20.0
+## Если Тор далеко, враг всё равно включается в бой спустя это время: последний враг не запирает зал.
+@export var notice_fallback_time: float = 3.0
+
 @export_group("Атака")
 @export var attack_range: float = 2.0
 @export var attack_damage: float = 12.0
@@ -147,6 +153,11 @@ var is_dead: bool = false
 var state: State = State.SPAWNING
 var knockback_velocity: Vector3 = Vector3.ZERO
 var player: Player
+## Каждый враг запоминает обнаруженного игрока до смерти или смены игрока.
+var _notice_player_id: int = 0
+var _notice_pending: bool = false
+var _noticed_player: bool = false
+var _notice_wait: float = 0.0
 
 var _state_time: float = 0.0
 var _cooldown: float = 0.0
@@ -269,7 +280,8 @@ func _physics_process(delta: float) -> void:
 			if _state_time >= _spawn_time:
 				_set_state(State.CHASE)
 		State.CHASE:
-			move_dir = _think_chase()
+			if _notice_tick(delta):
+				move_dir = _think_chase()
 		State.WINDUP:
 			_face_player(delta * 0.5)
 			var wt := boss_slam_windup if _doing_slam else windup_time
@@ -321,6 +333,47 @@ func _update_animation(delta: float) -> void:
 				_humanoid.play(anim_idle, 0.25)
 
 # --- Мышление ---
+
+## Новая цель не наследует знание прошлой. Без живого игрока время поиска не идёт.
+func _sync_notice_player() -> bool:
+	var valid_player: Player = null
+	if is_instance_valid(player) and not player.is_dead:
+		valid_player = player
+	var player_id: int = valid_player.get_instance_id() if valid_player else 0
+	if player_id != _notice_player_id:
+		_notice_player_id = player_id
+		_notice_wait = 0.0
+		_noticed_player = _notice_pending and player_id != 0
+		if player_id != 0:
+			_notice_pending = false
+	return player_id != 0
+
+## Удар/толчок будит врага сразу; сигнал до назначения player не теряется.
+func alert_to_player() -> void:
+	if _sync_notice_player():
+		_noticed_player = true
+	else:
+		_notice_pending = true
+
+func is_alert_to_player() -> bool:
+	return _sync_notice_player() and (kind == Kind.BOSS or _noticed_player)
+
+func _notice_tick(delta: float) -> bool:
+	if not _sync_notice_player():
+		return false
+	if kind == Kind.BOSS or _noticed_player:
+		return true
+	var mult := maxf(0.0, float(player.modify_stat(&"enemy_notice_radius_mult", 1.0)))
+	var radius := maxf(0.0, notice_radius) * mult
+	var diff := player.global_position - global_position
+	# Слух не требует дополнительного луча через всю толпу и работает за стенами.
+	if diff.x * diff.x + diff.z * diff.z <= radius * radius:
+		_noticed_player = true
+	else:
+		_notice_wait += maxf(0.0, delta)
+		if _notice_wait >= maxf(0.0, notice_fallback_time):
+			_noticed_player = true
+	return _noticed_player
 
 func _think_chase() -> Vector3:
 	if player == null or player.is_dead:
@@ -414,6 +467,7 @@ func _face_player(delta: float) -> void:
 # --- Атаки ---
 
 func _begin_windup(slam: bool) -> void:
+	alert_to_player()  # Вручную начатая атака и её оставшаяся очередь уже видят цель.
 	Perf.mark("enemy_windup")
 	_doing_slam = slam
 	_set_state(State.WINDUP)
@@ -561,7 +615,7 @@ func _setup_special() -> void:
 func _update_special(delta: float) -> void:
 	match kind:
 		Kind.SHAMAN:
-			if state == State.CHASE:
+			if state == State.CHASE and is_alert_to_player():
 				_ritual_left -= delta
 		Kind.BLOATED:
 			if _visual:
@@ -785,6 +839,8 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	Perf.mark("enemy_hit")
 	if is_dead:
 		return
+	# Даже блок щитом или поглощение брони сообщает врагу о присутствии игрока.
+	alert_to_player()
 	if kind == Kind.SHIELD and damage < DEBUG_KILL_DAMAGE and _shield_blocks(knockback, source):
 		_on_blocked(knockback)
 		return
@@ -826,6 +882,8 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 func apply_knockback_only(knockback: Vector3) -> Vector3:
 	if is_dead:
 		return Vector3.ZERO
+	if knockback.length_squared() > 0.0001:
+		alert_to_player()
 	var k := knockback * (1.0 - knock_resist)
 	if k.length_squared() > 0.0001:
 		# Толчок без урона тоже может сбросить врага с уступа.
@@ -853,7 +911,10 @@ func stun(time: float) -> void:
 
 ## Оглушение оружием (дубина и т. п.). Элиту и босса — только сильным ударом (strong), босса — никогда.
 func apply_stun(time: float, strong: bool = false) -> void:
-	if is_dead or kind == Kind.BOSS or time <= 0.0 or ((has_meta("elite") or _tough) and not strong):
+	if is_dead or time <= 0.0:
+		return
+	alert_to_player()
+	if kind == Kind.BOSS or ((has_meta("elite") or _tough) and not strong):
 		return
 	if _telegraph and is_instance_valid(_telegraph):
 		_telegraph.queue_free()

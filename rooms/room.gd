@@ -183,6 +183,8 @@ func spawn_extra(kind: String, global_pos: Vector3) -> Enemy:
 		enemy.rotation.y = atan2(to.x, to.z) - global_rotation.y
 	add_child(enemy)
 	_register(enemy)
+	# Поднятый шаманом или призванный в ходе боя враг сразу подключается к бою.
+	enemy.alert_to_player()
 	return enemy
 
 func _spawn_enemy(marker: Node3D) -> void:

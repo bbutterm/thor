@@ -1,14 +1,19 @@
 extends BodyTraitHandler
 ## Изъян Берсерка: лечение −50 %, орёт (враги замечают издалека).
-## TODO: враги и так всегда знают, где Тор (радиуса обнаружения в enemy.gd нет) — пока «орёт» только звуком.
+## Более громкого Берсерка враги раньше замечают; после убийств он иногда действительно орёт.
 
 @export var heal_mult: float = 0.5
+## Радиус, на котором враги замечают шумного Берсерка, относительно обычного тела.
+@export var notice_radius_mult: float = 1.5
 ## Шанс заорать после убийства
 @export_range(0.0, 1.0) var shout_chance: float = 0.3
 
 func modify(stat: StringName, value: Variant) -> Variant:
-	if stat == &"heal_mult":
-		return float(value) * heal_mult
+	match stat:
+		&"heal_mult":
+			return float(value) * heal_mult
+		&"enemy_notice_radius_mult":
+			return float(value) * notice_radius_mult
 	return value
 
 func on_kill(p: Player, _source: String) -> void:
