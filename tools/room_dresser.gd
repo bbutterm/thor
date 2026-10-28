@@ -68,6 +68,29 @@ const SURFACES := {
 	"surface_ground": {"albedo_tex": MT + "dirt_straw.webp", "tint": Color(0.7, 0.62, 0.55), "uv_scale": 0.1, "detail_scale": 0.37,
 		"overlay_color": Color(0.24, 0.3, 0.14), "overlay_amount": 0.5, "overlay_scale": 0.03, "overlay_top": 0.0, "macro_scale": 0.012,
 		"macro_strength": 0.45, "grime_strength": 0.0},
+	# --- Вид Мидгарда «срез» (зал 10, 28.10; на все залы — Н1 29.10): крупнее пятна, меньше шума, тёплая палитра.
+	# Тот же шейдер — те же пайплайны; подменяют surface_* в генерируемых залах (GenRooms.SLICE_SURFACES).
+	# Ручные арены (длинный дом, погреб Свена) остаются на surface_*.
+	"slice_dirt": {"albedo_tex": MT + "dirt_straw.webp", "tint": Color(0.98, 0.89, 0.78), "uv_scale": 0.22,
+		"overlay_tex": QV + "T_UnevenBrick_BaseColor.png", "overlay_uv": 0.45, "overlay_color": Color(0.78, 0.74, 0.7),
+		"overlay_amount": 0.18, "overlay_scale": 0.045, "overlay_softness": 0.08, "overlay_top": 0.0, "macro_strength": 0.24, "grime_strength": 0.0},
+	"slice_plank": {"albedo_tex": MT + "wood_floor.webp", "tint": Color(0.95, 0.8, 0.65), "uv_scale": 0.25,
+		"overlay_color": Color(0.16, 0.12, 0.1), "overlay_amount": 0.13, "overlay_scale": 0.08, "overlay_top": 0.2, "macro_strength": 0.21},
+	"slice_rock": {"albedo_tex": QV + "T_RockTrim_BaseColor.png", "normal_tex": QV + "T_RockTrim_Normal.png", "normal_strength": 0.55,
+		"tint": Color(0.72, 0.66, 0.6), "uv_scale": 0.45, "overlay_color": Color(0.3, 0.35, 0.18), "overlay_amount": 0.18, "overlay_scale": 0.14,
+		"overlay_top": 0.8, "macro_strength": 0.2, "grime_height": 0.35},
+	"slice_wood": {"albedo_tex": QV + "T_WoodTrim_BaseColor.png", "normal_tex": QV + "T_WoodTrim_Normal.png", "normal_strength": 0.4,
+		"tint": Color(0.79, 0.62, 0.48), "uv_scale": 0.38, "overlay_color": Color(0.12, 0.1, 0.09), "overlay_amount": 0.13, "overlay_scale": 0.1,
+		"overlay_top": 0.0, "macro_strength": 0.22, "grime_height": 0.6},
+	"slice_floor_brick": {"albedo_tex": QV + "T_Brick_BaseColor.png", "normal_tex": QV + "T_Brick_Normal.png", "normal_strength": 0.45,
+		"tint": Color(0.8, 0.7, 0.6), "uv_scale": 0.26, "overlay_tex": MT + "dirt_straw.webp", "overlay_uv": 0.3,
+		"overlay_color": Color(0.86, 0.76, 0.64), "overlay_amount": 0.22, "overlay_scale": 0.045, "overlay_softness": 0.16,
+		"overlay_top": 0.0, "macro_strength": 0.22, "grime_strength": 0.0},
+	"slice_stone": {"albedo_tex": MT + "stone_wall.webp", "tint": Color(0.92, 0.86, 0.78), "uv_scale": 0.22,
+		"overlay_color": Color(0.33, 0.37, 0.2), "overlay_amount": 0.12, "overlay_scale": 0.08, "overlay_top": 0.45, "macro_strength": 0.21},
+	"slice_pillar": {"albedo_tex": QV + "T_UnevenBrick_BaseColor.png", "normal_tex": QV + "T_UnevenBrick_Normal.png", "normal_strength": 0.45,
+		"tint": Color(0.86, 0.78, 0.68), "uv_scale": 0.33, "overlay_color": Color(0.33, 0.37, 0.2), "overlay_amount": 0.1, "overlay_scale": 0.1,
+		"overlay_top": 0.4, "macro_strength": 0.18},
 }
 
 ## Декали на пол (assets/decals/): ключ → [вес, мин. размер, макс. размер]

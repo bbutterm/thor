@@ -1,100 +1,87 @@
 [gd_scene format=4]
 
-[ext_resource type="Script" path="res://rooms/room.gd" id="1_h7hai"]
-[ext_resource type="PackedScene" path="res://assets/quaternius/village/Wall_UnevenBrick_Straight.gltf" id="2_5kp86"]
-[ext_resource type="Material" path="res://rooms/materials/surface_floor_brick.tres" id="3_d0kft"]
-[ext_resource type="Material" path="res://rooms/materials/surface_stone.tres" id="4_nnyu1"]
-[ext_resource type="Script" path="res://rooms/balcony.gd" id="5_buhw1"]
-[ext_resource type="Material" path="res://rooms/materials/surface_plank.tres" id="6_geol0"]
-[ext_resource type="Material" path="res://rooms/materials/woodtrim.tres" id="7_ogsha"]
-[ext_resource type="Script" path="res://rooms/dress_scatter.gd" id="8_u435m"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/beam.res" id="9_5022y"]
-[ext_resource type="Material" path="res://rooms/materials/surface_pillar.tres" id="10_s05jj"]
-[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_WoodTrim_BaseColor.png" id="11_ldkl3"]
-[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_WoodTrim_Normal.png" id="12_l87mj"]
-[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_WoodTrim_Roughness.png" id="13_gvt3v"]
-[ext_resource type="PackedScene" path="res://props/barrel.tscn" id="14_p5q5q"]
-[ext_resource type="Script" path="res://props/destructible.gd" id="15_owja3"]
-[ext_resource type="PackedScene" path="res://props/crate.tscn" id="16_opsan"]
-[ext_resource type="PackedScene" path="res://assets/quaternius/props/Torch_Metal.gltf" id="17_d01fm"]
-[ext_resource type="Script" path="res://rooms/wall_decor.gd" id="18_rfht8"]
-[ext_resource type="Script" path="res://rooms/floor_decal.gd" id="19_o11gi"]
-[ext_resource type="Material" path="res://rooms/materials/rocktrim.tres" id="20_4hnrg"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/kerb_1.res" id="21_80lxu"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/kerb_2.res" id="22_it5rq"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/pilaster.res" id="23_85djy"]
-[ext_resource type="Material" path="res://rooms/materials/surface_rock.tres" id="24_mwwdj"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/rock_3.res" id="25_6fugi"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/brick_4.res" id="26_32yyi"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/brick_1.res" id="27_wudyh"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/brick_3.res" id="28_b468w"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/rock_1.res" id="29_fqftu"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/brick_2.res" id="30_n1sv5"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/rock_4.res" id="31_86mk2"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/rock_5.res" id="32_0m04e"]
-[ext_resource type="Material" path="res://rooms/materials/surface_wood.tres" id="33_x8oqm"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/log.res" id="34_mlk3l"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/post.res" id="35_hlqx7"]
-[ext_resource type="ArrayMesh" path="res://rooms/meshes/rock_2.res" id="36_jh611"]
-[ext_resource type="Material" path="res://rooms/materials/surface_ground.tres" id="37_p23bt"]
-[ext_resource type="PackedScene" path="res://rooms/backdrop_midgard.tscn" id="38_puj16"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_qcvnc"]
-size = Vector3(32, 1, 24)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_cfnti"]
-size = Vector3(13, 24, 1)
+[ext_resource type="Script" path="res://rooms/room.gd" id="1_5kp86"]
+[ext_resource type="Resource" path="res://run/maps/midgard_slice.tres" id="2_d0kft"]
+[ext_resource type="PackedScene" path="res://assets/quaternius/village/Wall_UnevenBrick_Straight.gltf" id="3_nnyu1"]
+[ext_resource type="Material" path="res://rooms/materials/slice_floor_brick.tres" id="4_buhw1"]
+[ext_resource type="Material" path="res://rooms/materials/slice_stone.tres" id="5_geol0"]
+[ext_resource type="Script" path="res://rooms/balcony.gd" id="6_ogsha"]
+[ext_resource type="Material" path="res://rooms/materials/slice_plank.tres" id="7_u435m"]
+[ext_resource type="Material" path="res://rooms/materials/woodtrim.tres" id="8_5022y"]
+[ext_resource type="Script" path="res://rooms/dress_scatter.gd" id="9_s05jj"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/beam.res" id="10_ldkl3"]
+[ext_resource type="Material" path="res://rooms/materials/slice_pillar.tres" id="11_l87mj"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_WoodTrim_BaseColor.png" id="12_gvt3v"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_WoodTrim_Normal.png" id="13_p5q5q"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_WoodTrim_Roughness.png" id="14_owja3"]
+[ext_resource type="PackedScene" path="res://props/barrel.tscn" id="15_opsan"]
+[ext_resource type="Script" path="res://props/destructible.gd" id="16_d01fm"]
+[ext_resource type="PackedScene" path="res://props/crate.tscn" id="17_rfht8"]
+[ext_resource type="PackedScene" path="res://assets/quaternius/props/Torch_Metal.gltf" id="18_o11gi"]
+[ext_resource type="Script" path="res://rooms/wall_decor.gd" id="19_4hnrg"]
+[ext_resource type="Script" path="res://rooms/floor_decal.gd" id="20_80lxu"]
+[ext_resource type="Material" path="res://rooms/materials/rocktrim.tres" id="21_it5rq"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/kerb_1.res" id="22_85djy"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/kerb_2.res" id="23_mwwdj"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/pilaster.res" id="24_6fugi"]
+[ext_resource type="Material" path="res://rooms/materials/slice_rock.tres" id="25_32yyi"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/rock_3.res" id="26_wudyh"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/brick_4.res" id="27_b468w"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/brick_1.res" id="28_fqftu"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/brick_3.res" id="29_n1sv5"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/rock_1.res" id="30_86mk2"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/brick_2.res" id="31_0m04e"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/rock_4.res" id="32_x8oqm"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/rock_5.res" id="33_mlk3l"]
+[ext_resource type="Material" path="res://rooms/materials/slice_wood.tres" id="34_hlqx7"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/log.res" id="35_jh611"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/post.res" id="36_p23bt"]
+[ext_resource type="ArrayMesh" path="res://rooms/meshes/rock_2.res" id="37_puj16"]
+[ext_resource type="Material" path="res://rooms/materials/surface_ground.tres" id="38_qcvnc"]
+[ext_resource type="PackedScene" path="res://rooms/backdrop_midgard.tscn" id="39_cfnti"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_noph7"]
-size = Vector3(13, 24, 1)
+size = Vector3(32, 1, 24)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_yfk7t"]
-size = Vector3(32, 24, 1)
+size = Vector3(13, 24, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_q0qtm"]
-size = Vector3(1, 24, 24)
+size = Vector3(13, 24, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ha7fo"]
-size = Vector3(1, 24, 24)
+size = Vector3(32, 24, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_6t3fi"]
-size = Vector3(6, 1, 5)
+size = Vector3(1, 24, 24)
 
-[sub_resource type="BoxMesh" id="BoxMesh_buucv"]
-size = Vector3(6, 1, 5)
+[sub_resource type="BoxShape3D" id="BoxShape3D_buucv"]
+size = Vector3(1, 24, 24)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ah7fx"]
-size = Vector3(1, 6, 5)
+size = Vector3(6, 1, 5)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_fkbri"]
-size = Vector3(1, 6, 5)
+[sub_resource type="BoxMesh" id="BoxMesh_fkbri"]
+size = Vector3(6, 1, 5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_vuwux"]
+size = Vector3(1, 6, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_erhpq"]
+size = Vector3(1, 6, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vg5eg"]
 size = Vector3(6, 6, 1)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yam4e"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nncso"]
 albedo_color = Color(0.45, 0.8, 1, 1)
 roughness = 0.3
 emission_enabled = true
 emission = Color(0.45, 0.8, 1, 1)
 emission_energy_multiplier = 2.5
 
-[sub_resource type="BoxMesh" id="BoxMesh_erhpq"]
+[sub_resource type="BoxMesh" id="BoxMesh_eal30"]
 size = Vector3(2.6, 3.6, 0.1)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_vg5eg"]
-size = Vector3(9, 2, 22)
-
-[sub_resource type="ArrayMesh" id="ArrayMesh_eal30"]
-_surfaces = [{
-"aabb": AABB(-4.5, -1, -11, 9, 2, 22),
-"attribute_data": PackedByteArray("//////YodMEAAIA//////wAA0MAAAIA///////YodEEAAIA///////YodMEAAIA///////YodEEAAIA//////wAA0EAAAIA/jIyM//YozMAAAIC/jIyM/3sUdkEAAIC/29vb/3sUdkHNzMy+jIyM//YozMAAAIC/29vb/3sUdkHNzMy+29vb//YozMDNzMy+29vb//YozMDNzMy+29vb/3sUdkHNzMy+/////3sUdkGuR2E/29vb//YozMDNzMy+/////3sUdkGuR2E///////YozMCuR2E///////YozMCuR2E//////3sUdkGuR2E///////YodEEAAIA///////YozMCuR2E///////YodEEAAIA//////wAA0MAAAIA/jIyM//YozEAAAIC/jIyM/3sUdsEAAIC/29vb/3sUdsHNzMy+jIyM//YozEAAAIC/29vb/3sUdsHNzMy+29vb//YozEDNzMy+29vb//YozEDNzMy+29vb/3sUdsHNzMy+/////3sUdsGuR2E/29vb//YozEDNzMy+/////3sUdsGuR2E///////YozECuR2E///////YozECuR2E//////3sUdsGuR2E///////YodMEAAIA///////YozECuR2E///////YodMEAAIA//////wAA0EAAAIA/jIyM/3sUdkEAAIC/jIyM/wrX00AAAIC/29vb/wrX00DNzMy+jIyM/3sUdkEAAIC/29vb/wrX00DNzMy+29vb/3sUdkHNzMy+29vb/3sUdkHNzMy+29vb/wrX00DNzMy+/////wrX00CuR2E/29vb/3sUdkHNzMy+/////wrX00CuR2E//////3sUdkGuR2E//////3sUdkGuR2E//////wrX00CuR2E//////wAA0EAAAIA//////3sUdkGuR2E//////wAA0EAAAIA///////YodEEAAIA/jIyM/3sUdsEAAIC/jIyM/wrX08AAAIC/29vb/wrX08DNzMy+jIyM/3sUdsEAAIC/29vb/wrX08DNzMy+29vb/3sUdsHNzMy+29vb/3sUdsHNzMy+29vb/wrX08DNzMy+/////wrX08CuR2E/29vb/3sUdsHNzMy+/////wrX08CuR2E//////3sUdsGuR2E//////3sUdsGuR2E//////wrX08CuR2E//////wAA0MAAAIA//////3sUdsGuR2E//////wAA0MAAAIA///////YodMEAAIA/jIyM/3sUdsEAAIC/jIyM/3sUdsEAAIC/29vb/3sUdsHNzMy+jIyM/3sUdsEAAIC/29vb/3sUdsHNzMy+29vb/3sUdsHNzMy+29vb/3sUdsHNzMy+29vb/3sUdsHNzMy+/////3sUdsGuR2E/29vb/3sUdsHNzMy+/////3sUdsGuR2E//////3sUdsGuR2E//////3sUdsGuR2E//////3sUdsGuR2E///////YodMEAAIA/jIyM//YozEAAAIC/29vb/wrX00DNzMy+jIyM/wrX00AAAIC/jIyM//YozEAAAIC/29vb//YozEDNzMy+29vb/wrX00DNzMy+29vb//YozEDNzMy+/////wrX00CuR2E/29vb/wrX00DNzMy+29vb//YozEDNzMy+//////YozECuR2E//////wrX00CuR2E///////YozECuR2E//////wAA0EAAAIA//////wrX00CuR2E/jIyM//YozMAAAIC/29vb/wrX08DNzMy+jIyM/wrX08AAAIC/jIyM//YozMAAAIC/29vb//YozMDNzMy+29vb/wrX08DNzMy+29vb//YozMDNzMy+/////wrX08CuR2E/29vb/wrX08DNzMy+29vb//YozMDNzMy+//////YozMCuR2E//////wrX08CuR2E///////YozMCuR2E//////wAA0MAAAIA//////wrX08CuR2E/jIyM/3sUdkEAAIC/jIyM/3sUdkEAAIC/29vb/3sUdkHNzMy+jIyM/3sUdkEAAIC/29vb/3sUdkHNzMy+29vb/3sUdkHNzMy+29vb/3sUdkHNzMy+29vb/3sUdkHNzMy+/////3sUdkGuR2E/29vb/3sUdkHNzMy+/////3sUdkGuR2E//////3sUdkGuR2E//////3sUdkGuR2E//////3sUdkGuR2E///////YodEEAAIA/jIyM/wAAeMEAAIC/jIyM/wAAeEEAAIC/jIyM/wAA0MAAAIC/jIyM/wAAeMEAAIC/jIyM/wAA0EAAAIC/jIyM/wAAeEEAAIC/"),
-"format": 34359738399,
-"primitive": 3,
-"uv_scale": Vector4(0, 0, 0, 0),
-"vertex_count": 144,
-"vertex_data": PackedByteArray("9iiMwAAAgD97FC7B9iiMQAAAgD97FC7B9iiMQAAAgD97FC5B9iiMwAAAgD97FC7B9iiMQAAAgD97FC5B9iiMwAAAgD97FC5BAACQQAAAgL97FC7BAACQQAAAgL97FC5BAACQQM3MzL57FC5BAACQQAAAgL97FC7BAACQQM3MzL57FC5BAACQQM3MzL57FC7BAACQQM3MzL57FC7BAACQQM3MzL57FC5BAACQQK5HYT97FC5BAACQQM3MzL57FC7BAACQQK5HYT97FC5BAACQQK5HYT97FC7BAACQQK5HYT97FC7BAACQQK5HYT97FC5B9iiMQAAAgD97FC5BAACQQK5HYT97FC7B9iiMQAAAgD97FC5B9iiMQAAAgD97FC7BAACQwAAAgL97FC5BAACQwAAAgL97FC7BAACQwM3MzL57FC7BAACQwAAAgL97FC5BAACQwM3MzL57FC7BAACQwM3MzL57FC5BAACQwM3MzL57FC5BAACQwM3MzL57FC7BAACQwK5HYT97FC7BAACQwM3MzL57FC5BAACQwK5HYT97FC7BAACQwK5HYT97FC5BAACQwK5HYT97FC5BAACQwK5HYT97FC7B9iiMwAAAgD97FC7BAACQwK5HYT97FC5B9iiMwAAAgD97FC7B9iiMwAAAgD97FC5B9iiMQAAAgL8AADBB9iiMwAAAgL8AADBB9iiMwM3MzL4AADBB9iiMQAAAgL8AADBB9iiMwM3MzL4AADBB9iiMQM3MzL4AADBB9iiMQM3MzL4AADBB9iiMwM3MzL4AADBB9iiMwK5HYT8AADBB9iiMQM3MzL4AADBB9iiMwK5HYT8AADBB9iiMQK5HYT8AADBB9iiMQK5HYT8AADBB9iiMwK5HYT8AADBB9iiMwAAAgD97FC5B9iiMQK5HYT8AADBB9iiMwAAAgD97FC5B9iiMQAAAgD97FC5B9iiMwAAAgL8AADDB9iiMQAAAgL8AADDB9iiMQM3MzL4AADDB9iiMwAAAgL8AADDB9iiMQM3MzL4AADDB9iiMwM3MzL4AADDB9iiMwM3MzL4AADDB9iiMQM3MzL4AADDB9iiMQK5HYT8AADDB9iiMwM3MzL4AADDB9iiMQK5HYT8AADDB9iiMwK5HYT8AADDB9iiMwK5HYT8AADDB9iiMQK5HYT8AADDB9iiMQAAAgD97FC7B9iiMwK5HYT8AADDB9iiMQAAAgD97FC7B9iiMwAAAgD97FC7BAACQwAAAgL97FC7B9iiMwAAAgL8AADDB9iiMwM3MzL4AADDBAACQwAAAgL97FC7B9iiMwM3MzL4AADDBAACQwM3MzL57FC7BAACQwM3MzL57FC7B9iiMwM3MzL4AADDB9iiMwK5HYT8AADDBAACQwM3MzL57FC7B9iiMwK5HYT8AADDBAACQwK5HYT97FC7BAACQwK5HYT97FC7B9iiMwK5HYT8AADDB9iiMwAAAgD97FC7BAACQwAAAgL97FC5B9iiMwM3MzL4AADBB9iiMwAAAgL8AADBBAACQwAAAgL97FC5BAACQwM3MzL57FC5B9iiMwM3MzL4AADBBAACQwM3MzL57FC5B9iiMwK5HYT8AADBB9iiMwM3MzL4AADBBAACQwM3MzL57FC5BAACQwK5HYT97FC5B9iiMwK5HYT8AADBBAACQwK5HYT97FC5B9iiMwAAAgD97FC5B9iiMwK5HYT8AADBBAACQQAAAgL97FC7B9iiMQM3MzL4AADDB9iiMQAAAgL8AADDBAACQQAAAgL97FC7BAACQQM3MzL57FC7B9iiMQM3MzL4AADDBAACQQM3MzL57FC7B9iiMQK5HYT8AADDB9iiMQM3MzL4AADDBAACQQM3MzL57FC7BAACQQK5HYT97FC7B9iiMQK5HYT8AADDBAACQQK5HYT97FC7B9iiMQAAAgD97FC7B9iiMQK5HYT8AADDBAACQQAAAgL97FC5B9iiMQAAAgL8AADBB9iiMQM3MzL4AADBBAACQQAAAgL97FC5B9iiMQM3MzL4AADBBAACQQM3MzL57FC5BAACQQM3MzL57FC5B9iiMQM3MzL4AADBB9iiMQK5HYT8AADBBAACQQM3MzL57FC5B9iiMQK5HYT8AADBBAACQQK5HYT97FC5BAACQQK5HYT97FC5B9iiMQK5HYT8AADBB9iiMQAAAgD97FC5BAACQwAAAgL8AADDBAACQQAAAgL8AADBBAACQQAAAgL8AADDBAACQwAAAgL8AADDBAACQwAAAgL8AADBBAACQQAAAgL8AADBB/3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+/////f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+//7//v1RVVNX/v/+/VFVU1f+//79UVVTV/7//v1RVVNX/v/+/VFVU1f+//79UVVTVAAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+//z//v1RVqar/P/+/VFWpqv8//79UVamq/z//v1RVqar/P/+/VFWpqv8//79UVamq/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//v1RVqar/f/+/VFWpqv9//79UVamq/3//v1RVqar/f/+/VFWpqv9//79UVamq//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA/7///6oqVJX/v///qipUlf+///+qKlSV/7///6oqVJX/v///qipUlf+///+qKlSVAAD/v1RVqaoAAP+/VFWpqgAA/79UVamqAAD/v1RVqaoAAP+/VFWpqgAA/79UVamqAAD/v1RVqaoAAP+/VFWpqgAA/79UVamqAAD/v1RVqaoAAP+/VFWpqgAA/79UVamqBDWB2gQ18KAENYHaBDXwoAQ1gdoENfCg/z//f6qqqar/P/9/qqqpqv8//3+qqqmq/z//f6qqqar/P/9/qqqpqv8//3+qqqmq/z//f6qqqar/P/9/qqqpqv8//3+qqqmq/z//f6qqqar/P/9/qqqpqv8//3+qqqmqgloEtQlqfKWCWgS1CWp8pYJaBLUJanyl////v6qqqar///+/qqqpqv///7+qqqmq////v6qqqar///+/qqqpqv///7+qqqmq////v6qqqar///+/qqqpqv///7+qqqmq////v6qqqar///+/qqqpqv///7+qqqmq+sqB2v8c/tz6yoHa/xz+3PrKgdr/HP7c/7//f1RVqar/v/9/VFWpqv+//39UVamq/7//f1RVqar/v/9/VFWpqv+//39UVamq/7//f1RVqar/v/9/VFWpqv+//39UVamq/7//f1RVqar/v/9/VFWpqv+//39UVamqfKUEtR0+i8R8pQS1HT6LxHylBLUdPovE/38AAAAA/7//fwAAAAD/v/9/AAAAAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+/")
-}]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_dmabn"]
 size = Vector3(9, 2, 22)
@@ -111,122 +98,124 @@ _surfaces = [{
 }]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ktfld"]
+size = Vector3(9, 2, 22)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_1sf10"]
+_surfaces = [{
+"aabb": AABB(-4.5, -1, -11, 9, 2, 22),
+"attribute_data": PackedByteArray("//////YodMEAAIA//////wAA0MAAAIA///////YodEEAAIA///////YodMEAAIA///////YodEEAAIA//////wAA0EAAAIA/jIyM//YozMAAAIC/jIyM/3sUdkEAAIC/29vb/3sUdkHNzMy+jIyM//YozMAAAIC/29vb/3sUdkHNzMy+29vb//YozMDNzMy+29vb//YozMDNzMy+29vb/3sUdkHNzMy+/////3sUdkGuR2E/29vb//YozMDNzMy+/////3sUdkGuR2E///////YozMCuR2E///////YozMCuR2E//////3sUdkGuR2E///////YodEEAAIA///////YozMCuR2E///////YodEEAAIA//////wAA0MAAAIA/jIyM//YozEAAAIC/jIyM/3sUdsEAAIC/29vb/3sUdsHNzMy+jIyM//YozEAAAIC/29vb/3sUdsHNzMy+29vb//YozEDNzMy+29vb//YozEDNzMy+29vb/3sUdsHNzMy+/////3sUdsGuR2E/29vb//YozEDNzMy+/////3sUdsGuR2E///////YozECuR2E///////YozECuR2E//////3sUdsGuR2E///////YodMEAAIA///////YozECuR2E///////YodMEAAIA//////wAA0EAAAIA/jIyM/3sUdkEAAIC/jIyM/wrX00AAAIC/29vb/wrX00DNzMy+jIyM/3sUdkEAAIC/29vb/wrX00DNzMy+29vb/3sUdkHNzMy+29vb/3sUdkHNzMy+29vb/wrX00DNzMy+/////wrX00CuR2E/29vb/3sUdkHNzMy+/////wrX00CuR2E//////3sUdkGuR2E//////3sUdkGuR2E//////wrX00CuR2E//////wAA0EAAAIA//////3sUdkGuR2E//////wAA0EAAAIA///////YodEEAAIA/jIyM/3sUdsEAAIC/jIyM/wrX08AAAIC/29vb/wrX08DNzMy+jIyM/3sUdsEAAIC/29vb/wrX08DNzMy+29vb/3sUdsHNzMy+29vb/3sUdsHNzMy+29vb/wrX08DNzMy+/////wrX08CuR2E/29vb/3sUdsHNzMy+/////wrX08CuR2E//////3sUdsGuR2E//////3sUdsGuR2E//////wrX08CuR2E//////wAA0MAAAIA//////3sUdsGuR2E//////wAA0MAAAIA///////YodMEAAIA/jIyM/3sUdsEAAIC/jIyM/3sUdsEAAIC/29vb/3sUdsHNzMy+jIyM/3sUdsEAAIC/29vb/3sUdsHNzMy+29vb/3sUdsHNzMy+29vb/3sUdsHNzMy+29vb/3sUdsHNzMy+/////3sUdsGuR2E/29vb/3sUdsHNzMy+/////3sUdsGuR2E//////3sUdsGuR2E//////3sUdsGuR2E//////3sUdsGuR2E///////YodMEAAIA/jIyM//YozEAAAIC/29vb/wrX00DNzMy+jIyM/wrX00AAAIC/jIyM//YozEAAAIC/29vb//YozEDNzMy+29vb/wrX00DNzMy+29vb//YozEDNzMy+/////wrX00CuR2E/29vb/wrX00DNzMy+29vb//YozEDNzMy+//////YozECuR2E//////wrX00CuR2E///////YozECuR2E//////wAA0EAAAIA//////wrX00CuR2E/jIyM//YozMAAAIC/29vb/wrX08DNzMy+jIyM/wrX08AAAIC/jIyM//YozMAAAIC/29vb//YozMDNzMy+29vb/wrX08DNzMy+29vb//YozMDNzMy+/////wrX08CuR2E/29vb/wrX08DNzMy+29vb//YozMDNzMy+//////YozMCuR2E//////wrX08CuR2E///////YozMCuR2E//////wAA0MAAAIA//////wrX08CuR2E/jIyM/3sUdkEAAIC/jIyM/3sUdkEAAIC/29vb/3sUdkHNzMy+jIyM/3sUdkEAAIC/29vb/3sUdkHNzMy+29vb/3sUdkHNzMy+29vb/3sUdkHNzMy+29vb/3sUdkHNzMy+/////3sUdkGuR2E/29vb/3sUdkHNzMy+/////3sUdkGuR2E//////3sUdkGuR2E//////3sUdkGuR2E//////3sUdkGuR2E///////YodEEAAIA/jIyM/wAAeMEAAIC/jIyM/wAAeEEAAIC/jIyM/wAA0MAAAIC/jIyM/wAAeMEAAIC/jIyM/wAA0EAAAIC/jIyM/wAAeEEAAIC/"),
+"format": 34359738399,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 144,
+"vertex_data": PackedByteArray("9iiMwAAAgD97FC7B9iiMQAAAgD97FC7B9iiMQAAAgD97FC5B9iiMwAAAgD97FC7B9iiMQAAAgD97FC5B9iiMwAAAgD97FC5BAACQQAAAgL97FC7BAACQQAAAgL97FC5BAACQQM3MzL57FC5BAACQQAAAgL97FC7BAACQQM3MzL57FC5BAACQQM3MzL57FC7BAACQQM3MzL57FC7BAACQQM3MzL57FC5BAACQQK5HYT97FC5BAACQQM3MzL57FC7BAACQQK5HYT97FC5BAACQQK5HYT97FC7BAACQQK5HYT97FC7BAACQQK5HYT97FC5B9iiMQAAAgD97FC5BAACQQK5HYT97FC7B9iiMQAAAgD97FC5B9iiMQAAAgD97FC7BAACQwAAAgL97FC5BAACQwAAAgL97FC7BAACQwM3MzL57FC7BAACQwAAAgL97FC5BAACQwM3MzL57FC7BAACQwM3MzL57FC5BAACQwM3MzL57FC5BAACQwM3MzL57FC7BAACQwK5HYT97FC7BAACQwM3MzL57FC5BAACQwK5HYT97FC7BAACQwK5HYT97FC5BAACQwK5HYT97FC5BAACQwK5HYT97FC7B9iiMwAAAgD97FC7BAACQwK5HYT97FC5B9iiMwAAAgD97FC7B9iiMwAAAgD97FC5B9iiMQAAAgL8AADBB9iiMwAAAgL8AADBB9iiMwM3MzL4AADBB9iiMQAAAgL8AADBB9iiMwM3MzL4AADBB9iiMQM3MzL4AADBB9iiMQM3MzL4AADBB9iiMwM3MzL4AADBB9iiMwK5HYT8AADBB9iiMQM3MzL4AADBB9iiMwK5HYT8AADBB9iiMQK5HYT8AADBB9iiMQK5HYT8AADBB9iiMwK5HYT8AADBB9iiMwAAAgD97FC5B9iiMQK5HYT8AADBB9iiMwAAAgD97FC5B9iiMQAAAgD97FC5B9iiMwAAAgL8AADDB9iiMQAAAgL8AADDB9iiMQM3MzL4AADDB9iiMwAAAgL8AADDB9iiMQM3MzL4AADDB9iiMwM3MzL4AADDB9iiMwM3MzL4AADDB9iiMQM3MzL4AADDB9iiMQK5HYT8AADDB9iiMwM3MzL4AADDB9iiMQK5HYT8AADDB9iiMwK5HYT8AADDB9iiMwK5HYT8AADDB9iiMQK5HYT8AADDB9iiMQAAAgD97FC7B9iiMwK5HYT8AADDB9iiMQAAAgD97FC7B9iiMwAAAgD97FC7BAACQwAAAgL97FC7B9iiMwAAAgL8AADDB9iiMwM3MzL4AADDBAACQwAAAgL97FC7B9iiMwM3MzL4AADDBAACQwM3MzL57FC7BAACQwM3MzL57FC7B9iiMwM3MzL4AADDB9iiMwK5HYT8AADDBAACQwM3MzL57FC7B9iiMwK5HYT8AADDBAACQwK5HYT97FC7BAACQwK5HYT97FC7B9iiMwK5HYT8AADDB9iiMwAAAgD97FC7BAACQwAAAgL97FC5B9iiMwM3MzL4AADBB9iiMwAAAgL8AADBBAACQwAAAgL97FC5BAACQwM3MzL57FC5B9iiMwM3MzL4AADBBAACQwM3MzL57FC5B9iiMwK5HYT8AADBB9iiMwM3MzL4AADBBAACQwM3MzL57FC5BAACQwK5HYT97FC5B9iiMwK5HYT8AADBBAACQwK5HYT97FC5B9iiMwAAAgD97FC5B9iiMwK5HYT8AADBBAACQQAAAgL97FC7B9iiMQM3MzL4AADDB9iiMQAAAgL8AADDBAACQQAAAgL97FC7BAACQQM3MzL57FC7B9iiMQM3MzL4AADDBAACQQM3MzL57FC7B9iiMQK5HYT8AADDB9iiMQM3MzL4AADDBAACQQM3MzL57FC7BAACQQK5HYT97FC7B9iiMQK5HYT8AADDBAACQQK5HYT97FC7B9iiMQAAAgD97FC7B9iiMQK5HYT8AADDBAACQQAAAgL97FC5B9iiMQAAAgL8AADBB9iiMQM3MzL4AADBBAACQQAAAgL97FC5B9iiMQM3MzL4AADBBAACQQM3MzL57FC5BAACQQM3MzL57FC5B9iiMQM3MzL4AADBB9iiMQK5HYT8AADBBAACQQM3MzL57FC5B9iiMQK5HYT8AADBBAACQQK5HYT97FC5BAACQQK5HYT97FC5B9iiMQK5HYT8AADBB9iiMQAAAgD97FC5BAACQwAAAgL8AADDBAACQQAAAgL8AADBBAACQQAAAgL8AADDBAACQwAAAgL8AADDBAACQwAAAgL8AADBBAACQQAAAgL8AADBB/3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+/////f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+//7//v1RVVNX/v/+/VFVU1f+//79UVVTV/7//v1RVVNX/v/+/VFVU1f+//79UVVTVAAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+//z//v1RVqar/P/+/VFWpqv8//79UVamq/z//v1RVqar/P/+/VFWpqv8//79UVamq/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//v1RVqar/f/+/VFWpqv9//79UVamq/3//v1RVqar/f/+/VFWpqv9//79UVamq//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA/7///6oqVJX/v///qipUlf+///+qKlSV/7///6oqVJX/v///qipUlf+///+qKlSVAAD/v1RVqaoAAP+/VFWpqgAA/79UVamqAAD/v1RVqaoAAP+/VFWpqgAA/79UVamqAAD/v1RVqaoAAP+/VFWpqgAA/79UVamqAAD/v1RVqaoAAP+/VFWpqgAA/79UVamqBDWB2gQ18KAENYHaBDXwoAQ1gdoENfCg/z//f6qqqar/P/9/qqqpqv8//3+qqqmq/z//f6qqqar/P/9/qqqpqv8//3+qqqmq/z//f6qqqar/P/9/qqqpqv8//3+qqqmq/z//f6qqqar/P/9/qqqpqv8//3+qqqmqgloEtQlqfKWCWgS1CWp8pYJaBLUJanyl////v6qqqar///+/qqqpqv///7+qqqmq////v6qqqar///+/qqqpqv///7+qqqmq////v6qqqar///+/qqqpqv///7+qqqmq////v6qqqar///+/qqqpqv///7+qqqmq+sqB2v8c/tz6yoHa/xz+3PrKgdr/HP7c/7//f1RVqar/v/9/VFWpqv+//39UVamq/7//f1RVqar/v/9/VFWpqv+//39UVamq/7//f1RVqar/v/9/VFWpqv+//39UVamq/7//f1RVqar/v/9/VFWpqv+//39UVamqfKUEtR0+i8R8pQS1HT6LxHylBLUdPovE/38AAAAA/7//fwAAAAD/v/9/AAAAAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+/")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4r6ww"]
 size = Vector3(12, 0.5, 2.5)
 
-[sub_resource type="BoxMesh" id="BoxMesh_1sf10"]
+[sub_resource type="BoxMesh" id="BoxMesh_cisdx"]
 size = Vector3(12, 0.5, 2.5)
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_4r6ww"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_4jcnm"]
 height = 6.0
 radius = 0.8
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_cisdx"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_24uh3"]
 top_radius = 0.8
 bottom_radius = 0.8
 height = 6.0
-radial_segments = 12
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_4jcnm"]
-height = 0.5
-radius = 1.05
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_24uh3"]
-top_radius = 1.05
-bottom_radius = 1.05
-height = 0.5
 radial_segments = 12
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1d743"]
-height = 0.4
-radius = 1.0
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_jpm5o"]
-top_radius = 1.0
-bottom_radius = 1.0
-height = 0.4
-radial_segments = 12
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_voml8"]
-height = 6.0
-radius = 0.8
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_2xxhq"]
-top_radius = 0.8
-bottom_radius = 0.8
-height = 6.0
-radial_segments = 12
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_7mfav"]
 height = 0.5
 radius = 1.05
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_hrcc3"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_jpm5o"]
 top_radius = 1.05
 bottom_radius = 1.05
 height = 0.5
 radial_segments = 12
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_c4bcg"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_voml8"]
 height = 0.4
 radius = 1.0
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_555u8"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_2xxhq"]
 top_radius = 1.0
 bottom_radius = 1.0
 height = 0.4
 radial_segments = 12
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_04e1c"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_7mfav"]
+height = 6.0
+radius = 0.8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_hrcc3"]
+top_radius = 0.8
+bottom_radius = 0.8
+height = 6.0
+radial_segments = 12
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_c4bcg"]
+height = 0.5
+radius = 1.05
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_555u8"]
+top_radius = 1.05
+bottom_radius = 1.05
+height = 0.5
+radial_segments = 12
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_04e1c"]
+height = 0.4
+radius = 1.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_t3t2m"]
+top_radius = 1.0
+bottom_radius = 1.0
+height = 0.4
+radial_segments = 12
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sswig"]
 size = Vector3(4, 6, 0.6)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4m0ne"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n71oh"]
 albedo_color = Color(0.55, 0.32, 0.25, 1)
-albedo_texture = ExtResource("11_ldkl3")
+albedo_texture = ExtResource("12_gvt3v")
 roughness = 0.9
-roughness_texture = ExtResource("13_gvt3v")
+roughness_texture = ExtResource("14_owja3")
 normal_enabled = true
-normal_texture = ExtResource("12_l87mj")
+normal_texture = ExtResource("13_p5q5q")
 uv1_scale = Vector3(0.6, 0.6, 0.6)
 uv1_triplanar = true
 uv1_world_triplanar = true
 
-[sub_resource type="BoxMesh" id="BoxMesh_t3t2m"]
+[sub_resource type="BoxMesh" id="BoxMesh_bxjmm"]
 size = Vector3(4, 6, 0.6)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cpw6m"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fu1b7"]
 albedo_color = Color(1, 0.45, 0.2, 1)
 roughness = 0.5
 emission_enabled = true
 emission = Color(1, 0.45, 0.2, 1)
 emission_energy_multiplier = 3.0
 
-[sub_resource type="BoxMesh" id="BoxMesh_sswig"]
+[sub_resource type="BoxMesh" id="BoxMesh_quylj"]
 size = Vector3(0.5, 2.2, 0.05)
 
-[sub_resource type="BoxMesh" id="BoxMesh_bxjmm"]
+[sub_resource type="BoxMesh" id="BoxMesh_b6fhl"]
 size = Vector3(1.4, 0.3, 0.05)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_quylj"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_miwnl"]
 size = Vector3(4, 3, 2.5)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hu6sr"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w0npu"]
 albedo_color = Color(1, 0.6, 0.2, 1)
 roughness = 0.5
 emission_enabled = true
 emission = Color(1, 0.6, 0.2, 1)
 emission_energy_multiplier = 5.0
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_b6fhl"]
-top_radius = 0.0
-bottom_radius = 0.11
-height = 0.3
-radial_segments = 12
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_miwnl"]
-top_radius = 0.0
-bottom_radius = 0.11
-height = 0.3
-radial_segments = 12
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_ygo20"]
 top_radius = 0.0
@@ -252,7 +241,19 @@ bottom_radius = 0.11
 height = 0.3
 radial_segments = 12
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_7e6hq"]
+[sub_resource type="CylinderMesh" id="CylinderMesh_7e6hq"]
+top_radius = 0.0
+bottom_radius = 0.11
+height = 0.3
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1f28f"]
+top_radius = 0.0
+bottom_radius = 0.11
+height = 0.3
+radial_segments = 12
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_unlma"]
 _surfaces = [{
 "aabb": AABB(-15, 0, -11, 30, 1e-05, 22),
 "attribute_data": PackedByteArray("f39//wAA0MEAAAAAf39//zMzzcEAAAAAf39//2ZmysEAAAAAf39//zMzzcEAAAAAf39//83MyMEAAAAAf39//wAAxsEAAAAAf39//2ZmwsEAAAAAf39//5qZv8EAAAAAf39//wAAvMEAAAAAf39//zMzucEAAAAAf39//wAAqMEAAAAAf39//zMzpcEAAAAAf39//wAAlMEAAAAAf39//zMzkcEAAAAAf39//wAAiMEAAAAAf39//zMzhcEAAAAApaWl/83MhMEAAAAApaWl/wAAgsEAAAAA/Pz8/wAAgMEAAAAA/Pz8/2ZmesEAAAAA/////5qZccEAAAAA/////wAAbMEAAAAA/////wAAYMEAAAAA/////2ZmWsEAAAAA/////wAAWMEAAAAA/////2ZmUsEAAAAA/////2ZmTsEAAAAA/////8zMSMEAAAAA/////5qZQcEAAAAA/////wAAPMEAAAAA/////wAAMMEAAAAA/////2ZmKsEAAAAA/////2ZmHsEAAAAA/////8zMGMEAAAAA/////5qZEcEAAAAA/////wAADMEAAAAA/////wAACMEAAAAA/////2ZmAsEAAAAA/////wAAAMEAAAAA/////8zM9MAAAAAA/////83M3MAAAAAA/////5mZ0cAAAAAA/////zMzw8AAAAAA////////t8AAAAAApaWl/83MrMAAAAAApaWl/5mZocAAAAAAf39//wAAoMAAAAAAf39//8zMlMAAAAAAf39//wAAYMAAAAAAf39//5iZScAAAAAAf39//wAAgL8AAAAAf39//2BmJr8AAAAAf39//wAAwD8AAAAAf39//9DM7D8AAAAAf39//zQzE0AAAAAAf39//5yZKUAAAAAAf39//2hmRkAAAAAAf39//9DMXEAAAAAAf39//5iZaUAAAAAAf39//wAAgEAAAAAAf39//wAAgEAAAAAAf39//zQzi0AAAAAAf39//wAAxsEAAAAAf39//83MyMEAAAAAf39//5qZwcEAAAAAf39//zQzu8EAAAAAf39//83MtMEAAAAAf39//83MoMEAAAAAf39//83MjMEAAAAAf39//83MgMEAAAAApaWl/zQze8EAAAAA/Pz8/5qZccEAAAAA/////zQzY8EAAAAA/////5qZUcEAAAAA/////5qZScEAAAAA/////wAAQMEAAAAA/////zQzM8EAAAAA/////5qZIcEAAAAA/////wAAEMEAAAAA/////zQzA8EAAAAA/////zQz88AAAAAA/////zQz48AAAAAA/////wEAwMAAAAAA/////2dmpsAAAAAApaWl/wEAkMAAAAAAf39//zQzg8AAAAAAf39//2hmJsAAAAAAf39//wDNzL0AAAAAf39//5iZGUAAAAAAf39//8zMTEAAAAAAf39//wAAgEAAAAAAf39//5iZkUAAAAAAf39//8zMnEAAAAAAf39//5qZv8EAAAAAf39//2ZmwsEAAAAAf39//zQzu8EAAAAAf39//83MtMEAAAAAf39//2ZmrsEAAAAAf39//2ZmmsEAAAAAf39//2ZmhsEAAAAAf39//83MdMEAAAAApaWl/2ZmbsEAAAAA/Pz8/83MZMEAAAAA/////2ZmVsEAAAAA/////83MRMEAAAAA/////83MPMEAAAAA/////zMzM8EAAAAA/////2dmJsEAAAAA/////83MFMEAAAAA/////zMzA8EAAAAA/////83M7MAAAAAA/////5qZ2cAAAAAA/////5qZycAAAAAA/////2dmpsAAAAAA/////83MjMAAAAAApaWl/87MbMAAAAAAf39//zQzU8AAAAAAf39//2hm5r8AAAAAf39//zAzMz8AAAAAf39//8zMTEAAAAAAf39//wAAgEAAAAAAf39//5qZmUAAAAAAf39//zIzq0AAAAAAf39//2ZmtkAAAAAAf39//2ZmvMEAAAAAf39//zMzv8EAAAAAf39//wAAuMEAAAAAf39//5qZscEAAAAAf39//zMzq8EAAAAAf39//zMzl8EAAAAAf39//zMzg8EAAAAAf39//2ZmbsEAAAAApaWl/wAAaMEAAAAA/Pz8/2ZmXsEAAAAA/////wAAUMEAAAAA/////2ZmPsEAAAAA/////2ZmNsEAAAAA/////8zMLMEAAAAA/////wAAIMEAAAAA/////2ZmDsEAAAAA/////5mZ+cAAAAAA////////38AAAAAA/Pz8/8zMzMAAAAAA+Pj4/8zMvMAAAAAA/////5mZmcAAAAAA//////7/f8AAAAAApaWl/zIzU8AAAAAAf39//5iZOcAAAAAAf39//zAzs78AAAAAf39//9DMjD8AAAAAf39//2hmZkAAAAAAf39//87MjEAAAAAAf39//2hmpkAAAAAAf39//wAAuEAAAAAAf39//zQzw0AAAAAAf39///qkucEAAAAAf39//8dxvMEAAAAAf39//5Q+tcEAAAAAf39//y7YrsEAAAAAf39//8dxqMEAAAAAf39//8dxlMEAAAAAf39//8dxgMEAAAAAf39//47jaMEAAAAApaWl/yh9YsEAAAAA/Pz8/47jWMEAAAAA/////yh9SsEAAAAA/////47jOMEAAAAA/////47jMMEAAAAA//////RJJ8EAAAAA/////yh9GsEAAAAA/////47jCMEAAAAA/////+mT7sAAAAAA+Pj4/0/61MAAAAAA09PT/xzHwcAAAAAAxsbG/xzHscAAAAAA+Pj4/+mTjsAAAAAA/////570acAAAAAApaWl/9InPcAAAAAAf39//ziOI8AAAAAAf39//3Ach78AAAAAf39//5DjuD8AAAAAf39//8hxfEAAAAAAf39//37Sl0AAAAAAf39//xhssUAAAAAAf39//7AFw0AAAAAAf39//+Q4zkAAAAAAf39//wAAtsEAAAAAf39//83MuMEAAAAAf39//5qZscEAAAAAf39//zQzq8EAAAAAf39//83MpMEAAAAAf39//83MkMEAAAAAf39//5qZecEAAAAAf39//5qZYcEAAAAApaWl/zQzW8EAAAAA/Pz8/5qZUcEAAAAA/////zQzQ8EAAAAA/////5qZMcEAAAAA/////5qZKcEAAAAA/////wAAIMEAAAAA/////zQzE8EAAAAA/////5qZAcEAAAAA/////wEA4MAAAAAAxsbG/2dmxsAAAAAAk5OT/zQzs8AAAAAAjY2N/zQzo8AAAAAAxsbG/wEAgMAAAAAA/////87MTMAAAAAApaWl/wIAIMAAAAAAf39//2hmBsAAAAAAf39//6CZGb8AAAAAf39//zAz8z8AAAAAf39//8zMjEAAAAAAf39//2ZmpkAAAAAAf39//wAAwEAAAAAAf39//5iZ0UAAAAAAf39//8zM3EAAAAAAf39//zMzrcEAAAAAf39//wAAsMEAAAAAf39//83MqMEAAAAAf39//2ZmosEAAAAAf39//wAAnMEAAAAAf39//wAAiMEAAAAAf39//wAAaMEAAAAAf39//wAAUMEAAAAApaWl/5qZScEAAAAA/Pz8/wAAQMEAAAAA/////5qZMcEAAAAA/////wAAIMEAAAAA/////wAAGMEAAAAA/////2ZmDsEAAAAA/////5qZAcEAAAAA/////wAA4MAAAAAA+Pj4/83MvMAAAAAAjY2N/zMzo8AAAAAAjIyM/wAAkMAAAAAAjIyM/wAAgMAAAAAAjY2N/5qZOcAAAAAA+Pj4/2ZmBsAAAAAApaWl/zQzs78AAAAAf39//wAAgL8AAAAAf39//wAAAD8AAAAAf39//wAAQEAAAAAAf39//wAAsEAAAAAAf39//5qZyUAAAAAAf39//zQz40AAAAAAf39//8zM9EAAAAAAf39//wAAAEEAAAAAf39//8EWpsEAAAAAf39//47jqMEAAAAAf39//1uwocEAAAAAf39///VJm8EAAAAAf39//47jlMEAAAAAf39//47jgMEAAAAAf39//xzHWcEAAAAAf39//xzHQcEAAAAApaWl/7ZgO8EAAAAA/Pz8/xzHMcEAAAAA/////7ZgI8EAAAAA/////xzHEcEAAAAA/////xzHCcEAAAAA/////4MtAMEAAAAA/////2zB5sAAAAAA/////zmOw8AAAAAA/////wZboMAAAAAArq6u/2zBhsAAAAAAjIyM/3IcZ8AAAAAAjIyM/3IcR8AAAAAArq6u/wy2AMAAAAAA/////7AFm78AAAAApaWl/zDYAr8AAAAAf39//0CO470AAAAAf39//xzHsT8AAAAAf39//47jeEAAAAAAf39//8dxzEAAAAAAf39//2EL5kAAAAAAf39///uk/0AAAAAAf39//0qfCEEAAAAAf39//+Q4DkEAAAAAf39//2ZmpMEAAAAAf39//zMzp8EAAAAAf39//wAAoMEAAAAAf39//5qZmcEAAAAAf39//zMzk8EAAAAAf39//2ZmfsEAAAAAf39//2ZmVsEAAAAAf39//2ZmPsEAAAAApaWl/wAAOMEAAAAA/Pz8/2ZmLsEAAAAA/////wAAIMEAAAAA/////2ZmDsEAAAAA/////2ZmBsEAAAAA/////5qZ+cAAAAAA/////wAA4MAAAAAA/////83MvMAAAAAA/////5qZmcAAAAAAxsbG/wAAgMAAAAAAk5OT/5qZWcAAAAAAjY2N/5qZOcAAAAAAxsbG/2hm5r8AAAAA/////wAAgL8AAAAApaWl/6CZmb4AAAAAf39//8DMzD0AAAAAf39//8zMzD8AAAAAf39//zMzg0AAAAAAf39//zMz00AAAAAAf39//83M7EAAAAAAf39//zQzA0EAAAAAf39//wAADEEAAAAAf39//5qZEUEAAAAAf39//wAAnsEAAAAAf39//83MoMEAAAAAf39//5qZmcEAAAAAf39//zMzk8EAAAAAf39//83MjMEAAAAAf39//5qZccEAAAAAf39//5qZScEAAAAAf39//5qZMcEAAAAApaWl/zMzK8EAAAAA/Pz8/5qZIcEAAAAA/////zMzE8EAAAAA/////5qZAcEAAAAA/////zMz88AAAAAA/////wAA4MAAAAAA/////2ZmxsAAAAAA/////zMzo8AAAAAA/////wAAgMAAAAAA/////8zMTMAAAAAA/Pz8/2ZmJsAAAAAA+Pj4/2ZmBsAAAAAA/////wAAgL8AAAAA/////8DMTL4AAAAApaWl/wAAAD8AAAAAf39//2hmZj8AAAAAf39//5qZGUAAAAAAf39//83MnEAAAAAAf39//83M7EAAAAAAf39//zQzA0EAAAAAf39//wAAEEEAAAAAf39//8zMGEEAAAAAf39//2ZmHkEAAAAAf39//4iIksEAAAAAf39//1VVlcEAAAAAf39//yIijsEAAAAAf39//7y7h8EAAAAAf39//1VVgcEAAAAAf39//6uqWsEAAAAAf39//6uqMsEAAAAAf39//6uqGsEAAAAApaWl/0REFMEAAAAA/Pz8/6uqCsEAAAAA/////4iI+MAAAAAA/////1ZV1cAAAAAA/////1ZVxcAAAAAA/////yIissAAAAAA/////4mImMAAAAAA/////6uqasAAAAAA/////0REJMAAAAAA/////yMi4r8AAAAA/////1ZVlb8AAAAA/////6yqKr8AAAAA/////9jd3T4AAAAA/////97dnT8AAAAApaWl/3Z39z8AAAAAf39//1VVFUAAAAAAf39//1VVdUAAAAAAf39//6qqykAAAAAAf39//1VVDUEAAAAAf39//yIiGkEAAAAAf39//+/uJkEAAAAAf39//7u7L0EAAAAAf39//1VVNUEAAAAAf39//5/0fcEAAAAAf39//xzHgcEAAAAAf39//9MndcEAAAAAf39//wZbaMEAAAAAf39//zmOW8EAAAAAf39//zmOM8EAAAAAf39//zmOC8EAAAAAf39//3Ic58AAAAAApaWl/6VP2sAAAAAA/Pz8/3Icx8AAAAAA/////6VPqsAAAAAA/////3Ich8AAAAAA/////+Q4bsAAAAAA/////33SR8AAAAAA/////0qfFMAAAAAA/////8dxnL8AAAAA/////6BP+r0AAAAA/////9iCLT8AAAAA/////zmOoz8AAAAA/////zmO4z8AAAAA/////4ItOEAAAAAA/////7Zga0AAAAAApaWl/8EWjEAAAAAAf39//47jmEAAAAAAf39//47jyEAAAAAAf39//8dxDEEAAAAAf39//8dxNEEAAAAAf39//5Q+QUEAAAAAf39//2ELTkEAAAAAf39//y3YVkEAAAAAf39//8dxXEEAAAAAf39//y3YVsEAAAAAf39//8dxXMEAAAAAf39//2ELTsEAAAAAf39//5Q+QcEAAAAAf39//8dxNMEAAAAAf39//8dxDMEAAAAAf39//47jyMAAAAAAf39//47jmMAAAAAApaWl/8EWjMAAAAAA/Pz8/xzHccAAAAAA/////4ItOMAAAAAA/////zmO478AAAAA/////zmOo78AAAAA/////9iCLb8AAAAA/////6BP+j0AAAAA/////8dxnD8AAAAA/////0qfFEAAAAAA/////33SR0AAAAAA/////+Q4bkAAAAAA/////3Ich0AAAAAA/////6VPqkAAAAAA/////z/pw0AAAAAApaWl/6VP2kAAAAAAf39//3Ic50AAAAAAf39//zmOC0EAAAAAf39//zmOM0EAAAAAf39//zmOW0EAAAAAf39//wZbaEEAAAAAf39//9MndUEAAAAAf39//5/0fUEAAAAAf39//xzHgUEAAAAAf39//7u7L8EAAAAAf39//1VVNcEAAAAAf39//+/uJsEAAAAAf39//yIiGsEAAAAAf39//1VVDcEAAAAAf39//6qqysAAAAAAf39//1VVdcAAAAAAf39//1VVFcAAAAAApaWl/3Z3978AAAAA/Pz8/6qqqr8AAAAA/////9jd3b4AAAAA/////6yqKj8AAAAA/////1ZVlT8AAAAA/////yMi4j8AAAAA/////0REJEAAAAAA/////6uqakAAAAAA/////4mImEAAAAAA/////yIiskAAAAAA/////1ZVxUAAAAAA/////1ZV1UAAAAAA/////4iI+EAAAAAA/////xERCUEAAAAApaWl/0REFEEAAAAAf39//6uqGkEAAAAAf39//6uqMkEAAAAAf39//6uqWkEAAAAAf39//1VVgUEAAAAAf39//7y7h0EAAAAAf39//yIijkEAAAAAf39//4iIkkEAAAAAf39//1VVlUEAAAAAf39//8zMKMEAAAAAf39//2ZmLsEAAAAAf39//wAAIMEAAAAAf39//zQzE8EAAAAAf39//2ZmBsEAAAAAf39//83MvMAAAAAAf39//5qZWcAAAAAAf39//zQz878AAAAApaWl/wAAwL8AAAAA/Pz8/2hmZr8AAAAA/////wAAAAAAAAAA+Pj4/8zMjD8AAAAA/Pz8/8zMzD8AAAAA/////8zMDEAAAAAA/////wAAQEAAAAAA/////zMzg0AAAAAA/////2ZmpkAAAAAA/////wAAwEAAAAAA/////zMz00AAAAAA/////zMz40AAAAAA/////zMzA0EAAAAA/////wAAEEEAAAAApaWl/zMzG0EAAAAAf39//5qZIUEAAAAAf39//5qZOUEAAAAAf39//5qZYUEAAAAAf39//83MhEEAAAAAf39//zMzi0EAAAAAf39//5qZkUEAAAAAf39//wAAlkEAAAAAf39//83MmEEAAAAAf39//wAAHMEAAAAAf39//5qZIcEAAAAAf39//zQzE8EAAAAAf39//2ZmBsEAAAAAf39//zMz88AAAAAAf39//zMzo8AAAAAAf39//2ZmJsAAAAAAf39//8zMjL8AAAAApaWl/zAzM78AAAAA/Pz8/8DMzL0AAAAAxsbG/9DMTD8AAAAAjY2N/zQz8z8AAAAAk5OT/5qZGUAAAAAAxsbG/wAAQEAAAAAA/////zQzc0AAAAAA/////83MnEAAAAAA/////wAAwEAAAAAA/////5qZ2UAAAAAA/////83M7EAAAAAA/////83M/EAAAAAA/////wAAEEEAAAAA/////83MHEEAAAAApaWl/wAAKEEAAAAAf39//2ZmLkEAAAAAf39//2ZmRkEAAAAAf39//2ZmbkEAAAAAf39//zMzi0EAAAAAf39//5qZkUEAAAAAf39//wAAmEEAAAAAf39//2ZmnEEAAAAAf39//zMzn0EAAAAAf39//2ZmCsEAAAAAf39//wAAEMEAAAAAf39//5qZAcEAAAAAf39//5qZ6cAAAAAAf39//wAA0MAAAAAAf39//wAAgMAAAAAAf39//wAAwL8AAAAAf39//wAAAAAAAAAApaWl/9DMzD4AAAAA+/v7/wAAgD8AAAAAjY2N/zQz8z8AAAAAjIyM/wAAQEAAAAAAjIyM/wAAYEAAAAAAjY2N/zMzg0AAAAAA+Pj4/83MnEAAAAAA/////wAAwEAAAAAA/////zMz40AAAAAA/////83M/EAAAAAA/////wAACEEAAAAA/////wAAEEEAAAAA/////5qZIUEAAAAA/////2ZmLkEAAAAApaWl/5qZOUEAAAAAf39//wAAQEEAAAAAf39//wAAWEEAAAAAf39//wAAgEEAAAAAf39//wAAlEEAAAAAf39//2ZmmkEAAAAAf39//83MoEEAAAAAf39//zMzpUEAAAAAf39//wAAqEEAAAAAf39//5mZ8cAAAAAAf39//83M/MAAAAAAf39//wEA4MAAAAAAf39//2dmxsAAAAAAf39//83MrMAAAAAAf39//5qZOcAAAAAAf39//9DMzL4AAAAAf39//8zMjD8AAAAApaWl/wAAwD8AAAAA/Pz8/2ZmBkAAAAAAxsbG/wAAQEAAAAAAjY2N/zMzg0AAAAAAk5OT/zMzk0AAAAAAxsbG/2ZmpkAAAAAA/////wAAwEAAAAAA/////zMz40AAAAAA/////zMzA0EAAAAA/////wAAEEEAAAAA/////5qZGUEAAAAA/////5qZIUEAAAAA/////zMzM0EAAAAA/////wAAQEEAAAAApaWl/zMzS0EAAAAAf39//5qZUUEAAAAAf39//5qZaUEAAAAAf39//83MiEEAAAAAf39//83MnEEAAAAAf39//zMzo0EAAAAAf39//5qZqUEAAAAAf39//wAArkEAAAAAf39//83MsEEAAAAAf39/////18AAAAAAf39//zMz48AAAAAAf39//2dmxsAAAAAAf39//83MrMAAAAAAf39//zMzk8AAAAAAf39//2ZmBsAAAAAAf39//9DMzD4AAAAAf39//zQz8z8AAAAApaWl/zQzE0AAAAAA/Pz8/5qZOUAAAAAA/////zQzc0AAAAAA+Pj4/83MnEAAAAAA/Pz8/83MrEAAAAAA/////wAAwEAAAAAA/////5qZ2UAAAAAA/////83M/EAAAAAA/////wAAEEEAAAAA/////83MHEEAAAAA/////2ZmJkEAAAAA/////2ZmLkEAAAAA/////wAAQEEAAAAA/////83MTEEAAAAApaWl/wAAWEEAAAAAf39//2ZmXkEAAAAAf39//2ZmdkEAAAAAf39//zMzj0EAAAAAf39//zMzo0EAAAAAf39//5qZqUEAAAAAf39//wAAsEEAAAAAf39//2ZmtEEAAAAAf39//zMzt0EAAAAAf39//7AFw8AAAAAAf39//+Q4zsAAAAAAf39//xhsscAAAAAAf39//37Sl8AAAAAAf39//8hxfMAAAAAAf39//5DjuL8AAAAAf39//3Achz8AAAAAf39//ziOI0AAAAAApaWl/9InPUAAAAAA/Pz8/ziOY0AAAAAA/////+mTjkAAAAAA/////xzHsUAAAAAA/////xzHwUAAAAAA/////0/61EAAAAAA/////+mT7kAAAAAA/////47jCEEAAAAA/////yh9GkEAAAAA//////RJJ0EAAAAA/////47jMEEAAAAA/////47jOEEAAAAA/////yh9SkEAAAAA//////RJV0EAAAAApaWl/yh9YkEAAAAAf39//47jaEEAAAAAf39//8dxgEEAAAAAf39//8dxlEEAAAAAf39//8dxqEEAAAAAf39//y7YrkEAAAAAf39//5Q+tUEAAAAAf39///qkuUEAAAAAf39//8dxvEEAAAAAf39//zIzq8AAAAAAf39//2ZmtsAAAAAAf39//5qZmcAAAAAAf39//wAAgMAAAAAAf39//8zMTMAAAAAAf39//zAzM78AAAAAf39//2hm5j8AAAAAf39//zQzU0AAAAAApaWl/87MbEAAAAAA/Pz8/5qZiUAAAAAA/////2dmpkAAAAAA/////5qZyUAAAAAA/////5qZ2UAAAAAA/////83M7EAAAAAA/////zMzA0EAAAAA/////83MFEEAAAAA/////2dmJkEAAAAA/////zMzM0EAAAAA/////83MPEEAAAAA/////83MREEAAAAA/////2ZmVkEAAAAA/////zQzY0EAAAAApaWl/2ZmbkEAAAAAf39//83MdEEAAAAAf39//2ZmhkEAAAAAf39//2ZmmkEAAAAAf39//2ZmrkEAAAAAf39//83MtEEAAAAAf39//zQzu0EAAAAAf39//5qZv0EAAAAAf39//2ZmwkEAAAAAf39//5iZkcAAAAAAf39//8zMnMAAAAAAf39//wAAgMAAAAAAf39//8zMTMAAAAAAf39//5iZGcAAAAAAf39//wDNzD0AAAAAf39//2hmJkAAAAAAf39//zQzg0AAAAAApaWl/wEAkEAAAAAA/Pz8/zQzo0AAAAAA/////wEAwEAAAAAA/////zQz40AAAAAA/////zQz80AAAAAA/////zQzA0EAAAAA/////wAAEEEAAAAA/////5qZIUEAAAAA/////zQzM0EAAAAA/////wAAQEEAAAAA/////5qZSUEAAAAA/////5qZUUEAAAAA/////zQzY0EAAAAA/////wAAcEEAAAAApaWl/zQze0EAAAAAf39//83MgEEAAAAAf39//83MjEEAAAAAf39//83MoEEAAAAAf39//83MtEEAAAAAf39//zQzu0EAAAAAf39//5qZwUEAAAAAf39//wAAxkEAAAAAf39//83MyEEAAAAAf39//wAAgMAAAAAAf39//zQzi8AAAAAAf39//9DMXMAAAAAAf39//5yZKcAAAAAAf39//9DM7L8AAAAAf39//2BmJj8AAAAAf39//5iZSUAAAAAAf39//8zMlEAAAAAApaWl/5mZoUAAAAAA/Pz8/8zMtEAAAAAA/////5mZ0UAAAAAA/////8zM9EAAAAAA/////2ZmAkEAAAAA/////wAADEEAAAAA/////8zMGEEAAAAA/////2ZmKkEAAAAA/////wAAPEEAAAAA/////8zMSEEAAAAA/////2ZmUkEAAAAA/////2ZmWkEAAAAA/////wAAbEEAAAAA/////8zMeEEAAAAApaWl/wAAgkEAAAAAf39//zMzhUEAAAAAf39//zMzkUEAAAAAf39//zMzpUEAAAAAf39//zMzuUEAAAAAf39//5qZv0EAAAAAf39//wAAxkEAAAAAf39//2ZmykEAAAAAf39//zMzzUEAAAAAf39//5iZacAAAAAAf39//wAAgMAAAAAAf39//2hmRsAAAAAAf39//zQzE8AAAAAAf39//wAAwL8AAAAAf39//wAAgD8AAAAAf39//wAAYEAAAAAAf39//wAAoEAAAAAApaWl/83MrEAAAAAA/Pz8/wAAwEAAAAAA/////83M3EAAAAAA/////wAAAEEAAAAA/////wAACEEAAAAA/////5qZEUEAAAAA/////2ZmHkEAAAAA/////wAAMEEAAAAA/////5qZQUEAAAAA/////2ZmTkEAAAAA/////wAAWEEAAAAA/////wAAYEEAAAAA/////5qZcUEAAAAA/////2ZmfkEAAAAApaWl/83MhEEAAAAAf39//wAAiEEAAAAAf39//wAAlEEAAAAAf39//wAAqEEAAAAAf39//wAAvEEAAAAAf39//2ZmwkEAAAAAf39//83MyEEAAAAAf39//zMzzUEAAAAAf39//wAA0EEAAAAA"),
@@ -265,7 +266,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray("AABwwQAAAAAAADDBZmZqwQAAAAAAADDBZmZqwQAAAABmZirBAABwwQAAAABmZirBmplhwQAAAAAAADDBmplhwQAAAABmZirBzcxUwQAAAAAAADDBzcxUwQAAAABmZirBAABIwQAAAAAAADDBAABIwQAAAABmZirBAAAgwQAAAAAAADDBAAAgwQAAAABmZirBAADwwAAAAAAAADDBAADwwAAAAABmZirBAADAwAAAAAAAADDBAADAwAAAAABmZirBMzOzwAAAAAAAADDBMzOzwAAAAABmZirBAACgwAAAAAAAADDBAACgwAAAAABmZirBMzODwAAAAAAAADDBMzODwAAAAABmZirBAABAwAAAAAAAADDBAABAwAAAAABmZirBAAAgwAAAAAAAADDBAAAgwAAAAABmZirBMzPzvwAAAAAAADDBMzPzvwAAAABmZirBzcyMvwAAAAAAADDBzcyMvwAAAABmZirBAAAAAAAAAAAAADDBAAAAAAAAAABmZirBzcyMPwAAAAAAADDBzcyMPwAAAABmZirBMzPzPwAAAAAAADDBMzPzPwAAAABmZirBAAAgQAAAAAAAADDBAAAgQAAAAABmZirBAABAQAAAAAAAADDBAABAQAAAAABmZirBMzODQAAAAAAAADDBMzODQAAAAABmZirBzcycQAAAAAAAADDBzcycQAAAAABmZirBMzOzQAAAAAAAADDBMzOzQAAAAABmZirBAADAQAAAAAAAADDBAADAQAAAAABmZirBAADwQAAAAAAAADDBAADwQAAAAABmZirBAAAgQQAAAAAAADDBAAAgQQAAAABmZirBAABIQQAAAAAAADDBAABIQQAAAABmZirBzcxUQQAAAAAAADDBzcxUQQAAAABmZirBmplhQQAAAAAAADDBmplhQQAAAABmZirBZmZqQQAAAAAAADDBZmZqQQAAAABmZirBAABwQQAAAAAAADDBAABwQQAAAABmZirBZmZqwQAAAACamSHBAABwwQAAAACamSHBmplhwQAAAACamSHBzcxUwQAAAACamSHBAABIwQAAAACamSHBAAAgwQAAAACamSHBAADwwAAAAACamSHBAADAwAAAAACamSHBMzOzwAAAAACamSHBAACgwAAAAACamSHBMzODwAAAAACamSHBAABAwAAAAACamSHBAAAgwAAAAACamSHBMzPzvwAAAACamSHBzcyMvwAAAACamSHBAAAAAAAAAACamSHBzcyMPwAAAACamSHBMzPzPwAAAACamSHBAAAgQAAAAACamSHBAABAQAAAAACamSHBMzODQAAAAACamSHBzcycQAAAAACamSHBMzOzQAAAAACamSHBAADAQAAAAACamSHBAADwQAAAAACamSHBAAAgQQAAAACamSHBAABIQQAAAACamSHBzcxUQQAAAACamSHBmplhQQAAAACamSHBZmZqQQAAAACamSHBAABwQQAAAACamSHBZmZqwQAAAADNzBTBAABwwQAAAADNzBTBmplhwQAAAADNzBTBzcxUwQAAAADNzBTBAABIwQAAAADNzBTBAAAgwQAAAADNzBTBAADwwAAAAADNzBTBAADAwAAAAADNzBTBMzOzwAAAAADNzBTBAACgwAAAAADNzBTBMzODwAAAAADNzBTBAABAwAAAAADNzBTBAAAgwAAAAADNzBTBMzPzvwAAAADNzBTBzcyMvwAAAADNzBTBAAAAAAAAAADNzBTBzcyMPwAAAADNzBTBMzPzPwAAAADNzBTBAAAgQAAAAADNzBTBAABAQAAAAADNzBTBMzODQAAAAADNzBTBzcycQAAAAADNzBTBMzOzQAAAAADNzBTBAADAQAAAAADNzBTBAADwQAAAAADNzBTBAAAgQQAAAADNzBTBAABIQQAAAADNzBTBzcxUQQAAAADNzBTBmplhQQAAAADNzBTBZmZqQQAAAADNzBTBAABwQQAAAADNzBTBZmZqwQAAAABmZg7BAABwwQAAAABmZg7BmplhwQAAAABmZg7BzcxUwQAAAABmZg7BAABIwQAAAABmZg7BAAAgwQAAAABmZg7BAADwwAAAAABmZg7BAADAwAAAAABmZg7BMzOzwAAAAABmZg7BAACgwAAAAABmZg7BMzODwAAAAABmZg7BAABAwAAAAABmZg7BAAAgwAAAAABmZg7BMzPzvwAAAABmZg7BzcyMvwAAAABmZg7BAAAAAAAAAABmZg7BzcyMPwAAAABmZg7BMzPzPwAAAABmZg7BAAAgQAAAAABmZg7BAABAQAAAAABmZg7BMzODQAAAAABmZg7BzcycQAAAAABmZg7BMzOzQAAAAABmZg7BAADAQAAAAABmZg7BAADwQAAAAABmZg7BAAAgQQAAAABmZg7BAABIQQAAAABmZg7BzcxUQQAAAABmZg7BmplhQQAAAABmZg7BZmZqQQAAAABmZg7BAABwQQAAAABmZg7BZmZqwQAAAACO4wjBAABwwQAAAACO4wjBmplhwQAAAACO4wjBzcxUwQAAAACO4wjBAABIwQAAAACO4wjBAAAgwQAAAACO4wjBAADwwAAAAACO4wjBAADAwAAAAACO4wjBMzOzwAAAAACO4wjBAACgwAAAAACO4wjBMzODwAAAAACO4wjBAABAwAAAAACO4wjBAAAgwAAAAACO4wjBMzPzvwAAAACO4wjBzcyMvwAAAACO4wjBAAAAAAAAAACO4wjBzcyMPwAAAACO4wjBMzPzPwAAAACO4wjBAAAgQAAAAACO4wjBAABAQAAAAACO4wjBMzODQAAAAACO4wjBzcycQAAAAACO4wjBMzOzQAAAAACO4wjBAADAQAAAAACO4wjBAADwQAAAAACO4wjBAAAgQQAAAACO4wjBAABIQQAAAACO4wjBzcxUQQAAAACO4wjBmplhQQAAAACO4wjBZmZqQQAAAACO4wjBAABwQQAAAACO4wjBZmZqwQAAAACamQHBAABwwQAAAACamQHBmplhwQAAAACamQHBzcxUwQAAAACamQHBAABIwQAAAACamQHBAAAgwQAAAACamQHBAADwwAAAAACamQHBAADAwAAAAACamQHBMzOzwAAAAACamQHBAACgwAAAAACamQHBMzODwAAAAACamQHBAABAwAAAAACamQHBAAAgwAAAAACamQHBMzPzvwAAAACamQHBzcyMvwAAAACamQHBAAAAAAAAAACamQHBzcyMPwAAAACamQHBMzPzPwAAAACamQHBAAAgQAAAAACamQHBAABAQAAAAACamQHBMzODQAAAAACamQHBzcycQAAAAACamQHBMzOzQAAAAACamQHBAADAQAAAAACamQHBAADwQAAAAACamQHBAAAgQQAAAACamQHBAABIQQAAAACamQHBzcxUQQAAAACamQHBmplhQQAAAACamQHBZmZqQQAAAACamQHBAABwQQAAAACamQHBZmZqwQAAAAAAAODAAABwwQAAAAAAAODAmplhwQAAAAAAAODAzcxUwQAAAAAAAODAAABIwQAAAAAAAODAAAAgwQAAAAAAAODAAADwwAAAAAAAAODAAADAwAAAAAAAAODAMzOzwAAAAAAAAODAAACgwAAAAAAAAODAMzODwAAAAAAAAODAAABAwAAAAAAAAODAAAAgwAAAAAAAAODAMzPzvwAAAAAAAODAzcyMvwAAAAAAAODAAAAAAAAAAAAAAODAzcyMPwAAAAAAAODAMzPzPwAAAAAAAODAAAAgQAAAAAAAAODAAABAQAAAAAAAAODAMzODQAAAAAAAAODAzcycQAAAAAAAAODAMzOzQAAAAAAAAODAAADAQAAAAAAAAODAAADwQAAAAAAAAODAAAAgQQAAAAAAAODAAABIQQAAAAAAAODAzcxUQQAAAAAAAODAmplhQQAAAAAAAODAZmZqQQAAAAAAAODAAABwQQAAAAAAAODAZmZqwQAAAAA5jsPAAABwwQAAAAA5jsPAmplhwQAAAAA5jsPAzcxUwQAAAAA5jsPAAABIwQAAAAA5jsPAAAAgwQAAAAA5jsPAAADwwAAAAAA5jsPAAADAwAAAAAA5jsPAMzOzwAAAAAA5jsPAAACgwAAAAAA5jsPAMzODwAAAAAA5jsPAAABAwAAAAAA5jsPAAAAgwAAAAAA5jsPAMzPzvwAAAAA5jsPAzcyMvwAAAAA5jsPAAAAAAAAAAAA5jsPAzcyMPwAAAAA5jsPAMzPzPwAAAAA5jsPAAAAgQAAAAAA5jsPAAABAQAAAAAA5jsPAMzODQAAAAAA5jsPAzcycQAAAAAA5jsPAMzOzQAAAAAA5jsPAAADAQAAAAAA5jsPAAADwQAAAAAA5jsPAAAAgQQAAAAA5jsPAAABIQQAAAAA5jsPAzcxUQQAAAAA5jsPAmplhQQAAAAA5jsPAZmZqQQAAAAA5jsPAAABwQQAAAAA5jsPAZmZqwQAAAADNzLzAAABwwQAAAADNzLzAmplhwQAAAADNzLzAzcxUwQAAAADNzLzAAABIwQAAAADNzLzAAAAgwQAAAADNzLzAAADwwAAAAADNzLzAAADAwAAAAADNzLzAMzOzwAAAAADNzLzAAACgwAAAAADNzLzAMzODwAAAAADNzLzAAABAwAAAAADNzLzAAAAgwAAAAADNzLzAMzPzvwAAAADNzLzAzcyMvwAAAADNzLzAAAAAAAAAAADNzLzAzcyMPwAAAADNzLzAMzPzPwAAAADNzLzAAAAgQAAAAADNzLzAAABAQAAAAADNzLzAMzODQAAAAADNzLzAzcycQAAAAADNzLzAMzOzQAAAAADNzLzAAADAQAAAAADNzLzAAADwQAAAAADNzLzAAAAgQQAAAADNzLzAAABIQQAAAADNzLzAzcxUQQAAAADNzLzAmplhQQAAAADNzLzAZmZqQQAAAADNzLzAAABwQQAAAADNzLzAZmZqwQAAAAAzM6PAAABwwQAAAAAzM6PAmplhwQAAAAAzM6PAzcxUwQAAAAAzM6PAAABIwQAAAAAzM6PAAAAgwQAAAAAzM6PAAADwwAAAAAAzM6PAAADAwAAAAAAzM6PAMzOzwAAAAAAzM6PAAACgwAAAAAAzM6PAMzODwAAAAAAzM6PAAABAwAAAAAAzM6PAAAAgwAAAAAAzM6PAMzPzvwAAAAAzM6PAzcyMvwAAAAAzM6PAAAAAAAAAAAAzM6PAzcyMPwAAAAAzM6PAMzPzPwAAAAAzM6PAAAAgQAAAAAAzM6PAAABAQAAAAAAzM6PAMzODQAAAAAAzM6PAzcycQAAAAAAzM6PAMzOzQAAAAAAzM6PAAADAQAAAAAAzM6PAAADwQAAAAAAzM6PAAAAgQQAAAAAzM6PAAABIQQAAAAAzM6PAzcxUQQAAAAAzM6PAmplhQQAAAAAzM6PAZmZqQQAAAAAzM6PAAABwQQAAAAAzM6PAZmZqwQAAAACrqmrAAABwwQAAAACrqmrAmplhwQAAAACrqmrAzcxUwQAAAACrqmrAAABIwQAAAACrqmrAAAAgwQAAAACrqmrAAADwwAAAAACrqmrAAADAwAAAAACrqmrAMzOzwAAAAACrqmrAAACgwAAAAACrqmrAMzODwAAAAACrqmrAAABAwAAAAACrqmrAAAAgwAAAAACrqmrAMzPzvwAAAACrqmrAzcyMvwAAAACrqmrAAAAAAAAAAACrqmrAzcyMPwAAAACrqmrAMzPzPwAAAACrqmrAAAAgQAAAAACrqmrAAABAQAAAAACrqmrAMzODQAAAAACrqmrAzcycQAAAAACrqmrAMzOzQAAAAACrqmrAAADAQAAAAACrqmrAAADwQAAAAACrqmrAAAAgQQAAAACrqmrAAABIQQAAAACrqmrAzcxUQQAAAACrqmrAmplhQQAAAACrqmrAZmZqQQAAAACrqmrAAABwQQAAAACrqmrAZmZqwQAAAADHcZy/AABwwQAAAADHcZy/mplhwQAAAADHcZy/zcxUwQAAAADHcZy/AABIwQAAAADHcZy/AAAgwQAAAADHcZy/AADwwAAAAADHcZy/AADAwAAAAADHcZy/MzOzwAAAAADHcZy/AACgwAAAAADHcZy/MzODwAAAAADHcZy/AABAwAAAAADHcZy/AAAgwAAAAADHcZy/MzPzvwAAAADHcZy/zcyMvwAAAADHcZy/AAAAAAAAAADHcZy/zcyMPwAAAADHcZy/MzPzPwAAAADHcZy/AAAgQAAAAADHcZy/AABAQAAAAADHcZy/MzODQAAAAADHcZy/zcycQAAAAADHcZy/MzOzQAAAAADHcZy/AADAQAAAAADHcZy/AADwQAAAAADHcZy/AAAgQQAAAADHcZy/AABIQQAAAADHcZy/zcxUQQAAAADHcZy/mplhQQAAAADHcZy/ZmZqQQAAAADHcZy/AABwQQAAAADHcZy/ZmZqwQAAAADHcZw/AABwwQAAAADHcZw/mplhwQAAAADHcZw/zcxUwQAAAADHcZw/AABIwQAAAADHcZw/AAAgwQAAAADHcZw/AADwwAAAAADHcZw/AADAwAAAAADHcZw/MzOzwAAAAADHcZw/AACgwAAAAADHcZw/MzODwAAAAADHcZw/AABAwAAAAADHcZw/AAAgwAAAAADHcZw/MzPzvwAAAADHcZw/zcyMvwAAAADHcZw/AAAAAAAAAADHcZw/zcyMPwAAAADHcZw/MzPzPwAAAADHcZw/AAAgQAAAAADHcZw/AABAQAAAAADHcZw/MzODQAAAAADHcZw/zcycQAAAAADHcZw/MzOzQAAAAADHcZw/AADAQAAAAADHcZw/AADwQAAAAADHcZw/AAAgQQAAAADHcZw/AABIQQAAAADHcZw/zcxUQQAAAADHcZw/mplhQQAAAADHcZw/ZmZqQQAAAADHcZw/AABwQQAAAADHcZw/ZmZqwQAAAACrqmpAAABwwQAAAACrqmpAmplhwQAAAACrqmpAzcxUwQAAAACrqmpAAABIwQAAAACrqmpAAAAgwQAAAACrqmpAAADwwAAAAACrqmpAAADAwAAAAACrqmpAMzOzwAAAAACrqmpAAACgwAAAAACrqmpAMzODwAAAAACrqmpAAABAwAAAAACrqmpAAAAgwAAAAACrqmpAMzPzvwAAAACrqmpAzcyMvwAAAACrqmpAAAAAAAAAAACrqmpAzcyMPwAAAACrqmpAMzPzPwAAAACrqmpAAAAgQAAAAACrqmpAAABAQAAAAACrqmpAMzODQAAAAACrqmpAzcycQAAAAACrqmpAMzOzQAAAAACrqmpAAADAQAAAAACrqmpAAADwQAAAAACrqmpAAAAgQQAAAACrqmpAAABIQQAAAACrqmpAzcxUQQAAAACrqmpAmplhQQAAAACrqmpAZmZqQQAAAACrqmpAAABwQQAAAACrqmpAZmZqwQAAAAAzM4NAAABwwQAAAAAzM4NAmplhwQAAAAAzM4NAzcxUwQAAAAAzM4NAAABIwQAAAAAzM4NAAAAgwQAAAAAzM4NAAADwwAAAAAAzM4NAAADAwAAAAAAzM4NAMzOzwAAAAAAzM4NAAACgwAAAAAAzM4NAMzODwAAAAAAzM4NAAABAwAAAAAAzM4NAAAAgwAAAAAAzM4NAMzPzvwAAAAAzM4NAzcyMvwAAAAAzM4NAAAAAAAAAAAAzM4NAzcyMPwAAAAAzM4NAMzPzPwAAAAAzM4NAAAAgQAAAAAAzM4NAAABAQAAAAAAzM4NAMzODQAAAAAAzM4NAzcycQAAAAAAzM4NAMzOzQAAAAAAzM4NAAADAQAAAAAAzM4NAAADwQAAAAAAzM4NAAAAgQQAAAAAzM4NAAABIQQAAAAAzM4NAzcxUQQAAAAAzM4NAmplhQQAAAAAzM4NAZmZqQQAAAAAzM4NAAABwQQAAAAAzM4NAZmZqwQAAAADNzJxAAABwwQAAAADNzJxAmplhwQAAAADNzJxAzcxUwQAAAADNzJxAAABIwQAAAADNzJxAAAAgwQAAAADNzJxAAADwwAAAAADNzJxAAADAwAAAAADNzJxAMzOzwAAAAADNzJxAAACgwAAAAADNzJxAMzODwAAAAADNzJxAAABAwAAAAADNzJxAAAAgwAAAAADNzJxAMzPzvwAAAADNzJxAzcyMvwAAAADNzJxAAAAAAAAAAADNzJxAzcyMPwAAAADNzJxAMzPzPwAAAADNzJxAAAAgQAAAAADNzJxAAABAQAAAAADNzJxAMzODQAAAAADNzJxAzcycQAAAAADNzJxAMzOzQAAAAADNzJxAAADAQAAAAADNzJxAAADwQAAAAADNzJxAAAAgQQAAAADNzJxAAABIQQAAAADNzJxAzcxUQQAAAADNzJxAmplhQQAAAADNzJxAZmZqQQAAAADNzJxAAABwQQAAAADNzJxAZmZqwQAAAAAAAMBAAABwwQAAAAAAAMBAmplhwQAAAAAAAMBAzcxUwQAAAAAAAMBAAABIwQAAAAAAAMBAAAAgwQAAAAAAAMBAAADwwAAAAAAAAMBAAADAwAAAAAAAAMBAMzOzwAAAAAAAAMBAAACgwAAAAAAAAMBAMzODwAAAAAAAAMBAAABAwAAAAAAAAMBAAAAgwAAAAAAAAMBAMzPzvwAAAAAAAMBAzcyMvwAAAAAAAMBAAAAAAAAAAAAAAMBAzcyMPwAAAAAAAMBAMzPzPwAAAAAAAMBAAAAgQAAAAAAAAMBAAABAQAAAAAAAAMBAMzODQAAAAAAAAMBAzcycQAAAAAAAAMBAMzOzQAAAAAAAAMBAAADAQAAAAAAAAMBAAADwQAAAAAAAAMBAAAAgQQAAAAAAAMBAAABIQQAAAAAAAMBAzcxUQQAAAAAAAMBAmplhQQAAAAAAAMBAZmZqQQAAAAAAAMBAAABwQQAAAAAAAMBAZmZqwQAAAAAzM+NAAABwwQAAAAAzM+NAmplhwQAAAAAzM+NAzcxUwQAAAAAzM+NAAABIwQAAAAAzM+NAAAAgwQAAAAAzM+NAAADwwAAAAAAzM+NAAADAwAAAAAAzM+NAMzOzwAAAAAAzM+NAAACgwAAAAAAzM+NAMzODwAAAAAAzM+NAAABAwAAAAAAzM+NAAAAgwAAAAAAzM+NAMzPzvwAAAAAzM+NAzcyMvwAAAAAzM+NAAAAAAAAAAAAzM+NAzcyMPwAAAAAzM+NAMzPzPwAAAAAzM+NAAAAgQAAAAAAzM+NAAABAQAAAAAAzM+NAMzODQAAAAAAzM+NAzcycQAAAAAAzM+NAMzOzQAAAAAAzM+NAAADAQAAAAAAzM+NAAADwQAAAAAAzM+NAAAAgQQAAAAAzM+NAAABIQQAAAAAzM+NAzcxUQQAAAAAzM+NAmplhQQAAAAAzM+NAZmZqQQAAAAAzM+NAAABwQQAAAAAzM+NAZmZqwQAAAADNzPxAAABwwQAAAADNzPxAmplhwQAAAADNzPxAzcxUwQAAAADNzPxAAABIwQAAAADNzPxAAAAgwQAAAADNzPxAAADwwAAAAADNzPxAAADAwAAAAADNzPxAMzOzwAAAAADNzPxAAACgwAAAAADNzPxAMzODwAAAAADNzPxAAABAwAAAAADNzPxAAAAgwAAAAADNzPxAMzPzvwAAAADNzPxAzcyMvwAAAADNzPxAAAAAAAAAAADNzPxAzcyMPwAAAADNzPxAMzPzPwAAAADNzPxAAAAgQAAAAADNzPxAAABAQAAAAADNzPxAMzODQAAAAADNzPxAzcycQAAAAADNzPxAMzOzQAAAAADNzPxAAADAQAAAAADNzPxAAADwQAAAAADNzPxAAAAgQQAAAADNzPxAAABIQQAAAADNzPxAzcxUQQAAAADNzPxAmplhQQAAAADNzPxAZmZqQQAAAADNzPxAAABwQQAAAADNzPxAZmZqwQAAAACO4whBAABwwQAAAACO4whBmplhwQAAAACO4whBzcxUwQAAAACO4whBAABIwQAAAACO4whBAAAgwQAAAACO4whBAADwwAAAAACO4whBAADAwAAAAACO4whBMzOzwAAAAACO4whBAACgwAAAAACO4whBMzODwAAAAACO4whBAABAwAAAAACO4whBAAAgwAAAAACO4whBMzPzvwAAAACO4whBzcyMvwAAAACO4whBAAAAAAAAAACO4whBzcyMPwAAAACO4whBMzPzPwAAAACO4whBAAAgQAAAAACO4whBAABAQAAAAACO4whBMzODQAAAAACO4whBzcycQAAAAACO4whBMzOzQAAAAACO4whBAADAQAAAAACO4whBAADwQAAAAACO4whBAAAgQQAAAACO4whBAABIQQAAAACO4whBzcxUQQAAAACO4whBmplhQQAAAACO4whBZmZqQQAAAACO4whBAABwQQAAAACO4whBZmZqwQAAAADNzBRBAABwwQAAAADNzBRBmplhwQAAAADNzBRBzcxUwQAAAADNzBRBAABIwQAAAADNzBRBAAAgwQAAAADNzBRBAADwwAAAAADNzBRBAADAwAAAAADNzBRBMzOzwAAAAADNzBRBAACgwAAAAADNzBRBMzODwAAAAADNzBRBAABAwAAAAADNzBRBAAAgwAAAAADNzBRBMzPzvwAAAADNzBRBzcyMvwAAAADNzBRBAAAAAAAAAADNzBRBzcyMPwAAAADNzBRBMzPzPwAAAADNzBRBAAAgQAAAAADNzBRBAABAQAAAAADNzBRBMzODQAAAAADNzBRBzcycQAAAAADNzBRBMzOzQAAAAADNzBRBAADAQAAAAADNzBRBAADwQAAAAADNzBRBAAAgQQAAAADNzBRBAABIQQAAAADNzBRBzcxUQQAAAADNzBRBmplhQQAAAADNzBRBZmZqQQAAAADNzBRBAABwQQAAAADNzBRBZmZqwQAAAACamSFBAABwwQAAAACamSFBmplhwQAAAACamSFBzcxUwQAAAACamSFBAABIwQAAAACamSFBAAAgwQAAAACamSFBAADwwAAAAACamSFBAADAwAAAAACamSFBMzOzwAAAAACamSFBAACgwAAAAACamSFBMzODwAAAAACamSFBAABAwAAAAACamSFBAAAgwAAAAACamSFBMzPzvwAAAACamSFBzcyMvwAAAACamSFBAAAAAAAAAACamSFBzcyMPwAAAACamSFBMzPzPwAAAACamSFBAAAgQAAAAACamSFBAABAQAAAAACamSFBMzODQAAAAACamSFBzcycQAAAAACamSFBMzOzQAAAAACamSFBAADAQAAAAACamSFBAADwQAAAAACamSFBAAAgQQAAAACamSFBAABIQQAAAACamSFBzcxUQQAAAACamSFBmplhQQAAAACamSFBZmZqQQAAAACamSFBAABwQQAAAACamSFBZmZqwQAAAABmZipBAABwwQAAAABmZipBmplhwQAAAABmZipBzcxUwQAAAABmZipBAABIwQAAAABmZipBAAAgwQAAAABmZipBAADwwAAAAABmZipBAADAwAAAAABmZipBMzOzwAAAAABmZipBAACgwAAAAABmZipBMzODwAAAAABmZipBAABAwAAAAABmZipBAAAgwAAAAABmZipBMzPzvwAAAABmZipBzcyMvwAAAABmZipBAAAAAAAAAABmZipBzcyMPwAAAABmZipBMzPzPwAAAABmZipBAAAgQAAAAABmZipBAABAQAAAAABmZipBMzODQAAAAABmZipBzcycQAAAAABmZipBMzOzQAAAAABmZipBAADAQAAAAABmZipBAADwQAAAAABmZipBAAAgQQAAAABmZipBAABIQQAAAABmZipBzcxUQQAAAABmZipBmplhQQAAAABmZipBZmZqQQAAAABmZipBAABwQQAAAABmZipBZmZqwQAAAAAAADBBAABwwQAAAAAAADBBmplhwQAAAAAAADBBzcxUwQAAAAAAADBBAABIwQAAAAAAADBBAAAgwQAAAAAAADBBAADwwAAAAAAAADBBAADAwAAAAAAAADBBMzOzwAAAAAAAADBBAACgwAAAAAAAADBBMzODwAAAAAAAADBBAABAwAAAAAAAADBBAAAgwAAAAAAAADBBMzPzvwAAAAAAADBBzcyMvwAAAAAAADBBAAAAAAAAAAAAADBBzcyMPwAAAAAAADBBMzPzPwAAAAAAADBBAAAgQAAAAAAAADBBAABAQAAAAAAAADBBMzODQAAAAAAAADBBzcycQAAAAAAAADBBMzOzQAAAAAAAADBBAADAQAAAAAAAADBBAADwQAAAAAAAADBBAAAgQQAAAAAAADBBAABIQQAAAAAAADBBzcxUQQAAAAAAADBBmplhQQAAAAAAADBBZmZqQQAAAAAAADBBAABwQQAAAAAAADBB/3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/78=")
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_1f28f"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_gsyov"]
 _surfaces = [{
 "aabb": AABB(-30, -0.05, -30, 60, 1e-05, 60),
 "attribute_data": PackedByteArray("/////9ejmMHNzEy9/////xSuI0LNzEy9/////wAAcELNzEy9/////9ejmMHNzEy9/////wAAcELNzEy9/////wAAAADNzEy9/////wAAcMLNzEy9/////wAAAADNzEy9/////zQzU0HNzEy9/////wAAcMLNzEy9/////zQzU0HNzEy9/////zMzO8LNzEy9/////zMzO8LNzEy9/////4/C/cHNzEy9/////wAAgMDNzEy9/////zMzO8LNzEy9/////wAAgMDNzEy9/////9ejmMHNzEy9/////9Cj8L/NzEy9/////zQzU0HNzEy9/////xSuI0LNzEy9/////9Cj8L/NzEy9/////xSuI0LNzEy9/////1K4zkHNzEy9/////4/C/cHNzEy9/////8zMmMHNzEy9/////x+FU8HNzEy9/////4/C/cHNzEy9/////x+FU8HNzEy9/////1K4zsHNzEy9////////Z8HNzEy9/////9Cj8L/NzEy9/////wAAgEDNzEy9////////Z8HNzEy9/////wAAgEDNzEy9/////4XrCcHNzEy9"),
@@ -276,334 +277,335 @@ _surfaces = [{
 "vertex_data": PackedByteArray("AADwwc3MTL1SuC5BAADwQc3MTL1SuC5BAADwQc3MTL0AAPBBAADwwc3MTL1SuC5BAADwQc3MTL0AAPBBAADwwc3MTL0AAPBBAADwwc3MTL0AAPDBAADwQc3MTL0AAPDBAADwQc3MTL1mZobBAADwwc3MTL0AAPDBAADwQc3MTL1mZobBAADwwc3MTL1mZobBAADwwc3MTL1mZobBUrhuwc3MTL1mZobBUrhuwc3MTL1SuC5BAADwwc3MTL1mZobBUrhuwc3MTL1SuC5BAADwwc3MTL1SuC5BUrhuQc3MTL1mZobBAADwQc3MTL1mZobBAADwQc3MTL1SuC5BUrhuQc3MTL1mZobBAADwQc3MTL1SuC5BUrhuQc3MTL1SuC5BUrhuwc3MTL1mZobBMzMTwM3MTL1mZobBMzMTwM3MTL1SuC7BUrhuwc3MTL1mZobBMzMTwM3MTL1SuC7BUrhuwc3MTL1SuC7BMzMTQM3MTL1mZobBUrhuQc3MTL1mZobBUrhuQc3MTL1SuC7BMzMTQM3MTL1mZobBUrhuQc3MTL1SuC7BMzMTQM3MTL1SuC7B/3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+/")
 }]
 
-[node name="Room05" type="Node3D" unique_id=1160222478]
-script = ExtResource("1_h7hai")
+[node name="Room05" type="Node3D" unique_id=1144059011]
+script = ExtResource("1_5kp86")
 room_title = "Мост Биврёст (сломан)"
+visual_map = ExtResource("2_d0kft")
 max_alive = 60
 
-[node name="Geometry" type="Node3D" parent="." unique_id=1312611761]
+[node name="Geometry" type="Node3D" parent="." unique_id=1689604860]
 
-[node name="Floor" type="StaticBody3D" parent="Geometry" unique_id=772275361]
+[node name="Floor" type="StaticBody3D" parent="Geometry" unique_id=2128368614]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Floor" unique_id=285463316]
-shape = SubResource("BoxShape3D_qcvnc")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Floor" unique_id=1036711292]
+shape = SubResource("BoxShape3D_noph7")
 
-[node name="WallN_L" type="StaticBody3D" parent="Geometry" unique_id=285900517]
+[node name="WallN_L" type="StaticBody3D" parent="Geometry" unique_id=1714577729]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 12, -11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_L" unique_id=204712942]
-shape = SubResource("BoxShape3D_cfnti")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_L" unique_id=1927829162]
+shape = SubResource("BoxShape3D_yfk7t")
 
-[node name="WallN_R" type="StaticBody3D" parent="Geometry" unique_id=1709998019]
+[node name="WallN_R" type="StaticBody3D" parent="Geometry" unique_id=754774195]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 12, -11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_R" unique_id=508872673]
-shape = SubResource("BoxShape3D_noph7")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallN_R" unique_id=404471832]
+shape = SubResource("BoxShape3D_q0qtm")
 
-[node name="WallS" type="StaticBody3D" parent="Geometry" unique_id=1637390857]
+[node name="WallS" type="StaticBody3D" parent="Geometry" unique_id=1761561079]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallS" unique_id=404663943]
-shape = SubResource("BoxShape3D_yfk7t")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallS" unique_id=1249816591]
+shape = SubResource("BoxShape3D_ha7fo")
 
-[node name="WallW" type="StaticBody3D" parent="Geometry" unique_id=1427673185]
+[node name="WallW" type="StaticBody3D" parent="Geometry" unique_id=1102473210]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.5, 12, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallW" unique_id=1665029625]
-shape = SubResource("BoxShape3D_q0qtm")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallW" unique_id=1107694972]
+shape = SubResource("BoxShape3D_6t3fi")
 
-[node name="WallE" type="StaticBody3D" parent="Geometry" unique_id=794997958]
+[node name="WallE" type="StaticBody3D" parent="Geometry" unique_id=936363400]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 12, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/WallE" unique_id=177024153]
-shape = SubResource("BoxShape3D_ha7fo")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/WallE" unique_id=651173186]
+shape = SubResource("BoxShape3D_buucv")
 
-[node name="WallModels" type="Node3D" parent="Geometry" unique_id=1439707289]
+[node name="WallModels" type="Node3D" parent="Geometry" unique_id=1398381752]
 
-[node name="CL_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=1580770004 instance=ExtResource("2_5kp86")]
+[node name="CL_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=416314143 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -12.333333)
 
-[node name="CL_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1136850257 instance=ExtResource("2_5kp86")]
+[node name="CL_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1765446724 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -14)
 
-[node name="CL_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1310352525 instance=ExtResource("2_5kp86")]
+[node name="CL_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=723387649 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 0, -15.666666)
 
-[node name="CL_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=303529293 instance=ExtResource("2_5kp86")]
+[node name="CL_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1280872836 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 3.12, -12.333333)
 
-[node name="CL_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=766151276 instance=ExtResource("2_5kp86")]
+[node name="CL_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=157294932 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 3.12, -14)
 
-[node name="CL_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=116241969 instance=ExtResource("2_5kp86")]
+[node name="CL_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=646786618 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, 1, 0, 1, 0, -0.8333333, 0, -4.371139e-08, -2.1, 3.12, -15.666666)
 
-[node name="CR_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=68660337 instance=ExtResource("2_5kp86")]
+[node name="CR_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=2085519242 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -15.666667)
 
-[node name="CR_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1360590020 instance=ExtResource("2_5kp86")]
+[node name="CR_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=567175280 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -14)
 
-[node name="CR_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1593490817 instance=ExtResource("2_5kp86")]
+[node name="CR_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1293273305 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 0, -12.333334)
 
-[node name="CR_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=1348636121 instance=ExtResource("2_5kp86")]
+[node name="CR_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=69729272 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 3.12, -15.666667)
 
-[node name="CR_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1374944284 instance=ExtResource("2_5kp86")]
+[node name="CR_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1052347339 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 3.12, -14)
 
-[node name="CR_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=223952956 instance=ExtResource("2_5kp86")]
+[node name="CR_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=755459095 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(-3.6426155e-08, 0, -1, 0, 1, 0, 0.8333333, 0, -4.371139e-08, 2.1, 3.12, -12.333334)
 
-[node name="CE_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=519788670 instance=ExtResource("2_5kp86")]
+[node name="CE_0_0" type="Node3D" parent="Geometry/WallModels" unique_id=346428545 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -16.6)
 
-[node name="CE_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=158166561 instance=ExtResource("2_5kp86")]
+[node name="CE_0_1" type="Node3D" parent="Geometry/WallModels" unique_id=1549024241 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -16.6)
 
-[node name="CE_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=1144164832 instance=ExtResource("2_5kp86")]
+[node name="CE_0_2" type="Node3D" parent="Geometry/WallModels" unique_id=758110262 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -16.6)
 
-[node name="CE_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=599092355 instance=ExtResource("2_5kp86")]
+[node name="CE_1_0" type="Node3D" parent="Geometry/WallModels" unique_id=122101190 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 3.12, -16.6)
 
-[node name="CE_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=465676965 instance=ExtResource("2_5kp86")]
+[node name="CE_1_1" type="Node3D" parent="Geometry/WallModels" unique_id=1614557715 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.12, -16.6)
 
-[node name="CE_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=1512049918 instance=ExtResource("2_5kp86")]
+[node name="CE_1_2" type="Node3D" parent="Geometry/WallModels" unique_id=329374786 instance=ExtResource("3_nnyu1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 3.12, -16.6)
 
-[node name="CorridorFloor" type="StaticBody3D" parent="Geometry" unique_id=1602595634]
+[node name="CorridorFloor" type="StaticBody3D" parent="Geometry" unique_id=1212725460]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -14)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorFloor" unique_id=1177429234]
-shape = SubResource("BoxShape3D_6t3fi")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorFloor" unique_id=1483845917]
+shape = SubResource("BoxShape3D_ah7fx")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/CorridorFloor" unique_id=476497524]
-material_override = ExtResource("3_d0kft")
-mesh = SubResource("BoxMesh_buucv")
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/CorridorFloor" unique_id=1574681804]
+material_override = ExtResource("4_buhw1")
+mesh = SubResource("BoxMesh_fkbri")
 
-[node name="CorridorL" type="StaticBody3D" parent="Geometry" unique_id=1057843591]
+[node name="CorridorL" type="StaticBody3D" parent="Geometry" unique_id=1840962354]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 3, -14)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorL" unique_id=1578550211]
-shape = SubResource("BoxShape3D_ah7fx")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorL" unique_id=1380406016]
+shape = SubResource("BoxShape3D_vuwux")
 
-[node name="CorridorR" type="StaticBody3D" parent="Geometry" unique_id=1019648003]
+[node name="CorridorR" type="StaticBody3D" parent="Geometry" unique_id=524573822]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 3, -14)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorR" unique_id=542813219]
-shape = SubResource("BoxShape3D_fkbri")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorR" unique_id=402322431]
+shape = SubResource("BoxShape3D_erhpq")
 
-[node name="CorridorEnd" type="StaticBody3D" parent="Geometry" unique_id=1831521109]
+[node name="CorridorEnd" type="StaticBody3D" parent="Geometry" unique_id=180046280]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -17)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorEnd" unique_id=1229668151]
-shape = SubResource("BoxShape3D_vuwux")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/CorridorEnd" unique_id=1526367209]
+shape = SubResource("BoxShape3D_vg5eg")
 
-[node name="Portal" type="Node3D" parent="Geometry" unique_id=183098981]
+[node name="Portal" type="Node3D" parent="Geometry" unique_id=1072116136]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, -16.45)
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Portal" unique_id=767362522]
-material_override = SubResource("StandardMaterial3D_yam4e")
-mesh = SubResource("BoxMesh_erhpq")
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Portal" unique_id=358561912]
+material_override = SubResource("StandardMaterial3D_nncso")
+mesh = SubResource("BoxMesh_eal30")
 
-[node name="Block0" type="StaticBody3D" parent="Geometry" unique_id=231256353]
+[node name="Block0" type="StaticBody3D" parent="Geometry" unique_id=1293087408]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 1, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Block0" unique_id=421886057]
-shape = SubResource("BoxShape3D_vg5eg")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Block0" unique_id=217806626]
+shape = SubResource("BoxShape3D_dmabn")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block0" unique_id=1042864976]
-material_override = ExtResource("4_nnyu1")
-mesh = SubResource("ArrayMesh_eal30")
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block0" unique_id=1268858802]
+material_override = ExtResource("5_geol0")
+mesh = SubResource("ArrayMesh_nld32")
 
-[node name="Block1" type="StaticBody3D" parent="Geometry" unique_id=1335051551]
+[node name="Block1" type="StaticBody3D" parent="Geometry" unique_id=1032495758]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 1, 0)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Block1" unique_id=554848420]
-shape = SubResource("BoxShape3D_dmabn")
-
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block1" unique_id=1305078194]
-material_override = ExtResource("4_nnyu1")
-mesh = SubResource("ArrayMesh_nld32")
-
-[node name="Block2" type="StaticBody3D" parent="Geometry" unique_id=1867069819]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, -2)
-collision_mask = 0
-script = ExtResource("5_buhw1")
-slam_breakable = true
-
-[node name="Deck" type="CollisionShape3D" parent="Geometry/Block2" unique_id=1568847683]
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Block1" unique_id=722999000]
 shape = SubResource("BoxShape3D_ktfld")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block2" unique_id=1814916780]
-material_override = ExtResource("6_geol0")
-mesh = SubResource("BoxMesh_1sf10")
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block1" unique_id=1878567260]
+material_override = ExtResource("5_geol0")
+mesh = SubResource("ArrayMesh_1sf10")
 
-[node name="Scatter" type="Node3D" parent="Geometry/Block2" unique_id=1264006554]
+[node name="Block2" type="StaticBody3D" parent="Geometry" unique_id=1450375769]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, -2)
+collision_mask = 0
+script = ExtResource("6_ogsha")
+slam_breakable = true
 
-[node name="Beam" type="MultiMeshInstance3D" parent="Geometry/Block2/Scatter" unique_id=918180830]
-material_override = ExtResource("7_ogsha")
+[node name="Deck" type="CollisionShape3D" parent="Geometry/Block2" unique_id=1614744321]
+shape = SubResource("BoxShape3D_4r6ww")
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Block2" unique_id=848269670]
+material_override = ExtResource("7_u435m")
+mesh = SubResource("BoxMesh_cisdx")
+
+[node name="Scatter" type="Node3D" parent="Geometry/Block2" unique_id=1159096812]
+
+[node name="Beam" type="MultiMeshInstance3D" parent="Geometry/Block2/Scatter" unique_id=218157100]
+material_override = ExtResource("8_5022y")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("9_5022y")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("10_ldkl3")
 xforms = PackedFloat32Array(0.55998546, 0.014408097, 0, 6.085129e-08, -0.004037607, 1.9982936, 0, -0.05411285, 0, 0, 0.83458334, 0.27458352, 0.55998677, -0.013755218, 0, 7.239227e-08, 0.0038546496, 1.9982983, 0, -0.041839525, 0, 0, 0.83458334, 1.3945835)
 
-[node name="Pillar0" type="StaticBody3D" parent="Geometry" unique_id=447803848]
+[node name="Pillar0" type="StaticBody3D" parent="Geometry" unique_id=296345377]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 3, 6)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar0" unique_id=1694066056]
-shape = SubResource("CylinderShape3D_4r6ww")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar0" unique_id=1827318017]
+shape = SubResource("CylinderShape3D_4jcnm")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar0" unique_id=1326581367]
-material_override = ExtResource("10_s05jj")
-mesh = SubResource("CylinderMesh_cisdx")
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar0" unique_id=699570676]
+material_override = ExtResource("11_l87mj")
+mesh = SubResource("CylinderMesh_24uh3")
 
-[node name="PillarBase0" type="StaticBody3D" parent="Geometry" unique_id=883924226]
+[node name="PillarBase0" type="StaticBody3D" parent="Geometry" unique_id=1907937855]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.25, 6)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase0" unique_id=349293136]
-shape = SubResource("CylinderShape3D_4jcnm")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase0" unique_id=1515374644]
+shape = SubResource("CylinderShape3D_1d743")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase0" unique_id=2121647830]
-material_override = ExtResource("10_s05jj")
-mesh = SubResource("CylinderMesh_24uh3")
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase0" unique_id=1384305526]
+material_override = ExtResource("11_l87mj")
+mesh = SubResource("CylinderMesh_jpm5o")
 
-[node name="PillarCap0" type="StaticBody3D" parent="Geometry" unique_id=106378807]
+[node name="PillarCap0" type="StaticBody3D" parent="Geometry" unique_id=240505531]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 5.8, 6)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap0" unique_id=1487118566]
-shape = SubResource("CylinderShape3D_1d743")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap0" unique_id=158908894]
+shape = SubResource("CylinderShape3D_voml8")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap0" unique_id=6712438]
-material_override = ExtResource("10_s05jj")
-mesh = SubResource("CylinderMesh_jpm5o")
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap0" unique_id=829364283]
+material_override = ExtResource("11_l87mj")
+mesh = SubResource("CylinderMesh_2xxhq")
 
-[node name="Pillar1" type="StaticBody3D" parent="Geometry" unique_id=863574579]
+[node name="Pillar1" type="StaticBody3D" parent="Geometry" unique_id=184406048]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 3, -7)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar1" unique_id=526482076]
-shape = SubResource("CylinderShape3D_voml8")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/Pillar1" unique_id=1743338667]
+shape = SubResource("CylinderShape3D_7mfav")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar1" unique_id=716020196]
-material_override = ExtResource("10_s05jj")
-mesh = SubResource("CylinderMesh_2xxhq")
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/Pillar1" unique_id=116395500]
+material_override = ExtResource("11_l87mj")
+mesh = SubResource("CylinderMesh_hrcc3")
 
-[node name="PillarBase1" type="StaticBody3D" parent="Geometry" unique_id=1138509293]
+[node name="PillarBase1" type="StaticBody3D" parent="Geometry" unique_id=1182053814]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.25, -7)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase1" unique_id=1003021815]
-shape = SubResource("CylinderShape3D_7mfav")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarBase1" unique_id=1913480633]
+shape = SubResource("CylinderShape3D_c4bcg")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase1" unique_id=1906563808]
-material_override = ExtResource("10_s05jj")
-mesh = SubResource("CylinderMesh_hrcc3")
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarBase1" unique_id=985950911]
+material_override = ExtResource("11_l87mj")
+mesh = SubResource("CylinderMesh_555u8")
 
-[node name="PillarCap1" type="StaticBody3D" parent="Geometry" unique_id=818850387]
+[node name="PillarCap1" type="StaticBody3D" parent="Geometry" unique_id=1855766319]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 5.8, -7)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap1" unique_id=587017251]
-shape = SubResource("CylinderShape3D_c4bcg")
+[node name="Shape" type="CollisionShape3D" parent="Geometry/PillarCap1" unique_id=295111404]
+shape = SubResource("CylinderShape3D_04e1c")
 
-[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap1" unique_id=1112778163]
-material_override = ExtResource("10_s05jj")
-mesh = SubResource("CylinderMesh_555u8")
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/PillarCap1" unique_id=266894127]
+material_override = ExtResource("11_l87mj")
+mesh = SubResource("CylinderMesh_t3t2m")
 
-[node name="Door" type="StaticBody3D" parent="." unique_id=1914279244]
+[node name="Door" type="StaticBody3D" parent="." unique_id=2096261590]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -11.5)
 collision_mask = 0
 
-[node name="Shape" type="CollisionShape3D" parent="Door" unique_id=1616758660]
-shape = SubResource("BoxShape3D_04e1c")
+[node name="Shape" type="CollisionShape3D" parent="Door" unique_id=577966634]
+shape = SubResource("BoxShape3D_sswig")
 
-[node name="Mesh" type="MeshInstance3D" parent="Door" unique_id=2116480658]
-material_override = SubResource("StandardMaterial3D_4m0ne")
-mesh = SubResource("BoxMesh_t3t2m")
-
-[node name="Rune" type="Node3D" parent="Door" unique_id=974431249]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.33)
-
-[node name="Mesh" type="MeshInstance3D" parent="Door/Rune" unique_id=1792974224]
-material_override = SubResource("StandardMaterial3D_cpw6m")
-mesh = SubResource("BoxMesh_sswig")
-
-[node name="RuneBar" type="Node3D" parent="Door" unique_id=224357786]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.33)
-
-[node name="Mesh" type="MeshInstance3D" parent="Door/RuneBar" unique_id=1378944832]
-material_override = SubResource("StandardMaterial3D_cpw6m")
+[node name="Mesh" type="MeshInstance3D" parent="Door" unique_id=1262396558]
+material_override = SubResource("StandardMaterial3D_n71oh")
 mesh = SubResource("BoxMesh_bxjmm")
 
-[node name="Exit" type="Area3D" parent="." unique_id=112995444]
+[node name="Rune" type="Node3D" parent="Door" unique_id=747509266]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.33)
+
+[node name="Mesh" type="MeshInstance3D" parent="Door/Rune" unique_id=901207260]
+material_override = SubResource("StandardMaterial3D_fu1b7")
+mesh = SubResource("BoxMesh_quylj")
+
+[node name="RuneBar" type="Node3D" parent="Door" unique_id=1167204115]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.33)
+
+[node name="Mesh" type="MeshInstance3D" parent="Door/RuneBar" unique_id=1440313036]
+material_override = SubResource("StandardMaterial3D_fu1b7")
+mesh = SubResource("BoxMesh_b6fhl")
+
+[node name="Exit" type="Area3D" parent="." unique_id=1068888584]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -15)
 collision_layer = 32
 collision_mask = 2
 
-[node name="Shape" type="CollisionShape3D" parent="Exit" unique_id=1475640424]
-shape = SubResource("BoxShape3D_quylj")
+[node name="Shape" type="CollisionShape3D" parent="Exit" unique_id=342549520]
+shape = SubResource("BoxShape3D_miwnl")
 
-[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=445292318]
+[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=660045385]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 2.1, 8.5)
 
-[node name="Spawns" type="Node3D" parent="." unique_id=1861145367]
+[node name="Spawns" type="Node3D" parent="." unique_id=1984676285]
 
-[node name="grunt_0" type="Marker3D" parent="Spawns" unique_id=1726827253]
+[node name="grunt_0" type="Marker3D" parent="Spawns" unique_id=2117641127]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="grunt_1" type="Marker3D" parent="Spawns" unique_id=2121919695]
+[node name="grunt_1" type="Marker3D" parent="Spawns" unique_id=877895181]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="grunt_2" type="Marker3D" parent="Spawns" unique_id=1700013126]
+[node name="grunt_2" type="Marker3D" parent="Spawns" unique_id=849584089]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="thrower_3" type="Marker3D" parent="Spawns" unique_id=1486495776]
+[node name="thrower_3" type="Marker3D" parent="Spawns" unique_id=684113979]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, 6)
 metadata/kind = "thrower"
 metadata/wave = 0
 
-[node name="grunt_4" type="Marker3D" parent="Spawns" unique_id=1515640525]
+[node name="grunt_4" type="Marker3D" parent="Spawns" unique_id=188993619]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, 4)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="grunt_5" type="Marker3D" parent="Spawns" unique_id=64893096]
+[node name="grunt_5" type="Marker3D" parent="Spawns" unique_id=1772012743]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 3)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="grunt_6" type="Marker3D" parent="Spawns" unique_id=1861361919]
+[node name="grunt_6" type="Marker3D" parent="Spawns" unique_id=1419594039]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 2.05, 2.5)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="fodder_7" type="Marker3D" parent="Spawns" unique_id=2124871857]
+[node name="fodder_7" type="Marker3D" parent="Spawns" unique_id=915464167]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.25, 2.05, 4)
 metadata/kind = "fodder"
 metadata/wave = 0
@@ -614,1238 +616,1238 @@ metadata/entry_target = Vector3(4.4, 0.05, 4)
 metadata/spread_axes = Vector2(0.35, 3.5)
 metadata/entry_batch = 1
 
-[node name="grunt_8" type="Marker3D" parent="Spawns" unique_id=387477859]
+[node name="grunt_8" type="Marker3D" parent="Spawns" unique_id=1128705820]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, 4)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="grunt_9" type="Marker3D" parent="Spawns" unique_id=394804962]
+[node name="grunt_9" type="Marker3D" parent="Spawns" unique_id=61237238]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, 2)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="thrower_10" type="Marker3D" parent="Spawns" unique_id=833748338]
+[node name="thrower_10" type="Marker3D" parent="Spawns" unique_id=1300884578]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 2.05, -8)
 metadata/kind = "thrower"
 metadata/wave = 1
 
-[node name="grunt_11" type="Marker3D" parent="Spawns" unique_id=237039202]
+[node name="grunt_11" type="Marker3D" parent="Spawns" unique_id=1559392417]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.05, 2)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="merc_12" type="Marker3D" parent="Spawns" unique_id=2065258498]
+[node name="merc_12" type="Marker3D" parent="Spawns" unique_id=1235999109]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2.05, -8)
 metadata/kind = "merc"
 metadata/wave = 1
 
-[node name="fodder_13" type="Marker3D" parent="Spawns" unique_id=1493410574]
+[node name="fodder_13" type="Marker3D" parent="Spawns" unique_id=336531023]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 3)
 metadata/kind = "fodder"
 metadata/wave = 1
 metadata/count = 10
 metadata/spread = 2.25
 
-[node name="shaman_14" type="Marker3D" parent="Spawns" unique_id=201348893]
+[node name="shaman_14" type="Marker3D" parent="Spawns" unique_id=421392241]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2.05, -5)
 metadata/kind = "shaman"
 metadata/wave = 2
 
-[node name="shieldbearer_15" type="Marker3D" parent="Spawns" unique_id=587228048]
+[node name="shieldbearer_15" type="Marker3D" parent="Spawns" unique_id=1329063506]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.1499999, -2)
 metadata/kind = "shieldbearer"
 metadata/wave = 2
 
-[node name="grunt_16" type="Marker3D" parent="Spawns" unique_id=1220879670]
+[node name="grunt_16" type="Marker3D" parent="Spawns" unique_id=16189781]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, 4)
 metadata/kind = "grunt"
 metadata/wave = 2
 
-[node name="grunt_17" type="Marker3D" parent="Spawns" unique_id=821125143]
+[node name="grunt_17" type="Marker3D" parent="Spawns" unique_id=344815284]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 2
 
-[node name="grunt_18" type="Marker3D" parent="Spawns" unique_id=1636892968]
+[node name="grunt_18" type="Marker3D" parent="Spawns" unique_id=462422931]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, 2)
 metadata/kind = "grunt"
 metadata/wave = 2
 
-[node name="fodder_19" type="Marker3D" parent="Spawns" unique_id=2039658648]
+[node name="fodder_19" type="Marker3D" parent="Spawns" unique_id=732164517]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 2.5)
 metadata/kind = "fodder"
 metadata/wave = 2
 metadata/count = 11
 metadata/spread = 2.375
 
-[node name="Props" type="Node3D" parent="." unique_id=1123964219]
+[node name="Props" type="Node3D" parent="." unique_id=375158943]
 
-[node name="barrel_0" type="RigidBody3D" parent="Props" unique_id=542515848 groups=["props"] instance=ExtResource("14_p5q5q")]
+[node name="barrel_0" type="RigidBody3D" parent="Props" unique_id=178860471 groups=["props"] instance=ExtResource("15_opsan")]
 transform = Transform3D(0.38442773, 0, 0.92315507, 0, 1, 0, -0.92315507, 0, 0.38442773, -12, 2.02, 3)
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
-script = ExtResource("15_owja3")
+script = ExtResource("16_d01fm")
 
-[node name="barrel_1" type="RigidBody3D" parent="Props" unique_id=52608822 groups=["props"] instance=ExtResource("14_p5q5q")]
+[node name="barrel_1" type="RigidBody3D" parent="Props" unique_id=955340841 groups=["props"] instance=ExtResource("15_opsan")]
 transform = Transform3D(-0.9960359, 0, 0.08895274, 0, 1, 0, -0.08895274, 0, -0.9960359, 12, 2.02, -3)
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
-script = ExtResource("15_owja3")
+script = ExtResource("16_d01fm")
 
-[node name="crate_2" type="RigidBody3D" parent="Props" unique_id=468625725 groups=["props"] instance=ExtResource("16_opsan")]
+[node name="crate_2" type="RigidBody3D" parent="Props" unique_id=138849333 groups=["props"] instance=ExtResource("17_rfht8")]
 transform = Transform3D(-0.046476293, 0, -0.99891937, 0, 1, 0, 0.99891937, 0, -0.046476293, 0, 2.02, -2)
 collision_layer = 8
 collision_mask = 79
 mass = 1.6
-script = ExtResource("15_owja3")
+script = ExtResource("16_d01fm")
 max_health = 30.0
 debris_mode = "box"
 wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="crate_3" type="RigidBody3D" parent="Props" unique_id=750486341 groups=["props"] instance=ExtResource("16_opsan")]
+[node name="crate_3" type="RigidBody3D" parent="Props" unique_id=1558693638 groups=["props"] instance=ExtResource("17_rfht8")]
 transform = Transform3D(-0.36378387, 0, 0.9314834, 0, 1, 0, -0.9314834, 0, -0.36378387, 2, 0.02, 6)
 collision_layer = 8
 collision_mask = 79
 mass = 1.6
-script = ExtResource("15_owja3")
+script = ExtResource("16_d01fm")
 max_health = 30.0
 debris_mode = "box"
 wood_color = Color(0.62, 0.45, 0.28, 1)
 break_sound = "sounds/sfx/crate_break.wav"
 loot = "crate"
 
-[node name="barrel_4" type="RigidBody3D" parent="Props" unique_id=2036777391 groups=["props"] instance=ExtResource("14_p5q5q")]
+[node name="barrel_4" type="RigidBody3D" parent="Props" unique_id=1916874607 groups=["props"] instance=ExtResource("15_opsan")]
 transform = Transform3D(0.989107, 0, -0.14719813, 0, 1, 0, 0.14719813, 0, 0.989107, -2, 0.02, -8)
 collision_layer = 8
 collision_mask = 79
 mass = 1.2
-script = ExtResource("15_owja3")
+script = ExtResource("16_d01fm")
 
-[node name="Torches" type="Node3D" parent="." unique_id=1638949668]
+[node name="Torches" type="Node3D" parent="." unique_id=1542848840]
 
-[node name="Torch0" type="Node3D" parent="Torches" unique_id=237868589]
+[node name="Torch0" type="Node3D" parent="Torches" unique_id=613476703]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.8, 3.2, -5.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch0" unique_id=821284555 instance=ExtResource("17_d01fm")]
+[node name="Model" type="Node3D" parent="Torches/Torch0" unique_id=2056680834 instance=ExtResource("18_o11gi")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch0" unique_id=434726349]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch0" unique_id=1185630097]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
-material_override = SubResource("StandardMaterial3D_hu6sr")
-mesh = SubResource("CylinderMesh_b6fhl")
-
-[node name="Light" type="OmniLight3D" parent="Torches/Torch0" unique_id=2128950493]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
-light_color = Color(1, 0.62, 0.3, 1)
-light_energy = 2.2
-omni_range = 9.0
-
-[node name="Torch1" type="Node3D" parent="Torches" unique_id=406082854]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.8, 3.2, -5.5)
-
-[node name="Model" type="Node3D" parent="Torches/Torch1" unique_id=374336075 instance=ExtResource("17_d01fm")]
-transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
-
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch1" unique_id=1029066688]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
-material_override = SubResource("StandardMaterial3D_hu6sr")
-mesh = SubResource("CylinderMesh_miwnl")
-
-[node name="Light" type="OmniLight3D" parent="Torches/Torch1" unique_id=1597215132]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
-light_color = Color(1, 0.62, 0.3, 1)
-light_energy = 2.2
-omni_range = 9.0
-
-[node name="Torch2" type="Node3D" parent="Torches" unique_id=1486094227]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.8, 3.2, 5.5)
-
-[node name="Model" type="Node3D" parent="Torches/Torch2" unique_id=650583773 instance=ExtResource("17_d01fm")]
-transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
-
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch2" unique_id=718991248]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
-material_override = SubResource("StandardMaterial3D_hu6sr")
+material_override = SubResource("StandardMaterial3D_w0npu")
 mesh = SubResource("CylinderMesh_ygo20")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch2" unique_id=506831480]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch0" unique_id=1361311366]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch3" type="Node3D" parent="Torches" unique_id=1434472458]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.8, 3.2, 5.5)
+[node name="Torch1" type="Node3D" parent="Torches" unique_id=1080039582]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.8, 3.2, -5.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch3" unique_id=560729269 instance=ExtResource("17_d01fm")]
+[node name="Model" type="Node3D" parent="Torches/Torch1" unique_id=1690957166 instance=ExtResource("18_o11gi")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch3" unique_id=512947712]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch1" unique_id=32459130]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
-material_override = SubResource("StandardMaterial3D_hu6sr")
+material_override = SubResource("StandardMaterial3D_w0npu")
 mesh = SubResource("CylinderMesh_i2gas")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch3" unique_id=1450200897]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch1" unique_id=865857181]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch4" type="Node3D" parent="Torches" unique_id=136861435]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2, 3.6, -10.9)
+[node name="Torch2" type="Node3D" parent="Torches" unique_id=1591779647]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.8, 3.2, 5.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch4" unique_id=763197724 instance=ExtResource("17_d01fm")]
+[node name="Model" type="Node3D" parent="Torches/Torch2" unique_id=631875894 instance=ExtResource("18_o11gi")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch4" unique_id=950074734]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch2" unique_id=1981723420]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
-material_override = SubResource("StandardMaterial3D_hu6sr")
+material_override = SubResource("StandardMaterial3D_w0npu")
 mesh = SubResource("CylinderMesh_be2vs")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch4" unique_id=1349210514]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch2" unique_id=1155136594]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Torch5" type="Node3D" parent="Torches" unique_id=914435791]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 3.6, -10.9)
+[node name="Torch3" type="Node3D" parent="Torches" unique_id=113176546]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.8, 3.2, 5.5)
 
-[node name="Model" type="Node3D" parent="Torches/Torch5" unique_id=296020835 instance=ExtResource("17_d01fm")]
+[node name="Model" type="Node3D" parent="Torches/Torch3" unique_id=265951075 instance=ExtResource("18_o11gi")]
 transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
 
-[node name="Flame" type="MeshInstance3D" parent="Torches/Torch5" unique_id=426096069]
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch3" unique_id=26545346]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
-material_override = SubResource("StandardMaterial3D_hu6sr")
+material_override = SubResource("StandardMaterial3D_w0npu")
 mesh = SubResource("CylinderMesh_3trwx")
 
-[node name="Light" type="OmniLight3D" parent="Torches/Torch5" unique_id=294173081]
+[node name="Light" type="OmniLight3D" parent="Torches/Torch3" unique_id=52313711]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="Banners" type="Node3D" parent="." unique_id=2018080526]
+[node name="Torch4" type="Node3D" parent="Torches" unique_id=1686858037]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2, 3.6, -10.9)
 
-[node name="BannerW0" type="Node3D" parent="Banners" unique_id=1002501981]
+[node name="Model" type="Node3D" parent="Torches/Torch4" unique_id=491954779 instance=ExtResource("18_o11gi")]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
+
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch4" unique_id=625294130]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
+material_override = SubResource("StandardMaterial3D_w0npu")
+mesh = SubResource("CylinderMesh_7e6hq")
+
+[node name="Light" type="OmniLight3D" parent="Torches/Torch4" unique_id=665014854]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+light_color = Color(1, 0.62, 0.3, 1)
+light_energy = 2.2
+omni_range = 9.0
+
+[node name="Torch5" type="Node3D" parent="Torches" unique_id=1990462864]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 3.6, -10.9)
+
+[node name="Model" type="Node3D" parent="Torches/Torch5" unique_id=1622310438 instance=ExtResource("18_o11gi")]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, -0.3, -0.25)
+
+[node name="Flame" type="MeshInstance3D" parent="Torches/Torch5" unique_id=1606739399]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.08)
+material_override = SubResource("StandardMaterial3D_w0npu")
+mesh = SubResource("CylinderMesh_1f28f")
+
+[node name="Light" type="OmniLight3D" parent="Torches/Torch5" unique_id=616646547]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+light_color = Color(1, 0.62, 0.3, 1)
+light_energy = 2.2
+omni_range = 9.0
+
+[node name="Banners" type="Node3D" parent="." unique_id=758140672]
+
+[node name="BannerW0" type="Node3D" parent="Banners" unique_id=1985203507]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.97, 4.35, 0)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "banner_wolf"
 height = 2.3
 
-[node name="BannerE0" type="Node3D" parent="Banners" unique_id=1056426724]
+[node name="BannerE0" type="Node3D" parent="Banners" unique_id=856437679]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.97, 4.35, 0)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "banner_hammer"
 height = 2.3
 
-[node name="ShieldW-8" type="Node3D" parent="Banners" unique_id=1140269015]
+[node name="ShieldW-8" type="Node3D" parent="Banners" unique_id=147552393]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.97, 4.55, -8.25)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "shield_crossed_stripes"
 height = 1.05
 
-[node name="ShieldE-8" type="Node3D" parent="Banners" unique_id=1507940605]
+[node name="ShieldE-8" type="Node3D" parent="Banners" unique_id=2074173190]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.97, 4.55, -8.25)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 height = 1.05
 
-[node name="ShieldW8" type="Node3D" parent="Banners" unique_id=1497999523]
+[node name="ShieldW8" type="Node3D" parent="Banners" unique_id=27832436]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.97, 4.55, 8.25)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "shield_quartered"
 height = 1.05
 
-[node name="ShieldE8" type="Node3D" parent="Banners" unique_id=1607207281]
+[node name="ShieldE8" type="Node3D" parent="Banners" unique_id=2124866062]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.97, 4.55, 8.25)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "shield_tree"
 height = 1.05
 
-[node name="ShieldW-2" type="Node3D" parent="Banners" unique_id=2145006249]
+[node name="ShieldW-2" type="Node3D" parent="Banners" unique_id=519166769]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.97, 4.55, -2.75)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "shield_raven"
 height = 1.05
 
-[node name="ShieldE-2" type="Node3D" parent="Banners" unique_id=246608087]
+[node name="ShieldE-2" type="Node3D" parent="Banners" unique_id=2125814555]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.97, 4.55, -2.75)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "shield_triangles"
 height = 1.05
 
-[node name="ShieldW2" type="Node3D" parent="Banners" unique_id=13250122]
+[node name="ShieldW2" type="Node3D" parent="Banners" unique_id=1545000850]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.97, 4.55, 2.75)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "shield_spiral"
 height = 1.05
 
-[node name="ShieldE2" type="Node3D" parent="Banners" unique_id=1817550075]
+[node name="ShieldE2" type="Node3D" parent="Banners" unique_id=525178213]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14.97, 4.55, 2.75)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "shield_waves"
 height = 1.05
 
-[node name="BannerN-1" type="Node3D" parent="Banners" unique_id=1910683680]
+[node name="BannerN-1" type="Node3D" parent="Banners" unique_id=67101214]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.6, 4.2, -10.97)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "banner_raven"
 height = 2.1
 
-[node name="BannerN1" type="Node3D" parent="Banners" unique_id=1425120226]
+[node name="BannerN1" type="Node3D" parent="Banners" unique_id=219064979]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 4.2, -10.97)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "banner_serpent"
 height = 2.1
 
-[node name="ShieldS-1" type="Node3D" parent="Banners" unique_id=1545776806]
+[node name="ShieldS-1" type="Node3D" parent="Banners" unique_id=952507883]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -7.5, 4.3, 10.97)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "shield_triangles"
 height = 1.15
 
-[node name="ShieldS1" type="Node3D" parent="Banners" unique_id=909979327]
+[node name="ShieldS1" type="Node3D" parent="Banners" unique_id=1167803846]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 7.5, 4.3, 10.97)
-script = ExtResource("18_rfht8")
+script = ExtResource("19_4hnrg")
 art = "shield_waves"
 height = 1.15
 
-[node name="PortalLight" type="OmniLight3D" parent="." unique_id=1222593141]
+[node name="PortalLight" type="OmniLight3D" parent="." unique_id=191114448]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -15.5)
 light_color = Color(0.45, 0.8, 1, 1)
 light_energy = 2.5
 omni_range = 7.0
 
-[node name="Dress" type="Node3D" parent="." unique_id=706811846]
+[node name="Dress" type="Node3D" parent="." unique_id=940017504]
 
-[node name="FloorVisual" type="MeshInstance3D" parent="Dress" unique_id=1783427509]
-material_override = ExtResource("3_d0kft")
-mesh = SubResource("ArrayMesh_7e6hq")
+[node name="FloorVisual" type="MeshInstance3D" parent="Dress" unique_id=2016978516]
+material_override = ExtResource("4_buhw1")
+mesh = SubResource("ArrayMesh_unlma")
 
-[node name="Decals" type="Node3D" parent="Dress" unique_id=1069956359]
+[node name="Decals" type="Node3D" parent="Dress" unique_id=579327162]
 
-[node name="IchorSplat01_1" type="Node3D" parent="Dress/Decals" unique_id=8645456]
+[node name="IchorSplat01_1" type="Node3D" parent="Dress/Decals" unique_id=110512586]
 transform = Transform3D(0.07878637, 0, 0.9968915, 0, 1, 0, -0.9968915, 0, 0.07878637, 1.5023508, 0.004, -3.5704012)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "ichor_splat_01"
 size = 1.3960842
 
-[node name="SlamCrackMedium_2" type="Node3D" parent="Dress/Decals" unique_id=412960955]
+[node name="SlamCrackMedium_2" type="Node3D" parent="Dress/Decals" unique_id=1846303740]
 transform = Transform3D(-0.9171879, 0, -0.3984549, 0, 1, 0, 0.3984549, 0, -0.9171879, -4.1681004, 0.008, 7.9881506)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "slam_crack_medium"
 size = 2.6797228
 
-[node name="SlamCrackSmall_3" type="Node3D" parent="Dress/Decals" unique_id=935631605]
+[node name="SlamCrackSmall_3" type="Node3D" parent="Dress/Decals" unique_id=672949373]
 transform = Transform3D(0.38756424, 0, -0.9218427, 0, 1, 0, 0.9218427, 0, 0.38756424, -2.7074556, 0.012, -0.93180275)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "slam_crack_small"
 size = 1.8685558
 
-[node name="IchorSplat01_4" type="Node3D" parent="Dress/Decals" unique_id=1807904545]
+[node name="IchorSplat01_4" type="Node3D" parent="Dress/Decals" unique_id=678388768]
 transform = Transform3D(0.74524003, 0, 0.66679627, 0, 1, 0, -0.66679627, 0, 0.74524003, -3.070979, 0, 1.3635063)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "ichor_splat_01"
 size = 1.1281414
 
-[node name="SlamCrackSmall_5" type="Node3D" parent="Dress/Decals" unique_id=1997760395]
+[node name="SlamCrackSmall_5" type="Node3D" parent="Dress/Decals" unique_id=391477673]
 transform = Transform3D(-0.40319878, 0, 0.91511244, 0, 1, 0, -0.91511244, 0, -0.40319878, 5.0824804, 0.004, -8.720024)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "slam_crack_small"
 size = 1.2694985
 
-[node name="SlamCrackMedium_6" type="Node3D" parent="Dress/Decals" unique_id=1847992961]
+[node name="SlamCrackMedium_6" type="Node3D" parent="Dress/Decals" unique_id=1292872107]
 transform = Transform3D(0.89390177, 0, -0.44826296, 0, 1, 0, 0.44826296, 0, 0.89390177, 4.7147036, 0.008, 8.874734)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "slam_crack_medium"
 size = 2.049556
 
-[node name="Scorch_7" type="Node3D" parent="Dress/Decals" unique_id=304593591]
+[node name="Scorch_7" type="Node3D" parent="Dress/Decals" unique_id=173625189]
 transform = Transform3D(-0.9971071, 0, 0.07600971, 0, 1, 0, -0.07600971, 0, -0.9971071, -4.127015, 0.012, -8.097668)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 size = 2.3051162
 
-[node name="Scorch_8" type="Node3D" parent="Dress/Decals" unique_id=253947028]
+[node name="Scorch_8" type="Node3D" parent="Dress/Decals" unique_id=365033488]
 transform = Transform3D(0.40644434, 0, -0.91367555, 0, 1, 0, 0.91367555, 0, 0.40644434, 5.229121, 0, 4.1574583)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 size = 1.7830639
 
-[node name="SlamCrackMedium_9" type="Node3D" parent="Dress/Decals" unique_id=934669034]
+[node name="SlamCrackMedium_9" type="Node3D" parent="Dress/Decals" unique_id=1444833527]
 transform = Transform3D(0.99732465, 0, 0.07309958, 0, 1, 0, -0.07309958, 0, 0.99732465, 0.96955585, 0.004, -6.4377933)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "slam_crack_medium"
 size = 1.9598981
 
-[node name="IchorSplat01_10" type="Node3D" parent="Dress/Decals" unique_id=2034137124]
+[node name="IchorSplat01_10" type="Node3D" parent="Dress/Decals" unique_id=1314354679]
 transform = Transform3D(-0.91895074, 0, 0.3943723, 0, 1, 0, -0.3943723, 0, -0.91895074, 0.559659, 0.008, 2.9810143)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "ichor_splat_01"
 size = 1.4671432
 
-[node name="SlamCrackSmall_11" type="Node3D" parent="Dress/Decals" unique_id=619578889]
+[node name="SlamCrackSmall_11" type="Node3D" parent="Dress/Decals" unique_id=930835966]
 transform = Transform3D(-0.15150787, 0, 0.9884561, 0, 1, 0, -0.9884561, 0, -0.15150787, 1.6763058, 0.012, 8.530356)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "slam_crack_small"
 size = 1.6031904
 
-[node name="SlamCrackSmall_12" type="Node3D" parent="Dress/Decals" unique_id=1623440718]
+[node name="SlamCrackSmall_12" type="Node3D" parent="Dress/Decals" unique_id=1414381988]
 transform = Transform3D(-0.1486373, 0, 0.9888918, 0, 1, 0, -0.9888918, 0, -0.1486373, 4.970151, 0, 1.6180964)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "slam_crack_small"
 size = 1.3852056
 
-[node name="SlamCrackMedium_13" type="Node3D" parent="Dress/Decals" unique_id=220841119]
+[node name="SlamCrackMedium_13" type="Node3D" parent="Dress/Decals" unique_id=1774163256]
 transform = Transform3D(-0.3409909, 0, 0.9400666, 0, 1, 0, -0.9400666, 0, -0.3409909, 4.896661, 0.004, -2.2187705)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "slam_crack_medium"
 size = 2.289763
 
-[node name="SlamCrackSmall_14" type="Node3D" parent="Dress/Decals" unique_id=1236386906]
+[node name="SlamCrackSmall_14" type="Node3D" parent="Dress/Decals" unique_id=1724687672]
 transform = Transform3D(-0.9999191, 0, -0.012718661, 0, 1, 0, 0.012718661, 0, -0.9999191, -1.2394667, 0.008, -4.8750987)
-script = ExtResource("19_o11gi")
+script = ExtResource("20_80lxu")
 art = "slam_crack_small"
 size = 1.8204906
 
-[node name="Bones" type="Node3D" parent="Dress" unique_id=182850327]
+[node name="Bones" type="Node3D" parent="Dress" unique_id=828879386]
 
-[node name="Scatter" type="Node3D" parent="Dress" unique_id=322829074]
+[node name="Scatter" type="Node3D" parent="Dress" unique_id=82371219]
 
-[node name="Kerb1_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=663095218]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1636483100]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(0.7715654, 0, 0.01156583, -6.7207146, 0, 0.8954022, 0, 1.9639148, -0.012494949, 0, 0.7141921, -11.039968)
 
-[node name="Kerb1_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1689970351]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1133119232]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(-0.77159667, 0, 0.009613108, -12.773365, 0, 0.8954022, 0, 1.9585272, -0.010385359, 0, -0.71422106, -10.540023, 0.7716665, 0, 6.906986e-05, -14.283357, 0, 0.8954022, 0, 1.9727231, -7.461845e-05, 0, 0.71428573, -11.04)
 
-[node name="Kerb1_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=913046238]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=975435950]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(-0.771413, 0, 0.01830725, -14.289741, 0, 0.8954022, 0, 1.9685725, -0.019777928, 0, -0.7140511, 11.039918, -0.7716352, 0, -0.006439529, -12.767747, 0, 0.8954022, 0, 1.9757782, 0.006956836, 0, -0.7142567, 11.039989, -0.77166545, 0, 0.0011946918, -11.257084, 0, 0.8954022, 0, 1.9615332, -0.001290665, 0, -0.7142848, 11.04, -0.010586226, 0, -0.714227, -14.540021, 0, 0.8954022, 0, 1.9805981, 0.82570124, 0, -0.009157027, 9.732436)
 
-[node name="Kerb1_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=904597405]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1209476985]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(0.020776968, 0, 0.7140596, -15.039921, 0, 0.8954022, 0, 1.9755663, -0.8255077, 0, 0.017971963, -8.113983, -0.0090399925, 0, -0.71424294, -14.540015, 0, 0.8954022, 0, 1.9768304, 0.82571965, 0, -0.007819544, -1.6188017, 0.01841136, 0, 0.71410817, -15.039938, 0, 0.8954022, 0, 1.9659523, -0.82556385, 0, 0.015925726, -0.005574004)
 
-[node name="Kerb1_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=947150595]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1707494219]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(-0.0032110505, 0, -0.7142803, -14.540002, 0, 0.8954022, 0, 1.9596568, 0.82576287, 0, -0.0027775408, 1.6225107, 0.013052616, 0, -0.7141965, -14.540031, 0, 0.8954022, 0, 1.9748052, 0.82566595, 0, 0.011290441, 4.860664, 0.013449461, 0, 0.714191, -15.039967, 0, 0.8954022, 0, 1.9808005, -0.82565963, 0, 0.011633709, 6.4820824)
 
-[node name="Kerb1_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1529364997]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=493074428]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(-0.010693945, 0, 0.7142258, -6.4599786, 0, 0.8954022, 0, 1.9623686, -0.82569987, 0, -0.009250203, 9.732469)
 
-[node name="Kerb1_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=277808201]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=730207795]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(-0.014095194, 0, -0.71418166, -5.960036, 0, 0.8954022, 0, 1.9659418, 0.82564884, 0, -0.012192265, 8.11196, -0.0015146392, 0, -0.71428454, -5.9600005, 0, 0.8954022, 0, 1.9591683, 0.82576776, 0, -0.0013101546, 4.865074, 0.017864639, 0, -0.71411854, -5.9600587, 0, 0.8954022, 0, 1.9602951, 0.8255758, 0, 0.015452814, 3.2376685)
 
-[node name="Kerb1_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1495684657]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1695020558]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(0.010614811, 0, -0.7142267, -5.9600205, 0, 0.8954022, 0, 1.9648408, 0.8257009, 0, 0.009181753, -0.0032136135, 0.017603388, 0, -0.71412337, -5.960057, 0, 0.8954022, 0, 1.9714864, 0.82558143, 0, 0.0152268335, -1.6268679)
 
-[node name="Kerb1_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1489225961]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1072113609]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(0.7716233, 0, -0.007555175, 14.285977, 0, 0.8954022, 0, 1.9756695, 0.008162105, 0, 0.71424574, -11.039986, 0.771464, 0, -0.016365282, 11.262394, 0, 0.8954022, 0, 1.9618846, 0.017679958, 0, 0.7140982, -11.039934, 0.7715897, 0, -0.010080864, 9.746862, 0, 0.8954022, 0, 1.976859, 0.010890692, 0, 0.71421456, -11.039975)
 
-[node name="Kerb1_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1485691502]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=953489057]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(-0.7716048, 0, 0.009038413, 6.7135034, 0, 0.8954022, 0, 1.9813184, -0.009764496, 0, -0.7142286, -10.54002, -0.01704708, 0, 0.7141335, 5.960054, 0, 0.8954022, 0, 1.9713303, -0.8255932, 0, -0.014745629, -9.72407)
 
-[node name="Kerb1_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1529374525]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=113014304]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(0.7715093, 0, -0.014417699, 9.74838, 0, 0.8954022, 0, 1.9641668, 0.015575917, 0, 0.71414024, 10.5400505, 0.77156144, 0, 0.011788096, 12.765875, 0, 0.8954022, 0, 1.9777206, -0.012735071, 0, 0.71418846, 10.540034, -0.0039029876, 0, 0.71427774, 14.540003, 0, 0.8954022, 0, 1.962274, -0.82575995, 0, -0.0033760627, 9.7304125)
 
-[node name="Kerb1_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=754493405]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1529269781]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(0.01778711, 0, -0.71412, 6.4599423, 0, 0.8954022, 0, 1.9642111, 0.8255775, 0, 0.015385753, -8.113078, 0.010276404, 0, -0.7142304, 6.4599805, 0, 0.8954022, 0, 1.9589943, 0.8257052, 0, 0.0088890325, -3.2461882, -0.007833944, 0, -0.7142536, 6.4599886, 0, 0.8954022, 0, 1.980471, 0.825732, 0, -0.006776318, -1.6191669, 0.013073667, 0, 0.7141962, 5.9600315, 0, 0.8954022, 0, 1.973775, -0.8256656, 0, 0.01130865, -0.0039580273)
 
-[node name="Kerb1_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=495968127]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1753093459]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(-0.010403754, 0, -0.71422905, 6.45998, 0, 0.8954022, 0, 1.9644698, 0.82570356, 0, -0.00899919, 1.6246883, -0.018210169, 0, -0.71411204, 6.4599395, 0, 0.8954022, 0, 1.9759461, 0.8255683, 0, -0.015751695, 3.2485902, -0.010629516, 0, -0.71422654, 6.4599795, 0, 0.8954022, 0, 1.9773535, 0.8257007, 0, -0.009194473, 4.8678336, -0.018215286, 0, -0.7141119, 6.4599385, 0, 0.8954022, 0, 1.9760474, 0.8255682, 0, -0.01575612, 6.4916687, 0.01655345, 0, -0.7141422, 6.4599495, 0, 0.8954022, 0, 1.9752575, 0.8256032, 0, 0.014318643, 8.102681)
 
-[node name="Kerb1_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=338870450]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=529078752]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(-0.013945893, 0, -0.71418387, 15.039965, 0, 0.8954022, 0, 1.9725627, 0.82565135, 0, -0.0120631205, 8.111915, 0.013086481, 0, 0.714196, 14.540031, 0, 0.8954022, 0, 1.9698433, -0.8256654, 0, 0.011319734, 4.8606534, 0.019018434, 0, 0.71409625, 14.540067, 0, 0.8954022, 0, 1.9632052, -0.8255501, 0, 0.01645084, 3.2373192)
 
-[node name="Kerb1_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1994577058]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb1_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1037989589]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("21_80lxu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("22_85djy")
 xforms = PackedFloat32Array(0.020652132, 0, 0.7140623, 14.540078, 0, 0.8954022, 0, 1.9585274, -0.8255108, 0, 0.017863981, -3.2493293)
 
-[node name="Kerb2_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1294451778]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=993981716]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(0.77166265, 0, 0.0022670345, -8.230793, 0, 0.8954022, 0, 1.963848, -0.0024491523, 0, 0.71428216, -11.039999, 0.00080786337, 0, 0.7142854, -6.4600005, 0, 0.8954022, 0, 1.9679755, -0.8257687, 0, 0.00069879735, -9.729475)
 
-[node name="Kerb2_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=309334264]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=825636572]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(-0.77165073, 0, 0.0045671044, -9.744932, 0, 0.8954022, 0, 1.9611169, -0.004933994, 0, -0.7142711, -10.540005, 0.77161664, 0, -0.008121746, -11.253823, 0, 0.8954022, 0, 1.9685825, 0.008774191, 0, 0.71423954, -11.039984, -0.0025089432, 0, 0.71428245, -15.039999, 0, 0.8954022, 0, 1.9594814, -0.8257653, 0, -0.0021702219, -9.728472)
 
-[node name="Kerb2_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=246498282]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1134561251]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(-0.7716598, 0, -0.0029795188, -9.742291, 0, 0.8954022, 0, 1.9594926, 0.003218873, 0, -0.71427953, 11.039998)
 
-[node name="Kerb2_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1037105184]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=857503078]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(0.7716459, 0, -0.005219669, -8.228172, 0, 0.8954022, 0, 1.9693943, 0.0056389812, 0, 0.71426666, 10.540007, 0.7715186, 0, 0.013985176, -6.7215614, 0, 0.8954022, 0, 1.9666914, -0.015108648, 0, 0.7141488, 10.540048)
 
-[node name="Kerb2_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=126773413]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1063292572]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(0.016351787, 0, 0.71414566, -15.039951, 0, 0.8954022, 0, 1.9810885, -0.8256072, 0, 0.0141442055, -6.4911046, 0.014770307, 0, 0.71417147, -15.03996, 0, 0.8954022, 0, 1.9708976, -0.82563704, 0, 0.012776233, -4.869087, -0.018297242, 0, -0.7141104, -14.540061, 0, 0.8954022, 0, 1.9686517, 0.8255664, 0, -0.015827013, -3.2375376)
 
-[node name="Kerb2_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2099545463]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1062912467]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(0.005564076, 0, -0.7142695, -14.540006, 0, 0.8954022, 0, 1.9637579, 0.82575035, 0, 0.004812895, 3.2413926, -0.014445259, 0, 0.7141764, -15.039962, 0, 0.8954022, 0, 1.9776455, -0.82564276, 0, -0.01249507, 8.112066)
 
-[node name="Kerb2_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=669560181]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1310424284]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(0.019127365, 0, 0.7140941, -6.4599323, 0, 0.8954022, 0, 1.9665645, -0.8255476, 0, 0.016545065, 6.4803634, -0.020505328, 0, 0.7140655, -6.459923, 0, 0.8954022, 0, 1.9791139, -0.8255145, 0, -0.017736996, 1.6277465)
 
-[node name="Kerb2_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=10360320]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1991441376]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(-0.016317006, 0, -0.71414626, -5.9600487, 0, 0.8954022, 0, 1.9618102, 0.8256079, 0, -0.014114119, -3.238137, -0.004605626, 0, 0.71427464, -6.459996, 0, 0.8954022, 0, 1.9653295, -0.82575625, 0, -0.0039838413, -4.863221, 0.008866134, 0, 0.71424454, -6.459986, 0, 0.8954022, 0, 1.9819983, -0.8257215, 0, 0.007669157, -6.488838, 0.003644842, 0, -0.7142788, -5.960003, 0, 0.8954022, 0, 1.9751741, 0.8257611, 0, 0.0031527681, -8.108796)
 
-[node name="Kerb2_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=293722730]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=297437108]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(-0.7716351, 0, -0.006444858, 12.772256, 0, 0.8954022, 0, 1.9680294, 0.0069625936, 0, -0.71425664, -10.54001, 0.014213089, 0, 0.71417993, 14.540037, 0, 0.8954022, 0, 1.97589, -0.8256468, 0, 0.012294243, -9.733534)
 
-[node name="Kerb2_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=278676994]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1122905462]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(-0.77166426, 0, 0.0017194852, 8.229398, 0, 0.8954022, 0, 1.9704157, -0.0018576167, 0, -0.71428365, -10.540001)
 
-[node name="Kerb2_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2064584688]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1227410272]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(0.77164525, 0, 0.0053090565, 6.7148085, 0, 0.8954022, 0, 1.979103, -0.005735549, 0, 0.714266, 10.540007, -0.77166647, 0, 0.00027975673, 8.229901, 0, 0.8954022, 0, 1.9791528, -0.00030223047, 0, -0.7142857, 11.04, -0.014286775, 0, -0.7141788, 6.4599624, 0, 0.8954022, 0, 1.9795316, 0.8256455, 0, -0.012357982, 9.733556)
 
-[node name="Kerb2_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=168804017]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=384228081]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(0.7715372, 0, -0.013077432, 11.261243, 0, 0.8954022, 0, 1.9797632, 0.014127983, 0, 0.714166, 10.540042, 0.7715747, 0, 0.011021282, 14.279475, 0, 0.8954022, 0, 1.9782609, -0.0119066555, 0, 0.71420074, 10.54003)
 
-[node name="Kerb2_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1368614237]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1041680088]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(0.016268868, 0, 0.7141471, 5.960049, 0, 0.8954022, 0, 1.9763004, -0.82560885, 0, 0.014072482, -6.4910793, 0.00279388, 0, 0.7142816, 5.9600015, 0, 0.8954022, 0, 1.9807914, -0.8257644, 0, 0.0024166906, -4.8654613)
 
-[node name="Kerb2_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2024785043]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=28404976]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(-0.014583924, 0, 0.71417433, 14.540039, 0, 0.8954022, 0, 1.9649192, -0.8256403, 0, -0.012615013, 6.490569, -0.007163462, 0, 0.71425885, 14.5400095, 0, 0.8954022, 0, 1.9618543, -0.8257381, 0, -0.0061963554, 1.6237073)
 
-[node name="Kerb2_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=957694857]
-material_override = ExtResource("20_4hnrg")
+[node name="Kerb2_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1469813591]
+material_override = ExtResource("21_it5rq")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("22_it5rq")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("23_mwwdj")
 xforms = PackedFloat32Array(0.008886554, 0, 0.71424437, 14.540014, 0, 0.8954022, 0, 1.9751815, -0.82572126, 0, 0.00768682, -0.002690387, 0.012775299, 0, -0.71420026, 15.03997, 0, 0.8954022, 0, 1.9607321, 0.8256703, 0, 0.011050563, -1.6254063, -0.009018843, 0, -0.7142431, 15.039985, 0, 0.8954022, 0, 1.9666322, 0.82571983, 0, -0.007801249, -4.861885, 0.007110755, 0, 0.71425927, 14.5400095, 0, 0.8954022, 0, 1.975329, -0.8257385, 0, 0.006150764, -6.488307, -0.016622618, 0, -0.71414095, 15.039949, 0, 0.8954022, 0, 1.981794, 0.82560176, 0, -0.014378473, -8.10266)
 
-[node name="Pilaster_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=760360900]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2112853757]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(-0.10524213, 0, 0.5434753, -14.88, 0, 1.95, 0, 0, -0.5434753, 0, -0.10524213, -10.88)
 
-[node name="Pilaster_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1193411916]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1226409746]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(0.50463283, 0, -0.22756751, -14.88, 0, 1.95, 0, 0, 0.22756751, 0, 0.50463283, 10.88)
 
-[node name="Pilaster_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1475815193]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1083276421]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(-0.06207376, 0, 0.5500801, -6.12, 0, 1.95, 0, 0, -0.5500801, 0, -0.06207376, -10.88, 0.71428573, 0, 0, -2.38, 0, 6.24, 0, 0, 0, 0, 0.71428573, -11.1, 0.4107143, 0, 0, -3.2, 0, 3.75, 0, 0, 0, 0, 0.4107143, -10.9)
 
-[node name="Pilaster_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2055824574]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2112954015]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(0.27747482, 0, -0.47900838, -6.12, 0, 1.95, 0, 0, 0.47900838, 0, 0.27747482, 10.88)
 
-[node name="Pilaster_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=690828289]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=214639155]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(-0.47385594, 0, 0.286185, 6.12, 0, 1.95, 0, 0, -0.286185, 0, -0.47385594, -10.88, 0.71428573, 0, 0, 2.38, 0, 6.24, 0, 0, 0, 0, 0.71428573, -11.1, 0.4107143, 0, 0, 3.2, 0, 3.75, 0, 0, 0, 0, 0.4107143, -10.9)
 
-[node name="Pilaster_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=871691304]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1901700238]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(-0.14935759, 0, -0.53304183, 6.12, 0, 1.95, 0, 0, 0.53304183, 0, -0.14935759, 10.88)
 
-[node name="Pilaster_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=339672813]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1159961304]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(0.2741652, 0, 0.48091033, 14.88, 0, 1.95, 0, 0, -0.48091033, 0, 0.2741652, -10.88)
 
-[node name="Pilaster_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1554153259]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=872060099]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(-0.060435627, 0, 0.5502625, 14.88, 0, 1.95, 0, 0, -0.5502625, 0, -0.060435627, 10.88)
 
-[node name="Pilaster_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1717854261]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1594303694]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(0.4107143, 0, 0, -14.8, 0, 3.3500001, 0, 0, 0, 0, 0.4107143, -5.5)
 
-[node name="Pilaster_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1209155963]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1014120737]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(0.4107143, 0, 0, 14.8, 0, 3.3500001, 0, 0, 0, 0, 0.4107143, -5.5)
 
-[node name="Pilaster_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=311324756]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1066933651]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(0.4107143, 0, 0, -14.8, 0, 3.3500001, 0, 0, 0, 0, 0.4107143, 5.5)
 
-[node name="Pilaster_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=297152037]
-material_override = ExtResource("10_s05jj")
+[node name="Pilaster_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2065544325]
+material_override = ExtResource("11_l87mj")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("23_85djy")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("24_6fugi")
 xforms = PackedFloat32Array(0.4107143, 0, 0, 14.8, 0, 3.3500001, 0, 0, 0, 0, 0.4107143, 5.5)
 
-[node name="Rock3_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1731726131]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock3_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=824498811]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("25_6fugi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("26_wudyh")
 xforms = PackedFloat32Array(0.2644048, -0.052405532, 0.53001857, -5.566143, 0, 0.57648075, 0.06005018, -0.047579687, -0.53274107, -0.0260094, 0.26305363, -2.8436253, -0.14450558, -0.056561798, 0.59815174, -5.659767, 0, 0.54191345, 0.066033885, -0.049496017, -0.601588, 0.013586532, -0.14368017, -1.3770602)
 
-[node name="Rock3_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1714634487]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock3_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1829019957]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("25_6fugi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("26_wudyh")
 xforms = PackedFloat32Array(-0.114846885, 0.040950596, 0.47175208, -5.8069987, 0, 0.30370942, -0.06730731, -0.039193563, -0.47626814, -0.00987479, -0.11375788, 7.1160154, 0.24656726, -0.03927797, 0.29602003, -4.130698, 0, 0.3372859, 0.057856854, -0.031026982, -0.29936987, -0.032350153, 0.24380825, 6.5039043)
 
-[node name="Rock3_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1219625384]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock3_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1193991950]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("25_6fugi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("26_wudyh")
 xforms = PackedFloat32Array(0.59648836, -0.021617096, 0.35404477, 5.850609, 0, 0.44079807, 0.06619855, -0.05555799, -0.35566425, -0.036254264, 0.59377223, 3.2148151)
 
-[node name="Rock3_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1854253466]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock3_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=987996019]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("25_6fugi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("26_wudyh")
 xforms = PackedFloat32Array(-0.56006795, -0.0028365825, -0.038423777, 5.5569887, 0, 0.39311656, -0.058542162, -0.044911914, 0.03863441, -0.04112083, -0.5570145, -10.42682, -0.15467452, 0.052527618, -0.37313652, 5.7816834, 0, 0.39794585, 0.057547197, -0.032593444, 0.37691543, 0.021555722, -0.15312378, -10.624373, 0.623604, 0.0015901487, -0.006570401, 5.5874395, 0, 0.59442335, 0.14927757, -0.04989126, 0.006767123, -0.1465354, 0.60547566, -9.118812)
 
-[node name="Rock3_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1317763798]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock3_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1534972021]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("25_6fugi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("26_wudyh")
 xforms = PackedFloat32Array(0.17356914, -0.028496813, -0.27453557, 1.97887, 0, 0.24979225, -0.04361556, -0.02615181, 0.2770123, 0.017855408, 0.1720173, -6.1937904)
 
-[node name="Rock3_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1895606571]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock3_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=980729704]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("25_6fugi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("26_wudyh")
 xforms = PackedFloat32Array(-0.83408976, 0, 1.2408731, 3.6709146, 0, 0.79379284, 0, -0.13173026, -1.3093219, 0, -0.7904852, 11.905854)
 
-[node name="Rock3_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1412036942]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock3_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1205538323]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("25_6fugi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("26_wudyh")
 xforms = PackedFloat32Array(3.2872767, 0, 0.90571696, -6.8819175, 0, 1.750454, 0, -0.16997081, -0.9556778, 0, 3.1154249, -12.321085)
 
-[node name="Rock3_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1307761126]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock3_1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1415060167]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("25_6fugi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("26_wudyh")
 xforms = PackedFloat32Array(1.0047914, 0, 2.1370595, 11.060451, 0, 1.2622942, 0, -0.15045762, -2.2549434, 0, 0.9522629, -12.459127)
 
-[node name="Brick4_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1251214398]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick4_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1502361894]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("26_32yyi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("27_b468w")
 xforms = PackedFloat32Array(1.2997979, 0.33000877, 1.0516949, -5.268057, -0.41938806, 1.6518341, 0, 0.0681697, -1.0193534, -0.25880605, 1.341037, -2.8346014)
 
-[node name="Brick4_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1374546836]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick4_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1756461162]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("26_32yyi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("27_b468w")
 xforms = PackedFloat32Array(1.4390998, 0.32601276, 0.56035423, -5.41878, -0.3487292, 1.5393757, 0, 0.063135274, -0.5465063, -0.12380519, 1.4755652, 6.961842, 1.4465897, 0.091928765, 1.0968897, -5.5806875, -0.11528337, 1.8140975, 0, 0.072710276, -1.0946815, -0.06956549, 1.4495078, 7.470829, 1.0051447, -0.2873348, 0.39721662, -5.2532005, 0.30737737, 1.0752568, 0, 0.044733133, -0.38191816, 0.109176695, 1.0454077, 2.0912242, -1.8190926, -0.011999938, -0.28431225, -5.15716, -0.012145612, 1.8411758, 0, 0.07364863, 0.28430608, 0.0018754705, -1.8191323, 3.1189327)
 
-[node name="Brick4_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=974465739]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick4_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1393427118]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("26_32yyi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("27_b468w")
 xforms = PackedFloat32Array(0.008271634, -0.0024218177, -1.2978247, -5.3020144, 0.36468354, 1.2455639, 0, 0.051914133, 1.2455363, -0.3646755, 0.008618881, 9.619254)
 
-[node name="Brick4_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1752636728]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick4_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=768333804]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("26_32yyi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("27_b468w")
 xforms = PackedFloat32Array(-0.42655057, 0.011683561, 1.7386117, 5.64365, 0.049016908, 1.7895391, 0, 0.07160841, -1.7379599, 0.047604114, -0.42671055, 1.1578779)
 
-[node name="Brick4_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=542723240]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick4_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=100923284]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("26_32yyi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("27_b468w")
 xforms = PackedFloat32Array(1.5012671, -0.29243374, 1.1265047, 5.3361454, 0.36319172, 1.8645175, 0, 0.07598246, -1.1057224, 0.21538508, 1.5294838, -7.6369333, 1.562934, -0.003539782, -0.07371948, 1.2714231, 0.0035437173, 1.5646715, 0, 0.06258702, 0.07371929, -0.00016696178, 1.562938, -6.35172, 0.90777767, -0.1966467, 0.7953897, 1.6344308, 0.25889534, 1.1951351, 0, 0.04891421, -0.77735955, 0.16839497, 0.9288327, -6.4116955, 0.6033083, -0.041835282, 1.5013885, 2.3858998, 0.11197061, 1.6147326, 0, 0.064744405, -1.4977919, 0.10386158, 0.6047571, -5.6447744, 0.22758678, 0.024024006, 1.5066254, 1.4242225, -0.15997446, 1.5154872, 0, 0.060956288, -1.4983008, -0.15816028, 0.22885124, -7.2244496, -1.4792943, 0.32801116, -1.1141547, 1.8633621, 0.40714058, 1.8361591, 0, 0.07523025, 1.0877355, -0.24118893, -1.5152236, -7.84874, 1.5436271, -0.25122657, -1.0495272, 1.5730885, 0.3025532, 1.8589966, 0, 0.075338244, 1.0358975, -0.16859315, 1.5639372, -8.111725)
 
-[node name="Brick4_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=200033952]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick4_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1324669709]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("26_32yyi")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("27_b468w")
 xforms = PackedFloat32Array(0.8475976, 0.1030221, -1.238839, 5.256245, -0.18153946, 1.4935865, 0, 0.060183153, 1.2297883, 0.14947583, 0.85383564, -9.729279)
 
-[node name="Brick1_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2054069241]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick1_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1545539038]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("27_wudyh")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("28_fqftu")
 xforms = PackedFloat32Array(-0.12488702, -0.020584838, -1.1563221, -5.6504407, -0.18917972, 1.1477423, 0, 0.046529155, 1.1409276, 0.18805644, -0.12657213, -4.178447, -0.11599715, -0.0043359534, -1.3771372, -5.6038527, -0.05162363, 1.3810561, 0, 0.055280823, 1.376176, 0.05144122, -0.11607817, -2.4595988, -0.5282499, -0.09551351, 1.7048343, -5.5150084, -0.31801686, 1.7588338, 0, 0.071494125, -1.6776317, -0.30333462, -0.53681546, -7.712511, -0.6095257, 0.15421471, 1.1771935, -5.258093, 0.32734302, 1.2938064, 0, 0.05338297, -1.1412333, 0.2887408, -0.62873185, -7.4767284)
 
-[node name="Brick1_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=648504006]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick1_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=993351594]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("27_wudyh")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("28_fqftu")
 xforms = PackedFloat32Array(1.486282, -0.3730186, 0.030632602, -5.1462975, 0.37309313, 1.486579, 0, 0.061307296, -0.029711165, 0.007456739, 1.5323763, 9.693486)
 
-[node name="Brick1_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1391074164]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick1_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=421741688]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("27_wudyh")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("28_fqftu")
 xforms = PackedFloat32Array(1.6079271, 0.07650513, -0.42491332, -5.673278, -0.07912555, 1.6630012, 0, 0.06659529, 0.42443317, 0.02019452, 1.609746, 4.2758827, 0.16121319, -0.04416615, -1.2990487, -1.1992764, 0.34607083, 1.2632113, 0, 0.05239035, 1.2528819, -0.343241, 0.16715364, 6.3375735, -0.37798196, -0.027587831, -1.5084866, -4.3069987, -0.113220595, 1.5512397, 0, 0.062214643, 1.5044848, 0.10980808, -0.37898737, 6.762065, 1.3632135, -0.012656058, -0.15992483, -4.0705886, 0.012742844, 1.3725615, 0, 0.054904822, 0.15991795, -0.0014846764, 1.3632723, 6.850027)
 
-[node name="Brick1_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1905796569]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick1_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=578217085]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("27_wudyh")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("28_fqftu")
 xforms = PackedFloat32Array(-1.0720973, -0.21617489, -0.4018067, 5.2874184, -0.23030251, 1.1421618, 0, 0.046605974, 0.3938794, 0.079420805, -1.0936747, 3.6207042, 1.0667365, -0.270811, -0.59076345, 5.671325, 0.30735913, 1.2107011, 0, 0.049964257, 0.5725997, -0.14536515, 1.100575, 3.7742271, 1.440036, 0.25660104, 1.1667453, 5.2956085, -0.32823408, 1.8420383, 0, 0.074842155, -1.1486518, -0.20467907, 1.4627194, 2.387084)
 
-[node name="Brick1_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=468735995]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick1_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=482480165]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("27_wudyh")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("28_fqftu")
 xforms = PackedFloat32Array(0.85291815, 0.07101716, -1.604645, 5.894056, -0.15090337, 1.812354, 0, 0.07274502, 1.5991114, 0.13314801, 0.85586965, -7.6397986, 1.5240186, 0.38838714, -1.0230799, 5.3244505, -0.46333238, 1.8181014, 0, 0.07504846, 0.99139297, 0.25265062, 1.5727292, -6.1460457, 0.021921376, 0.004761283, -1.5743345, 5.5817213, -0.3341855, 1.5386204, 0, 0.06297977, 1.5384642, 0.33415157, 0.02243249, -0.7178359, -0.8336757, 0.25327098, 1.4410683, 5.2514296, 0.48950732, 1.6112795, 0, 0.0673598, -1.3788425, 0.41889286, -0.8712987, -1.64451, 1.0723771, -0.1591976, 0.46791258, 1.4076698, 0.17339246, 1.1679956, 0, 0.04723183, -0.46284026, 0.06871003, 1.0841293, -6.424085)
 
-[node name="Brick3_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1905804340]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick3_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1709249761]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("28_b468w")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("29_n1sv5")
 xforms = PackedFloat32Array(-0.19868739, -0.048186745, -1.6712513, -5.7623944, -0.3968385, 1.6362758, 0, 0.0673484, 1.624168, 0.39390206, -0.20444717, -2.6683874, 1.5676944, -0.042693254, -0.5253787, -5.4352636, 0.045025248, 1.6533252, 0, 0.06615753, 0.52518404, -0.014302413, 1.5682757, -8.524037, 1.4568557, 0.24357441, 0.120032415, -5.7894964, -0.24437733, 1.461658, 0, 0.059277847, -0.11838914, -0.0197937, 1.4770771, -7.1204233, -1.1681157, 0.085467674, 0.708353, -5.291446, 0.09988282, 1.3651325, 0, 0.054751262, -0.7064645, 0.051689982, -1.1712383, -8.852604)
 
-[node name="Brick3_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1717952624]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick3_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=594736855]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("28_b468w")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("29_n1sv5")
 xforms = PackedFloat32Array(-1.1603954, -0.28451735, 0.10187529, -5.560002, -0.2855498, 1.1646062, 0, 0.047964092, -0.098944515, -0.024260206, -1.1947668, 6.2290382, -1.5631356, 0.351043, -0.16885918, -1.7243998, 0.3529875, 1.5717943, 0, 0.064437725, 0.1647556, -0.03700018, -1.6020688, 5.7620506, 0.5653879, 0.05591081, -1.6969053, -3.8701005, -0.17610252, 1.7808046, 0, 0.07157963, 1.6886685, 0.16699125, 0.56814563, 7.791919, 0.6550488, -0.07081826, -1.2777776, -1.3628693, 0.15452528, 1.429315, 0, 0.05750575, 1.2703749, -0.13734205, 0.6588658, 6.381507)
 
-[node name="Brick3_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=568114598]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick3_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1682625381]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("28_b468w")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("29_n1sv5")
 xforms = PackedFloat32Array(0.28950313, -0.08043573, 1.8228663, -5.834458, 0.49456626, 1.7800359, 0, 0.07389856, -1.7563359, 0.4879814, 0.30046958, 9.832437, 0.27645123, 0.015745873, 1.5382445, -5.260207, -0.08887815, 1.5604389, 0, 0.06251872, -1.5357553, -0.08747224, 0.2768993, 9.404374, 1.5158832, 0.2007683, -0.87115943, -5.1554465, -0.2310644, 1.7446312, 0, 0.07039464, 0.8636179, 0.114380255, 1.5291206, 9.232345)
 
-[node name="Brick3_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1009861924]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick3_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=810899734]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("28_b468w")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("29_n1sv5")
 xforms = PackedFloat32Array(1.1465809, 0.34968087, 1.3553632, -5.4932575, -0.5278249, 1.7307036, 0, 0.07237606, -1.2964131, -0.39537627, 1.1987178, -9.215784)
 
-[node name="Brick3_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2011504143]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick3_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2059291604]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("28_b468w")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("29_n1sv5")
 xforms = PackedFloat32Array(-0.8024717, -0.0196058, 1.533876, 5.523328, -0.04228413, 1.730703, 0, 0.06924877, -1.5334184, -0.03746412, -0.8027111, 0.0917176)
 
-[node name="Brick3_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1718333561]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick3_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1556978378]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("28_b468w")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("29_n1sv5")
 xforms = PackedFloat32Array(1.4627881, -0.075957544, 0.98918027, 5.2375546, 0.09165581, 1.7651049, 0, 0.07069932, -0.9878494, 0.051295616, 1.4647589, -10.611559, -0.28882006, 0.061322503, 1.8550651, 5.8381033, 0.39013004, 1.8374555, 0, 0.07513662, -1.8146145, 0.38528043, -0.2952583, -10.150394, -0.5775938, -0.1510442, 1.1594095, 5.846424, -0.32993338, 1.2616668, 0, 0.05216373, -1.12169, -0.2933286, -0.5970167, -9.365932)
 
-[node name="Brick3_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1786689087]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick3_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2110739095]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("28_b468w")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("29_n1sv5")
 xforms = PackedFloat32Array(1.3620628, 0.0058882013, 0.616623, 5.316698, -0.0064634774, 1.4951361, 0, 0.059806004, -0.61661726, -0.002665638, 1.3620756, -1.7479527, -0.40455216, -0.05509702, 1.7750504, 5.113147, -0.24579234, 1.8047404, 0, 0.072856046, -1.7588136, -0.23953746, -0.4082868, -1.5426444, 0.44071838, 0.12969546, -1.3854865, 1.5623827, -0.41208053, 1.4002914, 0, 0.058386665, 1.3291289, 0.39113867, 0.4594057, -6.489638, 1.607977, 0.026601516, -0.5475247, 1.635424, -0.028100975, 1.6986147, 0, 0.067953885, 0.5474498, 0.009056718, 1.6081971, -6.489313, 0.66925013, -0.10825, 1.6189371, 1.2588365, 0.28025088, 1.7326369, 0, 0.070206225, -1.5981661, 0.2585005, 0.67794824, -7.349351, 0.157162, 0.024461765, -1.7703384, 1.3659747, -0.27336597, 1.7563221, 0, 0.07109876, 1.7492763, 0.2722693, 0.1590543, -6.5274396)
 
-[node name="Rock1_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=51223468]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock1_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1250513829]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("29_fqftu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("30_86mk2")
 xforms = PackedFloat32Array(0.23085739, -0.02422773, 0.73763806, -5.803415, 0, 0.61723346, 0.03178509, -0.061881192, -0.7382616, -0.0075761094, 0.23066242, 6.699627, 0.17284758, -0.06372854, -0.5339842, -3.6396563, 0, 0.49486607, -0.0758419, -0.045271147, 0.53884554, 0.020442452, 0.1712882, 7.10041, 0.65158015, -0.0007186797, 0.10724242, -1.6527852, 0, 0.50925386, 0.005737814, -0.052827783, -0.107246466, -0.004366367, 0.6515556, 5.968433)
 
-[node name="Rock1_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=96028392]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock1_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=48269966]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("29_fqftu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("30_86mk2")
 xforms = PackedFloat32Array(-0.44992024, 0.020892559, -0.34690636, -5.584751, 0, 0.4476893, 0.043263327, -0.045499723, 0.3479144, 0.027018096, -0.44861665, -1.0354959, -0.34815803, -0.020719852, 0.33971757, -5.591962, 0, 0.46683863, 0.030850558, -0.03895328, -0.3404015, 0.021191983, -0.34745848, -8.851842)
 
-[node name="Rock1_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=661771786]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock1_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1706845651]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("29_fqftu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("30_86mk2")
 xforms = PackedFloat32Array(0.4136763, 0.043465953, 0.4508587, 5.8508034, 0, 0.43868664, -0.08161692, -0.04918846, -0.45488414, 0.03952838, 0.41001552, -0.98464024)
 
-[node name="Rock1_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=211721047]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock1_-2_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=515383013]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("29_fqftu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("30_86mk2")
 xforms = PackedFloat32Array(-3.7412486, 0, 0.56097543, -12.629361, 0, 1.8161291, 0, 0.26428223, -0.7457311, 0, -2.8143504, 12.16805)
 
-[node name="Rock1_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=974122475]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock1_-2_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2064154219]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("29_fqftu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("30_86mk2")
 xforms = PackedFloat32Array(1.2622467, 0, 2.6704493, -11.884635, 0, 1.7936763, 0, 0.25977862, -3.5499547, 0, 0.9495236, -12.992502)
 
-[node name="Rock1_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=772453927]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock1_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1102127449]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("29_fqftu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("30_86mk2")
 xforms = PackedFloat32Array(-0.103293255, 0, -1.5666313, -16.64707, 0, 0.99267805, 0, 0.099113025, 2.0825973, 0, -0.077702224, -7.5408244)
 
-[node name="Rock1_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1301683743]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock1_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=10255190]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("29_fqftu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("30_86mk2")
 xforms = PackedFloat32Array(-0.77705187, 0, 1.4065868, 17.160044, 0, 0.9639797, 0, 0.09335667, -1.8698426, 0, -0.5845363, -8.514244)
 
-[node name="Rock1_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2106664953]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock1_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=218254780]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("29_fqftu")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("30_86mk2")
 xforms = PackedFloat32Array(1.6500614, 0, 1.8893995, 16.036894, 0, 1.4306777, 0, 0.18696773, -2.5116682, 0, 1.2412567, 1.6759456)
 
-[node name="Brick2_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=166069551]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick2_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=237313315]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("30_n1sv5")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("31_0m04e")
 xforms = PackedFloat32Array(0.4224181, 0.11644767, 1.5868976, -5.136246, -0.4375095, 1.5870812, 0, 0.06585124, -1.5298332, -0.42172801, 0.43817472, 7.4802117, 1.024521, -0.21094175, 0.89679956, -5.3280563, 0.27785537, 1.3495132, 0, 0.05511282, -0.8783748, 0.18085125, 1.0460114, 2.6061473, -1.1693734, 0.058103077, -0.63572204, -5.2031136, 0.06611558, 1.330632, 0, 0.05329094, 0.6349387, -0.031548426, -1.1708161, 4.5010805, 0.6437118, -0.063667946, -0.9869945, -1.4849669, 0.116151534, 1.1743447, 0, 0.047202993, 0.9822019, -0.09714717, 0.64685273, 5.5926886, 0.56682146, -0.029400013, 1.1521662, -1.5304234, 0.06652918, 1.2826581, 0, 0.051375292, -1.1506195, 0.059680574, 0.5675834, 5.927163)
 
-[node name="Brick2_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=858021053]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick2_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=588253932]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("30_n1sv5")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("31_0m04e")
 xforms = PackedFloat32Array(1.3690463, 0.09353898, 1.1673176, -5.8793497, -0.12280477, 1.7973834, 0, 0.07206295, -1.1646025, -0.079570524, 1.372238, 9.677413, -0.2916493, -0.008033227, -1.6904154, -5.7425075, -0.047231536, 1.7147586, 0, 0.06861636, 1.6897745, 0.04654337, -0.29175994, 10.711932, 1.0436941, -0.019105216, -0.8059975, -5.4732723, 0.024137512, 1.3186022, 0, 0.052752923, 0.80586255, -0.014751618, 1.043869, 9.53553)
 
-[node name="Brick2_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=2014602087]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick2_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=547665088]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("30_n1sv5")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("31_0m04e")
 xforms = PackedFloat32Array(0.6080212, -0.114688575, -1.2332327, -5.6501856, 0.25574645, 1.3558393, 0, 0.055189945, 1.2118623, -0.22858867, 0.6187433, -0.7865108, -0.8013334, 0.21291108, -1.3874251, -5.2885203, 0.4150435, 1.5620991, 0, 0.06465187, 1.3409021, -0.3562723, -0.8291359, -2.119616, 0.41235414, -0.0042326045, 1.5315678, -5.6846504, 0.016279778, 1.5860292, 0, 0.06344451, -1.531487, 0.015719932, 0.41237587, -1.989239, -1.2355747, 0.22047633, 0.50506604, -5.836595, 0.23765843, 1.3318653, 0, 0.05411612, -0.49721223, 0.0887227, -1.2550915, -2.0189269, 1.0969968, 0.12501714, 1.165046, -5.5818515, -0.18174636, 1.5947826, 0, 0.064204216, -1.1575534, -0.13191836, 1.1040974, -3.5527377, -1.4693459, 0.35539493, -0.9511566, -5.3479958, 0.41988984, 1.7359937, 0, 0.07144208, 0.9244983, -0.22361109, -1.5117152, -3.177212, -1.3295071, 0.27537063, -0.66945523, -5.3656044, 0.30702516, 1.4823372, 0, 0.06055197, 0.6555416, -0.13577731, -1.3577254, -3.7618895)
 
-[node name="Brick2_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1071890770]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick2_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1519377580]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("30_n1sv5")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("31_0m04e")
 xforms = PackedFloat32Array(1.4992137, -0.3887103, -0.33766553, 5.8682733, 0.39784124, 1.5344307, 0, 0.06340669, 0.32685786, -0.084746435, 1.5487857, 2.48233)
 
-[node name="Brick2_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=658122184]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick2_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1769175009]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("30_n1sv5")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("31_0m04e")
 xforms = PackedFloat32Array(0.99795103, 0.18413274, 0.587469, 5.1819053, -0.21276131, 1.1531104, 0, 0.04690298, -0.5777173, -0.10659508, 1.0147961, -10.970579)
 
-[node name="Brick2_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1869185556]
-material_override = ExtResource("24_mwwdj")
+[node name="Brick2_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=693244921]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("30_n1sv5")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("31_0m04e")
 xforms = PackedFloat32Array(0.23989467, -0.0022144164, -1.4385574, 5.379913, 0.01346183, 1.4583622, 0, 0.058336973, 1.4384961, -0.013278449, 0.2399049, -8.516198, -0.7464807, 0.06915638, -0.82072985, 2.0668013, 0.1025414, 1.1068418, 0, 0.044463262, 0.8172303, -0.075710855, -0.7496773, -5.6198025)
 
-[node name="Rock4_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1599232143]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock4_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=476956822]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("31_86mk2")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("32_x8oqm")
 xforms = PackedFloat32Array(-0.22747266, -0.053766903, 0.43866804, -5.8097167, 0, 0.40138218, 0.074212186, -0.039882574, -0.44361073, 0.027570345, -0.22493818, 9.937974, 0.36748582, 0, 1.3644156, -7.740814, 0, 0.824373, 0, -0.13685723, -1.8565632, 0, 0.27007076, 12.845255, 1.5415294, 0, 1.7421908, -4.161108, 0, 1.2317057, 0, -0.15506884, -2.3706026, 0, 1.1328927, 12.261891)
 
-[node name="Rock4_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1418228325]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock4_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1403832385]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("31_86mk2")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("32_x8oqm")
 xforms = PackedFloat32Array(-0.1459897, -0.02136722, -0.47878748, -5.583004, 0, 0.3132521, -0.035679564, -0.04013702, 0.4800028, -0.006498699, -0.14562006, 2.910007, -0.6949498, -0.0017801576, 0.07659613, -1.6369874, 0, 0.42946854, 0.026415462, -0.055933136, -0.07665086, 0.016139677, -0.6944536, 6.7982044, -0.25896338, -0.009614101, 0.21782988, -1.630939, 0, 0.33676496, 0.014990495, -0.0270827, -0.21804374, 0.011418352, -0.2587094, 6.6156955, 0.6562452, 0.006753491, 0.1652265, -1.5290623, 0, 0.42631233, -0.04373581, -0.05414482, -0.16557257, 0.026767395, 0.65487355, 5.8055267)
 
-[node name="Rock4_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=260933797]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock4_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=149142186]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("31_86mk2")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("32_x8oqm")
 xforms = PackedFloat32Array(-0.5585052, 0.013301194, -0.15065284, 2.106425, 0, 0.35093904, 0.08258848, -0.04630997, 0.15220991, 0.04880619, -0.5527918, -6.2354407, 0.26033837, 0.0018453693, -0.5114149, 1.6394447, 0, 0.529388, 0.0022446788, -0.04590949, 0.51141876, -0.00093938765, 0.2603364, -6.7427535, 0.082883246, -0.017170431, -0.35519177, 1.6112901, 0, 0.2395278, -0.0268407, -0.029253567, 0.3561525, 0.003995876, 0.08265966, -6.9093647)
 
-[node name="Rock4_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=649743596]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock4_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=348026026]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("31_86mk2")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("32_x8oqm")
 xforms = PackedFloat32Array(1.9230093, 0, 0.15933143, 17.06218, 0, 0.84293234, 0, -0.13768701, -0.21680258, 0, 1.4132481, -3.7141855)
 
-[node name="Rock5_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=428022245]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock5_-1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=953417199]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("32_0m04e")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("33_mlk3l")
 xforms = PackedFloat32Array(0.024956776, 0.117403254, -0.6617244, -5.839574, 0, 0.59479004, 0.13079397, -0.053997673, 0.6745094, -0.004343908, 0.024483733, -3.717208, 0.43306187, -0.032571208, -0.39361584, -5.5965915, 0, 0.43050563, -0.06538089, -0.046950057, 0.39608142, 0.035612244, 0.4303661, -7.5227046, -0.37804627, 0.03914087, -0.39010638, -5.767561, 0, 0.32446197, 0.09005738, -0.043769583, 0.39550105, 0.03741345, -0.3728897, -8.861121)
 
-[node name="Rock5_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=621230174]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock5_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1687679694]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("32_0m04e")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("33_mlk3l")
 xforms = PackedFloat32Array(0.4247487, 0.015430749, 0.11192324, -5.716532, 0, 0.4221244, -0.06184841, -0.035162825, -0.11304802, 0.057977054, 0.42052263, 10.057321)
 
-[node name="Rock5_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1734069729]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock5_-1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=731066439]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("32_0m04e")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("33_mlk3l")
 xforms = PackedFloat32Array(-0.32061252, 0.05188236, 0.33016753, -5.7036586, 0, 0.37237358, -0.087829374, -0.03716715, -0.33623043, -0.04947243, -0.31483126, 4.643935)
 
-[node name="Rock5_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1730176848]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock5_0_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1452797201]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("32_0m04e")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("33_mlk3l")
 xforms = PackedFloat32Array(-0.254404, -0.050182782, -0.3080076, 5.774258, 0, 0.25897014, -0.098038085, -0.032539602, 0.3173643, -0.040227275, -0.24690354, 0.09760779)
 
-[node name="Rock5_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=263984532]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock5_0_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1839970380]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("32_0m04e")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("33_mlk3l")
 xforms = PackedFloat32Array(-0.36627853, -0.07412028, 0.5469498, 5.8030024, 0, 0.4403764, 0.13173403, -0.053393107, -0.5579258, 0.048659995, -0.35907277, -7.393075, -0.3544678, 0.0036194334, 0.3723182, 5.863671, 0, 0.31988466, -0.008030223, -0.04112826, -0.37236363, -0.0034454833, -0.3544246, -8.844513, -0.1593318, -0.043144472, 0.37404308, 1.5743684, 0, 0.27427885, 0.06921176, -0.032923386, -0.37944758, 0.018116564, -0.15706241, -7.2142506)
 
-[node name="Rock5_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1717079383]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock5_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=178506137]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("32_0m04e")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("33_mlk3l")
 xforms = PackedFloat32Array(-1.2765095, 0, -1.462853, 9.372243, 0, 0.95443285, 0, 0.14221208, 1.9690747, 0, -0.94833666, 11.717119)
 
-[node name="Rock5_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=344859450]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock5_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=21396646]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("32_0m04e")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("33_mlk3l")
 xforms = PackedFloat32Array(-2.3890882, 0, 2.7487268, 4.240326, 0, 1.7912982, 0, 0.35458833, -3.6999264, 0, -1.7748868, -13.557481)
 
-[node name="Rock5_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1009696143]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock5_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=331100138]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("32_0m04e")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("33_mlk3l")
 xforms = PackedFloat32Array(-0.74091786, 0, 2.7343574, -15.759724, 0, 1.5270075, 0, 0.2875177, -3.680585, 0, -0.5504381, -3.6432104)
 
-[node name="Rock5_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=468988597]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock5_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=586665695]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("32_0m04e")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("33_mlk3l")
 xforms = PackedFloat32Array(1.7290646, 0, 2.0009959, -17.227108, 0, 1.3017855, 0, 0.2303618, -2.6934423, 0, 1.2845461, 6.6469584)
 
-[node name="Rock5_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=572305352]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock5_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=778387645]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("32_0m04e")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("33_mlk3l")
 xforms = PackedFloat32Array(3.97748, 0, 0.2538278, 16.76044, 0, 1.6236886, 0, 0.31205308, -0.34166518, 0, 2.954925, 5.296099)
 
-[node name="Log" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=102696944]
-material_override = ExtResource("33_x8oqm")
+[node name="Log" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=89922503]
+material_override = ExtResource("34_hlqx7")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("34_mlk3l")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("35_jh611")
 xforms = PackedFloat32Array(5.7, 0, 0, 0, 0, 0.18, 0, 6.24, 0, 0, 0.18, -11)
 
-[node name="Post_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=858728457]
-material_override = ExtResource("7_ogsha")
+[node name="Post_-2_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=654884620]
+material_override = ExtResource("8_5022y")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("35_hlqx7")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("36_p23bt")
 xforms = PackedFloat32Array(-4.5754877e-08, 0, 0.91804326, -14.97, 0, 1.5833334, 0, 2.3841858e-07, -1.0467496, 0, -4.0128945e-08, -1.2478228e-07, -4.5754877e-08, 0, 0.91804326, -14.97, 0, 1.6500001, 0, 2.3841858e-07, -1.0467496, 0, -4.0128945e-08, -8.25, -4.5754877e-08, 0, 0.91804326, -14.97, 0, 1.6500001, 0, 2.3841858e-07, -1.0467496, 0, -4.0128945e-08, -2.7500002)
 
-[node name="Post_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1323529214]
-material_override = ExtResource("7_ogsha")
+[node name="Post_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=175847081]
+material_override = ExtResource("8_5022y")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("35_hlqx7")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("36_p23bt")
 xforms = PackedFloat32Array(-4.5754877e-08, 0, -0.91804326, 14.97, 0, 1.5833334, 0, 2.3841858e-07, 1.0467496, 0, -4.0128945e-08, 1.2478228e-07, -4.5754877e-08, 0, -0.91804326, 14.97, 0, 1.6500001, 0, 2.3841858e-07, 1.0467496, 0, -4.0128945e-08, 8.25, -4.5754877e-08, 0, -0.91804326, 14.97, 0, 1.6500001, 0, 2.3841858e-07, 1.0467496, 0, -4.0128945e-08, 2.7500002)
 
-[node name="Post_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=290604991]
-material_override = ExtResource("7_ogsha")
+[node name="Post_1_-1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1919238944]
+material_override = ExtResource("8_5022y")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("35_hlqx7")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("36_p23bt")
 xforms = PackedFloat32Array(-4.5754877e-08, 0, -0.91804326, 14.97, 0, 1.6500001, 0, 2.3841858e-07, 1.0467496, 0, -4.0128945e-08, -8.25, -4.5754877e-08, 0, -0.91804326, 14.97, 0, 1.6500001, 0, 2.3841858e-07, 1.0467496, 0, -4.0128945e-08, -2.7499998)
 
-[node name="Post_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=206012691]
-material_override = ExtResource("7_ogsha")
+[node name="Post_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=813065667]
+material_override = ExtResource("8_5022y")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("35_hlqx7")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("36_p23bt")
 xforms = PackedFloat32Array(-4.5754877e-08, 0, 0.91804326, -14.97, 0, 1.6500001, 0, 2.3841858e-07, -1.0467496, 0, -4.0128945e-08, 8.25, -4.5754877e-08, 0, 0.91804326, -14.97, 0, 1.6500001, 0, 2.3841858e-07, -1.0467496, 0, -4.0128945e-08, 2.7499998)
 
-[node name="Post_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=562251835]
-material_override = ExtResource("7_ogsha")
+[node name="Post_-1_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=519655617]
+material_override = ExtResource("8_5022y")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("35_hlqx7")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("36_p23bt")
 xforms = PackedFloat32Array(1.0467496, 0, 0, -5.6, 0, 1.5333333, 0, 2.3841858e-07, 0, 0, 0.91804326, -10.97)
 
-[node name="Post_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=910020851]
-material_override = ExtResource("7_ogsha")
+[node name="Post_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=516688166]
+material_override = ExtResource("8_5022y")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("35_hlqx7")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("36_p23bt")
 xforms = PackedFloat32Array(1.0467496, 0, 0, 5.6, 0, 1.5333333, 0, 2.3841858e-07, 0, 0, 0.91804326, -10.97)
 
-[node name="Post_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1655563104]
-material_override = ExtResource("7_ogsha")
+[node name="Post_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=921164806]
+material_override = ExtResource("8_5022y")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("35_hlqx7")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("36_p23bt")
 xforms = PackedFloat32Array(-1.0467496, 0, -8.025789e-08, -7.5, 0, 1.5666667, 0, 2.3841858e-07, 9.1509754e-08, 0, -0.91804326, 10.97)
 
-[node name="Post_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1291847630]
-material_override = ExtResource("7_ogsha")
+[node name="Post_0_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1647169049]
+material_override = ExtResource("8_5022y")
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("35_hlqx7")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("36_p23bt")
 xforms = PackedFloat32Array(-1.0467496, 0, -8.025789e-08, 7.5, 0, 1.5666667, 0, 2.3841858e-07, 9.1509754e-08, 0, -0.91804326, 10.97)
 
-[node name="Rock2_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=381749296]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock2_-1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1605684070]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("36_jh611")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("37_puj16")
 xforms = PackedFloat32Array(-1.6465824, 0, -0.1579988, -0.10958179, 0, 0.5032977, 0, -0.11974114, 0.21289879, 0, -1.2219799, 13.404971)
 
-[node name="Rock2_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=296483374]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock2_1_1" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1213659530]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("36_jh611")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("37_puj16")
 xforms = PackedFloat32Array(-0.6385533, 0, -2.4966676, 12.515122, 0, 1.0380231, 0, -0.14071497, 3.3641868, 0, -0.47389027, 12.473926)
 
-[node name="Rock2_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=590114535]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock2_0_-2" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=587173547]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("36_jh611")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("37_puj16")
 xforms = PackedFloat32Array(-0.19514947, 0, -1.7382065, 7.268959, 0, 0.71246624, 0, -0.12794547, 2.3421826, 0, -0.14482647, -13.492644)
 
-[node name="Rock2_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1378264843]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock2_-2_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=866108966]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("36_jh611")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("37_puj16")
 xforms = PackedFloat32Array(-0.95973027, 0, 1.7163469, -17.155674, 0, 0.7590455, 0, -0.12977251, -2.3127275, 0, -0.71224564, 1.1625965)
 
-[node name="Rock2_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=517698669]
-material_override = ExtResource("24_mwwdj")
+[node name="Rock2_1_0" type="MultiMeshInstance3D" parent="Dress/Scatter" unique_id=1086975557]
+material_override = ExtResource("25_32yyi")
 cast_shadow = 0
 gi_mode = 0
-script = ExtResource("8_u435m")
-mesh = ExtResource("36_jh611")
+script = ExtResource("9_s05jj")
+mesh = ExtResource("37_puj16")
 xforms = PackedFloat32Array(0.30148318, 0, 1.3299373, 15.876645, 0, 0.55087405, 0, -0.12160729, -1.7920519, 0, 0.22374003, 8.801064)
 
-[node name="GroundSkirt" type="MeshInstance3D" parent="Dress" unique_id=641372054]
-material_override = ExtResource("37_p23bt")
+[node name="GroundSkirt" type="MeshInstance3D" parent="Dress" unique_id=1075930997]
+material_override = ExtResource("38_qcvnc")
 cast_shadow = 0
-mesh = SubResource("ArrayMesh_1f28f")
+mesh = SubResource("ArrayMesh_gsyov")
 
-[node name="Backdrop" type="Node3D" parent="Dress" unique_id=1310542159 instance=ExtResource("38_puj16")]
+[node name="Backdrop" type="Node3D" parent="Dress" unique_id=1632614543 instance=ExtResource("39_cfnti")]

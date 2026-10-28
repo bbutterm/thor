@@ -1,0 +1,39 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/world_surface.gdshader" id="1_ag3uf"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_Brick_BaseColor.png" id="2_c3hlb"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_Noise_Terrain.png" id="3_8a5uu"]
+[ext_resource type="Texture2D" path="res://assets/quaternius/village/T_Brick_Normal.png" id="4_1c73v"]
+[ext_resource type="Texture2D" path="res://assets/textures/midgard/dirt_straw.webp" id="5_h0mrs"]
+
+[resource]
+resource_name = "slice_floor_brick"
+render_priority = 0
+shader = ExtResource("1_ag3uf")
+shader_parameter/albedo_tex = ExtResource("2_c3hlb")
+shader_parameter/normal_tex = ExtResource("4_1c73v")
+shader_parameter/normal_strength = 0.45
+shader_parameter/tint = Color(0.8, 0.7, 0.6, 1)
+shader_parameter/uv_scale = 0.26
+shader_parameter/roughness_base = null
+shader_parameter/blend_sharpness = null
+shader_parameter/noise_tex = ExtResource("3_8a5uu")
+shader_parameter/detail_mix = null
+shader_parameter/detail_scale = null
+shader_parameter/detail_angle = null
+shader_parameter/antitile_scale = null
+shader_parameter/macro_scale = null
+shader_parameter/macro_strength = 0.22
+shader_parameter/macro_tint = null
+shader_parameter/overlay_color = Color(0.86, 0.76, 0.64, 1)
+shader_parameter/overlay_tex = ExtResource("5_h0mrs")
+shader_parameter/overlay_uv = 0.3
+shader_parameter/overlay_amount = 0.22
+shader_parameter/overlay_scale = 0.045
+shader_parameter/overlay_softness = 0.16
+shader_parameter/overlay_top = 0.0
+shader_parameter/overlay_roughness = null
+shader_parameter/grime_color = null
+shader_parameter/grime_height = null
+shader_parameter/grime_strength = 0.0
+shader_parameter/vertex_ao = null

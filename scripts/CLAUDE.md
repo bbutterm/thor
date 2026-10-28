@@ -61,6 +61,7 @@
 ## Графика мира (`world_art.gd`)
 Комплект владельца `assets/sky|decals|decor|textures/`, `docs/world_art/`; другие миры — в запасе, исключены из экспорта. `WorldArt`, числа — `data/world_art.tres` / `WorldArtTuning`.
 - Небо и дымка мира — поля группы «Небо и атмосфера» в `run/maps/<мир>.tres` (`sky` — путь к панораме, `exposure`, `ambient_*`, `fog_*`, флаги `ground_fog`/`dust_motes`/`torch_embers`), применяет `WorldArt.apply_world` (`Game._ready`, копия окружения; без `sky` — процедурное небо сцены).
+- Профиль графики зала — `Room.visual_map` (RunMap только для вида: небо с тонировкой `sky_tint*` — шейдер `shaders/panorama_tint.gdshader`, свет, туман, `room_outline_multiplier`/`room_halftone_multiplier`); применяет `Game._finish_room_load` при смене профиля, без профиля — `Run.map`. Генерируемые залы Мидгарда — `run/maps/midgard_slice.tres` (см. `rooms/CLAUDE.md`).
 - Атмосфера зала — `WorldArt.dress_room` (`Game._load_room`): искры над `Torches/*` и очагом `Decor/Hearth` (+ языки пламени), пылинки, низкий туман (узел `Atmosphere`, CPUParticles3D).
 - Рунные круги: прыжковые руны, двери-награды (`WorldArt.circle_for_color`).
 - **Статичный декор/декали/частицы — StandardMaterial3D из кеша `WorldArt.material(key, kind)`, без instance uniform** (не тратят буфер GL Compatibility); новый вид — в `WorldArt.material_specs()` (прогрев).
