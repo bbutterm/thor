@@ -40,7 +40,7 @@
 ## Модели персонажей (Quaternius, CC0)
 - `assets/quaternius/characters/` — тела, одежда, волосы, анимации (`gaits.glb` = UAL1, `animations.glb` = UAL2). Скелет у всех один (65 костей, правая кисть `hand_r`).
 - `humanoid_model.gd` собирает персонажа: тело + одежда + волосы на одном скелете, красит, добавляет библиотеки анимаций `ual1/…`, `ual2/…`. Godot при импорте отрезает суффикс `_Loop` — `HumanoidModel.resolve()` ищет оба варианта. Общий тонированный материал — `HumanoidModel._tinted`.
-- Вид и анимации врагов — `MODEL_LOOKS` в `tools/build_scenes.gd` (поля групп «Модель»/«Анимации» в `enemy.gd`). Замена на Synty: положить в сцену врага узел `Visual` со своим `AnimationPlayer` или поменять пути/имена анимаций там.
+- Вид и анимации врагов — `MODEL_LOOKS` в `tools/build/gen_enemies.gd` (поля групп «Модель»/«Анимации» в `enemy.gd`). Замена на Synty: положить в сцену врага узел `Visual` со своим `AnimationPlayer` или поменять пути/имена анимаций там.
 - Массовка/драугры: `HumanoidModel.random_look()` смешивает части одежды, волосы, цвета; у грунтов `randomize_look` + `weapon_pool` + `shield_chance`.
 - Вспышка попадания — оверлей `shaders/hit_flash.tres` (`Enemy.FLASH_MATERIAL`), обводка — его `next_pass` (см. `scripts/CLAUDE.md`, «Комиксовая обводка»).
 

@@ -121,3 +121,45 @@
 - `godot --headless --path . --import` — без ошибок.
 - `python3 tools/run_tests.py --all --jobs 4` — 59 из 59 PASS за 3 мин 18 с, без SCRIPT ERROR; предупреждений в логах 16 (было 22).
 - Путь GL Compatibility (свой материал вспышки на врага, его headless не проходит): `tests/enemy_shots.tscn` под xvfb до и после этапа — в логе те же 3 сообщения при выходе (утечки текстур, `ERR_CANT_OPEN`), без новых ошибок. Разница кадров «после — до» (2.5–13 на пиксель) не больше, чем между двумя прогонами одного и того же кода «до» (3.3–22): в сцене случайная одежда и частицы.
+
+## Этап 4. Генератор: `tools/build_scenes.gd` → данные залов и сборщики (28.10)
+
+### Было → стало
+`build_scenes.gd` — 1934 строки → 420 (порядок сборки, `MANUAL_SCENES`/`_save`, общие помощники, список залов). Два шага, два коммита:
+
+**4.1. Данные залов** — `room_defs()` (400 строк словарей) → по файлу на зал:
+
+| Было | Стало |
+|---|---|
+| словари 11 залов в `room_defs()` | `tools/rooms/room_01.gd` … `room_11.gd` (`static func def() -> Dictionary`, 22–137 строк) |
+| `shop_room_def()` | `tools/rooms/shop_room.gd` |
+| `_ring_points`, `_ring_props`, `_stack_props`, `_nav_quad`, `SHIP_Y`, `WALL_INSET` | `tools/rooms/room_kit.gd` (static) |
+| — | `ROOM_DATA` (список preload) → `room_defs()`; `shop_room_def()` — делегат (их вызывает `generator_test`) |
+
+**4.2. Сборщики** — `tools/build/` (`RefCounted`, ссылка `gen: SceneBuilder`; генератору дан `class_name SceneBuilder`):
+
+| Было | Стало |
+|---|---|
+| `build_resources` | `build/gen_resources.gd` — `GenResources` (57) |
+| `build_props` | `build/gen_props.gd` — `GenProps` (94) |
+| `build_enemies`, `MODEL_LOOKS` | `build/gen_enemies.gd` — `GenEnemies` (156, вместе с данными вида врагов) |
+| `build_player` | `build/gen_player.gd` — `GenPlayer` (182) |
+| `build_dress`, `build_rooms`, `_build_room`, `_watchtower`, `_build_ramps`, `_build_wall_art`, `_wall_decor`, `_block_style`, `_is_wood_deck`, `_corner_props` | `build/gen_rooms.gd` — `GenRooms` (489) |
+| `_floor_opening_*`, `_floor_cut_lines`, `_cut_floor`, `_nav_region`, `_build_enemy_navigation` | `build/gen_room_floor.gd` — `GenRoomFloor` (166) |
+| `build_ui_scenes`, `build_game` | `build/gen_ui.gd` — `GenUi` (81) |
+
+`build_*` остались на `SceneBuilder` обёртками (`## API →`). Приватных обёрток не понадобилось.
+
+### Проверка «перегенерация = те же сцены»
+- Генератор пишет 33 сцены. Закоммиченные сцены **расходятся** со свежей генерацией не только в `unique_id` (другие наборы ресурсов, `radiance_size` и т. п. — их правили после генератора), поэтому сравнение — со свежей генерацией до этапа (эталон).
+- Вывод генератора меняется от запуска к запуску только в `unique_id` и случайных id ресурсов (`id="Type_xxxxx"`). Нормализация (id → порядковые номера по первому появлению, `load_steps` убран): два запуска одного кода — 0 различий.
+- После шага 4.1 — 0 различий с эталоном; после шага 4.2 — 0 различий. Перегенерированные сцены не коммитились (вернул к `HEAD`).
+- Побочно: в логе генератора пропало сообщение при выходе «2 resources still in use at exit».
+
+### Найдено и не тронуто
+- Закоммиченные генерируемые сцены (все 33) не совпадают с тем, что сейчас выдаёт генератор. Если перезапустить генератор, сцены изменятся по-настоящему, а не только в id. Разобрать отдельно: какие правки внесены в сцены руками и нужно ли перенести их в генератор.
+
+### Проверка
+- `godot --headless --path . --import` — без ошибок; `tools/check_export_assets.py` — без новых замечаний (`tools/*` исключён из экспорта).
+- После 4.1: `generator_test`, `reach_test`, `tower_test`, `room_transition_test` — PASS. После 4.2: `python3 tools/run_tests.py --all --jobs 4` — 59 из 59 PASS за 3 мин 12 с.
+- Карта тестов: `tools/build/`, `tools/rooms/` → тесты генератора и залов.

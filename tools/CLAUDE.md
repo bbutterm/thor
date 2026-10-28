@@ -3,7 +3,20 @@
 ## Генератор сцен (`build_scenes.gd`)
 - Генерирует сцены игрока, врагов, бочек, **обычных боевых залов** (`room_defs()`: `rooms/room_01…09.tscn`), зала-ларька (`shop_room_def()`), UI и `scenes/game.tscn`. Меняешь их структуру — правь генератор и перезапускай: `godot --headless --path . res://tools/build_scenes.tscn`. Коммить только намеренно изменённые .tscn: генератор переписывает `unique_id` в негенерируемых по смыслу сценах — такой шум откатывай **по одному файлу**, никогда не всю папку.
 - **Ручные сцены** — `MANUAL_SCENES` (`rooms/boss_arena.tscn`, `rooms/sven_arena.tscn`; новые арены — туда же): генератор их не создаёт и не перезаписывает (`_save` отказывается, проверка — `tests/generator_test.tscn`).
-- Вид и анимации врагов — `MODEL_LOOKS`; пропсы — `build_props` (новый разрушаемый пропс — см. `props/CLAUDE.md`); даль — `build_dress`; стены — `_wall_row`, дома — `_house`, вышки — `_watchtower`, авто-щиты/знамёна — `_build_wall_art`, материалы — `_tex_mat`, стиль блока — `_block_style`. Ключи `room_defs()` — `rooms/CLAUDE.md`.
+- **Устройство** (этап 4 рефакторинга): `build_scenes.gd` (`SceneBuilder`) — порядок сборки (`_ready`), `MANUAL_SCENES` и `_save`, общие помощники (`_mat`, `_tex_mat`, `_world_tex_mat`, `_model`, `_wall_row`, `_house`, `_box`, `_balcony`, `_cyl`, `_mesh`), список залов `ROOM_DATA` → `room_defs()`, `shop_room_def()`. Сборщики — `RefCounted`-компоненты `build/` (доступ `gen.<имя>`, общие помощники — `gen._box(...)`):
+
+| Файл | Класс | Что собирает |
+|---|---|---|
+| `build/gen_resources.gd` | `GenResources` | ресурсы тел и рун |
+| `build/gen_props.gd` | `GenProps` | бочки, ящики, взрывные бочки (`build_props`; новый разрушаемый пропс — `props/CLAUDE.md`) |
+| `build/gen_enemies.gd` | `GenEnemies` | сцены врагов; вид и анимации — `MODEL_LOOKS` здесь же |
+| `build/gen_player.gd` | `GenPlayer` | `player/player.tscn` |
+| `build/gen_rooms.gd` | `GenRooms` | залы: `_build_room`, стиль блока `_block_style`, вышки `_watchtower`, пандусы, авто-щиты/знамёна `_build_wall_art`, даль `build_dress` |
+| `build/gen_room_floor.gd` | `GenRoomFloor` | вырезы в полу и навигация врагов между ярусами |
+| `build/gen_ui.gd` | `GenUi` | UI-сцены и `scenes/game.tscn` |
+
+- **Данные залов** — по файлу на зал: `tools/rooms/room_01.gd` … `room_11.gd`, `tools/rooms/shop_room.gd` (`static func def() -> Dictionary`), общие помощники и константы (`ring_props`, `stack_props`, `nav_quad`, `WALL_INSET`, `SHIP_Y`) — `tools/rooms/room_kit.gd`. Новый зал — новый файл + строка в `ROOM_DATA` (ключи — `rooms/CLAUDE.md`, «Новый боевой зал»).
+- **Проверка перегенерации** после правок генератора: сцены до и после должны совпасть с точностью до `unique_id` и случайных id ресурсов (`id="Type_xxxxx"`). Вывод генератора детерминирован — сравнивай нормализованно (порядковые номера id), а не с закоммиченными сценами: те расходятся с текущим генератором (их правили после).
 - `room_dresser.gd` (`RoomDresser`) — одевание залов (вызывается в конце `_build_room`), подробно — `rooms/CLAUDE.md`.
 - Разовые правки ручных сцен (запускать сценой, не `-s`): `dress_arenas.tscn` (арена Свена), `dress_longhouse.tscn` (убранство длинного дома, узел `Decor`), `dress_longhouse_art.tscn` (картинки длинного дома).
 - `setup_project.gd` — одноразовая настройка проекта (`godot --headless --path . -s tools/setup_project.gd`): Jolt, имена слоёв физики, управление, автозагрузки, главная сцена.

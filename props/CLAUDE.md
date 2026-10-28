@@ -16,7 +16,7 @@ HP, правило скорости (бывший `BarrelWatch` — тот те�
 Мосты и настилы залов — `Balcony.slam_breakable` (генератор: блок `"wood"` толщиной ≤ 0.5 м с низом выше 1 м — мост деревни, Биврёст), ломает удар-приземление (`PlayerSlam._slam_break_floor`); балконы Ярла — нет.
 
 ## Новый разрушаемый пропс
-Ветка в `build_props` (RigidBody слой 4, группа `props`, `set_script(destructible.gd)`, узел `Model` — из него режутся обломки; поля `max_health`, `debris_mode` radial|box, `loot`, `break_sound`), путь — в `AssetCache.FILES` и `Destructible.warmup_samples`, в зал — вид в `props` словаря `room_defs()`.
+Ветка в `build_props` (`tools/build/gen_props.gd`; RigidBody слой 4, группа `props`, `set_script(destructible.gd)`, узел `Model` — из него режутся обломки; поля `max_health`, `debris_mode` radial|box, `loot`, `break_sound`), путь — в `AssetCache.FILES` и `Destructible.warmup_samples`, в зал — вид в `props` описания зала (`tools/rooms/<зал>.gd`).
 
 ## Тесты
 `destructible_test` (все источники урона, обломки, содержимое, взрывные, мосты, балконы Ярла); кадры — `tests/destruct_shots.tscn`.
