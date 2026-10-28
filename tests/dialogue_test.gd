@@ -37,6 +37,7 @@ func _run() -> void:
 	_test_conditions()
 	_test_selection()
 	_test_shop_greeting_history()
+	_test_visit_outcomes()
 	_test_content()
 	_test_finale_gating()
 	_test_loki_finale_branches()
@@ -169,6 +170,86 @@ func _test_shop_greeting_history() -> void:
 	check(Dialogue.check(regular._conds, Dialogue.context()), "после повторного открытия и смерти реплика доступна")
 	Save.data.stats.deaths = 0
 	check(not Dialogue.check(regular._conds, Dialogue.context()), "без смертей реплика об умирающем клиенте недоступна")
+	Save.reset()
+
+## Реплики, говорящие о смерти в последнем забеге, не должны выпадать после победы.
+func _test_visit_outcomes() -> void:
+	print("-- Визиты после победы и смерти")
+	var lost := Dialogue.parse_condition("lost")
+	check(lost.get("ok", false), "существующее условие lost разбирается")
+	check(Dialogue.check([lost], {"last_won": false}), "lost выполнено при проигрыше")
+	check(not Dialogue.check([lost], {"last_won": true}), "lost не выполнено при победе")
+	var saved_pools: Dictionary = Dialogue.pools
+	var saved_locale := TranslationServer.get_locale()
+	var cases := [
+		{"pool": "loki.visit", "intro": "loki_intro", "line": "loki.visit.02_01", "file": "loki"},
+		{"pool": "sif.visit", "intro": "sif_intro", "line": "sif.visit.01_01", "file": "sif"},
+		{"pool": "skadi.visit", "intro": "skadi_intro", "line": "skadi.visit.01_01", "file": "skadi"},
+	]
+	for case_data in cases:
+		var pool_name: String = case_data.pool
+		var line_id: String = case_data.line
+		var items: Array = saved_pools.get(pool_name, [])
+		var target: Dictionary = {}
+		for item in items:
+			if str(item.lines[0].get("id", "")) == line_id:
+				target = item
+				break
+		check(not target.is_empty(), "%s: реплика найдена" % line_id)
+		if target.is_empty():
+			continue
+		var loc_data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/dialogues/en/%s.json" % case_data.file))
+		var loc_lines: Dictionary = (loc_data as Dictionary).get("lines", {}) if loc_data is Dictionary else {}
+		var translation: Dictionary = loc_lines.get(line_id, {})
+		check(not str(translation.get("en", "")).strip_edges().is_empty(), "%s: английский перевод найден" % line_id)
+		# Оставляем один настоящий элемент: случайный выбор становится воспроизводимым.
+		var one_pool := {}
+		one_pool[pool_name] = [target]
+		Dialogue.pools = one_pool
+		Save.reset()
+		Save.end_run({"won": false, "cause": "draugr", "rooms": 1})
+		for language in ["ru", "en"]:
+			I18n.apply(language)
+			Dialogue.refresh_locale()
+			check(Dialogue.visitor_lines().is_empty() and Dialogue.pool_lines(pool_name).is_empty(),
+				"%s/%s: до знакомства визита нет и пустой пул безопасен" % [line_id, language])
+		Save.mark_seen(case_data.intro)
+		for language in ["ru", "en"]:
+			I18n.apply(language)
+			Dialogue.refresh_locale()
+			var visit := Dialogue.visitor_lines()
+			var shown: Dictionary = visit[0] if not visit.is_empty() else {}
+			var expected := str(target.lines[0].text) if language == "ru" else str(translation.get("en", ""))
+			check(shown.get("id", "") == line_id and shown.get("text", "") == expected,
+				"%s/%s: после смерти случайный визит показан на выбранном языке" % [line_id, language])
+		Save.end_run({"won": true, "rooms": 7})
+		check(bool(Dialogue.context().get("last_won", false)), "%s: победа записана в контексте" % line_id)
+		for language in ["ru", "en"]:
+			I18n.apply(language)
+			Dialogue.refresh_locale()
+			check(Dialogue.visitor_lines().is_empty() and Dialogue.pool_lines(pool_name).is_empty(),
+				"%s/%s: после победы реплика недоступна и пустой пул безопасен" % [line_id, language])
+		# Остальные визиты этого персонажа должны оставаться доступны и после победы.
+		var full_pool := {}
+		full_pool[pool_name] = items
+		Dialogue.pools = full_pool
+		var others := 0
+		for item in items:
+			if str(item.lines[0].get("id", "")) != line_id and Dialogue.check(item._conds, Dialogue.context()):
+				others += 1
+		check(others > 0, "%s: после победы остались другие визиты" % pool_name)
+		for language in ["ru", "en"]:
+			I18n.apply(language)
+			Dialogue.refresh_locale()
+			var visits_ok := true
+			for i in 10:
+				var sample := Dialogue.visitor_lines()
+				if sample.is_empty() or str(sample[0].get("id", "")) == line_id:
+					visits_ok = false
+			check(visits_ok, "%s/%s: выбор других визитов работает после победы" % [pool_name, language])
+	Dialogue.pools = saved_pools
+	TranslationServer.set_locale(saved_locale)
+	Dialogue.refresh_locale()
 	Save.reset()
 
 func _pool_size(prefix: String) -> int:
