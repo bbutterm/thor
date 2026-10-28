@@ -220,7 +220,23 @@ func _check_next_wave() -> void:
 	if _alive.size() < _wave_size * next_wave_fraction or _wave_time >= next_wave_timeout:
 		_advance_wave()
 
+## В отдельных залах следующая волна дополнительно ждёт игрока в указанной области.
+## Нет данных — прежнее поведение. Координаты области и высота локальны залу.
+func _wave_gate_open(index: int) -> bool:
+	var gates: Dictionary = get_meta("wave_gates", {})
+	if not gates.has(index):
+		return true
+	if not is_instance_valid(_player) or _player.is_dead:
+		return false
+	var gate: Dictionary = gates[index]
+	var area: Rect2 = gate.get("area", Rect2())
+	var p := to_local(_player.global_position)
+	return area.has_point(Vector2(p.x, p.z)) and p.y >= float(gate.get("min_y", 0.0)) \
+		and (not bool(gate.get("grounded", false)) or _player.is_on_floor())
+
 func _advance_wave() -> void:
+	if not _wave_gate_open(_wave_index + 1):
+		return
 	_advance_pending = true
 	_wave_index += 1
 	var idx := _wave_index

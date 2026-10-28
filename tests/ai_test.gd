@@ -146,6 +146,8 @@ func _run() -> void:
 		fails += 1
 	if not await _room10_ascent():
 		fails += 1
+	if not await _room11_ascent():
+		fails += 1
 	FX.reset_time()
 	print("=== ИТОГ AI: %d FAIL ===" % fails)
 	get_tree().quit(1 if fails > 0 else 0)
@@ -189,4 +191,48 @@ func _room10_ascent() -> bool:
 			break
 	var ok := middle and reached
 	print("[%s] частокол: корм прошёл средний и верхний ярусы" % ["OK" if ok else "FAIL"])
+	return ok
+
+## Корм проходит три марша к игроку на вершине, без переноса по координатам.
+func _room11_ascent() -> bool:
+	Run.start_run("berserker")
+	Run.room_order.assign(["res://rooms/room_11.tscn", Run.BOSS_SCENE])
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await frames(90)
+	var game := get_tree().current_scene as Game
+	var room := game.room
+	room.set_physics_process(false)
+	room._spawn_queue.clear()
+	for e in room.alive_enemies().duplicate():
+		e.queue_free()
+	room._alive.clear()
+	var p := game.player
+	p.input_enabled = false
+	p.global_position = room.to_global(Vector3(2, 19.6, -12))
+	p.velocity = Vector3.ZERO
+	room._player = p
+	var enemy := room.spawn_extra("fodder", room.to_global(Vector3(-11, 0.05, 10.8)))
+	if enemy == null:
+		print("[FAIL] башня: корм не появился")
+		return false
+	enemy._set_state(Enemy.State.CHASE)
+	enemy.alert_to_player()
+	var level1 := false
+	var level2 := false
+	var reached := false
+	for i in 4800:
+		await get_tree().physics_frame
+		p.health = p.max_health
+		if not is_instance_valid(enemy) or enemy.is_dead:
+			break
+		var y := room.to_local(enemy.global_position).y
+		if enemy.is_on_floor() and y >= 6.3:
+			level1 = true
+		if enemy.is_on_floor() and y >= 12.8:
+			level2 = true
+		if enemy.is_on_floor() and y >= 19.2 and enemy.global_position.distance_to(p.global_position) < 3.0:
+			reached = true
+			break
+	var ok := level1 and level2 and reached
+	print("[%s] башня: корм прошёл все ярусы" % ["OK" if ok else "FAIL"])
 	return ok

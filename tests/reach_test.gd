@@ -196,6 +196,11 @@ func _run() -> void:
 	await _walk_room10_ramp(Vector3(-10, 0.1, 10.4), 0.0, 2.9, "яма → средний ярус")
 	await _walk_room10_ramp(Vector3(-6.8, 3.1, -1.6), PI, 6.5, "средний → верхний помост")
 	await _walk_room10_ramp(Vector3(9, 3.1, -6.4), PI, 6.5, "средний ярус → вышка")
+	await _walk_tower11_ramp(Vector3(-11, 0.1, 10.8), 0.0, 6.4, "первый")
+	await _walk_tower11_ramp(Vector3(-5, 6.6, -10.7), PI, 12.9, "второй")
+	await _walk_tower11_ramp(Vector3(1, 13.1, 10.7), 0.0, 19.4, "третий")
+	await _tower11_wave_gate()
+	await _tower11_slam()
 	FX.reset_time()
 	get_tree().quit(1 if fails > 0 else 0)
 
@@ -253,5 +258,84 @@ func _walk_room10_ramp(start: Vector3, yaw: float, min_y: float, what: String) -
 			break
 	Input.action_release("move_forward")
 	print("[%s] частокол: %s (y=%.2f)" % ["OK" if ok else "FAIL", what, top])
+	if not ok:
+		fails += 1
+
+## Три физические поверхности, ведущие игрока от уровня к уровню.
+func _walk_tower11_ramp(start: Vector3, yaw: float, min_y: float, what: String) -> void:
+	var g := await _start("res://rooms/room_11.tscn")
+	g.room.set_physics_process(false)
+	g.room._spawn_queue.clear()
+	var p := g.player
+	p.global_position = g.room.to_global(start)
+	p.velocity = Vector3.ZERO
+	p.rotation_target = Vector2(0, yaw)
+	await frames(10)
+	Input.action_press("move_forward")
+	var ok := false
+	var peak := 0.0
+	for i in 360:
+		await get_tree().physics_frame
+		var y := g.room.to_local(p.global_position).y
+		peak = maxf(peak, y)
+		if p.is_on_floor() and y >= min_y:
+			ok = true
+			break
+	Input.action_release("move_forward")
+	print("[%s] башня: %s марш (y=%.2f)" % ["OK" if ok else "FAIL", what, peak])
+	if not ok:
+		fails += 1
+
+## Пустая предыдущая волна не пропускает финал, пока Тор не ступил на вершину.
+func _tower11_wave_gate() -> void:
+	var g := await _start("res://rooms/room_11.tscn")
+	var room := g.room
+	room.set_physics_process(false)
+	room._spawn_queue.clear()
+	for e in room.alive_enemies().duplicate():
+		e.queue_free()
+	room._alive.clear()
+	room._wave_index = 2
+	room._wave_size = 1
+	room._advance_pending = false
+	room._started = true
+	room._player = g.player
+	g.player.global_position = room.to_global(Vector3(0, 0.1, 12))
+	g.player.velocity = Vector3.ZERO
+	await frames(8)
+	room._check_next_wave()
+	var held := room._wave_index == 2 and not room._advance_pending and not room._is_cleared
+	g.player.global_position = room.to_global(Vector3(2, 19.6, -15))
+	g.player.velocity = Vector3.ZERO
+	await frames(12)
+	room._check_next_wave()
+	await frames(70)
+	var opened := room._wave_index == 3 and room.pending_spawns() > 0
+	print("[%s] башня: финал ждёт вершины и запускается там" % ["OK" if held and opened else "FAIL"])
+	if not (held and opened):
+		fails += 1
+
+## Сойти с верхней кромки на открытый двор, ударить в пол и остаться живым.
+func _tower11_slam() -> void:
+	var g := await _start("res://rooms/room_11.tscn")
+	g.room.set_physics_process(false)
+	g.room._spawn_queue.clear()
+	var p := g.player
+	var powers := [0.0]
+	p.slammed.connect(func(power: float) -> void: powers[0] = power)
+	p.global_position = g.room.to_global(Vector3(10.0, 19.6, -14))
+	p.rotation_target = Vector2.ZERO
+	p.velocity = Vector3.ZERO
+	await frames(10)
+	Input.action_press("move_right")
+	await frames(30)
+	Input.action_release("move_right")
+	Input.action_press("slam")
+	await frames(2)
+	Input.action_release("slam")
+	await frames(100)
+	var local := g.room.to_local(p.global_position)
+	var ok: bool = not p.is_dead and p.is_on_floor() and absf(local.y) < 0.3 and powers[0] >= 0.99
+	print("[%s] башня: прыжок 19.5 м, жизнь и сила удара (y=%.2f, сила=%.2f)" % ["OK" if ok else "FAIL", local.y, powers[0]])
 	if not ok:
 		fails += 1

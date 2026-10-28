@@ -400,7 +400,7 @@ func show_doors() -> void:
 		var d := RewardDoor.create(def, id)
 		var x := (i - (n - 1) / 2.0) * spacing
 		x = clampf(x, -half_w + 1.8, half_w - 1.8)
-		var local := Vector3(x, 0, z)
+		var local := Vector3(x, float(room.get_meta("exit_y", 0.0)), z)
 		var ground := Loot.floor_point(room, room.to_global(local))
 		room.add_child(d)
 		d.global_position = ground

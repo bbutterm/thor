@@ -302,6 +302,14 @@ func _clear_room_and_exit(is_last: bool, door_pick: int = 0) -> bool:
 		await wait(1.5)
 		check(room.alive_count() == 0 and not room._started, "тихий зал (%s) — без врагов" % reward)
 	while not peaceful and not room._is_cleared and safety < 40:
+		# Проверка прохождения находится в reach_test; в smoke добираемся до ворот следующей волны.
+		var gates: Dictionary = room.get_meta("wave_gates", {})
+		var gate: Dictionary = gates.get(room._wave_index + 1, {})
+		if not gate.is_empty() and room.alive_count() == 0 and room.pending_spawns() == 0:
+			var area: Rect2 = gate.get("area", Rect2())
+			var center := area.get_center()
+			game.player.global_position = room.to_global(Vector3(center.x, float(gate.get("min_y", 0.0)) + 0.6, center.y))
+			game.player.velocity = Vector3.ZERO
 		safety += 1
 		await wait(1.2)
 		for e in room.alive_enemies().duplicate():

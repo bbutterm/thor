@@ -56,6 +56,21 @@ func _test_structure() -> void:
 	Run.start_run("berserker")
 	check(Run.room_order.size() == 8, "7 залов + босс (%d)" % Run.room_order.size())
 	check(Run.room_order[7] == Run.BOSS_SCENE, "босс в конце")
+	var required_ok := true
+	var combat_only_ok := true
+	for attempt in 16:
+		Run.start_run("berserker")
+		for path in Run.map.required_rooms:
+			var idx := Run.room_order.find(path)
+			required_ok = required_ok and idx >= 0 and Run.room_order.count(path) == 1 and idx not in Run.miniboss_rooms
+			if idx > 0:
+				Run.room_index = idx - 1
+				for pick in Run.roll_door_offers():
+					var def := Run.reward_def(pick)
+					combat_only_ok = combat_only_ok and def != null and def.combat
+	check(required_ok, "вертикальные залы включены по одному вне арены мини-босса")
+	check(combat_only_ok, "тихие двери не заменяют обязательный боевой зал")
+	Run.room_index = 0
 	var repeats := 0
 	for i in range(1, 7):
 		if Run.room_order[i] == Run.room_order[i - 1]:

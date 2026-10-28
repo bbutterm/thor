@@ -12,6 +12,8 @@ class_name RunMap
 @export var miniboss_room: int = 4
 ## Награда первого зала (в него не входят через дверь)
 @export var first_room_reward: String = "combat"
+## Эти залы гарантированно входят в боевые слоты мира, не чаще одного раза.
+@export var required_rooms: PackedStringArray = []
 
 @export_group("Двери")
 ## Сколько дверей после зачистки (GDD 4: 2–3)
@@ -124,7 +126,7 @@ func miniboss_index() -> int:
 ## Набор дверей к залу next_index. rewards — все RewardDef, visits — сколько раз заходили (id → n),
 ## prev — награда зала, из которого выходим; boss_index — номер зала босса;
 ## anvil_ok — наковальне есть что дать (Run.anvil_available()).
-func roll_offers(rewards: Array, next_index: int, boss_index: int, visits: Dictionary, prev: String, shop_ok: bool, anvil_ok: bool = false) -> Array[String]:
+func roll_offers(rewards: Array, next_index: int, boss_index: int, visits: Dictionary, prev: String, shop_ok: bool, anvil_ok: bool = false, combat_only: bool = false) -> Array[String]:
 	var out: Array[String] = []
 	if next_index >= boss_index:
 		out.append("boss")
@@ -141,10 +143,12 @@ func roll_offers(rewards: Array, next_index: int, boss_index: int, visits: Dicti
 			continue
 		if rd.id == prev and not rd.combat:
 			peaceful_prev = true
+		if (combat_only and not rd.combat) or (rd.id == "shop" and not shop_ok):
+			continue
 		if rd.weight > 0.0:
 			pool.append(rd)
 	# Ларёк гарантирован: пока не зашли нужное число раз — дверь ларька в каждом наборе с shop_earliest_room
-	if shop_ok and int(visits.get("shop", 0)) < shop_per_world and next_index + 1 >= shop_earliest_room \
+	if shop_ok and not combat_only and int(visits.get("shop", 0)) < shop_per_world and next_index + 1 >= shop_earliest_room \
 			and not (no_peaceful_twice and peaceful_prev):
 		out.append("shop")
 	# Наковальня Эйтри — в ранних залах (стихия молота до мини-босса), если такая награда есть

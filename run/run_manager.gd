@@ -25,6 +25,7 @@ const ROOM_SCENES := [
 	"res://rooms/room_08.tscn",
 	"res://rooms/room_09.tscn",
 	"res://rooms/room_10.tscn",
+	"res://rooms/room_11.tscn",
 ]
 const BOSS_SCENE := "res://rooms/boss_arena.tscn"
 const MJOLNIR_TRAITS_DIR := "res://weapons/mjolnir_traits/"
@@ -524,22 +525,51 @@ func add_mjolnir_trait(t: MjolnirTrait) -> Array[MjolnirTrait]:
 
 # --- Двери-награды (блок И, GDD 15.1) ---
 
-## Порядок сцен залов на мир: RunMap.rooms залов из ROOM_SCENES (по кругу, без повтора подряд) + босс.
+## Порядок сцен: обязательные комнаты вне слота мини-босса и без повторов, остальные — случайно.
 ## Тесты могут задать room_order сами — двери тогда назначают только награды.
 func _build_room_order() -> void:
 	var n := map.rooms if map else rooms_per_run
 	room_order.clear()
+	if map:
+		miniboss_rooms = PackedInt32Array([map.miniboss_index()])
+	var required: Array[String] = []
+	if map:
+		for path in map.required_rooms:
+			if path not in ROOM_SCENES:
+				push_error("RunMap: обязательный зал отсутствует в ROOM_SCENES: %s" % path)
+			elif path not in required:
+				required.append(path)
+	var slots: Array[int] = []
+	for i in n:
+		if i not in miniboss_rooms:
+			slots.append(i)
+	if not required.is_empty():
+		slots.shuffle()
+	var placed := {}
+	for path in required:
+		if slots.is_empty():
+			push_error("RunMap: недостаточно боевых слотов для обязательных залов")
+			break
+		placed[slots.pop_back()] = path
+	var candidates: Array = []
+	for path in ROOM_SCENES:
+		if path not in required:
+			candidates.append(path)
 	var pool: Array = []
-	while room_order.size() < n:
+	for i in n:
+		if placed.has(i):
+			room_order.append(placed[i])
+			continue
 		if pool.is_empty():
-			pool = ROOM_SCENES.duplicate()
+			pool = candidates.duplicate()
 			pool.shuffle()
+			if pool.is_empty():
+				push_error("RunMap: нет необязательных комнат для оставшихся слотов")
+				break
 			if not room_order.is_empty() and pool[0] == room_order[room_order.size() - 1] and pool.size() > 1:
 				pool.append(pool.pop_front())
 		room_order.append(pool.pop_front())
 	room_order.append(BOSS_SCENE)
-	if map:
-		miniboss_rooms = PackedInt32Array([map.miniboss_index()])
 
 func reward_def(id: String) -> RewardDef:
 	for r in all_rewards:
@@ -583,7 +613,9 @@ func roll_door_offers() -> Array[String]:
 	if map == null:
 		out.append("boss" if next >= boss_index else "combat")
 		return out
-	return map.roll_offers(all_rewards, next, boss_index, reward_visits, current_reward(), shop_available(), anvil_available())
+	# Тихая награда пропускает бой, а ларёк заменяет сцену; обязательный зал должен реально сыграться.
+	var required_next := next < room_order.size() and room_order[next] in map.required_rooms
+	return map.roll_offers(all_rewards, next, boss_index, reward_visits, current_reward(), shop_available() and not required_next, anvil_available(), required_next)
 
 ## Игрок вошёл в дверь: следующий зал получит эту награду.
 func choose_door(id: String) -> void:

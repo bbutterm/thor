@@ -318,6 +318,7 @@ func dress_room(root_: Node3D, opts_: Dictionary) -> void:
 		_block(b)
 	_pillar_dress(geo)
 	_walls(geo)
+	_timber_posts()
 	_palisade_rows()
 	_decals()
 	if opts.get("bones", true):
@@ -983,16 +984,17 @@ func _walls(geo: Node) -> void:
 func _open_edges(geo: Node) -> void:
 	# Нижние 6 м коллизии прежние; над ними невидимая граница продолжается, чтобы
 	# прыжковая руна или рывок с площадки не выносили игрока за пределы уровня.
-	const BOUNDARY_HEIGHT := 24.0
+	var exit_y := float(root.get_meta("exit_y", 0.0))
+	var boundary_height := maxf(24.0, exit_y + 12.0)
 	for wall_name in ["WallN_L", "WallN_R", "WallS", "WallW", "WallE"]:
 		var wall := geo.get_node_or_null(wall_name) as StaticBody3D
 		var shape := wall.get_node_or_null("Shape") as CollisionShape3D if wall else null
 		if shape and shape.shape is BoxShape3D:
 			var box := shape.shape.duplicate() as BoxShape3D
 			var bottom := wall.position.y + shape.position.y - box.size.y * 0.5
-			box.size.y = BOUNDARY_HEIGHT
+			box.size.y = boundary_height
 			shape.shape = box
-			wall.position.y = bottom - shape.position.y + BOUNDARY_HEIGHT * 0.5
+			wall.position.y = bottom - shape.position.y + boundary_height * 0.5
 	var models := geo.get_node_or_null("WallModels")
 	if models:
 		for model in models.get_children():
@@ -1002,9 +1004,9 @@ func _open_edges(geo: Node) -> void:
 				model.free()
 	# Рунные ворота оформлены как отдельно стоящая арка.
 	for sign_x in [-1.0, 1.0]:
-		var c := Vector3(sign_x * (gap * 0.5 + 0.38), WALL_TOP * 0.5, -dep * 0.5 - 0.1)
+		var c := Vector3(sign_x * (gap * 0.5 + 0.38), exit_y + WALL_TOP * 0.5, -dep * 0.5 - 0.1)
 		_add("pilaster", _fit("pilaster", c, Vector3(0.8, WALL_TOP, 0.8)))
-	_add("log", Transform3D(Basis.from_scale(Vector3(gap + 1.7, 0.18, 0.18)), Vector3(0, WALL_TOP, -dep * 0.5)))
+	_add("log", Transform3D(Basis.from_scale(Vector3(gap + 1.7, 0.18, 0.18)), Vector3(0, exit_y + WALL_TOP, -dep * 0.5)))
 	# Факелы и знамёна больше не висят в воздухе: у каждого есть отдельная стойка.
 	var torches := root.get_node_or_null("Torches")
 	if torches:
@@ -1075,6 +1077,20 @@ func _not_in_block(p: Vector3) -> bool:
 			if absf(p.x - c.x) < s.x * 0.5 + 0.3 and absf(p.z - c.z) < s.z * 0.5 + 0.3:
 				return false
 	return true
+
+## Опоры из уже общего меша post, без коллизии: [основание Vector3, высота, ширина].
+func _timber_posts() -> void:
+	for spec in opts.get("timber_posts", []):
+		if not (spec is Array) or spec.size() != 3 or not (spec[0] is Vector3):
+			push_error("timber_posts: нужны основание, высота и ширина")
+			continue
+		var base: Vector3 = spec[0]
+		var h := float(spec[1])
+		var width := float(spec[2])
+		if not is_finite(h) or not is_finite(width) or h <= 0.0 or width <= 0.0:
+			push_error("timber_posts: высота и ширина должны быть положительными")
+			continue
+		_add("post", _fit("post", base + Vector3(0, h * 0.5, 0), Vector3(width, h, width)))
 
 ## Короткие декоративные ряды частокола: пары конечных точек [Vector3, Vector3].
 ## Точки одной высоты, вдоль X или Z; y — основание кола. Коллизии нет.
