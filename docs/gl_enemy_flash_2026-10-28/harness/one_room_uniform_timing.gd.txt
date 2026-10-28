@@ -1,0 +1,186 @@
+extends Node
+## Отдельный GL-стенд без переходов: реальные попадания по бессмертной толпе.
+## Сценарий искусственный, ошибки движка сохраняются независимо от кода выхода.
+
+var game: Game
+var mob: Array[Enemy] = []
+var failures: int = 0
+var hits: int = 0
+var count: int = 20
+var spawn_start_frame: int = 0
+var spawn_elapsed_ms: float = 0.0
+var first_hit_call_ms: float = -1.0
+var before_hit_frame: int = 0
+var manifest: Array = []
+var flash_material_count: int = 0
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	if not has_meta("runner"):
+		var runner := Node.new()
+		runner.name = "OneRoomUniformTimingRunner"
+		runner.set_script(get_script())
+		runner.set_meta("runner", true)
+		get_tree().root.add_child.call_deferred(runner)
+		return
+	_run.call_deferred()
+
+func _check(ok: bool, message: String) -> void:
+	print("ONE_ROOM_CHECK %s %s" % ["OK" if ok else "FAIL", message])
+	if not ok:
+		failures += 1
+
+func _frames(n: int) -> void:
+	for i in n:
+		await get_tree().process_frame
+		if is_instance_valid(game) and is_instance_valid(game.player):
+			game.player.health = game.player.max_health
+
+func _snapshot(label: String) -> void:
+	var live := 0
+	var physics := 0
+	var flash_meshes := 0
+	for e in mob:
+		if is_instance_valid(e) and not e.is_dead:
+			live += 1
+			flash_meshes += e._flash_meshes.size()
+			if e.is_physics_processing():
+				physics += 1
+	var pools := 0
+	var active := 0
+	var hidden := 0
+	for kind in FX._pools:
+		for entry in FX._pools[kind]:
+			if not is_instance_valid(entry):
+				continue
+			var mi := entry as MeshInstance3D
+			pools += 1
+			if mi.visible:
+				active += 1
+			elif mi.material_override == null:
+				hidden += 1
+	var holder := "<none>"
+	if FX._holder and is_instance_valid(FX._holder) and FX._holder.is_inside_tree():
+		holder = str(FX._holder.get_path())
+	print("ONE_ROOM_SNAPSHOT phase=%s frame=%d live=%d physics=%d flash_meshes=%d current_mat_iu=%d pools=%d active=%d hidden_no_material=%d holder=%s hits=%d" % [
+		label, Engine.get_process_frames(), live, physics, flash_meshes, FX.instance_uniform_users(get_tree().root), pools, active, hidden, holder, hits])
+
+func _run() -> void:
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty() and args[0].is_valid_int():
+		count = args[0].to_int()
+	print("ONE_ROOM_BEGIN count=%d seed=9017 renderer=%s scripted_damage=true" % [count, RenderingServer.get_current_rendering_method()])
+	seed(9017)
+	Dialogue.in_run_scenes = false
+	Run.start_run("berserker")
+	Run.room_order.assign(["res://rooms/room_06.tscn"])
+	Run.room_rewards.clear()
+	Run.room_index = 0
+	Run.miniboss_rooms.clear()
+	Run.doors_enabled = false
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await _frames(40)
+	game = get_tree().current_scene as Game
+	if not is_instance_valid(game) or not is_instance_valid(game.room):
+		_check(false, "game and room created")
+		print("ONE_ROOM_END success=false")
+		get_tree().quit(1)
+		return
+	game.player.max_health = 1000000.0
+	game.player.health = game.player.max_health
+	game.player.global_position = Vector3(0, 0.1, 0)
+	game.player.velocity = Vector3.ZERO
+	game.room.set_physics_process(false)
+	game.room._spawn_queue.clear()
+	for existing in game.room.alive_enemies().duplicate():
+		if is_instance_valid(existing):
+			existing.queue_free()
+	game.room._alive.clear()
+	await _frames(2)
+	var warm := game.player.head.find_children("*", "Node", true, false).filter(func(n: Node) -> bool: return n is ShaderWarmup)
+	_check(warm.is_empty(), "initial warmup completed")
+	print("ONE_ROOM_PHASE spawn frame=%d" % Engine.get_process_frames())
+	seed(9017)
+	# Measurements are all-frame intervals; disable synchronous hitch-file writes in BOTH arms.
+	Perf.frames.clear()
+	Perf.enabled_logging = false
+	Perf.record_all = true
+	spawn_start_frame = Engine.get_process_frames()
+	var start_us := Time.get_ticks_usec()
+	for i in count:
+		var a := TAU * float(i) / float(count)
+		var radius := 7.0 + float(i % 2) * 1.3
+		var pos := Vector3(cos(a) * radius, 0.05, sin(a) * radius)
+		# Same operations as spawn_extra, except appearance is fixed before _ready.
+		var kind := "grunt" if i % 4 == 0 else "fodder"
+		var enemy := game.room._make_enemy(kind)
+		enemy.randomize_look = false
+		enemy.position = game.room.to_local(pos) + Vector3(0, 0.05, 0)
+		if game.room._player:
+			var to: Vector3 = game.room._player.global_position - pos
+			enemy.rotation.y = atan2(to.x, to.z) - game.room.global_rotation.y
+		game.room.add_child(enemy)
+		game.room._register(enemy)
+		if enemy:
+			enemy.max_health = 1000000.0
+			enemy.health = enemy.max_health
+			mob.append(enemy)
+	spawn_elapsed_ms = float(Time.get_ticks_usec() - start_us) / 1000.0
+	await _frames(45)
+	var materials := {}
+	for enemy in mob:
+		var parts: Array = []
+		for gi in enemy._flash_meshes:
+			var mesh := gi as MeshInstance3D
+			parts.append({"name": str(gi.name), "mesh": mesh.mesh.resource_path if mesh and mesh.mesh else ""})
+		manifest.append({"kind": int(enemy.kind), "parts": parts})
+		var flash_material: Material
+		for property in enemy.get_property_list():
+			if property.name == "_flash_material_gl":
+				flash_material = enemy.get("_flash_material_gl") as Material
+				break
+		if flash_material == null:
+			flash_material = Enemy.FLASH_MATERIAL
+		materials[flash_material.get_instance_id()] = true
+	flash_material_count = materials.size()
+	# Keep manifest inspection out of the first-hit frame.
+	await _frames(2)
+	_snapshot("before_hits")
+	before_hit_frame = Engine.get_process_frames()
+	_check(mob.size() == count and mob.all(func(e: Enemy) -> bool: return is_instance_valid(e) and not e.is_dead and e.is_physics_processing()), "%d living enemies with AI and physics" % count)
+	for cycle in 5:
+		print("ONE_ROOM_PHASE hit_start cycle=%d frame=%d" % [cycle, Engine.get_process_frames()])
+		for i in mob.size():
+			var enemy := mob[i]
+			if is_instance_valid(enemy) and not enemy.is_dead:
+				if hits == 0:
+					var hit_start_us := Time.get_ticks_usec()
+					enemy.take_hit(1.0, Vector3.ZERO, "ranged")
+					first_hit_call_ms = float(Time.get_ticks_usec() - hit_start_us) / 1000.0
+				else:
+					enemy.take_hit(1.0, Vector3.ZERO, "ranged")
+				hits += 1
+			if i % 11 == 10:
+				await _frames(1)
+		_snapshot("after_hits_%d" % cycle)
+		await _frames(30)
+		_snapshot("settled_%d" % cycle)
+	Perf.record_all = false
+	Perf.enabled_logging = true
+	var report := {"spawn_start_frame": spawn_start_frame, "spawn_elapsed_ms": spawn_elapsed_ms,
+		"before_hit_frame": before_hit_frame, "first_hit_call_ms": first_hit_call_ms,
+		"flash_material_count": flash_material_count, "manifest": manifest, "frames": Perf.frames}
+	var report_file := FileAccess.open("user://enemy_flash_timing.json", FileAccess.WRITE)
+	if report_file:
+		report_file.store_string(JSON.stringify(report))
+		report_file.close()
+	else:
+		_check(false, "cannot write all-frame report")
+	print("ONE_ROOM_TIMING spawn_frame=%d spawn_sync_ms=%.3f hit_sync_ms=%.3f flash_materials=%d recorded_frames=%d" % [
+		spawn_start_frame, spawn_elapsed_ms, first_hit_call_ms, flash_material_count, Perf.frames.size()])
+	_check(hits == count * 5, "all scripted ranged hits applied")
+	_check(game.room.scene_file_path.ends_with("room_06.tscn") and Run.room_index == 0, "no room transition occurred")
+	print("ONE_ROOM_END success=%s hits=%d" % [str(failures == 0), hits])
+	get_tree().paused = false
+	FX.reset_time()
+	get_tree().quit(1 if failures else 0)

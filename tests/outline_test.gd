@@ -71,7 +71,14 @@ func _outlined(gi: GeometryInstance3D) -> bool:
 	if not gi.is_in_group(Outline.GROUP):
 		return false
 	var m := gi.material_overlay
-	return m == Outline.material() or (m == Enemy.FLASH_MATERIAL and Outline.flash_next_pass() == Outline.material())
+	return m == Outline.material() or (Outline.is_flash(m) and m.next_pass == Outline.material())
+
+## Одинаковое значение для общего per-instance материала Forward+ и материала врага в GL.
+func _flash_value(gi: GeometryInstance3D, name: StringName) -> Variant:
+	var m := gi.material_overlay as ShaderMaterial
+	if m != null and m.shader == Enemy.FLASH_GL_SHADER:
+		return m.get_shader_parameter(name)
+	return gi.get_instance_shader_parameter(name)
 
 func _meshes(root: Node) -> Array:
 	var out: Array = root.find_children("*", "MeshInstance3D", true, false)
@@ -101,6 +108,7 @@ func _test_material() -> void:
 	check(Outline.material() == m, "material() отдаёт один и тот же экземпляр")
 	check(not Outline.SHADER.code.contains("instance uniform"), "шейдер без instance-переменных")
 	check(not FX._has_iu(m), "FX не считает материал обводки текущим instance-материалом")
+	check(not FX._has_iu(Enemy.FLASH_MATERIAL_GL), "шейдер вспышки GL без instance-переменных")
 	check(Outline.SHADER.code.contains("cull_front") and Outline.SHADER.code.contains("depth_draw_never"),
 		"вывернутая оболочка: cull_front, без записи глубины (проход прозрачных — без теней и prepass)")
 	check(absf(float(m.get_shader_parameter("width_px")) - Outline.cfg().width_px) < 0.001, "толщина из data/outline_tuning.tres")
@@ -221,22 +229,73 @@ func _test_flash(enemies: Array) -> void:
 	var e := enemies[0] as Enemy
 	e._set_overlay(1.0, 0.0)
 	var g := e._flash_meshes[0]
-	check(g.material_overlay == Enemy.FLASH_MATERIAL and Outline.flash_next_pass() == Outline.material(),
+	var flash_material_id := g.material_overlay.get_instance_id()
+	check(Outline.is_flash(g.material_overlay) and g.material_overlay.next_pass == Outline.material(),
 		"при вспышке: оверлей — вспышка, обводка — её next_pass")
 	e._set_overlay(0.0, 0.0)
 	check(g.material_overlay == Outline.material(), "вспышка погасла — оверлей снова обводка")
 	# Состояния стихий используют тот же слот, что вспышка и обводка.
 	e.status_glow = Color(1.0, 0.2, 0.0, 0.7)
 	e._set_overlay(0.0, 0.0)
-	var glow: Color = g.get_instance_shader_parameter("elite")
-	check(g.material_overlay == Enemy.FLASH_MATERIAL and Outline.flash_next_pass() == Outline.material()
+	check(g.material_overlay.get_instance_id() == flash_material_id, "материал вспышки повторно используется после выключения")
+	var glow: Color = _flash_value(g, &"elite")
+	check(Outline.is_flash(g.material_overlay) and g.material_overlay.next_pass == Outline.material()
 		and glow.r > 0.9 and glow.a > 0.6, "подсветка стихии и обводка вместе")
+	# Значения двух врагов меняются независимо; в GL один материал на врага, а не на часть модели.
+	var other := enemies[1] as Enemy
+	other.status_glow = Color(0.1, 0.7, 1.0, 0.4)
+	other._set_overlay(0.2, 0.6)
+	var other_mesh := other._flash_meshes[0]
+	e.elite_glow = Color(0.3, 1.0, 0.1, 0.5)
+	e._set_overlay(0.8, 0.3)
+	var a: Color = _flash_value(g, &"elite")
+	var b: Color = _flash_value(other_mesh, &"elite")
+	check(a.is_equal_approx(Color(1.0, 0.2, 0.0, 0.7)) and b.is_equal_approx(other.status_glow)
+		and is_equal_approx(float(_flash_value(g, &"flash")), 0.8)
+		and is_equal_approx(float(_flash_value(other_mesh, &"flash")), 0.2)
+		and is_equal_approx(float(_flash_value(g, &"glow")), 0.3)
+		and is_equal_approx(float(_flash_value(other_mesh, &"glow")), 0.6),
+		"независимые вспышки и цвета двух врагов; стихия важнее элиты")
+	if RenderingServer.get_current_rendering_method() == "gl_compatibility":
+		var same_parts := true
+		for part in e._flash_meshes:
+			if is_instance_valid(part) and part.material_overlay != g.material_overlay:
+				same_parts = false
+		check(same_parts and g.material_overlay != other_mesh.material_overlay
+			and not FX._has_iu(g.material_overlay), "GL: один материал на врага, без instance uniform")
+	else:
+		check(g.material_overlay == other_mesh.material_overlay and g.material_overlay == Enemy.FLASH_MATERIAL,
+			"Forward+: общий исходный материал с независимыми instance-параметрами")
 	GameSettings.set_value("video", "outline", false, false)
-	check(g.material_overlay == Enemy.FLASH_MATERIAL and Outline.flash_next_pass() == null,
+	check(Outline.is_flash(g.material_overlay) and g.material_overlay.next_pass == null
+		and Outline.is_flash(other_mesh.material_overlay) and other_mesh.material_overlay.next_pass == null,
 		"выключение обводки не гасит подсветку стихии")
+	Outline.begin_warmup()
+	check(g.material_overlay.next_pass == Outline.material() and other_mesh.material_overlay.next_pass == Outline.material(),
+		"прогрев временно включает обводку у обоих активных материалов")
+	# _build() завершил сборку, но десять кадров прогрева ещё не истекли:
+	# обычная overlay() уже выключена, а next_pass вспышек всё ещё прогревается.
+	Outline.warming = false
+	var during_warmup := enemies[2] as Enemy
+	during_warmup._set_overlay(0.5, 0.0)
+	var warm_mesh := during_warmup._flash_meshes[0]
+	check(warm_mesh.material_overlay.next_pass == Outline.material(), "новая вспышка получает next_pass во время кадров прогрева")
+	Outline.end_warmup()
+	check(g.material_overlay.next_pass == null and other_mesh.material_overlay.next_pass == null
+		and warm_mesh.material_overlay.next_pass == null,
+		"после прогрева выключенная обводка снова отсутствует")
+	during_warmup._set_overlay(0.0, 0.0)
 	GameSettings.set_value("video", "outline", true, false)
 	e.status_glow = Color(0, 0, 0, 0)
 	e._set_overlay(0.0, 0.0)
+	var elite_only: Color = _flash_value(g, &"elite")
+	check(elite_only.g > 0.9 and elite_only.a > 0.0 and elite_only.a <= e.elite_glow.a,
+		"после стихии возвращается пульсирующий цвет элиты")
+	e.elite_glow = Color(0, 0, 0, 0)
+	e._set_overlay(0.0, 0.0)
+	other.status_glow = Color(0, 0, 0, 0)
+	other._set_overlay(0.0, 0.0)
+	_test_element_feedback(other)
 	var el := game.room._make_enemy("grunt")
 	Loot.make_elite(el)
 	el.position = game.room.to_local(game.room.global_position + Vector3(0, 0.05, 5))
@@ -245,21 +304,75 @@ func _test_flash(enemies: Array) -> void:
 	el.set_physics_process(false)
 	await wait(0.2)
 	el._set_overlay(0.0, 0.0)
-	check(_all_outlined(el._visual), "элита (постоянное свечение) обведена")
+	var actual_elite: Color = _flash_value(el._flash_meshes[0], &"elite")
+	check(_all_outlined(el._visual) and Color(actual_elite.r, actual_elite.g, actual_elite.b).is_equal_approx(
+		Color(el.elite_glow.r, el.elite_glow.g, el.elite_glow.b)) and actual_elite.a > 0.0,
+		"элита Loot: свой цвет, постоянное свечение и обводка")
 	enemies.append(el)
+	await _test_flash_death()
+
+func _test_element_feedback(e: Enemy) -> void:
+	# Реальные состояния стихий вычисляют цвет сами, а не получают его напрямую из теста.
+	var status := ElementStatus.of(e, true)
+	status.set_physics_process(false)
+	status.ignite(0.0, 5.0)
+	status._update_glow(0.0)
+	e._set_overlay(0.0, 0.0)
+	var burn: Color = _flash_value(e._flash_meshes[0], &"elite")
+	status.shock(5.0)
+	status._update_glow(0.0)
+	e._set_overlay(0.0, 0.0)
+	var shock: Color = _flash_value(e._flash_meshes[0], &"elite")
+	status.freeze(5.0)
+	status._update_glow(0.0)
+	e._set_overlay(0.0, 0.0)
+	var frozen: Color = _flash_value(e._flash_meshes[0], &"elite")
+	check(Color(burn.r, burn.g, burn.b).is_equal_approx(ElementStatus.GLOW_BURN) and burn.a > 0.0
+		and Color(shock.r, shock.g, shock.b).is_equal_approx(ElementStatus.GLOW_SHOCK) and shock.a > 0.0
+		and Color(frozen.r, frozen.g, frozen.b).is_equal_approx(ElementStatus.GLOW_FROZEN) and frozen.a > 0.0,
+		"ElementStatus: огонь, ток и заморозка сохраняют цвета и приоритет")
+	status.queue_free()
+	e.status_glow = Color(0, 0, 0, 0)
+	e._set_overlay(0.0, 0.0)
+
+func _test_flash_death() -> void:
+	var dying := game.room.spawn_extra("fodder", game.room.global_position + Vector3(0, 0.05, 2))
+	dying.set_physics_process(false)
+	dying.status_glow = Color(0.2, 0.6, 1.0, 0.7)
+	dying._set_overlay(1.0, 0.5)
+	var visual := dying._visual
+	var material_ref: WeakRef = weakref(dying._flash_material_gl) if dying._flash_material_gl != null else null
+	dying.take_hit(9999.0, Vector3.ZERO, "test")
+	check(dying.is_dead and is_instance_valid(visual) and visual.get_parent() is RigidBody3D
+		and _all_outlined(visual), "при смерти свечение снято, тело остаётся с обводкой")
+	await wait(0.05)
+	if material_ref != null:
+		check(material_ref.get_ref() == null, "материал погибшего врага освобождён, труп его не удерживает")
 
 func _test_budget() -> void:
-	print("-- Текущие instance-материалы (толпа 40; не занятые слоты)")
+	print("-- Текущие instance-материалы (толпа 44, все со вспышкой; не занятые слоты)")
 	var base := game.room.global_position
-	for i in 40:
+	var crowd: Array[Enemy] = []
+	for i in 44:
 		var e := game.room.spawn_extra("fodder" if i % 4 else "grunt", base + Vector3(randf_range(-7, 7), 0.05, randf_range(-8, 0)))
 		if e:
 			e.set_physics_process(false)
-	await wait(0.3)
+			crowd.append(e)
+	await wait(0.6)
+	var flash_materials := {}
+	for e in crowd:
+		e._set_overlay(0.8, 0.3)
+		if not e._flash_meshes.is_empty():
+			flash_materials[e._flash_meshes[0].material_overlay.get_instance_id()] = true
+	await wait(0.05)
+	if RenderingServer.get_current_rendering_method() == "gl_compatibility":
+		check(crowd.size() == 44 and flash_materials.size() == 44, "GL: 44 врага — 44 материала, не по материалу на меш")
+	else:
+		check(crowd.size() == 44 and flash_materials.size() == 1, "Forward+: 44 врага сохраняют один общий материал")
 	var on_iu := FX.instance_uniform_users(get_tree().root)
 	var on_count := Outline.active_count()
 	GameSettings.set_value("video", "outline", false, false)
-	await wait(0.05)
+	# Измеряем в том же кадре: иначе независимо затухающие частицы меняют счётчик.
 	var off_iu := FX.instance_uniform_users(get_tree().root)
 	GameSettings.set_value("video", "outline", true, false)
 	await wait(0.05)
@@ -269,11 +382,13 @@ func _test_budget() -> void:
 	var mats := {}
 	for n in get_tree().get_nodes_in_group(Outline.GROUP):
 		var m := (n as GeometryInstance3D).material_overlay
-		if m == Enemy.FLASH_MATERIAL:
+		if Outline.is_flash(m):
 			m = m.next_pass
 		if m:
 			mats[m.get_instance_id()] = true
 	check(mats.size() == 1, "у всех обведённых узлов один и тот же материал (%d разных)" % mats.size())
+	for e in crowd:
+		e._set_overlay(0.0, 0.0)
 
 func _test_setting(enemies: Array, things: Array) -> void:
 	print("-- Настройка: вкл/выкл и толщина вживую")
