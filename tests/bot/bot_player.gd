@@ -902,7 +902,7 @@ func _hammer(p: Player, dist: float, dy: float, dt: float) -> void:
 					_catch_decided = true
 					_catch_attempt = rng.randf() < float(skill.perfect)
 				var eta := proj.catch_eta()
-				if _catch_attempt and eta >= 0.0 and eta <= h.perfect_window * 0.75 and not _held.has("throw"):
+				if _catch_attempt and eta >= 0.0 and eta <= h.effective_perfect_window() * 0.75 and not _held.has("throw"):
 					tap("throw", 2)
 					_catch_attempt = false
 			else:

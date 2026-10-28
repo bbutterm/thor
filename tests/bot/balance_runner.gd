@@ -5,14 +5,16 @@ extends Node
 ## Аргументы: bodies (через запятую; пусто — все тела), runs, seed, out (JSON Lines — строка на забег),
 ## time_cap (с игрового времени на забег), room_cap (с на зал), max_rooms (остановиться после стольких залов — bot_test),
 ## trace=1 (событийная телеметрия в JSONL, по умолчанию выключена).
+## progression=1 — один открытый персонаж, чистый тестовый профиль и покупки после каждого завершённого забега.
 ## Отчёт по файлам: python3 tests/bot/balance_report.py <out.jsonl> … (docs/balance_<дата>.md).
 
 const BotPlayer := preload("res://tests/bot/bot_player.gd")
 
-var args := {"bodies": "", "runs": "5", "seed": "1", "out": "", "time_cap": "1800", "room_cap": "300", "max_rooms": "0", "profile": "skilled", "trace": "0"}
+var args := {"bodies": "", "runs": "5", "seed": "1", "out": "", "time_cap": "1800", "room_cap": "300", "max_rooms": "0", "profile": "skilled", "trace": "0", "progression": "0"}
 var bot: Node
 var results: Array = []
 var errors: int = 0
+const PROGRESSION_SAVE := "user://balance_progression.json"
 ## Для bot_test: колбэк по итогу (Array результатов)
 var on_done: Callable
 
@@ -63,29 +65,81 @@ func _run() -> void:
 	var runs := int(args.runs)
 	var base_seed := int(args.seed)
 	var bodies := _bodies()
+	var progression := str(args.progression) == "1"
 	var known: Array = Run.all_bodies.map(func(b: BodyDef) -> String: return b.id)
-	if runs <= 0 or bodies.is_empty() or not str(args.profile) in BotPlayer.PROFILES or not str(args.trace) in ["0", "1"] or bodies.any(func(b: String) -> bool: return not b in known):
+	if runs <= 0 or bodies.is_empty() or not str(args.profile) in BotPlayer.PROFILES or not str(args.trace) in ["0", "1"] or not str(args.progression) in ["0", "1"] or bodies.any(func(b: String) -> bool: return not b in known):
 		push_error("balance: неверный профиль, число забегов или тело")
 		errors += 1
+		if progression:
+			Save.data.clear()
 		if on_done.is_valid():
 			on_done.call([])
 		else:
 			_finish()
 		return
+	if progression:
+		var setup_error := _prepare_progression(bodies)
+		if setup_error != "":
+			print("balance progression: ", setup_error)
+			errors += 1
+			# _exit_tree у Save сам пишет файл: не затереть чужой профиль при отказе.
+			Save.data.clear()
+			if on_done.is_valid():
+				on_done.call([])
+			else:
+				_finish()
+			return
 	print("=== BALANCE RUN: %s × %d (seed %d) ===" % [", ".join(bodies), runs, base_seed])
 	var t0 := Time.get_ticks_msec()
 	for body in bodies:
 		for r in runs:
+			var before: Dictionary = Save.data.duplicate(true) if progression else {}
 			var s := base_seed * 1000 + _hash(body) % 997 * 7 + r
 			var res: Dictionary = await play_one(body, r, s)
+			var incomplete := false
+			if progression:
+				var reason := ""
+				if res.outcome in ["death", "win"]:
+					reason = _record_progression(res, before)
+				else:
+					reason = "незавершённый забег: " + str(res.outcome)
+				if reason != "":
+					var observed := str(res.outcome)
+					var restored := await _rollback_progression(before)
+					res["progression"] = {"completed": false, "failure": reason, "rollback_saved": restored,
+						"bank_before": int(before.glory.bank), "glory_awarded": 0,
+						"bank_after": Save.glory_bank(), "purchases": []}
+					if observed in ["death", "win"]:
+						res["observed_outcome"] = observed
+						res["outcome"] = "error"
+					print("balance progression: ", reason, "; сохранение восстановлено: ", restored)
+					errors += 1
+					incomplete = true
 			results.append(res)
-			if res.outcome == "error":
+			if res.outcome == "error" and not incomplete:
 				errors += 1
+			var prior_errors := errors
 			_append(res)
 			print("  %s #%d: %s, зал %d, %.0f с, Слава %d, убито %d, урон %.0f, подсадок %d  [%.0f с реальных]" % [body, r + 1,
 				res.outcome, res.rooms_reached, res.time, res.glory, res.kills, res.dmg_total, res.stats.assists,
 				(Time.get_ticks_msec() - t0) / 1000.0])
-	print("=== ИТОГ BALANCE: %d забегов, %.0f с реальных ===" % [results.size(), (Time.get_ticks_msec() - t0) / 1000.0])
+			if progression and errors > prior_errors and not incomplete:
+				# Без журнала нельзя продолжать серию с покупками, которые нельзя проверить.
+				var observed := str(res.outcome)
+				var restored := await _rollback_progression(before)
+				res["observed_outcome"] = observed
+				res["outcome"] = "error"
+				res["progression"] = {"completed": false, "failure": "ошибка записи журнала",
+					"rollback_saved": restored, "bank_before": int(before.glory.bank),
+					"glory_awarded": 0, "bank_after": Save.glory_bank(), "purchases": []}
+				incomplete = true
+			if incomplete:
+				break
+	if progression:
+		var completed := results.filter(func(row: Dictionary) -> bool: return bool(row.get("progression", {}).get("completed", false))).size()
+		print("=== ИТОГ PROGRESSION: %d завершено, %d незавершено, %.0f с реальных ===" % [completed, results.size() - completed, (Time.get_ticks_msec() - t0) / 1000.0])
+	else:
+		print("=== ИТОГ BALANCE: %d забегов, %.0f с реальных ===" % [results.size(), (Time.get_ticks_msec() - t0) / 1000.0])
 	if on_done.is_valid():
 		on_done.call(results)
 		return
@@ -96,6 +150,104 @@ static func _hash(s: String) -> int:
 	for c in s.to_utf8_buffer():
 		h = (h * 31 + c) % 1000003
 	return h
+
+## Серия прогрессии всегда начинается с нуля и не перезаписывает существующие файлы.
+func _prepare_progression(bodies: Array[String]) -> String:
+	GameSettings.ensure_loaded()
+	var out := str(args.out)
+	if bodies.size() != 1 or int(args.max_rooms) != 0 or not str(args.seed).is_valid_int() \
+			or int(args.seed) < 0 or not str(args.time_cap).is_valid_float() or float(args.time_cap) <= 0.0 \
+			or not str(args.room_cap).is_valid_float() or float(args.room_cap) <= 0.0:
+		return "нужно одно тело, max_rooms=0, неотрицательный seed и положительные лимиты"
+	if not out.is_absolute_path() or out.begins_with("res://") or FileAccess.file_exists(out) \
+			or not DirAccess.dir_exists_absolute(out.get_base_dir()):
+		return "нужен новый абсолютный путь журнала в существующем каталоге"
+	if not Save.is_test or Save.path != Save.TEST_PATH or GameSettings.path != GameSettings.TEST_PATH \
+			or FileAccess.file_exists(Save.TEST_PATH) or FileAccess.file_exists(PROGRESSION_SAVE) \
+			or FileAccess.file_exists(GameSettings.TEST_PATH):
+		return "нужен отдельный чистый XDG_DATA_HOME с тестовым сохранением и настройками"
+	Save.use_path(PROGRESSION_SAVE, true)
+	if not Save.is_in_pool("body", bodies[0]):
+		return "выбранное тело закрыто в новом профиле"
+	if not Save.save_game():
+		return "не удалось создать тестовое сохранение"
+	return ""
+
+## Покупаем только разрешённые игрой открытия, в стабильном порядке: цена, порядок, id.
+func _affordable_unlocks() -> Array[UnlockDef]:
+	var choices: Array[UnlockDef] = []
+	for u in Save.all_unlocks:
+		if Save.buy_block_reason(u.id) == "":
+			choices.append(u)
+	choices.sort_custom(func(a: UnlockDef, b: UnlockDef) -> bool:
+		if a.price != b.price:
+			return a.price < b.price
+		if a.order != b.order:
+			return a.order < b.order
+		return a.id < b.id)
+	return choices
+
+## Начисление делает только tracker.finish → Save.end_run, здесь мы его проверяем.
+func _record_progression(res: Dictionary, before: Dictionary) -> String:
+	var saved: Dictionary = Save.data.get("last_run", {})
+	var won := str(res.outcome) == "win"
+	var awarded := int(saved.get("glory", -1))
+	var previous_bank := int(before.glory.bank)
+	if awarded < 0 or bool(saved.get("won", not won)) != won or str(saved.get("body", "")) != str(res.body):
+		return "сохранённый результат не соответствует настоящему исходу"
+	if Save.runs() != int(before.stats.runs) + 1 \
+			or Save.wins() != int(before.stats.wins) + (1 if won else 0) \
+			or Save.deaths() != int(before.stats.deaths) + (0 if won else 1):
+		return "неверное число завершений в сохранении"
+	if Save.glory_bank() != previous_bank + awarded \
+			or int(Save.data.glory.earned) != int(before.glory.earned) + awarded \
+			or int(Save.data.glory.spent) != int(before.glory.spent) \
+			or Save.data.unlocks != before.unlocks or Save.data.purchases != before.purchases:
+		return "начисление записано неверно или повторно"
+	var after_award := Save.glory_bank()
+	var purchases: Array[Dictionary] = []
+	while true:
+		var choices := _affordable_unlocks()
+		if choices.is_empty():
+			break
+		var u := choices[0]
+		var bank_before := Save.glory_bank()
+		var spent_before := int(Save.data.glory.spent)
+		var reason := Save.buy(u.id)
+		if reason != "" or Save.glory_bank() != bank_before - u.price \
+				or int(Save.data.glory.spent) != spent_before + u.price or not Save.is_unlocked(u.id):
+			return "ошибка покупки %s: %s" % [u.id, reason]
+		purchases.append({"id": u.id, "price": u.price, "bank_before": bank_before, "bank_after": Save.glory_bank()})
+	if not Save.save_game():
+		return "не удалось сохранить покупки"
+	res["progression"] = {
+		"completed": true, "completed_run": Save.runs(),
+		"bank_before": previous_bank, "glory_awarded": awarded, "bank_after_award": after_award,
+		"purchases": purchases, "bank_after": Save.glory_bank(),
+		"earned_total": int(Save.data.glory.earned), "spent_total": int(Save.data.glory.spent),
+		"wins": Save.wins(), "deaths": Save.deaths(),
+	}
+	return ""
+
+## Таймеры и PROCESS_MODE_ALWAYS-потомки не должны завершить забег после тайм-аута.
+func _disable_subtree(node: Node) -> void:
+	node.process_mode = Node.PROCESS_MODE_DISABLED
+	for child in node.get_children(true):
+		_disable_subtree(child)
+
+func _rollback_progression(before: Dictionary) -> bool:
+	get_tree().paused = true
+	bot.stop()
+	var game := get_tree().current_scene as Game
+	if is_instance_valid(game):
+		_disable_subtree(game)
+		game.queue_free()
+	# queue_free завершается в конце кадра; только затем восстанавливаем снимок.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	Save.data = before.duplicate(true)
+	Save.changed.emit()
+	return Save.save_game()
 
 ## Один забег телом body. Возвращает итог (словарь — строка JSON Lines).
 func play_one(body: String, run_no: int, seed_value: int) -> Dictionary:
@@ -112,7 +264,7 @@ func play_one(body: String, run_no: int, seed_value: int) -> Dictionary:
 			break
 	if game == null or not game.is_node_ready() or game.room == null:
 		push_error("balance: сцена игры не загрузилась")
-		return {"body": body, "run": run_no, "outcome": "error", "rooms_reached": 0, "time": 0.0, "glory": 0, "kills": 0,
+		return {"body": body, "run": run_no, "seed": seed_value, "profile": str(args.profile), "outcome": "error", "rooms_reached": 0, "time": 0.0, "glory": 0, "kills": 0,
 			"dmg_total": 0.0, "stats": {"assists": 0}}
 	bot.begin(game, seed_value)
 	var outcome := ""
@@ -142,7 +294,16 @@ func play_one(body: String, run_no: int, seed_value: int) -> Dictionary:
 			outcome = "room_timeout"
 		elif max_rooms > 0 and Run.room_index >= max_rooms:
 			outcome = "stopped"
-	await wait(0.2)
+	if str(args.progression) == "1":
+		# Смерть уже вызывает finish(false); победа ждёт экрана результата и часто
+		# не успевает сохраниться до следующей сцены. finish защищён от повтора.
+		if is_instance_valid(game) and outcome in ["death", "win"]:
+			game.tracker.finish(outcome == "win")
+		get_tree().paused = true
+		if is_instance_valid(game):
+			_disable_subtree(game)
+	else:
+		await wait(0.2)
 	bot._flush_glory()
 	bot.stop()
 	var tr_res: Dictionary = game.tracker.result(outcome == "win") if is_instance_valid(game) else {}
@@ -174,6 +335,10 @@ func play_one(body: String, run_no: int, seed_value: int) -> Dictionary:
 	}
 	if bot.telemetry_enabled and is_instance_valid(bot.telemetry):
 		res["telemetry"] = bot.telemetry.result()
+	if str(args.progression) == "1" and not outcome in ["death", "win"]:
+		res["death_room"] = -1
+		res["death_scene"] = ""
+		res["death_reward"] = ""
 	return res
 
 func _append(res: Dictionary) -> void:
@@ -192,6 +357,11 @@ func _append(res: Dictionary) -> void:
 		push_error("balance: не открыть %s" % path)
 		return
 	f.store_line(JSON.stringify(res))
+	if str(args.progression) == "1":
+		f.flush()
+		if f.get_error() != OK:
+			errors += 1
+			push_error("balance: ошибка записи %s" % path)
 	f.close()
 
 func _finish() -> void:

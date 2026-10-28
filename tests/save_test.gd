@@ -5,6 +5,20 @@ extends Node
 ## godot --headless --path . --fixed-fps 60 res://tests/save_test.tscn
 
 const TEST_FILE := "user://save_test.json"
+## Цены до решения 28.10: проверяем все существовавшие открытия после ×5.
+const BASE_PRICE_GROUPS := {
+	80: ["rune_heal"],
+	100: ["belly", "rune_dash_damage"],
+	120: ["rune_raven_eye", "rune_slam_fire"],
+	150: ["boomerang", "no_whining", "ice_trail", "rune_fenrir"],
+	180: ["heaviness"],
+	200: ["catch", "greed", "lightning_rod", "morning_jog"],
+	250: ["discount", "earthquake", "loki_chest", "storm"],
+	300: ["body_priest", "sky_thunder", "two_hammers", "warmup"],
+	400: ["body_soldier", "dwarf_lab"],
+	500: ["body_courier", "body_skald"],
+	600: ["body_shieldmaiden", "body_smith"],
+}
 
 var _fails: Array[String] = []
 var _passes: int = 0
@@ -43,6 +57,7 @@ func _run() -> void:
 	Save.use_path(TEST_FILE)
 	_test_roundtrip()
 	_test_migration()
+	_test_price_scaling()
 	_test_buy()
 	_test_pools()
 	await _test_permanent()
@@ -76,7 +91,7 @@ func _test_roundtrip() -> void:
 	check(Save.runs() == 2 and Save.deaths() == 1 and Save.wins() == 1, "счётчики: забеги 2, смерти 1, победы 1")
 	check(Save.deaths_by("fall") == 1 and Save.killed_by_count("fall") == 1, "причина смерти: падение")
 	check(Save.is_seen("odin_intro") and Save.get_choice("odin_intro") == "snap", "просмотренные сцены и выборы")
-	check(Save.glory_bank() == 340 + 900 - 100, "накопленная Слава: %d" % Save.glory_bank())
+	check(Save.glory_bank() == 340 + 900 - 500, "накопленная Слава: %d" % Save.glory_bank())
 	check(int(Save.data.records.best_glory) == 900 and int(Save.data.records.best_kills) == 60, "рекорды")
 	check(float(Save.data.records.fastest_win) == 610.0, "рекорд быстрой победы")
 	check(Save.is_unlocked("belly"), "открытие сохранилось")
@@ -101,6 +116,24 @@ func _test_migration() -> void:
 	_write(JSON.stringify({"runs": 3, "deaths": 2}))
 	Save.load_game()
 	check(Save.runs() == 3 and Save.deaths() == 2 and int(Save.data.version) == 2, "сохранение без версии (v0) мигрировано")
+	_write(JSON.stringify({"version": 2, "glory": {"bank": 345, "earned": 500, "spent": 155}}))
+	check(Save.load_game() and Save.glory_bank() == 345, "накопленная Слава не пересчитывается из-за новых цен")
+
+func _test_price_scaling() -> void:
+	print("-- Цены открытий")
+	for base in BASE_PRICE_GROUPS:
+		var expected := int(round(float(base) * 5.0 / 50.0)) * 50
+		for id in BASE_PRICE_GROUPS[base]:
+			var u := Save.get_unlock(str(id))
+			check(u != null and u.price == expected, "%s: цена ×5 = %d" % [id, expected])
+	var cheapest := 2147483647
+	for u in Save.all_unlocks:
+		check(u.price > 0 and u.price % 50 == 0, "%s: цена положительна и кратна 50" % u.id)
+		if u.requires == "" and Save.target_exists(u):
+			cheapest = mini(cheapest, u.price)
+	check(cheapest <= 400, "доступно открытие не дороже 400 (%d)" % cheapest)
+	var heal := Save.get_unlock("rune_heal")
+	check(heal != null and heal.price == 400 and Save.target_exists(heal), "руна лечения доступна за 400")
 
 func _test_buy() -> void:
 	print("-- Покупки")
@@ -111,18 +144,22 @@ func _test_buy() -> void:
 		check(u.id != "" and not ids.has(u.id) and u.title != "" and u.price > 0, "открытие %s: id, название, цена" % u.id)
 		ids[u.id] = true
 		check(u.requires == "" or Save.get_unlock(u.requires) != null, "требование %s существует" % u.id)
-	Save.add_glory_bank(300)
-	check(Save.buy("belly") == "", "покупка за 100")
-	check(Save.glory_bank() == 200, "Слава списана: 300 → %d" % Save.glory_bank())
+	Save.add_glory_bank(1500)
+	check(Save.buy("belly") == "", "покупка за 500")
+	check(Save.glory_bank() == 1000, "Слава списана: 1500 → %d" % Save.glory_bank())
 	check(Save.is_unlocked("belly"), "куплено отмечено")
 	check(Save.buy("belly") == "owned", "повторно не купить")
-	check(Save.glory_bank() == 200, "Слава не списана повторно")
-	check(Save.buy("rune_slam_fire") == "", "руна в пул за 120")
-	check(Save.buy("no_whining") == "no_glory", "не хватает Славы (80 < 150)")
-	check(Save.glory_bank() == 80, "при отказе Слава цела")
+	check(Save.glory_bank() == 1000, "Слава не списана повторно")
+	check(Save.buy("rune_slam_fire") == "", "руна в пул за 600")
+	check(Save.buy("no_whining") == "no_glory", "не хватает Славы (400 < 750)")
+	check(Save.glory_bank() == 400, "при отказе Слава цела")
 	Save.add_glory_bank(1000)
 	check(Save.buy("dwarf_lab") in ["requires", "soon"], "сначала нужен «Сундук Локи» (или оружия ещё нет)")
-	check(Save.buy("catch") == "soon", "нереализованный перк не продаётся")
+	check(is_zero_approx(Save.perk("catch_window")), "до покупки бонус хвата отсутствует")
+	check(Save.buy("catch") == "", "перк хвата доступен за 1000")
+	check(Save.glory_bank() == 400 and is_equal_approx(Save.perk("catch_window"), 0.05),
+		"покупка списала Славу и дала +0.05 с")
+	check(Save.buy("catch") == "owned" and Save.glory_bank() == 400, "перк хвата не купить дважды")
 	check(Save.buy("nope") == "unknown", "неизвестное открытие")
 
 func _test_pools() -> void:

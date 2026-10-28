@@ -91,6 +91,33 @@ func _run() -> void:
 	h.cooldown_left = 0.0
 	h.throw_hammer()
 	check(not h.in_hand and int(bot.stats.throws) == 1, "статистика считает реально выполненный бросок")
+	var proj := h.projectile
+	if proj:
+		# На одном и том же настоящем возврате ETA между порогами бота: 0.15×0.75 и 0.20×0.75.
+		proj.start_return(true)
+		proj.global_position = h.hand_point() + Vector3.UP * 5.7
+		proj.vel = Vector3.DOWN * h.return_speed * h.return_speed_mult
+		var eta := proj.catch_eta()
+		check(eta > 0.15 * 0.75 and eta < 0.20 * 0.75, "время возврата между порогами бота (%.3f с)" % eta)
+		check(not Save.is_unlocked("catch"), "бот: перк сначала закрыт")
+		bot._catch_decided = true
+		bot._catch_attempt = true
+		bot._hammer(p, 10.0, 0.0, 1.0 / 60.0)
+		check(not bot._held.has("throw") and bot._catch_attempt, "без перка бот ждёт базовое окно")
+		var unlock := Save.get_unlock("catch")
+		if unlock:
+			Save.add_glory_bank(unlock.price)
+			var reason := Save.buy("catch")
+			check(reason == "", "бот: покупка перка ловли: %s" % reason)
+			if reason == "":
+				bot._hammer(p, 10.0, 0.0, 1.0 / 60.0)
+				check(bot._held.has("throw") and not bot._catch_attempt, "с перком бот нажимает в расширенном окне")
+				await frames(20)
+				check(h.in_hand and int(bot.stats.perfect) == 1, "нажатие бота даёт настоящий идеальный хват")
+		else:
+			check(false, "бот: перк ловли существует")
+	else:
+		check(false, "бот: снаряд для проверки хвата существует")
 	bot.stop()
 	# На высокой изолированной площадке проверяем, что рывок не начнётся за край.
 	var platform := StaticBody3D.new()

@@ -72,6 +72,123 @@ func _wait_caught(hand: MjolnirHand) -> void:
 			return
 		await get_tree().physics_frame
 
+## Настоящий снаряд возвращается по прямой к неподвижному игроку, чтобы попасть между границами 0.15 и 0.20 с.
+func _return_from(hand: MjolnirHand, distance: float) -> MjolnirProjectile:
+	hand.force_return_instant()
+	# Даём предыдущему окну и отметке промаха в HUD закрыться.
+	await wait(0.25)
+	hand.perfect_ready = false
+	hand.reset_cooldown()
+	_results.clear()
+	hand.throw_hammer()
+	var proj := hand.projectile
+	if proj == null:
+		return null
+	proj.start_return(true)
+	proj.global_position = hand.hand_point() + Vector3.UP * distance
+	proj.vel = Vector3.DOWN * hand.return_speed * hand.return_speed_mult
+	return proj
+
+func _test_before_catch(hand: MjolnirHand, assist: CatchAssist, distance: float, expected: bool,
+		min_offset: float, max_offset: float, label: String) -> void:
+	var proj := await _return_from(hand, distance)
+	if proj == null:
+		check(false, label + ": снаряд не создан")
+		return
+	var eta := proj.catch_eta()
+	if assist:
+		assist._process(0.0)
+		check(assist._window == expected, "%s: окно HUD до поимки (ETA %.3f с)" % [label, eta])
+	var pressed_at := hand._now()
+	hand.press_throw()
+	await _wait_caught(hand)
+	if not hand.in_hand:
+		check(false, label + ": молот не вернулся")
+		return
+	var actual := hand._caught_time - pressed_at
+	check(actual > min_offset and actual < max_offset, "%s: фактическое время до поимки %.3f с" % [label, actual])
+	var perfects := _results.filter(func(r: Array) -> bool: return r[0] == &"perfect")
+	var early := _results.filter(func(r: Array) -> bool: return r[0] == &"early")
+	check((perfects.size() == 1 and early.is_empty() and hand.perfect_ready) if expected else
+			(perfects.is_empty() and early.size() == 1 and not hand.perfect_ready), label + ": результат хвата до поимки")
+	if expected and perfects.size() == 1:
+		check(absf(float(perfects[0][1]) + actual) < 0.001, label + ": сигнал содержит фактическое время")
+	# Усиление должно попасть на настоящий следующий бросок, а не только в флаг.
+	hand.press_throw()
+	check(hand.projectile != null and is_equal_approx(hand.projectile.damage_mult, hand.perfect_damage_mult if expected else 1.0),
+			label + ": множитель следующего броска")
+
+func _test_after_catch(hand: MjolnirHand, assist: CatchAssist, target: float, expected: bool,
+		min_offset: float, max_offset: float, hold: bool, label: String) -> void:
+	var proj := await _return_from(hand, 2.0)
+	if proj == null:
+		check(false, label + ": снаряд не создан")
+		return
+	await _wait_caught(hand)
+	if not hand.in_hand:
+		check(false, label + ": молот не вернулся")
+		return
+	for i in 60:
+		if hand._now() - hand._caught_time >= target:
+			break
+		await get_tree().physics_frame
+	var actual := hand._now() - hand._caught_time
+	check(actual > min_offset and actual < max_offset, "%s: фактическое время после поимки %.3f с" % [label, actual])
+	if assist:
+		assist._process(0.0)
+		check(assist._window == expected and (hand.perfect_window_left() >= 0.0) == expected,
+				label + ": окно HUD после поимки")
+	_results.clear()
+	if hold:
+		hand.begin_hold()
+		var perfects := _results.filter(func(r: Array) -> bool: return r[0] == &"perfect")
+		check(hand.holding and (perfects.size() == 1) == expected and hand.perfect_ready == expected,
+				label + ": хват при удержании")
+		hand.cancel_hold()
+	else:
+		hand.press_throw()
+		var result: StringName = _results[-1][0] if not _results.is_empty() else &""
+		check(result == (&"perfect" if expected else &"late"), label + ": результат хвата после поимки")
+		if not _results.is_empty():
+			check(absf(float(_results[-1][1]) - actual) < 0.001, label + ": сигнал содержит фактическое время")
+		check(hand.projectile != null and is_equal_approx(hand.projectile.damage_mult, hand.perfect_damage_mult if expected else 1.0),
+				label + ": множитель следующего броска")
+
+func _test_catch_perk(hand: MjolnirHand, assist: CatchAssist) -> void:
+	print("-- Перк окна хвата")
+	check(not Save.is_unlocked("catch") and is_equal_approx(hand.perfect_window, 0.15)
+			and is_equal_approx(hand.effective_perfect_window(), 0.15), "без перка базовое окно ±0.15 с")
+	await _test_before_catch(hand, assist, 3.9, true, 0.0, 0.15, "база: до поимки внутри окна")
+	await _test_before_catch(hand, assist, 6.9, false, 0.15, 0.20, "база: до поимки за окном")
+	await _test_after_catch(hand, assist, 0.09, true, 0.0, 0.15, false, "база: после поимки внутри окна")
+	await _test_after_catch(hand, assist, 0.17, false, 0.15, 0.20, false, "база: после поимки за окном")
+	await _test_after_catch(hand, assist, 0.17, false, 0.15, 0.20, true, "база: удержание за окном")
+	var unlock := Save.get_unlock("catch")
+	if unlock == null:
+		check(false, "перк ловли существует")
+		return
+	Save.add_glory_bank(unlock.price)
+	var reason := Save.buy("catch")
+	check(reason == "", "покупка перка ловли: %s" % reason)
+	if reason != "":
+		return
+	check(is_equal_approx(Save.perk("catch_window"), 0.05) and is_equal_approx(hand.perfect_window, 0.15)
+			and is_equal_approx(hand.effective_perfect_window(), 0.20), "купленный перк расширяет окно до ±0.20 с")
+	var bank := Save.glory_bank()
+	check(Save.load_game() and Save.is_unlocked("catch") and Save.glory_bank() == bank
+			and is_equal_approx(hand.effective_perfect_window(), 0.20), "окно и банк сохранены после загрузки")
+	var base := hand.perfect_window
+	hand.perfect_window = 0.22
+	check(is_equal_approx(hand.effective_perfect_window(), 0.27), "перк добавляется к настройке сцены, не заменяя её")
+	hand.perfect_window = base
+	await _test_before_catch(hand, assist, 6.9, true, 0.15, 0.20, "перк: до поимки в новом окне")
+	await _test_before_catch(hand, assist, 10.5, false, 0.20, 0.40, "перк: до поимки за новым окном")
+	await _test_after_catch(hand, assist, 0.17, true, 0.15, 0.20, false, "перк: после поимки в новом окне")
+	await _test_after_catch(hand, assist, 0.17, true, 0.15, 0.20, true, "перк: удержание в новом окне")
+	await _test_after_catch(hand, assist, 0.23, false, 0.20, 0.40, false, "перк: после поимки за новым окном")
+	hand.force_return_instant()
+	hand.perfect_ready = false
+
 func _run() -> void:
 	GameSettings.set_value("access", "catch_assist", true)
 	Run.start_run("berserker")
@@ -202,6 +319,7 @@ func _run() -> void:
 		"идеальный хват снял %.0f с перезарядки (%.1f с на возврате → %.1f с после поимки)" % [hand.perfect_cooldown_refund, before, after])
 	hand.throw_cooldown = 0.0
 	hand.reset_cooldown()
+	await _test_catch_perk(hand, assist)
 
 	print("=== ИТОГ CATCH: %d OK, %d FAIL ===" % [ok, fail])
 	get_tree().quit(1 if fail > 0 else 0)

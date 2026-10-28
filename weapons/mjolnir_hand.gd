@@ -4,7 +4,7 @@ class_name MjolnirHand
 ## Сам полёт — в mjolnir_projectile.gd. Трейты (GDD 10, блок Б4: стихия + приёмы + связки) — обработчики
 ## MjolnirTraitHandler, собираются из Run.mjolnir_traits и Run.active_combos(); рука и снаряд вызывают
 ## их хуки (trait_call / trait_modify).
-## Идеальный хват: ПКМ в окне ±perfect_window от поимки — следующий бросок ×perfect_damage_mult.
+## Идеальный хват: ПКМ в эффективном окне от поимки — следующий бросок ×perfect_damage_mult.
 ## Удержание ПКМ (Праща, Заряд — trait_modify(&"hold_throw")): нажал — держишь (on_hold_tick), отпустил —
 ## бросок с усилением next_throw. Без таких приёмов ПКМ бросает сразу по нажатию, как раньше.
 
@@ -46,7 +46,7 @@ signal traits_changed
 @export var catch_runes: int = 1
 
 @export_group("Идеальный хват")
-## Окно (с) до и после поимки, в которое надо нажать ПКМ
+## Базовое окно (с) до и после поимки; перк добавляется через effective_perfect_window().
 @export var perfect_window: float = 0.15
 @export var perfect_damage_mult: float = 2.0
 ## Промах по окну хвата не дальше этого (с) — подсказка покажет «РАНО»/«ПОЗДНО»; дальше нажатие считается обычным
@@ -149,7 +149,7 @@ func begin_hold() -> void:
 	if not in_hand or holding:
 		return
 	var now := _now()
-	if _perfect_open and now - _caught_time <= perfect_window:
+	if _perfect_open and now - _caught_time <= effective_perfect_window():
 		_grant_perfect()
 		catch_timing.emit(&"perfect", now - _caught_time)
 	_perfect_open = false
@@ -198,7 +198,7 @@ func request_throw_or_recall() -> void:
 	var now := _now()
 	if in_hand:
 		# ПКМ сразу после поимки — тоже идеальный хват (и сразу усиленный бросок)
-		if _perfect_open and now - _caught_time <= perfect_window:
+		if _perfect_open and now - _caught_time <= effective_perfect_window():
 			_grant_perfect()
 			catch_timing.emit(&"perfect", now - _caught_time)
 		elif _perfect_open and now - _caught_time <= catch_feedback_range:
@@ -215,7 +215,7 @@ func request_throw_or_recall() -> void:
 				return
 			_catch_attempted = true
 			var eta := projectile.catch_eta()
-			if eta > perfect_window:
+			if eta > effective_perfect_window():
 				catch_timing.emit(&"early", -eta)
 			else:
 				_recall_press_time = now
@@ -275,7 +275,7 @@ func on_caught() -> void:
 	_caught_time = now
 	# Нажал раньше окна — «поздний» хват после поимки тоже не засчитывается
 	_perfect_open = not _catch_attempted
-	var perfect := now - _recall_press_time <= perfect_window
+	var perfect := now - _recall_press_time <= effective_perfect_window()
 	if player and not player.is_dead:
 		player.restore_mjolnir_runes(catch_runes)
 		if not player.is_on_floor() and not player.is_climbing:
@@ -425,11 +425,15 @@ func _grant_perfect() -> void:
 func current_damage() -> float:
 	return base_damage * damage_mult
 
+## Общий размер окна для игровой логики, подсказки и бота. Базовое экспортированное значение не меняется.
+func effective_perfect_window() -> float:
+	return perfect_window + Save.perk("catch_window")
+
 ## Сколько ещё открыто окно хвата после поимки (с), −1 — закрыто. Для подсказки хвата.
 func perfect_window_left() -> float:
 	if not in_hand or not _perfect_open:
 		return -1.0
-	var left := perfect_window - (_now() - _caught_time)
+	var left := effective_perfect_window() - (_now() - _caught_time)
 	return left if left >= 0.0 else -1.0
 
 func hand_point() -> Vector3:

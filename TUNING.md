@@ -301,7 +301,8 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 ## «План тренировок» — `run/unlocks/*.tres` (`run/unlock_def.gd`), `ui/training_plan.gd`
 
-Цены и эффекты — в файлах открытий (инспектор): `price`, `amount` (для перков: `move_speed_pct` 0.05, `max_health` 20, `dash_charges` 1, `catch_window` 0.2, `start_silver` 30, `shop_discount` 0.15, `first_rune_level` 2), `requires`, `available` (перк уже работает). На экране: `card_height` 92, `glory_pulse_time` 0.25.
+Цены и эффекты — в файлах открытий (инспектор): `price`, `amount` (для перков: `move_speed_pct` 0.05, `max_health` 20, `dash_charges` 1, `catch_window` +0.05 с, `start_silver` 30, `shop_discount` 0.15, `first_rune_level` 2), `requires`, `available` (перк уже работает). На экране: `card_height` 92, `glory_pulse_time` 0.25.
+Цены открытий увеличены ×5 и округлены до 50; самое дешёвое стоит 400. Уже накопленная Слава не меняется.
 Слава за забег целиком уходит в копилку (`Save.data.glory.bank`).
 Обычный JSON: событие → список фраз. Добавляй сколько хочешь.
 
