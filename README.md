@@ -2,7 +2,11 @@
 
 ## Актуальная сборка
 
-[Скачать Windows ZIP из main 3ab177d](ThorDostoynayaSmert-preview-3ab177d.zip?raw=1), распаковать и запустить `ThorDostoynayaSmert.exe`. [Отчёт и что проверить](REPORT_2026-10-28-day.md).
+[Скачать Windows ZIP из main 037f709](ThorDostoynayaSmert-windows.zip?raw=1), распаковать и запустить `ThorDostoynayaSmert.exe`. [Отчёт и что проверить](REPORT_2026-10-28-day.md).
+
+Архив: 94 920 401 байт, SHA-256 `2f796656d59fd4c84e5e29c33d19fe5af93221bbfec0a160e11d057648ae1655`; внутри один EXE. На исходном коммите прошли 59 игровых тестовых сцен; запуск через Wine в режиме самопроверки прошёл с появлением врага. Графику на настоящей Windows-видеокарте ещё нужно проверить.
+
+Предыдущая версия: [Windows ZIP 3ab177d](ThorDostoynayaSmert-preview-3ab177d.zip?raw=1).
 
 ## Предыдущая сборка 2a4461f
 
