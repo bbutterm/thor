@@ -418,6 +418,22 @@ func _test_card_layout() -> void:
 				overflow.append(str(t.id))
 			card.queue_free()
 		check(overflow.is_empty(), "%s: описания и статусы внутри рамки (%s)" % [lang, ", ".join(overflow)])
+		# Первый проход проверяет новые приёмы; отдельно проверяем карточки их второго уровня.
+		for id in [&"hammer_dive", &"hammer_step"]:
+			var trait: MjolnirTrait = _find(id)
+			_set_traits([trait])
+			var upgrade: SkinCard = tp._make_card(trait, 0) as SkinCard
+			tp._root.add_child(upgrade)
+			await frames(3)
+			var limit: float = SkinCard.TEXT_BOX.size.y * tp.card_width / SkinCard.VISIBLE.size.x
+			var bottom: float = 0.0
+			for child in upgrade.body.get_children():
+				var label: Label = child as Label
+				bottom = maxf(bottom, label.position.y + label.size.y)
+			check(upgrade.body.size.y <= limit + 1.0 and bottom <= limit + 1.0,
+				"%s: %s ур. 2 внутри рамки" % [lang, id])
+			upgrade.queue_free()
+			_set_traits([])
 	GameSettings.set_value("text", "language", "ru", false)
 	tp.visible = false
 	tp._status_labels.clear()
