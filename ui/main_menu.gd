@@ -174,6 +174,7 @@ func _start_with(body_id: String) -> void:
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 ## Проверка собранной игры: ./Thor.exe --headless -- --selftest.
+## Проверка F5 требует изолированный профиль с файлами-маркерами и --selftest-lag-desktop=<путь>.
 func _selftest() -> void:
 	var has_odin_line := Odin.pick("death") != ""
 	print("SELFTEST bodies=%d runes=%d odin=%s" % [Run.all_bodies.size(), Run.all_runes.size(), has_odin_line])
@@ -193,9 +194,106 @@ class SelfTestRunner extends Node:
 			await get_tree().physics_frame
 			var g := get_tree().current_scene as Game
 			if g and is_instance_valid(g.room) and g.room._started and g.room.alive_enemies().size() > 0:
+				if "--selftest-lag" in OS.get_cmdline_user_args():
+					var lag_ok := await _test_lag_report()
+					if not lag_ok:
+						get_tree().quit(1)
+						return
 				print("SELFTEST OK scene=%s room=%s enemies=%d" % [g.name, Run.current_room_path(), g.room.alive_enemies().size()])
 				get_tree().quit(0)
 				return
 		var current := get_tree().current_scene
 		printerr("SELFTEST FAIL: за 600 физических кадров не появилась боевая волна (сцена=%s, зал=%s)" % [current.name if current else "нет", Run.current_room_path()])
 		get_tree().quit(1)
+
+	func _test_lag_report() -> bool:
+		var arg_prefix := "--selftest-lag-desktop="
+		var expected := ""
+		var path_args := 0
+		for arg in OS.get_cmdline_user_args():
+			if arg.begins_with(arg_prefix):
+				expected = arg.trim_prefix(arg_prefix)
+				path_args += 1
+		var desktop := OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
+		if path_args != 1 or expected.is_empty() or not expected.replace("\\", "/").is_absolute_path() \
+				or desktop.is_empty() or _normalize_path(expected) != _normalize_path(desktop) \
+				or not DirAccess.dir_exists_absolute(desktop):
+			printerr("SELFTEST LAG FAIL: рабочий стол не совпал с ожидаемым или недоступен: %s" % desktop)
+			return false
+		var dir := DirAccess.open(desktop)
+		if dir == null:
+			printerr("SELFTEST LAG FAIL: не удалось открыть рабочий стол: %s" % desktop)
+			return false
+		dir.include_hidden = true
+		# Не допускаем перезаписи ранее созданного отчёта: имя содержит время только до секунды.
+		for name in dir.get_files():
+			if name.to_lower().begins_with("thor_lag_") and name.to_lower().ends_with(".zip"):
+				printerr("SELFTEST LAG FAIL: рабочий стол теста уже содержит отчёт: %s" % name)
+				return false
+		# Фикстуры создаёт запускающий тест в изолированном профиле; настоящие файлы не заменяем.
+		for name in ["save.json", "settings.cfg"]:
+			var user_path: String = "user://" + name
+			if not FileAccess.file_exists(user_path) or not FileAccess.get_file_as_string(user_path).contains("isolated_selftest"):
+				printerr("SELFTEST LAG FAIL: нет тестового файла %s" % user_path)
+				return false
+
+		# Создаём узнаваемую запись настоящим механизмом логирования и восстанавливаем настройки.
+		var marker := "selftest_lag_%d" % Time.get_ticks_usec()
+		var old_hitch_ms: float = Perf.hitch_ms
+		var old_logging: bool = Perf.enabled_logging
+		Perf.hitch_ms = -1.0
+		Perf.enabled_logging = true
+		Perf.mark(marker)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		Perf.hitch_ms = old_hitch_ms
+		Perf.enabled_logging = old_logging
+
+		# Событие проходит через обычную доставку ввода, а не прямой вызов Perf.report_lag().
+		var key := InputEventKey.new()
+		key.physical_keycode = KEY_F5
+		key.pressed = true
+		Input.parse_input_event(key)
+		for i in 6:
+			await get_tree().process_frame
+			var reports: PackedStringArray = []
+			for name in dir.get_files():
+				if name.to_lower().begins_with("thor_lag_") and name.to_lower().ends_with(".zip"):
+					reports.append(name)
+			if reports.size() == 1:
+				var release := InputEventKey.new()
+				release.physical_keycode = KEY_F5
+				Input.parse_input_event(release)
+				return _check_lag_zip(desktop.path_join(reports[0]), marker)
+			if reports.size() > 1:
+				printerr("SELFTEST LAG FAIL: после F5 найдено несколько отчётов")
+				return false
+		printerr("SELFTEST LAG FAIL: после F5 отчёт на рабочем столе не появился")
+		return false
+
+	func _normalize_path(path: String) -> String:
+		var normalized := path.replace("\\", "/").simplify_path().trim_suffix("/")
+		return normalized.to_lower() if OS.get_name() == "Windows" else normalized
+
+	func _check_lag_zip(path: String, marker: String) -> bool:
+		var zip := ZIPReader.new()
+		if zip.open(path) != OK:
+			printerr("SELFTEST LAG FAIL: не удалось открыть ZIP: %s" % path)
+			return false
+		var files := zip.get_files()
+		var ok := "system.txt" in files and "hitches.log" in files
+		if ok:
+			var info := zip.read_file("system.txt").get_string_from_utf8()
+			var log := zip.read_file("hitches.log").get_string_from_utf8()
+			ok = info.contains(OS.get_name()) and info.contains("API:") and info.contains("Godot:") and log.contains(marker)
+		# Проверяем, что именно тестовые сохранение и настройки вошли в архив без изменений.
+		for name in ["save.json", "settings.cfg"]:
+			var user_path: String = "user://" + name
+			if not name in files or zip.read_file(name) != FileAccess.get_file_as_bytes(user_path):
+				ok = false
+		zip.close()
+		if not ok:
+			printerr("SELFTEST LAG FAIL: архив не содержит ожидаемые данные (%s)" % str(files))
+			return false
+		print("SELFTEST LAG OK desktop=%s archive=%s files=%s" % [path.get_base_dir(), path, str(files)])
+		return true

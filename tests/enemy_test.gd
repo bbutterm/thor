@@ -97,6 +97,7 @@ func _run() -> void:
 	await _empty_room()
 	await _test_fodder()
 	await _test_bloated()
+	await _test_death_marks()
 	await _test_shield()
 	await _test_shaman()
 	await _test_merc()
@@ -143,6 +144,37 @@ func _test_bloated() -> void:
 	check(is_instance_valid(f2) and f2.health < 500.0, "убитый Раздутый взорвался и задел соседа")
 	check(_hurts.is_empty(), "издалека Тора не задело")
 	check(Run.glory > g0, "убийство Раздутого засчитано (Слава %d → %d)" % [g0, Run.glory])
+	await _clear()
+
+## Читаем метки сразу, до следующего кадра, когда Perf переносит их в историю.
+func _mark_count(name: String) -> int:
+	var count := 0
+	for mark in Perf._marks:
+		if mark == name or mark == "*" + name:
+			count += 1
+	return count
+
+func _test_death_marks() -> void:
+	print("-- Метки смерти врагов")
+	# Оставляем одного врага живым, чтобы зал не завершился во время проверки.
+	var keeper := _spawn("fodder", Vector3(0, 0, 20))
+	var ordinary := _spawn("fodder", Vector3(-12, 0, -8))
+	var killed_bloated := _spawn("bloated", Vector3(12, 0, -8))
+	var self_bloated := _spawn("bloated", Vector3(0, 0, -22))
+	for e in [keeper, ordinary, killed_bloated, self_bloated]:
+		e.set_physics_process(false)
+	var deaths := _mark_count("enemy_death")
+	ordinary._die("ranged")
+	check(_mark_count("enemy_death") == deaths + 1, "смерть обычного врага отмечается один раз")
+	ordinary._die("ranged")
+	check(_mark_count("enemy_death") == deaths + 1, "повторная обработка смерти не добавляет метку")
+	var blasts := _mark_count("blast")
+	killed_bloated._die("ranged")
+	check(_mark_count("enemy_death") == deaths + 2 and _mark_count("blast") == blasts + 1,
+		"при убийстве Раздутого отмечены и смерть, и взрыв")
+	self_bloated._die("self_blast")
+	check(_mark_count("enemy_death") == deaths + 3 and _mark_count("blast") == blasts + 2,
+		"при самоподрыве Раздутого отмечены и смерть, и взрыв")
 	await _clear()
 
 func _test_shield() -> void:

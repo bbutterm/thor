@@ -146,9 +146,9 @@ func _build() -> void:
 	# Текстурные эффекты VFX-комплекта: все материалы (по одному на текстуру) во всех режимах billboard
 	FX.warmup_sprites(self, p, right)
 	# Свободный узел пула эффектов отдаёт материал (FX._take): квад остаётся с материалом по умолчанию,
-	# и его пайплайны компилируются при первом же исчезновении дыма (~0.5 с после первой разбитой бочки,
-	# первой смерти) — даже у скрытого узла. Прогреваем здесь: те же общие квады без материала.
-	# (и прозрачными — эффект прячется, когда transparency ещё не 0)
+	# и его пайплайны могут компилироваться при первом исчезновении дыма (~0.5 с после первой разбитой
+	# бочки, первой смерти). Показываем маленькие образцы в кадре под затемнением: скрытый узел не рисуется.
+	# Также нужен прозрачный вариант: эффект прячется, когда transparency ещё не 0.
 	for k in 6:
 		var bare := MeshInstance3D.new()
 		bare.mesh = FX.shared_mesh(["quad", "quad_bottom", "quad_floor"][k % 3])
@@ -156,8 +156,9 @@ func _build() -> void:
 		bare.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		bare.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 		add_child(bare)
-		bare.position = Vector3(0, -3.0, 0)
-		bare.visible = false
+		bare.position = Vector3((float(k) - 2.5) * 0.1, 0.8, 0)
+		bare.rotation_degrees.x = 35.0
+		bare.scale = Vector3.ONE * 0.06
 	FX.hit_flash(game, p, 0.4)
 	FX.smoke(game, p, 0.4)
 	FX.scorch(game, center, 0.8)
@@ -165,6 +166,11 @@ func _build() -> void:
 	WorldArt.warmup(self, p, right)
 	# Одевание залов (блок Б0): общий шейдер поверхностей и все меши MultiMesh со своими материалами
 	RoomDress.warmup(self, center, right)
+	# Открытый зал может содержать другие форматы вершин и материалы, чем общие образцы.
+	# Показываем конкретные комбинации материала и формата меша из загруженного зала.
+	var room := game_node.get("room") as Node3D if game_node else null
+	if room:
+		RoomDress.warmup_room(self, room)
 	if VfxScreen.instance and is_instance_valid(VfxScreen.instance):
 		VfxScreen.instance.warmup(FRAMES)
 	ComicFX.warmup()

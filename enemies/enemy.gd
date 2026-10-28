@@ -962,6 +962,8 @@ func _die(source: String) -> void:
 	if is_dead:
 		return
 	is_dead = true
+	# Смерть отмечаем до эффектов и взрыва: Раздутый и самоподрыв не создают обычный труп.
+	Perf.mark("enemy_death")
 	remove_from_group("enemies")
 	if _telegraph and is_instance_valid(_telegraph):
 		_telegraph.queue_free()
@@ -990,7 +992,6 @@ func _die(source: String) -> void:
 	queue_free()
 
 func _spawn_debris() -> void:
-	Perf.mark("enemy_death")
 	if _visual == null:
 		return
 	# Не копим трупы: сверх лимита самый старый исчезает сразу

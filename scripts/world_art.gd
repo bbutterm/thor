@@ -648,9 +648,11 @@ static func warmup(parent: Node3D, center: Vector3, right: Vector3) -> void:
 		mi.global_position = center + right * x + Vector3(0, 0.5, 0)
 		mi.scale = Vector3.ONE * 0.2
 		x += 0.4
-	for spec in [["ember", "particle_add"], ["fire", "flipbook"], ["fog_puff_01", "fog"]]:
-		var p := _emitter("Warm", spec[0], spec[1], 1, 1.0)
-		p.preprocess = 0.0
+	# У пыли отдельный вариант материала: затухание возле камеры. Одного создания
+	# материала недостаточно, частица должна попасть в кадр во время прогрева.
+	for spec in [["ember", "particle_add"], ["dust", "particle_add"], ["fire", "flipbook"], ["fog_puff_01", "fog"]]:
+		var p := _emitter("Warm_" + spec[0], spec[0], spec[1], 1, 1.0)
+		p.preprocess = 1.0 if spec[0] == "dust" else 0.0
 		p.scale_amount_min = 0.2
 		p.scale_amount_max = 0.2
 		p.color = Color(1, 1, 1, 0.05)
