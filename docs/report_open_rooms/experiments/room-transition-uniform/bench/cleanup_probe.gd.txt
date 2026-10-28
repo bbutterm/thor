@@ -1,0 +1,85 @@
+extends Node
+## Диагностический контроль одной операции для сравнения исходного и нового Game.
+## Не включён в полный набор: start, transition, cancel, restart, free_wait,
+## cancel_wait, restart_wait и all. Путь test-сцены и операции общие для обеих версий.
+
+var game: Game
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	if not has_meta("runner"):
+		var runner := Node.new()
+		runner.name = "RoomTransitionCleanupProbeRunner"
+		runner.set_script(get_script())
+		runner.set_meta("runner", true)
+		get_tree().root.add_child.call_deferred(runner)
+		return
+	_run.call_deferred()
+
+func _frames(n: int) -> void:
+	for i in n:
+		await get_tree().process_frame
+
+func _run() -> void:
+	var args := OS.get_cmdline_user_args()
+	var mode := args[0] if not args.is_empty() else "start"
+	print("BEGIN_CLEANUP_CONTROL mode=%s" % mode)
+	var modes := ["transition", "cancel", "free_wait", "restart_wait"] if mode == "all" else [mode]
+	for item in modes:
+		if not await _exercise(item):
+			get_tree().quit(1)
+			return
+	print("END_CLEANUP_CONTROL mode=%s" % mode)
+	get_tree().quit(0)
+
+func _exercise(mode: String) -> bool:
+	Dialogue.in_run_scenes = false
+	Run.start_run("berserker")
+	Run.room_order.assign(["res://rooms/room_06.tscn", "res://rooms/room_07.tscn", "res://rooms/room_01.tscn"])
+	Run.room_rewards.clear()
+	Run.room_index = 0
+	Run.miniboss_rooms.clear()
+	Run.doors_enabled = false
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await _frames(18)
+	game = get_tree().current_scene as Game
+	if not game:
+		printerr("CLEANUP CONTROL FAIL: game unavailable")
+		return false
+	match mode:
+		"transition":
+			game._on_exit_reached()
+			await _frames(45)
+		"cancel":
+			game._on_exit_reached()
+			game.go_to_menu()
+			await _frames(45)
+		"restart":
+			game._on_exit_reached()
+			game.restart_run()
+			await _frames(45)
+		"free_wait":
+			game._load_room()
+			game.queue_free()
+			await _frames(45)
+		"cancel_wait":
+			game._load_room()
+			game.go_to_menu()
+			await _frames(45)
+		"restart_wait":
+			game._load_room()
+			game.restart_run()
+			await _frames(45)
+		"start":
+			pass
+		_:
+			printerr("CLEANUP CONTROL FAIL: invalid mode")
+			return false
+	get_tree().paused = false
+	FX.reset_time()
+	var current := get_tree().current_scene
+	if current and is_instance_valid(current):
+		current.queue_free()
+	await _frames(60)
+	print("CLEANUP_PHASE_DONE %s" % mode)
+	return true
