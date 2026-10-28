@@ -11,6 +11,8 @@ from pathlib import Path
 import re
 import sys
 
+from export_dialogue_assets import DialogueAssets
+
 ROOT = Path(__file__).resolve().parent.parent
 RUNTIME = ("rooms", "scenes", "scripts", "enemies", "player", "run", "weapons", "props", "ui", "data")
 def load_aliases():
@@ -53,7 +55,9 @@ def is_excluded(path, patterns):
 
 def main():
     cfg = configparser.ConfigParser(interpolation=None)
-    cfg.read(ROOT / "export_presets.cfg", encoding="utf-8")
+    if not cfg.read(ROOT / "export_presets.cfg", encoding="utf-8"):
+        print("FAIL: export_presets.cfg не найден")
+        return 1
     issues = []
     portrait_pairs = set(UI_PAIRS)
     resource_refs = []
@@ -73,10 +77,24 @@ def main():
                 portrait_pairs.update(re.findall(r'\.set_speaker\(\s*"([^"\n]+)"\s*,\s*"([^"\n]+)"', text))
             if f.suffix == ".json" and f.parent == ROOT / "data/dialogues":
                 portrait_pairs.update(refs_from_json(json.loads(text)))
+    try:
+        visuals = DialogueAssets(ROOT, script_text)
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        print(f"FAIL: аудит изображений диалогов: {exc}")
+        return 1
+    issues.extend(visuals.issues)
+    deferred = []
+    if not any(re.fullmatch(r"preset\.\d+", section) for section in cfg.sections()):
+        issues.append("export_presets.cfg: не найдено ни одного preset")
     for section in cfg.sections():
         if not re.fullmatch(r"preset\.\d+", section):
             continue
         patterns = [part.strip() for part in cfg[section].get("exclude_filter", "").strip('"').split(",") if part.strip()]
+        includes = [part.strip() for part in cfg[section].get("include_filter", "").strip('"').split(",") if part.strip()]
+        export_filter = cfg[section].get("export_filter", "all_resources").strip('"')
+        visual_issues, visual_deferred = visuals.audit_preset(section, patterns, includes, export_filter)
+        issues.extend(visual_issues)
+        deferred.extend(visual_deferred)
         for source, path in resource_refs:
             if is_excluded(path, patterns):
                 issues.append(f"{section}: {source} ссылается на исключённый {path}")
@@ -108,7 +126,13 @@ def main():
         for issue in sorted(set(issues)):
             print("FAIL:", issue)
         return 1
-    print(f"OK: {len(resource_refs)} статических ссылок, {len(portrait_pairs)} пар персонаж/эмоция; исключённых нужных ресурсов нет")
+    print(f"OK: {len(resource_refs)} статических ссылок, {len(portrait_pairs)} пар персонаж/эмоция, "
+          f"{len(visuals.edges)} ссылок на изображения диалогов; перечисленные активные ссылки проверены")
+    for message in sorted(set(deferred)):
+        print("DEFERRED:", message)
+    if deferred:
+        print("LIMIT: отсрочки проверены статически для штатных путей; изменённые сохранения "
+              "и произвольные динамические вызовы не доказываются этим аудитом")
     return 0
 
 

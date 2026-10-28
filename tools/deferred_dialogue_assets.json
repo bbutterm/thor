@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "deferred": [
+    {
+      "source": "data/dialogues/finale.json",
+      "scene": "finale_a",
+      "field": "backdrop",
+      "value": "yggdrasil",
+      "path": "sprites/backgrounds/yggdrasil_top.webp",
+      "trigger": "meet",
+      "conditions": ["event:odin_finale_unlocked"],
+      "guard": {"kind": "event", "name": "odin_finale_unlocked", "trigger": "meet"},
+      "reason": "Черновой финал ожидает будущего события победы над Одином и постановки; демо его не подключает."
+    },
+    {
+      "source": "data/dialogues/hel.json",
+      "scene": "hel_intro",
+      "field": "backdrop",
+      "value": "helheim",
+      "path": "sprites/backgrounds/hel_throne.webp",
+      "trigger": "boss_intro",
+      "conditions": ["boss == hel", "first_time"],
+      "guard": {"kind": "boss", "name": "hel", "trigger": "boss_intro"},
+      "reason": "Сцена ожидает будущего босса Хель; в текущем забеге вход к боссу вызывает интро Ярла."
+    }
+  ]
+}
