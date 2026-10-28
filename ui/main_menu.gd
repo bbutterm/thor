@@ -5,6 +5,7 @@ extends Control
 var _ui: Control
 
 func _ready() -> void:
+	QuickCheck.finish()  # вернулись из «Быстрой проверки» — всё по-новому, сюжетные сцены включены
 	FX.reset_time()
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -113,6 +114,18 @@ func _build(focus: bool = true) -> void:
 	var plan_box := CenterContainer.new()
 	plan_box.add_child(plan)
 	vb.add_child(plan_box)
+	if QuickCheck.available():
+		# Рабочий инструмент владельца (NOW.md, П0): только в сборках для плейтеста и в отладке
+		var quick := UIStyle.button(tr("Быстрая проверка"), 22, "secondary")
+		quick.custom_minimum_size = Vector2(320, 54)
+		quick.pressed.connect(func() -> void:
+			var qc := QuickCheck.new()
+			qc.name = "QuickCheck"
+			qc.closed.connect(quick.grab_focus)
+			add_child(qc))
+		var quick_box := CenterContainer.new()
+		quick_box.add_child(quick)
+		vb.add_child(quick_box)
 	var settings := UIStyle.button(tr("Настройки"), 22, "secondary")
 	settings.custom_minimum_size = Vector2(320, 54)
 	settings.pressed.connect(func() -> void:

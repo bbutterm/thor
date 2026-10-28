@@ -31,8 +31,9 @@ func _init() -> void:
 	_tex_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_tex_rect)
 
-## Один спрайт на двоих: Хугин и Мунин нарисованы вместе
-const ALIASES := {"munin": "hugin", "hovding": "draugr", "berserker": "draugr"}
+## Один спрайт на двоих: Хугин и Мунин нарисованы вместе. Хёвдинг (вожак драугров) — пока лицом Ярла:
+## портреты draugr_* исключены из экспорта (бюджет ZIP). Берсерк и Вёльва — процедурная заглушка до своих портретов.
+const ALIASES := {"munin": "hugin", "hovding": "jarl"}
 const EXTS := ["png", "webp"]
 ## Точки лица (центр глаз) на холсте исходника — для крупного плана в пузыре (data/portrait_faces.json)
 const FACES_PATH := "res://data/portrait_faces.json"

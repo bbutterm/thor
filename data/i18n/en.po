@@ -1912,22 +1912,22 @@ msgstr "The first rune of each run starts at level 2."
 msgid "Утренняя зарядка"
 msgstr "Morning Exercises"
 
-#: scenes/game.gd:268
+#: scenes/game.gd:275
 msgid "приём"
 msgstr "technique"
 
-#: scenes/game.gd:268
+#: scenes/game.gd:275
 #: weapons/mjolnir_traits/earth.tres (group)
 #: weapons/mjolnir_traits/fire.tres (group)
 #: weapons/mjolnir_traits/ice.tres (group)
 msgid "стихия"
 msgstr "element"
 
-#: scenes/game.gd:268
+#: scenes/game.gd:275
 msgid "уровень %d"
 msgstr "level %d"
 
-#: scenes/game.gd:309
+#: scenes/game.gd:316
 msgid "Дверь открыта — вперёд!"
 msgstr "Door open — go!"
 
@@ -2088,9 +2088,9 @@ msgid "Правый стик — прокрутка описания."
 msgstr "Right stick scrolls the description."
 
 #: ui/body_select.gd:224
-#: ui/main_menu.gd:152
-#: ui/main_menu.gd:164
-#: ui/settings_panel.gd:133
+#: ui/main_menu.gd:165
+#: ui/main_menu.gd:177
+#: ui/quick_check.gd:85
 msgid "Назад"
 msgstr "Back"
 
@@ -2218,8 +2218,8 @@ msgstr "To Odin ▸"
 
 #: ui/end_screen.gd:55
 #: ui/training_plan.gd:138
-#: scenes/game.gd:379
-#: scenes/game.gd:388
+#: scenes/game.gd:386
+#: scenes/game.gd:395
 msgid "В меню"
 msgstr "To menu"
 
@@ -2299,40 +2299,45 @@ msgstr "ODIN'S TIP"
 msgid "Загрузка…"
 msgstr "Loading…"
 
-#: ui/main_menu.gd:104
+#: ui/main_menu.gd:105
 msgid "Начать забег"
 msgstr "Start Run"
 
-#: ui/main_menu.gd:110
+#: ui/main_menu.gd:111
 msgid "План тренировок"
 msgstr "Training Plan"
 
-#: ui/main_menu.gd:116
+#: ui/main_menu.gd:119
+#: ui/quick_check.gd:63
+msgid "Быстрая проверка"
+msgstr "Quick check"
+
+#: ui/main_menu.gd:129
 #: ui/pause_menu.gd:71
 msgid "Настройки"
 msgstr "Settings"
 
-#: ui/main_menu.gd:125
+#: ui/main_menu.gd:138
 msgid "Выход"
 msgstr "Quit"
 
-#: ui/main_menu.gd:141
+#: ui/main_menu.gd:154
 msgid "WASD — бег  ·  Пробел — прыжок / двойной\nShift — рывок  ·  Ctrl или C в воздухе — удар-приземление\nCtrl+Shift — подкат  ·  Пробел после приземления — СУПЕР-ПРЫЖОК\nЛКМ — удар (комбо из 3)  ·  ПКМ — метнуть / вернуть Мьёльнир\nQ — сменить оружие  ·  E — подобрать  ·  Esc — пауза"
 msgstr "WASD — run  ·  Space — jump / double jump\nShift — dash  ·  Ctrl or C in the air — ground slam\nCtrl+Shift — slide  ·  Space right after landing — SUPER JUMP\nLMB — attack (3-hit combo)  ·  RMB — throw / recall Mjolnir\nQ — switch weapon  ·  E — pick up  ·  Esc — pause"
 
-#: ui/main_menu.gd:142
+#: ui/main_menu.gd:155
 msgid "Геймпад: управление и кнопки — в настройках."
 msgstr "Gamepad: controls and buttons are in Settings."
 
-#: ui/main_menu.gd:89
+#: ui/main_menu.gd:90
 msgid "ТОР"
 msgstr "THOR"
 
-#: ui/main_menu.gd:92
+#: ui/main_menu.gd:93
 msgid "ДОСТОЙНАЯ СМЕРТЬ"
 msgstr "A WORTHY DEATH"
 
-#: ui/main_menu.gd:95
+#: ui/main_menu.gd:96
 msgid "Тор скуфнулся. Один вселяет его в смертных воинов — возвращать форму."
 msgstr "Thor has let himself go. Odin puts his spirit into mortal warriors to get him back in shape."
 
@@ -2402,6 +2407,66 @@ msgstr "Saved to the desktop"
 #: ui/pause_menu.gd:95
 msgid "ЖУРНАЛ ЗАБЕГА"
 msgstr "RUN LOG"
+
+#: ui/quick_check.gd:12
+msgid "Обычная поимка — 1,5 с, идеальный хват — сразу можно бросать."
+msgstr "Normal catch — 1.5 s; perfect catch — throw again right away."
+
+#: ui/quick_check.gd:12
+msgid "Перезарядка молота — после поимки"
+msgstr "Hammer cooldown starts on catch"
+
+#: ui/quick_check.gd:122
+msgid "БЫСТРАЯ ПРОВЕРКА · F6 — старое/новое: %s"
+msgstr "QUICK CHECK · F6 — old/new: %s"
+
+#: ui/quick_check.gd:122
+msgid "НОВОЕ"
+msgstr "NEW"
+
+#: ui/quick_check.gd:122
+msgid "СТАРОЕ"
+msgstr "OLD"
+
+#: ui/quick_check.gd:13
+msgid "Возврат молота — только по ПКМ"
+msgstr "Hammer returns only on RMB"
+
+#: ui/quick_check.gd:13
+msgid "Молот летит сквозь толпу, промах — втыкается в землю. Вернуть — ПКМ ещё раз."
+msgstr "The hammer flies through the crowd; a miss sticks into the ground. Press RMB again to recall it."
+
+#: ui/quick_check.gd:14
+msgid "Быстрее бросок и возврат, сильный отброс, ударная волна, сочный удар."
+msgstr "Faster throw and return, strong knockback, a shockwave, a meaty hit."
+
+#: ui/quick_check.gd:14
+msgid "Молот — разрушительный"
+msgstr "Destructive hammer"
+
+#: ui/quick_check.gd:15
+msgid "До ~20 врагов на экране, корм разлетается на куски."
+msgstr "Up to ~20 enemies on screen; fodder bursts into pieces."
+
+#: ui/quick_check.gd:15
+msgid "Меньше врагов, но мясо"
+msgstr "Fewer enemies, more gore"
+
+#: ui/quick_check.gd:16
+msgid "Боссы не падают от спама мили"
+msgstr "Bosses don't melt to melee spam"
+
+#: ui/quick_check.gd:16
+msgid "Простые удары по боссу — вполсилы; молот и удар-приземление — полный урон."
+msgstr "Plain melee hits on a boss deal half damage; the hammer and the ground slam deal full damage."
+
+#: ui/quick_check.gd:64
+msgid "Что нового в этой сборке. В зале F6 — сравнить со старым."
+msgstr "What's new in this build. In the room press F6 to compare with the old version."
+
+#: ui/quick_check.gd:78
+msgid "Попробовать"
+msgstr "Try it"
 
 #: ui/rune_pick.gd:12
 msgid "НОРНЫ ПРЕДЛАГАЮТ РУНУ"

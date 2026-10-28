@@ -97,6 +97,13 @@ func _ready() -> void:
 	tracker = RunTracker.attach(self, player)
 	# Обучение в первом зале — подсказки Хугина и Мунина (run/tutorial.gd)
 	tutorial = Tutorial.attach(self)
+	if QuickCheck.active:
+		# «Быстрая проверка» (NOW.md, П0): без обучения, с оружием пункта, плашка и F6 — старое/новое
+		tutorial.active = false
+		var weapon_id := str(Run.get_meta("quick_check_weapon", ""))
+		if weapon_id != "" and ResourceLoader.exists("res://weapons/defs/%s.tres" % weapon_id):
+			player.equip(load("res://weapons/defs/%s.tres" % weapon_id) as WeaponDef)
+		add_child(QuickCheck.Overlay.new())
 	VfxScreen.attach(self, player)  # линии скорости, виньетка берсерка, идеальный хват
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Дожидаемся фоновой загрузки моделей (обычно уже готово, пока игрок был в меню)
