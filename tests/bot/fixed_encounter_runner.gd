@@ -7,7 +7,7 @@ const BotPlayer := preload("res://tests/bot/bot_player.gd")
 const FIXTURE := "res://tests/bot/fixed_encounter_room.tscn"
 const TIME_CAP_SECONDS := 180
 
-var args := {"body": "thrall", "seed": "1", "profile": "skilled", "trace": "0", "out": ""}
+var args := {"body": "thrall", "seed": "1", "profile": "skilled", "trace": "0", "teardown": "0", "out": ""}
 var game: Game
 var room: Room
 var bot: Node
@@ -67,6 +67,42 @@ func _on_enemy_count(_count: int) -> void:
 			"position": _coords(enemy.global_position), "yaw": enemy.global_rotation.y, "elite": enemy.has_meta("elite"),
 			"max_hp": enemy.max_health, "t": game.tracker.run_time})
 
+## Только после записи итога: явно отключаем даже потомков с PROCESS_MODE_ALWAYS.
+func _disable_subtree(node: Node) -> void:
+	node.process_mode = Node.PROCESS_MODE_DISABLED
+	for child in node.get_children(true):
+		_disable_subtree(child)
+
+## Диагностика завершения: не держим сцену или бота и проверяем отложенное удаление.
+func _teardown() -> bool:
+	var game_id := game.get_instance_id()
+	var room_id := room.get_instance_id()
+	var bot_id := bot.get_instance_id()
+	get_tree().paused = true  # Таймер награды/экрана результата не должен сработать.
+	FX.reset_time()
+	_disable_subtree(game)
+	_disable_subtree(bot)
+	if room.enemy_count_changed.is_connected(_on_enemy_count):
+		room.enemy_count_changed.disconnect(_on_enemy_count)
+	bot.queue_free()
+	game.queue_free()
+	room = null
+	bot = null
+	game = null
+	# process_frame приходит до _process; два сигнала гарантируют хотя бы один конец кадра.
+	await get_tree().process_frame
+	var paused_after_first := get_tree().paused
+	await get_tree().process_frame
+	var game_freed := not is_instance_id_valid(game_id)
+	var room_freed := not is_instance_id_valid(room_id)
+	var bot_freed := not is_instance_id_valid(bot_id)
+	var stayed_paused := paused_after_first and get_tree().paused
+	print("FIXED TEARDOWN: game_freed=%s room_freed=%s bot_freed=%s stayed_paused=%s" % [game_freed, room_freed, bot_freed, stayed_paused])
+	if not (game_freed and room_freed and bot_freed and stayed_paused):
+		_abort("сцена, зал или бот не освобождены либо пауза снялась во время проверки")
+		return false
+	return true
+
 func _run() -> void:
 	GameSettings.ensure_loaded()
 	if not Save.is_test or Save.path != Save.TEST_PATH or GameSettings.path != GameSettings.TEST_PATH \
@@ -83,7 +119,8 @@ func _run() -> void:
 	var seed_arg := str(args.seed)
 	var out := str(args.out)
 	if not body in known or not seed_arg.is_valid_int() or int(seed_arg) < 0 or not str(args.profile) in BotPlayer.PROFILES \
-			or not str(args.trace) in ["0", "1"] or not out.is_absolute_path() or out.begins_with("res://") or FileAccess.file_exists(out):
+			or not str(args.trace) in ["0", "1"] or not str(args.teardown) in ["0", "1"] \
+			or not out.is_absolute_path() or out.begins_with("res://") or FileAccess.file_exists(out):
 		_abort("неверные аргументы или файл результата уже существует")
 		return
 	var seed_value := int(seed_arg)
@@ -169,6 +206,13 @@ func _run() -> void:
 	if not valid:
 		_abort("встреча не соответствует запланированным маркерам или получена награда")
 		return
+	if str(args.teardown) == "1":
+		# Локальные RefCounted удерживают определения оружия до завершения корутины.
+		melee = null
+		ranged = null
+		var teardown_ok: bool = await _teardown()
+		if not teardown_ok:
+			return
 	get_tree().paused = false
 	FX.reset_time()
 	get_tree().quit()
