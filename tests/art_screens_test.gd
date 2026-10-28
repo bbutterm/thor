@@ -5,6 +5,11 @@ extends Node
 ## godot --headless --path . --fixed-fps 60 res://tests/art_screens_test.tscn
 ## Кадры (xvfb): xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/art_screens_test.tscn -- <папка> [pages] [en]
 
+const NEW_UNLOCK_ART := [
+	"rune_heal", "rune_dash_damage", "rune_slam_fire", "rune_raven_eye", "rune_fenrir",
+	"heaviness", "ice_trail", "lightning_rod", "storm", "earthquake", "two_hammers", "sky_thunder",
+]
+
 var _fails: Array[String] = []
 var _passes: int = 0
 var game: Game
@@ -107,7 +112,12 @@ func _test_data() -> void:
 	for u in Save.all_unlocks:
 		if u.icon:
 			with_icon += 1
-	check(with_icon == 16, "картинки у открытий «Плана тренировок» (%d из %d)" % [with_icon, Save.all_unlocks.size()])
+	check(with_icon == 28 and with_icon == Save.all_unlocks.size(), "картинки у всех открытий «Плана тренировок» (%d из %d)" % [with_icon, Save.all_unlocks.size()])
+	for id in NEW_UNLOCK_ART:
+		var unlock := Save.get_unlock(id) as UnlockDef
+		var expected := "res://sprites/unlocks/%s.png" % id
+		check(unlock != null and unlock.icon != null and unlock.icon.resource_path == expected,
+			"иллюстрация открытия %s: %s" % [id, expected])
 	check(Save.get_unlock("boomerang").icon.resource_path.ends_with("hammer_found.webp"), "«Вспомнил, где лежит молот» — hammer_found")
 	check(Save.get_unlock("body_smith").icon.resource_path.ends_with("new_body.webp"), "тела в «Плане» — new_body")
 	# Причины смерти → картинки и пулы подписей Одина
@@ -211,7 +221,25 @@ func _test_training_plan() -> void:
 		for t in card.find_children("*", "TextureRect", true, false):
 			pic = pic or (t as TextureRect).texture == Save.get_unlock("belly").icon
 	check(pic, "у «Сбросил пузо» — картинка belly")
+	for id in NEW_UNLOCK_ART:
+		var unlock := Save.get_unlock(id) as UnlockDef
+		var unlock_card := tp._cards.get(id) as Control
+		var actual_icon := false
+		if unlock_card and unlock and unlock.icon:
+			for node in unlock_card.find_children("*", "TextureRect", true, false):
+				if (node as TextureRect).texture == unlock.icon:
+					actual_icon = true
+		check(actual_icon, "картинка открытия %s показана на карточке" % id)
 	await shot("02_training_plan")
+	# Показать реальные карточки в 1280×800: прокручиваем к последней записи
+	# раздела, чтобы в кадр попали сразу несколько строк.
+	if shots_dir != "":
+		for view in [["sky_thunder", "02a_training_traits"], ["rune_fenrir", "02b_training_runes"]]:
+			var last_card := tp._cards.get(view[0]) as Control
+			if last_card:
+				tp._scroll.ensure_control_visible(last_card)
+				await wait(0.2)
+				await shot(view[1])
 	tp.close(false)
 	tp.queue_free()
 

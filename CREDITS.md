@@ -44,6 +44,7 @@
 - `sprites/portraits/brokk_embarrassed.webp` — эмоция Брокка, создана генерацией изображений OpenAI 28.10.2026 редактированием ранее сгенерированного для проекта портрета `brokk_neutral.webp`.
 - `sprites/portraits/eitri_smug.webp` — эмоция Эйтри, создана генерацией изображений OpenAI 28.10.2026 редактированием ранее сгенерированного для проекта портрета `eitri_neutral.webp`.
 - `sprites/ui/icons/door_boss.webp` — иконка двери к Ярлу, созданная генерацией изображений OpenAI 27.10.2026 по стилю существующих иконок и портрету Ярла владельца.
+- `sprites/unlocks/{rune_heal,rune_dash_damage,rune_slam_fire,rune_raven_eye,rune_fenrir,heaviness,ice_trail,lightning_rod,storm,earthquake,two_hammers,sky_thunder}.png` — иллюстрации открытий, созданы генерацией изображений OpenAI 28.10.2026 по визуальным референсам проекта `sprites/unlocks/catch.webp` и `sprites/unlocks/hammer_found.webp`.
 
 
 | Руки от первого лица: PSX First Person Arms (Free) 1.1.0 — модель с ригом и анимациями, текстура рук | Drillimpact — https://drillimpact.itch.io/psx-first-person-arms-free (`assets/arms/drillimpact_psx/`; своя текстура `thor_arm.png` с татуировками — `tools/make_arm_texture.py`, наруч — процедурный) | CC0 (`assets/arms/drillimpact_psx/LICENSE.txt`) |
