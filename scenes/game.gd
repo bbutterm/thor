@@ -119,8 +119,10 @@ func _load_room() -> void:
 
 func _on_room_cleared() -> void:
 	Run.add_glory(Run.glory_room_clear)
-	# Следующий зал грузим в фоне, пока игрок выбирает руну
-	if Run.room_index + 1 < Run.room_order.size():
+	# Следующий зал грузим в фоне, пока игрок выбирает руну. Dummy-рендерер может
+	# повреждать RID при одновременной загрузке и создании ресурсов; в headless
+	# сцена будет загружена обычным load при входе.
+	if DisplayServer.get_name() != "headless" and Run.room_index + 1 < Run.room_order.size():
 		ResourceLoader.load_threaded_request(Run.room_order[Run.room_index + 1], "", true)
 	if Run.is_boss_room():
 		Run.won = true
