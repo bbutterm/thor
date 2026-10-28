@@ -1,0 +1,91 @@
+extends Node
+## Данные, матрицы, коллизии и свет. Этот эксперимент не изменяет игровые сцены.
+const Exp := preload("res://tests/fixtures/corridor_batch_experiment.gd")
+var passes := 0
+var failures: Array[String] = []
+
+
+func _ready() -> void:
+	_run.call_deferred()
+
+
+func check(condition: bool, label: String) -> void:
+	if condition:
+		passes += 1
+		print("[OK] ", label)
+	else:
+		failures.append(label)
+		print("[FAIL] ", label)
+
+
+func _rays(room: Node3D) -> Array[Dictionary]:
+	var probes := [
+		[Vector3(0, 4, 0), Vector3(0, -2, 0)],
+		[Vector3(-1.5, 2, -15), Vector3(-4, 2, -15)],
+		[Vector3(1.5, 2, -15), Vector3(4, 2, -15)],
+		[Vector3(0, 2, -16), Vector3(0, 2, -19)],
+		[Vector3(0, 4, -15), Vector3(0, -2, -15)],
+		[Vector3(9, 6, -2.5), Vector3(9, 0, -2.5)],
+		[Vector3(9, 2, -7.3), Vector3(9, 0, -7.3)],
+	]
+	var output: Array[Dictionary] = []
+	var space := room.get_world_3d().direct_space_state
+	for probe in probes:
+		var query := PhysicsRayQueryParameters3D.create(probe[0], probe[1], 1)
+		var hit := space.intersect_ray(query)
+		if hit.is_empty():
+			output.append({})
+		else:
+			output.append({"collider": hit.collider, "shape": hit.shape,
+				"position": hit.position, "normal": hit.normal})
+	return output
+
+
+func _run() -> void:
+	print("=== CORRIDOR BATCH EXPERIMENT ===")
+	print("HEADLESS LIMIT: Dummy renderer не хранит буфер MultiMesh; проверяем входные матрицы, чтение GPU-буфера проверит GL-прогон.")
+	for path in ["res://rooms/room_01.tscn", "res://rooms/room_06.tscn", "res://rooms/shop_room.tscn", "res://rooms/boss_arena.tscn", "res://rooms/sven_arena.tscn"]:
+		var room := (load(path) as PackedScene).instantiate() as Node3D
+		add_child(room)
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		var collisions := Exp.snapshot(room, "collision")
+		var lights := Exp.snapshot(room, "light")
+		var baseline: Array[Dictionary] = []
+		if path.ends_with("room_01.tscn"):
+			baseline = _rays(room)
+		check(not collisions.is_empty(), "%s: получены коллизии" % path)
+		check(not lights.is_empty(), "%s: получены источники света" % path)
+		if not baseline.is_empty():
+			check(baseline.all(func(ray: Dictionary) -> bool: return not ray.is_empty()), "%s: все контрольные лучи попадают в геометрию" % path)
+		var data: Dictionary = Exp.prepare(room)
+		if data.has("error"):
+			check(false, "%s: %s" % [path, data.error])
+			room.queue_free()
+			await get_tree().process_frame
+			continue
+		check(data.records.size() == 18 and data.rows.size() == 6 and data.sides.size() == 3,
+			"%s: 18 элементов → шесть групп/три группы" % path)
+		print("  conservative extra light bounds: rows=%d, sides=%d" % [
+			Exp.count_extra_light_bounds(data, lights, "rows"), Exp.count_extra_light_bounds(data, lights, "sides")])
+		for mode in ["original", "rows", "sides", "original"]:
+			Exp.select(data, mode)
+			await get_tree().physics_frame
+			check(Exp.verify(data), "%s %s: одинаковые ресурсы, материалы, входные матрицы и параметры рендера" % [path, mode])
+			check(Exp.snapshots_equal(collisions, Exp.snapshot(room, "collision")), "%s %s: коллизии, слои и маски не менялись" % [path, mode])
+			check(Exp.snapshots_equal(lights, Exp.snapshot(room, "light")), "%s %s: источники света и их настройки не менялись" % [path, mode])
+			if not baseline.is_empty():
+				check(Exp.snapshots_equal(baseline, _rays(room)), "%s %s: семь физических лучей совпали" % [path, mode])
+		data.clear()
+		collisions.clear()
+		lights.clear()
+		baseline.clear()
+		room.queue_free()
+		await get_tree().process_frame
+	# Дождаться удаления последней сцены и штатно отпустить загруженные ресурсы
+	# до завершения движка; любые сообщения очистки при выходе остаются в логе.
+	AssetCache.shutdown()
+	for frame in 6:
+		await get_tree().process_frame
+	print("ИТОГ: %d OK, %d FAIL" % [passes, failures.size()])
+	get_tree().quit(0 if failures.is_empty() else 1)
