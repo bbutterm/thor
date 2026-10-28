@@ -144,9 +144,47 @@ func _test_movement(p: Player) -> void:
 	check(p.horizontal_speed() > 15.0, "рывок (скорость %.1f)" % p.horizontal_speed())
 	check(p.dash_charges == charges_before - 1, "заряд рывка списан")
 	Input.action_release("move_forward")
-	await wait(p.dash_recharge + 0.2)
-	check(p.dash_charges == p.dash_charges_max, "руны восстановились на земле")
+	# При завершении рывка Тор слегка подлетает: таймер руны работает только на полу.
+	# Дождаться настоящей посадки, затем остановиться; иначе фиксированное число
+	# кадров может закончиться до начисления полной доли (особенно при hit-stop).
+	var landed := false
+	for i in 180:
+		await get_tree().physics_frame
+		if not p.is_dashing() and p.is_on_floor() and p.velocity.y <= 0.0 and not p.is_climbing:
+			landed = true
+			break
+	check(landed, "после рывка игрок снова на полу")
+	if landed:
+		p.velocity.x = 0.0
+		p.velocity.z = 0.0
+	var restored := await _wait_for_ground_recharge(p) if landed else false
+	check(restored, "руны восстановились на земле")
 	print("    высота прыжка ~", snappedf(y1, 0.01))
+
+## Проверить восстановление за требуемое игровое время на устойчивой опоре.
+## Ожидание ограничено кадрами и верхней границей начисляемого времени: зависший
+## таймер не пройдёт тест, а время в воздухе и замедление не считаются как земля.
+func _wait_for_ground_recharge(p: Player) -> bool:
+	if not is_instance_valid(p) or p.is_dead or p.dash_charges >= p.dash_charges_max:
+		return false
+	var duration := p.dash_recharge * p.weapon_dash_recharge_mult() * p._rune_dash_recharge_mult
+	var remaining := maxf(0.0, duration - p._dash_recharge_timer)
+	var ground_time := 0.0
+	var frame_limit := int(ceil((duration + 4.0) * 60.0))
+	# Сигнал physics_frame приходит перед обработкой узлов: две физические
+	# итерации допуска учитывают порядок сигнала и округление времени.
+	var tolerance := 2.0 / 60.0
+	for i in frame_limit:
+		await get_tree().physics_frame
+		if not is_instance_valid(p) or p.is_dead:
+			return false
+		if p.is_on_floor() and not p._weapon_skill_enemy_only_floor() and not p.is_climbing:
+			ground_time += p.get_physics_process_delta_time()
+		if p.dash_charges == p.dash_charges_max:
+			return ground_time + tolerance >= remaining
+		if ground_time > remaining + tolerance:
+			return false
+	return false
 
 func _test_axe(p: Player) -> void:
 	print("-- Топор")
