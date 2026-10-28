@@ -59,8 +59,15 @@ const TRIALS_DIR := "res://run/trials/"
 ## После каких залов (индекс с 0) в зале появляется мини-босс — последней волной; за него выбор трейта
 ## (с картой мира — RunMap.miniboss_room: Мидгард — 4-й зал, индекс 3)
 @export var miniboss_rooms: PackedInt32Array = [3]
-## Какой мини-босс (MinibossDef)
+## Какой мини-босс (MinibossDef) в этом забеге — выбирает _pick_miniboss из miniboss_pool при start_run
 @export var miniboss_def_path: String = "res://enemies/minibosses/fat_sven.tres"
+## Мини-боссы Мидгарда (GDD 14.1): 4-й зал берёт случайного, без повтора подряд в соседних забегах
+## (последний — Save.data["last_miniboss"]). В тестах — всегда первый, если не задан forced_miniboss
+## или miniboss_rotation_in_tests.
+@export var miniboss_pool: PackedStringArray = ["res://enemies/minibosses/fat_sven.tres", "res://enemies/minibosses/hovding.tres"]
+## Тесты: id мини-босса (MinibossDef.id) на следующие забеги; "" — по правилам
+var forced_miniboss: String = ""
+var miniboss_rotation_in_tests: bool = false
 ## Своя арена мини-босса (блок Н): зал мини-босса (miniboss_rooms) — эта сцена. Пусто — мини-босс
 ## выходит последней волной обычного зала
 @export var miniboss_arena: String = "res://rooms/sven_arena.tscn"
@@ -189,6 +196,7 @@ func start_run(forced_body_id: String = "") -> void:
 		body = BodyDef.new()
 	rune_power = maxi(1, int(body.stat(&"rune_power", 1)))
 	doors._build_room_order()
+	_pick_miniboss()
 	_place_miniboss_arenas()
 	room_index = 0
 	room_rewards.clear()
@@ -356,6 +364,35 @@ func verdict() -> String:
 ## В текущем зале есть мини-босс (финальный босс — не мини-босс)
 func is_miniboss_room() -> bool:
 	return not is_boss_room() and room_index in miniboss_rooms
+
+## Мини-босс забега: forced_miniboss, иначе случайный из miniboss_pool, кроме прошлого (Save); его арена.
+func _pick_miniboss() -> void:
+	var defs: Array[MinibossDef] = []
+	for path in miniboss_pool:
+		if ResourceLoader.exists(path):
+			var d := load(path) as MinibossDef
+			if d:
+				defs.append(d)
+	if defs.is_empty():
+		return
+	var chosen: MinibossDef = null
+	if forced_miniboss != "":
+		for d in defs:
+			if d.id == forced_miniboss:
+				chosen = d
+	elif Save.is_test and not miniboss_rotation_in_tests:
+		chosen = defs[0]
+	else:
+		var last := str(Save.data.get("last_miniboss", ""))
+		var options := defs.filter(func(d: MinibossDef) -> bool: return d.id != last)
+		if options.is_empty():
+			options = defs
+		chosen = options[randi() % options.size()]
+	if chosen == null:
+		chosen = defs[0]
+	miniboss_def_path = chosen.resource_path
+	miniboss_arena = chosen.arena
+	Save.data["last_miniboss"] = chosen.id
 
 ## Залы мини-босса (miniboss_rooms) — его своя арена (кроме финального зала).
 func _place_miniboss_arenas() -> void:

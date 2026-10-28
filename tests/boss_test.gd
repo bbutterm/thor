@@ -72,8 +72,124 @@ func _hold_player(pos: Vector3) -> void:
 func _run() -> void:
 	print("=== BOSS TEST ===")
 	await _test_sven()
+	await _test_rotation()
+	await _test_hovding()
 	await _test_jarl()
 	_finish()
+
+# --- Чередование мини-боссов (GDD 14.1, ночь 29.10, Н5) ---
+
+func _test_rotation() -> void:
+	print("-- Чередование мини-боссов")
+	Run.miniboss_rotation_in_tests = true
+	var ids: Array[String] = []
+	Save.data["last_miniboss"] = ""
+	for i in 10:
+		Run.start_run("berserker")
+		ids.append((Run.miniboss_def() as MinibossDef).id)
+	var repeats := 0
+	for i in range(1, ids.size()):
+		if ids[i] == ids[i - 1]:
+			repeats += 1
+	check(repeats == 0 and "hovding" in ids and "fat_sven" in ids, "4-й зал — случайный мини-босс без повтора подряд (%s)" % ", ".join(ids))
+	Save.data["last_miniboss"] = "fat_sven"
+	Run.start_run("berserker")
+	check((Run.miniboss_def() as MinibossDef).id == "hovding" and Run.miniboss_arena == "" and not "res://rooms/sven_arena.tscn" in Run.room_order,
+		"Хёвдинг дерётся в обычном зале (без арены Свена)")
+	Save.data["last_miniboss"] = "hovding"
+	Run.start_run("berserker")
+	check((Run.miniboss_def() as MinibossDef).id == "fat_sven" and Run.room_order.has(Run.miniboss_arena), "после Хёвдинга — Свен со своей ареной")
+	Run.miniboss_rotation_in_tests = false
+	Run.forced_miniboss = "hovding"
+	Run.start_run("berserker")
+	check((Run.miniboss_def() as MinibossDef).id == "hovding", "принудительный выбор (Run.forced_miniboss)")
+	Run.forced_miniboss = ""
+
+# --- Хёвдинг с дружиной (GDD 14.1, ночь 29.10, Н5) ---
+
+func _test_hovding() -> void:
+	print("-- Хёвдинг с дружиной")
+	Dialogue.in_run_scenes = false
+	Run.forced_miniboss = "hovding"
+	Run.start_run("berserker")
+	Run.miniboss_rooms = PackedInt32Array([0])
+	Run.room_order.assign([Run.ROOM_SCENES[0], Run.BOSS_SCENE])
+	Run.room_index = 0
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await wait(0.6)
+	game = get_tree().current_scene as Game
+	if game.tutorial:
+		game.tutorial.active = false
+	check(Run.is_miniboss_room(), "зал мини-босса — обычный зал 1")
+	var hov: HovdingBoss = null
+	for i in 60:
+		for e in game.room.alive_enemies():
+			if e is HovdingBoss:
+				hov = e as HovdingBoss
+		if hov:
+			break
+		_kill_all_but(null)
+		await wait(0.3)
+	check(hov != null, "Хёвдинг вышел последней волной")
+	if hov == null:
+		Run.forced_miniboss = ""
+		Run.miniboss_rooms = PackedInt32Array([3])
+		return
+	await wait(1.0)
+	check(hov.has_meta("miniboss") and hov.kind == Enemy.Kind.BOSS and is_equal_approx(hov.max_health, 484.0), "мини-босс 22 У (%.0f)" % hov.max_health)
+	check(game.hud._boss_box.visible and game.hud._boss_title.text == "ХЁВДИНГ", "полоса HP «%s»" % game.hud._boss_title.text)
+	check(Dialogue.history.any(func(h: Dictionary) -> bool: return h.speaker == "hovding"), "интро-реплика Хёвдинга")
+	check(hov.get_node_or_null("Banner") != null, "знамя на спине")
+	var guards: Array[Enemy] = []
+	for e in game.room.alive_enemies():
+		if e != hov and hov.is_guard(e):
+			guards.append(e)
+	check(guards.size() == 5, "дружина — отряд из 5 воинов (%d)" % guards.size())
+	game.player.global_position = hov.global_position + Vector3(0, 0.1, 9)
+	hov._horn_cd = 99.0
+	await wait(1.0)
+	var boosted := guards.filter(func(g: Enemy) -> bool: return is_instance_valid(g) and HovdingBoss.has_aura(g))
+	check(boosted.size() >= 3, "знамя-аура на дружине (%d)" % boosted.size())
+	var g0: Enemy = boosted[0] if not boosted.is_empty() else null
+	var base_speed := float(g0.get_meta("_aura_speed", 0.0)) if g0 else 0.0
+	check(g0 != null and g0.move_speed > base_speed * 1.2 and g0.get_node_or_null("AuraRing") != null, "дружина быстрее и с кольцом ауры")
+	# Рог: телеграф, подкрепление, круг под Тором
+	var alive0 := game.room.alive_count()
+	hov._horn_cd = 0.0
+	var raised := await wait_until(func() -> bool: return hov.is_horn_raised(), 3.0)
+	check(raised and hov._horn_mesh.visible, "поднял рог (телеграф)")
+	var blown := await wait_until(func() -> bool: return hov.horns > 0, 3.0)
+	check(blown and game.room.alive_count() > alive0, "рог созвал подкрепление (%d → %d)" % [alive0, game.room.alive_count()])
+	var zone := get_tree().get_nodes_in_group("hazard_zones").any(func(z: Node) -> bool: return z.get("source_node") == hov)
+	check(zone, "рог — круг под Тором")
+	# Вторая фаза
+	check(not hov.engaged, "в начале держится за дружиной")
+	var s0 := hov.move_speed
+	hov.take_hit(hov.health - hov.max_health * 0.45, Vector3.ZERO, "melee")
+	await wait(0.2)
+	check(hov.engaged and hov.move_speed > s0, "при 50 % HP сам идёт в бой")
+	check(_said("hovding.engage"), "реплика второй фазы")
+	# Смерть: аура снимается
+	var keep: Array[Enemy] = []
+	for g in guards:
+		if is_instance_valid(g) and not g.is_dead and HovdingBoss.has_aura(g):
+			keep.append(g)
+	hov.take_hit(9999, Vector3.ZERO, "melee")
+	await wait(0.2)
+	check(not keep.is_empty() and keep.all(func(g: Enemy) -> bool: return not is_instance_valid(g) or (not HovdingBoss.has_aura(g) and g.get_node_or_null("AuraRing") == null)), "со смертью вожака аура пропала")
+	check(_said("hovding.death"), "смертная реплика Хёвдинга")
+	await wait(0.3)
+	_kill_all_but()
+	var picked := await wait_until(func() -> bool: return game.trait_pick.visible, 5.0)
+	check(picked, "после Хёвдинга — выбор трейта Мьёльнира")
+	if game.trait_pick.visible:
+		game.trait_pick._open_time = -10.0
+		game.trait_pick.choose(0, true)
+		await wait(0.3)
+	get_tree().paused = false
+	Run.forced_miniboss = ""
+	Run.miniboss_rooms = PackedInt32Array([3])
+	await wait(0.2)
 
 # --- Толстый Свен ---
 

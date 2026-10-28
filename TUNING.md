@@ -108,6 +108,14 @@
 - **Раздувание:** с `swell_hp_fraction` 0.25 HP бежит ×`swell_speed_mult` 1.4 к Тору (не дольше `swell_max_time` 6 с), раздувается на `swell_amount` 0.5; ближе `fuse_range` 3 м — фитиль `fuse_time` 1.1 с (красный круг), взрыв `blast_radius` 5 / `blast_damage` 30 — его конец. Убит раздутым — взрыв ×`death_blast_mult` 0.6 через 0.45 с.
 - Арена — `rooms/sven_arena.tscn` (генератор, «Пивной погреб Свена»): `Run.miniboss_arena` подменяет ею зал мини-босса (`Run.miniboss_rooms`); пусто — Свен выходит последней волной обычного зала.
 
+### Хёвдинг с дружиной (ночь 29.10, Н5, GDD 14.1) — `enemies/minibosses/hovding.tres`, `enemies/hovding.tscn` (`enemies/bosses/hovding.gd`, `HovdingBoss`)
+
+`max_health` 484 (22 У), `move_speed` 4.0, `knock_resist` 0.65, `attack_damage` 18, удар по площади 4.0 м / 18, `model_scale` 1.35, `glory` 50; свита — отряд `escort_squad` «hovding_guard» (`enemies/squads/hovding_guard.tres`: 3 воина «окружение» + 2 «фланг»); арены нет — дерётся в обычном 4-м зале. Реплики — `data/dialogues/hovding.json` (пулы intro/horn/engage/death; портрет — драугр).
+- **Знамя-аура:** дружина в `aura_radius` 14 м — скорость ×`aura_speed_mult` 1.25, урон ×`aura_damage_mult` 1.3 (золотое кольцо под ногами); со смертью вожака — снимается.
+- **Рог:** раз в `horn_interval` 11 с телеграф `horn_windup` 1.2 с (рог над головой, звук `horn_call`), подкрепление `horn_reinforce_count` 2 × `horn_reinforce_kind` grunt (не больше `horn_cap` 24 врагов в зале) и круг под Тором `horn_zone_radius` 2.6 м / телеграф `horn_zone_telegraph` 1.0 с / `horn_zone_damage` 16.
+- **Фаза 1:** держится в `hold_min`–`hold_max` 7–11 м от Тора, топор раз в `axe_cooldown` 4 с (замах `axe_windup` 0.55, `axe_speed` 18, `axe_damage` 14). **Фаза 2** с `engage_hp_fraction` 0.5: сам в бою, скорость ×`engage_speed_mult` 1.3, рог реже (×1.5).
+- **Чередование:** `Run.miniboss_pool` (Свен, Хёвдинг) — случайный, кроме прошлого (`Save.data.last_miniboss`); арена — `MinibossDef.arena` (у Свена — `rooms/sven_arena.tscn`). В тестах — всегда первый, если не задан `Run.forced_miniboss` / `Run.miniboss_rotation_in_tests`.
+
 ## Ярл Бьорн — `enemies/jarl.tscn` (`enemies/bosses/jarl.gd`), числа GDD — `enemies/defs/jarl.tres`
 
 60 У = 1320 HP, `move_speed` 3.6, удар 25 (`attack_range` 3.6 — широкий замах), удар по площади `boss_slam_radius` 6 / 30, `knock_resist` 0.85. Фазы: `phase2_at` 0.66, `phase3_at` 0.33, рёв `roar_time` 1.2 с.

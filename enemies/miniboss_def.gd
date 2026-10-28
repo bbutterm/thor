@@ -42,6 +42,12 @@ class_name MinibossDef
 ## Сколько обычных врагов выходит вместе с ним
 @export var escort_count: int = 2
 @export var escort_kind: String = "grunt"
+## Свита — отряд (SquadDef, enemies/squads/<id>.tres) вместо escort_count × escort_kind (Хёвдинг: дружина)
+@export var escort_squad: String = ""
+@export var escort_squad_override: Dictionary = {}
+@export_group("Арена")
+## Своя арена (ручная сцена с маркером MinibossSpot): Run подставляет её в зал мини-босса. Пусто — обычный зал.
+@export var arena: String = ""
 @export_group("Реплики")
 ## Пулы data/dialogues (пузырь в углу): при появлении и при смерти; пусто — не говорит
 @export var intro_pool: String = "sven.intro"
@@ -60,6 +66,18 @@ func add_to_room(room: Room, hud: Node = null) -> void:
 	room.spawns.add_child(m)
 	m.global_position = spots[0]
 	markers.append(m)
+	if escort_squad != "" and SquadDef.find(escort_squad):
+		var sm := Marker3D.new()
+		sm.name = "MinibossSquad"
+		sm.set_meta("kind", "squad")
+		sm.set_meta("squad", escort_squad)
+		if not escort_squad_override.is_empty():
+			sm.set_meta("squad_override", escort_squad_override)
+		room.spawns.add_child(sm)
+		sm.global_position = spots[1] if spots.size() > 1 else spots[0]
+		markers.append(sm)
+		room.add_wave(markers)
+		return
 	for i in mini(escort_count, spots.size() - 1):
 		var em := Marker3D.new()
 		em.set_meta("kind", escort_kind)

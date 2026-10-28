@@ -537,7 +537,7 @@ if not ONLY or any(name.startswith(prefix) for name in skill_names for prefix in
     save("skill_land", mix(thump(0.38, 130, 42), dust * 0.6, metal(0.16, 290) * 0.18), 0.75)
 
 # --- Опасные зоны и снаряды врагов (GDD 12.6): отдельный seed не меняет существующие звуки ---
-hazard_names = ("hazard_warn", "hazard_strike", "orb_cast")
+hazard_names = ("hazard_warn", "hazard_strike", "orb_cast", "horn_call")
 if not ONLY or any(name.startswith(prefix) for name in hazard_names for prefix in ONLY):
     rng = np.random.default_rng(291029)
     # Телеграф зоны: нарастающий вой с дрожью — «сейчас ударит, уходи»
@@ -554,5 +554,12 @@ if not ONLY or any(name.startswith(prefix) for name in hazard_names for prefix i
     tt = t(0.6)
     hum = np.sin(2 * np.pi * (110 + 30 * np.sin(2 * np.pi * 6 * tt)) * tt) * env(len(tt), 0.05, 1.2)
     save("orb_cast", lp(hum + rng.standard_normal(len(tt)) * 0.08, 900), 0.55)
+    # Рог Хёвдинга: низкий медный гул с подъёмом и вибрато
+    tt = t(1.2)
+    f = 140 + 30 * np.clip(tt / 0.4, 0, 1) + 3 * np.sin(2 * np.pi * 5 * tt)
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    brass = np.sin(ph) + 0.6 * np.sin(2 * ph) + 0.35 * np.sin(3 * ph) + 0.2 * np.sin(4 * ph)
+    brass *= np.clip(tt / 0.15, 0, 1) * np.clip((1.2 - tt) / 0.3, 0, 1)
+    save("horn_call", lp(brass + rng.standard_normal(len(tt)) * 0.03, 1800), 0.7)
 
 print("Готово:", OUT)

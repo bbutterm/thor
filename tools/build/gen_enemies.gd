@@ -45,6 +45,14 @@ const MODEL_LOOKS := {
 		"anim_spawn": "LayToIdle", "anim_idle": "Zombie_Idle_Loop", "anim_move": "Zombie_Walk_Fwd_Loop", "anim_move_ref_speed": 1.6,
 		"anim_attack": "Punch_Cross", "anim_attack_hit_at": 0.45, "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
 	},
+	# Хёвдинг: драугр-вожак в красном, с бородой и топором (знамя и рог — свои, enemies/bosses/hovding.gd)
+	"hovding": {
+		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Ranger.gltf", "model_hair": "hair/Hair_Beard.gltf",
+		"skin_tint": Color(0.5, 0.66, 0.72), "cloth_tint": Color(0.62, 0.22, 0.18), "eye_glow": Color(1.0, 0.8, 0.3, 1.0),
+		"hand_weapon": "q_axe", "randomize_look": false, "shield_chance": 0.0,
+		"anim_spawn": "LayToIdle", "anim_idle": "Sword_Idle", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.6,
+		"anim_attack": "Sword_Regular_C", "anim_attack_hit_at": 0.35, "anim_slam": "Sword_Regular_C", "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
 	# Корм — облегчённый: одно тело + один комплект одежды, без оружия, волос и случайной сборки
 	"fodder": {
 		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Peasant.gltf", "model_hair": "",
@@ -115,6 +123,9 @@ func build_enemies() -> void:
 		# Толстый Свен — мини-босс (GDD 14.1): свой скрипт поверх enemy.gd; числа и вид перекрывает MinibossDef
 		"sven": {"kind": Enemy.Kind.BOSS, "hp": 550.0, "speed": 4.2, "range": 2.6, "dmg": 18.0, "windup": 0.75, "recover": 0.9, "cd": 1.0, "color": Color(0.55, 0.62, 0.4), "scale": 1.5, "resist": 0.6,
 			"script": "res://enemies/bosses/sven.gd", "extra": {"lunge_speed": 5.0, "wall_splat_speed": 99.0, "boss_slam_radius": 4.5, "boss_slam_damage": 20.0, "boss_slam_windup": 0.9, "boss_far_slam_chance": 0.004}},
+		# Хёвдинг с дружиной — мини-босс (GDD 14.1): знамя-аура, рог, вторая фаза при 50 % HP; числа и вид перекрывает MinibossDef
+		"hovding": {"kind": Enemy.Kind.BOSS, "hp": 484.0, "speed": 4.0, "range": 2.6, "dmg": 18.0, "windup": 0.7, "recover": 0.85, "cd": 1.0, "color": Color(0.6, 0.3, 0.25), "scale": 1.35, "resist": 0.65,
+			"script": "res://enemies/bosses/hovding.gd", "extra": {"lunge_speed": 5.0, "wall_splat_speed": 99.0, "boss_slam_radius": 4.0, "boss_slam_damage": 18.0, "boss_slam_windup": 0.9, "boss_far_slam_chance": 0.0}},
 	}
 	var script := load("res://enemies/enemy.gd")
 	for key in defs:
