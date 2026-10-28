@@ -124,7 +124,7 @@ func sky_strike(point: Vector3) -> void:
 func aura_interval_now() -> float:
 	return aura_interval
 
-## Источник урона стихии (Щитоносец пропускает огонь и молнию — enemy.gd _shield_blocks)
+## Источник урона стихии (Щитоносец пропускает огонь и молнию — enemies/parts/enemy_shield.gd _shield_blocks)
 func damage_source() -> String:
 	return "hammer"
 
@@ -246,7 +246,7 @@ static func push_enemy(en: Enemy, push: Vector3) -> void:
 	if en == null or en.is_dead:
 		return
 	var k := push * (1.0 - en.knock_resist)
-	# Сброшен Тором: падение с высоты засчитывается (enemy.gd _check_fall смотрит на время последнего удара)
+	# Сброшен Тором: падение с высоты засчитывается (enemies/parts/enemy_motion.gd _check_fall смотрит на время последнего удара)
 	en._last_hit_time = Run.combat_clock
 	en.knockback_velocity += Vector3(k.x, 0, k.z)
 	en.velocity.x += k.x

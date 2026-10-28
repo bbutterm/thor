@@ -1,7 +1,20 @@
 # enemies/ — враги, элита, мини-боссы, боссы, модели персонажей
 
 ## Что здесь
-- `enemy.gd` — один скрипт на всех врагов (поле `kind`): грунт (драугр-воин), метатель, босс + Мидгард по GDD 12.1 — корм, Раздутый, Щитоносец, Шаман, Наёмник Локи (их поведение — раздел «Враги Мидгарда» в конце скрипта).
+- `enemy.gd` (`Enemy`) — один скрипт на всех врагов (поле `kind`): грунт (драугр-воин), метатель, босс + Мидгард по GDD 12.1 — корм, Раздутый, Щитоносец, Шаман, Наёмник Локи. В нём — все `@export`-числа и состояние, `_physics_process` (машина состояний), выбор действия по `kind` (`_think_chase`, `_begin_windup`, `_execute_attack`, `_setup_special`, `_update_special`), атаки грунта/босса/метателя, `take_hit`, `apply_def`, оглушение, `_die`. Эти функции переопределяют `BossEnemy`, Свен и Ярл — их в компоненты не выносить.
+- **Компоненты** `parts/` (этап 3 рефакторинга; `RefCounted`, создаёт `Enemy._init`, доступ `enemy.<имя>`; состояние — поля `Enemy`):
+
+| Файл | Класс, `enemy.` | Что внутри |
+|---|---|---|
+| `parts/enemy_notice.gd` | `EnemyNotice`, `notice` | обнаружение Тора: слух, запасной таймер, `alert_to_player` |
+| `parts/enemy_fodder_lod.gd` | `EnemyFodderLod`, `fodder_lod` | дальний корм реже думает и реже обновляет позу |
+| `parts/enemy_motion.gd` | `EnemyMotion`, `motion` | движение с отбрасыванием, `apply_knockback_only`, падение с высоты, застревание, шмяк об стену |
+| `parts/enemy_shield.gd` | `EnemyShield`, `shield` | Щитоносец: блок спереди, `hit_breaks_armor`, удар щитом, щит на корпусе |
+| `parts/enemy_shaman.gd` | `EnemyShaman`, `shaman` | Шаман: отход, обряд (лечение, корм), `summon_around` (и элита-Призыватель) |
+| `parts/enemy_merc.gd` | `EnemyMerc`, `merc` | Наёмник Локи: лазер, очередь |
+| `parts/enemy_visual.gd` | `EnemyVisual`, `visual` | анимации по состоянию, вздрагивание, вспышка/свечение `_set_overlay`, `_collect_meshes`, оружие в руке, заглушка, труп |
+
+  Почему не подклассы на каждый вид: `kind` меняют на ходу — `MinibossDef` делает из любого врага `Kind.BOSS`, тесты переключают вид на одном экземпляре; с подклассами щитоносец-мини-босс сохранил бы щит. Функции компонентов, нужные снаружи, есть и на `Enemy` (обёртки в конце `enemy.gd`). Раздутый и метатель — несколько строк в `enemy.gd` (`_update_special`, `_die`, `_throw_projectile`). Новый вид: `Kind` (только в конец), ветки в диспетчерах, логика — новый `parts/enemy_<вид>.gd`.
 - `enemy_projectile.gd`; `blast.gd` — взрыв по площади (бьёт и Тора, и своих).
 - `enemy_def.gd` + `defs/*.tres` — числа по GDD (`EnemyDef`, враги всех миров; зал применяет к врагу `apply_def` по `game_kind`).
 - `elite/` — модификаторы элиты (`EliteModifier` .tres в `mods/` + обработчик-узел `EliteHandler` на враге; замедление Тора — компонент `PlayerSlow`, `player.gd` не трогается); элиту делает `Loot.make_elite`.
@@ -9,7 +22,7 @@
 - `humanoid_model.gd` — сборка персонажа. Сцены врагов (`*.tscn`, кроме ручных арен) генерирует `tools/build_scenes.gd`.
 
 ## Публичный API
-- `Enemy.apply_def`, `Enemy.armor_pierce_hit`, `Enemy.status_glow` (свечение стихий поверх цвета элиты в общем оверлее), `Enemy._collect_meshes` (обводка), `Enemy.FLASH_MATERIAL` (не читай `.next_pass` напрямую — `Outline.flash_next_pass()`).
+- `Enemy.apply_def`, `Enemy.armor_pierce_hit`, `Enemy.status_glow` (свечение стихий поверх цвета элиты в общем оверлее), `EnemyVisual._collect_meshes` (обводка), `Enemy.FLASH_MATERIAL` (не читай `.next_pass` напрямую — `Outline.flash_next_pass()`).
 - Хуки эффектов: `FX.enemy_hit` / `FX.enemy_died` (ихор — у нежити, `FX.is_undead`).
 - Трюки для шкалы стиля — `StyleMeter.event(&"…")` (см. `player/CLAUDE.md`).
 - Источник урона по Тору: перед `player.take_damage()` — `RunTracker.note_hit(enemy)` (id из `enemy_id`/`death_source_id`/`kind`).

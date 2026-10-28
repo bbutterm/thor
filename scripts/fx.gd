@@ -745,7 +745,7 @@ static func coin_glint(parent: Node, pos: Vector3, color: Color) -> void:
 	_last_glint_ms = now
 	spark_star(parent, pos + Vector3(0, 0.15, 0), color, c.coin_glint_size)
 
-## «Пуф» исчезающего трупа (enemy.gd → _spawn_debris, когда тело сжимается).
+## «Пуф» исчезающего трупа (enemies/parts/enemy_visual.gd → _spawn_debris, когда тело сжимается).
 static func corpse_smoke(body: Node3D) -> void:
 	if body and is_instance_valid(body) and body.is_inside_tree():
 		smoke(body.get_parent(), body.global_position + Vector3(0, 0.5, 0), cfg().smoke_size * 0.8)

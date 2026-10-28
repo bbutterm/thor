@@ -95,7 +95,7 @@ func begin(body: CharacterBody3D, source: String, destination: Vector3, speed: f
 	was_airborne = false
 	active = true
 	if mode == "balcony":
-		# Задаём и горизонтальную скорость — _apply_movement сохраняет её без рывка.
+		# Задаём и горизонтальную скорость — EnemyMotion._apply_movement сохраняет её без рывка.
 		body.velocity = Vector3(horizontal.x, jump_speed, horizontal.z)
 	return true
 

@@ -82,3 +82,42 @@
 - `godot --headless --path . --import` — без ошибок.
 - `python3 tools/run_tests.py --all --jobs 4` — 59 из 59 PASS за 3 мин 13 с, без SCRIPT ERROR; предупреждений в логах не больше, чем до этапа (22 против 27).
 - Карта тестов: для `player/player_slam|jumps|dash|weapon_skills|runes|health` добавлены свои тесты сверх общего правила `player/`.
+
+## Этап 3. Враги: `enemies/enemy.gd` → компоненты по видам и системам (28.10)
+
+### Было → стало
+`enemy.gd` — 1479 строк → 894 (из них ~240 — `@export`-числа и поля состояния). Логика (~600 строк) — в `enemies/parts/`:
+
+| Было (`enemy.gd`) | Стало |
+|---|---|
+| `_sync_notice_player`, `alert_to_player`, `is_alert_to_player`, `_notice_tick` | `parts/enemy_notice.gd` — `EnemyNotice`, `enemy.notice` (51 строка) |
+| `_fodder_lod_active`, `_think_chase_lod`, `_update_fodder_animation_lod`, `_restore_fodder_animation` | `parts/enemy_fodder_lod.gd` — `EnemyFodderLod`, `enemy.fodder_lod` (63) |
+| `apply_knockback_only`, `_apply_movement`, `_below_fall_limit`, `_check_fall`, `_push_props`, `_update_stuck`, `_check_wall_splat` | `parts/enemy_motion.gd` — `EnemyMotion`, `enemy.motion` (141) |
+| `_shield_blocks`, `hit_breaks_armor`, `_on_blocked`, `_do_shield_bash`; щит на корпусе из `_setup_special` | `parts/enemy_shield.gd` — `EnemyShield`, `enemy.shield` (71; новая `attach_front_shield()`) |
+| `_think_shaman`, `_ritual_telegraph`, `_do_ritual`, `summon_around` | `parts/enemy_shaman.gd` — `EnemyShaman`, `enemy.shaman` (61) |
+| `_muzzle`, `_update_merc`, `_show_laser`, `_start_burst`, `_fire_bullet`; лазер из `_setup_special` | `parts/enemy_merc.gd` — `EnemyMerc`, `enemy.merc` (99; новая `build_laser()`) |
+| `_update_animation`, `_begin_flinch`, `_spawn_debris`, `_update_visual_feedback`, `_set_overlay`, `_collect_meshes`, `_attach_weapon`, `_build_procedural_model`, `_add_mesh`, `_capsule/_sphere/_box/_cone` | `parts/enemy_visual.gd` — `EnemyVisual`, `enemy.visual` (254) |
+
+На `Enemy` остались: поля и `@export`, `_ready`, `_physics_process` (машина состояний), `_think_chase` и диспетчеры по `kind` (`_begin_windup`, `_execute_attack`, `_setup_special`, `_update_special`), атаки грунта/босса/метателя (`_do_melee`, `_do_boss_slam`, `_show_slam_telegraph`, `_throw_projectile`), общие помощники (`_separation`, `_has_line_of_sight`, `_face_dir`, `_hit_player`, `_ray`, `_room`…), `take_hit`, `apply_def`, оглушение, `_die`, `fade_debris`.
+
+### Отступление от промта (подклассы → компоненты)
+Промт предлагал подклассы на каждый вид и свои скрипты у сцен. Не сделано, потому что меняло бы поведение:
+- `MinibossDef.apply` ставит любому врагу `kind = Kind.BOSS` — у подкласса щитоносца-мини-босса остались бы щит и удар щитом, а сейчас он ведёт себя как босс;
+- тесты (`fodder_model_test`, `weapon_skill_test`) переключают `kind` на одном экземпляре.
+
+Поэтому выбор по `kind` остался в `Enemy`, а логика видов и систем — в компонентах, как у игрока на этапе 2. Сцены врагов и генератор не менялись (перегенерация не нужна).
+
+Функции, которые переопределяют `BossEnemy`/`FatSven`/`JarlBoss` (`_ready`, `_physics_process`, `_think_chase`, `take_hit`, `_die`), и функции, которые зовут наследники без точки (`_face_dir`, `_separation`, `_hit_player`, `_ray`, `_room`, `_set_state`, `_show_slam_telegraph`, `_enemies_now`, `_has_line_of_sight`), остались в `Enemy`. Компоненты зовут методы врага через `enemy.` — переопределения наследников по-прежнему срабатывают.
+
+### Обёртки на `Enemy`
+- `## API →`: `alert_to_player`, `is_alert_to_player`, `apply_knockback_only`, `hit_breaks_armor`, `summon_around`.
+- `## совместимость →`: `_fodder_lod_active`, `_think_chase_lod` (fodder_lod_test), `_below_fall_limit` (BossEnemy), `_update_visual_feedback` (BossEnemy, enemy_test), `_set_overlay` (Outline, ShaderWarmup, тесты обводки и вспышки).
+- Тесты не менялись. В комментариях `wind.gd`, `mjolnir_element.gd`, `fx.gd`, `spawn_entry.gd` обновлены пути к перенесённым функциям.
+
+### Найдено и не тронуто
+- Ничего нового.
+
+### Проверка
+- `godot --headless --path . --import` — без ошибок.
+- `python3 tools/run_tests.py --all --jobs 4` — 59 из 59 PASS за 3 мин 18 с, без SCRIPT ERROR; предупреждений в логах 16 (было 22).
+- Путь GL Compatibility (свой материал вспышки на врага, его headless не проходит): `tests/enemy_shots.tscn` под xvfb до и после этапа — в логе те же 3 сообщения при выходе (утечки текстур, `ERR_CANT_OPEN`), без новых ошибок. Разница кадров «после — до» (2.5–13 на пиксель) не больше, чем между двумя прогонами одного и того же кода «до» (3.3–22): в сцене случайная одежда и частицы.
