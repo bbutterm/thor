@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# Only after an explicit performance window. Reuses, verifies, and does not rerun the visual test.
+set -uo pipefail
+project=/workspace/thor-n3-tower-batching
+config=/workspace/thor-artifacts/room-transition-gl/xorg-one-room.conf
+godot_bin=/usr/local/bin/godot
+if [[ $# != 2 || "$1" != /* || -e "$1" || "$2" != /* || ! -d "$2" ]]; then
+    printf 'Usage: %s NEW_ABSOLUTE_OUTPUT_DIR PREVIOUS_VISUAL_OUTPUT_DIR\n' "$0" >&2
+    exit 2
+fi
+out=$1
+visual=$2
+busy=$(ps -eo stat=,comm= | awk '$1 !~ /^Z/ && ($2 == "godot" || $2 == "Xorg" || $2 == "Xvfb") {print}')
+if [[ -n "$busy" ]]; then printf 'Live Godot/Xorg/Xvfb process present:\n%s\n' "$busy" >&2; exit 2; fi
+if [[ ! -f "$config" || ! -d "$project/.godot" ]]; then printf 'Missing configuration or imported project\n' >&2; exit 2; fi
+for cmd in "$godot_bin" /usr/lib/xorg/Xorg xdpyinfo timeout python3 sha256sum rg stdbuf awk ps cp git date seq; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then printf 'Missing command: %s\n' "$cmd" >&2; exit 2; fi
+done
+if ! rg -q 'OpenGL API .*Mesa.*llvmpipe' "$visual/views.log"; then
+    printf 'Previous views were not on the expected Mesa llvmpipe device\n' >&2
+    exit 1
+fi
+python3 - "$visual/metadata.txt" "$project" "$config" <<'PY'
+import hashlib,re,sys
+from pathlib import Path
+meta=Path(sys.argv[1]).read_text()
+project=Path(sys.argv[2])
+paths=[project/'tests/fixtures/tower_batch_experiment.gd',project/'tests/tower_batch_views.gd',
+       project/'tests/tower_batch_perf.gd',project/'rooms/room_01.tscn',Path(sys.argv[3])]
+for p in paths:
+    found=re.search(r'^([0-9a-f]{64})  '+re.escape(str(p))+r'$',meta,re.M)
+    actual=hashlib.sha256(p.read_bytes()).hexdigest()
+    if found is None or found.group(1)!=actual:
+        raise SystemExit('Visual baseline SHA changed or missing: '+str(p))
+print('Visual baseline SHA verified for fixture, views, performance script, scene and Xorg configuration.')
+PY
+if [[ $? != 0 ]]; then exit 1; fi
+umask 077
+ulimit -c 0
+ulimit -f 48828
+if ! mkdir -p "$out" "$out/xdg" "$out/cache"; then printf 'Cannot create output directory\n' >&2; exit 1; fi
+python3 "$project/tests/tower_batch_gate.py" views "$visual/views.log" "$visual/views" > "$out/visual-gate.log" 2>&1
+gate=$?
+cat "$out/visual-gate.log"
+if [[ "$gate" != 0 && "$gate" != 3 ]]; then printf 'Visual gate failed; performance skipped\n' >&2; exit 1; fi
+visual_dirty=0
+if [[ "$gate" == 3 ]]; then visual_dirty=1; fi
+printf 'project=%s\nhead=%s\nvisual=%s\nvisual_gate=%d\nstart=%s\n' "$project" "$(git -C "$project" rev-parse HEAD)" "$visual" "$gate" "$(date -u +%FT%TZ)" > "$out/metadata.txt"
+sha256sum "$project/tests/fixtures/tower_batch_experiment.gd" "$project/tests/tower_batch_perf.gd" "$project/rooms/room_01.tscn" "$config" >> "$out/metadata.txt"
+display_num=
+for n in $(seq 150 199); do
+    if [[ ! -e "/tmp/.X11-unix/X$n" && ! -e "/tmp/.X$n-lock" ]]; then display_num=$n; break; fi
+done
+if [[ -z "$display_num" ]]; then printf 'No unused X display\n' >&2; exit 2; fi
+cp "$config" "$out/xorg.conf"
+/usr/lib/xorg/Xorg ":$display_num" -noreset -nolisten tcp -config "$out/xorg.conf" -logfile "$out/xorg.log" > "$out/xorg-stdout.log" 2>&1 &
+xorg_pid=$!
+cleanup() {
+    kill "$xorg_pid" 2>/dev/null || true
+    wait "$xorg_pid" 2>/dev/null || true
+}
+trap cleanup EXIT
+export DISPLAY=":$display_num"
+export LIBGL_ALWAYS_SOFTWARE=1
+export LP_NUM_THREADS=4
+ready=0
+for ((i=0; i<50; i++)); do
+    if xdpyinfo >/dev/null 2>&1; then ready=1; break; fi
+    if ! kill -0 "$xorg_pid" 2>/dev/null; then break; fi
+    sleep 0.2
+done
+if [[ "$ready" != 1 ]]; then printf 'Xorg failed; logs preserved\n' >&2; exit 1; fi
+printf 'display=%s software=%s threads=%s\n' "$DISPLAY" "$LIBGL_ALWAYS_SOFTWARE" "$LP_NUM_THREADS" >> "$out/metadata.txt"
+printf 'START perf %s\n' "$(date -u +%FT%TZ)" | tee -a "$out/metadata.txt"
+if XDG_DATA_HOME="$out/xdg" XDG_CACHE_HOME="$out/cache" \
+    timeout --signal=TERM --kill-after=10s 360 stdbuf -oL -eL "$godot_bin" --path "$project" --fixed-fps 60 --audio-driver Dummy \
+    --rendering-method gl_compatibility --resolution 320x180 res://tests/tower_batch_perf.tscn -- "$out/perf" > "$out/perf.log" 2>&1; then rc=0; else rc=$?; fi
+printf 'END perf rc=%d %s\n' "$rc" "$(date -u +%FT%TZ)" | tee -a "$out/metadata.txt"
+if [[ "$rc" != 0 ]]; then printf 'Performance did not complete; full log preserved\n' >&2; exit 1; fi
+if ! rg -q 'OpenGL API .*Mesa.*llvmpipe' "$out/perf.log"; then printf 'Unexpected graphics device\n' >&2; exit 1; fi
+python3 "$project/tests/tower_batch_gate.py" perf "$out/perf.log" "$out/perf/tower_perf_samples.json" > "$out/perf-gate.log" 2>&1
+gate=$?
+cat "$out/perf-gate.log"
+if [[ "$gate" != 0 && "$gate" != 3 ]]; then printf 'Performance gate failed\n' >&2; exit 1; fi
+rg 'TOWER_SAMPLE |TOWER_PERF_END|ERROR:' "$out/perf.log" || true
+if [[ "$gate" == 3 || "$visual_dirty" == 1 ]]; then
+    printf 'Measurements saved; visual/perf cleanup errors are reported separately, overall run is not clean\n' >&2
+    exit 1
+fi
+printf 'A/B/B/A data saved; repeat and test Forward+/hardware before drawing conclusions\n'

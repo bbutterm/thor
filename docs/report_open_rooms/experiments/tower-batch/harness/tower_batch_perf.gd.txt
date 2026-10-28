@@ -1,0 +1,162 @@
+extends Node
+## Один процесс, реальная игровая сцена и 44 неподвижных врага: исходная вышка и пробный MultiMesh.
+## Это нагрузка рендера, а не результат настоящего боя. Нужен GL или Forward+, не --headless.
+## godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 320x180 \
+##   res://tests/tower_batch_perf.tscn -- /tmp/tower-perf
+
+const Exp := preload("res://tests/fixtures/tower_batch_experiment.gd")
+var game: Game
+var old_room: Room
+var data: Dictionary
+var output := "user://tower_batch_perf"
+var results: Array = []
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	if not has_meta("runner"):
+		var runner := Node.new()
+		runner.set_script(get_script())
+		runner.set_meta("runner", true)
+		get_tree().root.add_child.call_deferred(runner)
+		return
+	if DisplayServer.get_name() == "headless":
+		_fail("A real renderer is required")
+		return
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		output = args[0]
+	if DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(output)) != OK:
+		_fail("Cannot create output directory")
+		return
+	_run.call_deferred()
+
+func frames(n: int) -> void:
+	for i in n:
+		await get_tree().process_frame
+
+func _run() -> void:
+	seed(9001)
+	Run.start_run("berserker")
+	Run.room_order.assign(["res://rooms/room_01.tscn", Run.BOSS_SCENE])
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await frames(40)
+	game = get_tree().current_scene as Game
+	if game == null or game.room == null or game.player == null:
+		_fail("Game, room or player unavailable")
+		return
+	game.room.set_physics_process(false)
+	game.room._spawn_queue.clear()
+	for enemy in game.room.alive_enemies().duplicate():
+		enemy.queue_free()
+	game.room._alive.clear()
+	game.player.input_enabled = false
+	game.player.set_physics_process(false)
+	await frames(5)
+	old_room = (load("res://tests/fixtures/room_01_before_b0.tscn") as PackedScene).instantiate() as Room
+	game.level.add_child(old_room)
+	old_room.visible = false
+	old_room.set_physics_process(false)
+	WorldArt.dress_room(old_room, Run.map)
+	var center := game.room.to_global(Vector3(4.0, 0.1, 5.0))
+	game.player.global_position = center
+	for i in 44:
+		var angle := TAU * i / 44.0
+		var radius := 5.0 + (i % 4) * 1.5
+		var e := game.room.spawn_extra("grunt" if i % 4 == 0 else "fodder", center + Vector3(cos(angle) * radius, 0.05, sin(angle) * radius))
+		if e:
+			e.health = 1e6
+			e.max_health = 1e6
+			e.reparent(game, true)
+			e.process_mode = Node.PROCESS_MODE_DISABLED
+		await get_tree().process_frame
+	await frames(25)
+	if get_tree().get_nodes_in_group("enemies").size() != 44:
+		_fail("Expected exactly 44 stationary enemies")
+		return
+	get_tree().paused = true
+	var tower := game.room.get_node("Geometry/Watchtower0") as Node3D
+	var target := tower.global_position + Vector3(0, 2.0, 0)
+	var d := target - game.player.head.global_position
+	game.player.rotation_target = Vector2(atan2(d.y, Vector2(d.x, d.z).length()), atan2(-d.x, -d.z))
+	game.player.rotation.y = game.player.rotation_target.y
+	game.player.head.rotation.x = game.player.rotation_target.x
+	game.hud.visible = false
+	var viewmodel := game.player.get_node_or_null("Head/Camera/ViewmodelContainer") as CanvasItem
+	if viewmodel:
+		viewmodel.visible = false
+	var collisions := Exp.snapshot(game.room, "collision")
+	var lights := Exp.snapshot(game.room, "light")
+	data = Exp.prepare(game.room)
+	if data.has("error") or not Exp.verify(data):
+		_fail("Preparation/geometry check failed: %s" % data.get("error", "unknown"))
+		return
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		_fail("No game camera")
+		return
+	var centers_in_frustum := 0
+	for group in data.groups:
+		for record in group.records:
+			var world: Transform3D = record.world
+			if camera.is_position_in_frustum(world.origin):
+				centers_in_frustum += 1
+	if centers_in_frustum == 0:
+		_fail("Camera does not cover any tower source centers")
+		return
+	print("TOWER_PERF renderer=%s adapter=%s enemies=44 sources=18 batches=7 centers_in_frustum=%d extra_light_aabb=%d" % [
+		RenderingServer.get_current_rendering_method(), RenderingServer.get_video_adapter_name(),
+		centers_in_frustum, Exp.extra_light_bounds(data, game.room)])
+	await _measure("old", "old_warmup", 15, false)
+	await _measure("original", "original_warmup", 15, true)
+	await _measure("batch", "batch_warmup", 15, true)
+	# Counterbalance order: original/batch then batch/original.
+	await _measure("old", "old_1", 60, false)
+	for sample in [["original", "original_1"], ["batch", "batch_1"], ["batch", "batch_2"], ["original", "original_2"]]:
+		await _measure(sample[0], sample[1], 60, false)
+	await _measure("old", "old_2", 60, false)
+	Exp.select(data, "original")
+	if not Exp.verify(data) or collisions != Exp.snapshot(game.room, "collision") or lights != Exp.snapshot(game.room, "light"):
+		_fail("Geometry, collisions or lights changed")
+		return
+	var f := FileAccess.open(output.path_join("tower_perf_samples.json"), FileAccess.WRITE)
+	if f == null:
+		_fail("Cannot write performance samples")
+		return
+	f.store_string(JSON.stringify(results))
+	f.close()
+	print("TOWER_PERF_END rounds=2 enemies=44")
+	get_tree().paused = false
+	get_tree().quit(0)
+
+func _measure(mode: String, label: String, count: int, screenshot: bool) -> void:
+	old_room.visible = mode == "old"
+	game.room.visible = mode != "old"
+	Exp.select(data, "batch" if mode == "batch" else "original")
+	await frames(5)
+	if screenshot:
+		await RenderingServer.frame_post_draw
+		var image := get_viewport().get_texture().get_image()
+		if image == null or image.save_png(output.path_join(label + ".png")) != OK:
+			_fail("Cannot capture %s" % label)
+			return
+	var samples := PackedFloat32Array()
+	var calls := PackedInt32Array()
+	var before := Time.get_ticks_usec()
+	for i in count:
+		await get_tree().process_frame
+		var now := Time.get_ticks_usec()
+		samples.append(float(now - before) / 1000.0)
+		calls.append(int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)))
+		before = now
+	var sorted := samples.duplicate()
+	var sorted_calls := calls.duplicate()
+	sorted.sort()
+	sorted_calls.sort()
+	print("TOWER_SAMPLE %s count=%d median=%.3f p95=%.3f draw_calls_median=%d" % [
+		label, count, sorted[count / 2], sorted[int(count * 0.95)], sorted_calls[count / 2]])
+	results.append({"label": label, "frames_ms": Array(samples), "draw_calls": Array(calls)})
+
+func _fail(reason: String) -> void:
+	push_error(reason)
+	get_tree().paused = false
+	get_tree().quit(1)

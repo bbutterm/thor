@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# Run only when the coordinator has released the Godot/Xorg window.
+set -uo pipefail
+
+project=/workspace/thor-n3-tower-batching
+cache_source=/workspace/thor-slam
+xorg_config=/workspace/thor-artifacts/room-transition-gl/xorg-one-room.conf
+godot_bin=/usr/local/bin/godot
+
+if [[ $# -lt 1 || $# -gt 2 || "$1" != /* || -e "$1" || ( $# == 2 && "$2" != "--with-perf" ) ]]; then
+    printf 'Usage: %s NEW_ABSOLUTE_OUTPUT_DIRECTORY [--with-perf]\n' "$0" >&2
+    exit 2
+fi
+out=$1
+run_perf=0
+if [[ $# == 2 ]]; then run_perf=1; fi
+busy=$(ps -eo stat=,comm= | awk '$1 !~ /^Z/ && ($2 == "godot" || $2 == "Xorg" || $2 == "Xvfb") {print}')
+if [[ -n "$busy" ]]; then
+    printf 'Another live Godot/Xorg/Xvfb process is present; do not run:\n%s\n' "$busy" >&2
+    exit 2
+fi
+for cmd in "$godot_bin" /usr/lib/xorg/Xorg xdpyinfo timeout python3 sha256sum rg stdbuf awk ps cp git date seq; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then printf 'Missing command: %s\n' "$cmd" >&2; exit 2; fi
+done
+if [[ ! -f "$xorg_config" ]]; then printf 'Missing Xorg configuration: %s\n' "$xorg_config" >&2; exit 2; fi
+if ! python3 -c 'import PIL' >/dev/null 2>&1; then printf 'Pillow is required for independent pixel validation\n' >&2; exit 2; fi
+if ! git -C "$project" merge-base --is-ancestor 5617a74 HEAD || \
+   ! git -C "$project" diff --quiet 5617a74 -- tests/fixtures/tower_batch_experiment.gd tests/tower_batch_views.gd tests/tower_batch_perf.gd; then
+    printf 'Probe differs from reviewed commit 5617a74; inspect and update the plan first\n' >&2
+    exit 2
+fi
+
+umask 077
+ulimit -c 0
+# 48 828 KiB < 50 000 000 bytes; a log that reaches this limit is a failure.
+ulimit -f 48828
+if ! mkdir -p "$out" "$out/xdg-import" "$out/cache-import" "$out/xdg-views" "$out/cache-views" "$out/xdg-perf" "$out/cache-perf"; then
+    printf 'Cannot create output directory\n' >&2
+    exit 1
+fi
+printf 'project=%s\nhead=%s\nstart=%s\n' "$project" "$(git -C "$project" rev-parse HEAD)" "$(date -u +%FT%TZ)" > "$out/metadata.txt"
+sha256sum "$project/tests/fixtures/tower_batch_experiment.gd" "$project/tests/tower_batch_views.gd" "$project/tests/tower_batch_perf.gd" \
+    "$project/rooms/room_01.tscn" "$xorg_config" >> "$out/metadata.txt"
+
+if [[ ! -e "$project/.godot" && -d "$cache_source/.godot" ]]; then
+    printf 'copy_cache_source_head=%s\n' "$(git -C "$cache_source" rev-parse HEAD)" >> "$out/metadata.txt"
+    if ! cp -a --reflink=auto "$cache_source/.godot" "$project/.godot"; then
+        printf 'Could not copy the reusable import cache\n' >&2
+        exit 1
+    fi
+fi
+import_ok=0
+for attempt in 1 2; do
+    log="$out/import-$attempt.log"
+    printf 'START import-%d %s\n' "$attempt" "$(date -u +%FT%TZ)" | tee -a "$out/metadata.txt"
+    if XDG_DATA_HOME="$out/xdg-import" XDG_CACHE_HOME="$out/cache-import" \
+        timeout --signal=TERM --kill-after=10s 600 "$godot_bin" --headless --editor --import --path "$project" > "$log" 2>&1; then rc=0; else rc=$?; fi
+    printf 'END import-%d rc=%d %s\n' "$attempt" "$rc" "$(date -u +%FT%TZ)" | tee -a "$out/metadata.txt"
+    if [[ "$rc" == 0 ]] && ! rg -q 'ERROR:|SCRIPT ERROR|Parse Error' "$log"; then import_ok=1; break; fi
+    rg -n 'ERROR:|SCRIPT ERROR|Parse Error' "$log" | head -30 || true
+done
+if [[ "$import_ok" != 1 ]]; then printf 'Import failed; full logs preserved, no GL test started\n' >&2; exit 1; fi
+
+display_num=
+for n in $(seq 150 199); do
+    if [[ ! -e "/tmp/.X11-unix/X$n" && ! -e "/tmp/.X$n-lock" ]]; then display_num=$n; break; fi
+done
+if [[ -z "$display_num" ]]; then printf 'No unused X display\n' >&2; exit 2; fi
+cp "$xorg_config" "$out/xorg.conf"
+/usr/lib/xorg/Xorg ":$display_num" -noreset -nolisten tcp -config "$out/xorg.conf" -logfile "$out/xorg.log" > "$out/xorg-stdout.log" 2>&1 &
+xorg_pid=$!
+cleanup() {
+    kill "$xorg_pid" 2>/dev/null || true
+    wait "$xorg_pid" 2>/dev/null || true
+}
+trap cleanup EXIT
+export DISPLAY=":$display_num"
+export LIBGL_ALWAYS_SOFTWARE=1
+export LP_NUM_THREADS=4
+ready=0
+for ((i=0; i<50; i++)); do
+    if xdpyinfo >/dev/null 2>&1; then ready=1; break; fi
+    if ! kill -0 "$xorg_pid" 2>/dev/null; then break; fi
+    sleep 0.2
+done
+if [[ "$ready" != 1 ]]; then printf 'Xorg failed; full logs preserved\n' >&2; exit 1; fi
+printf 'display=%s software=%s threads=%s\n' "$DISPLAY" "$LIBGL_ALWAYS_SOFTWARE" "$LP_NUM_THREADS" >> "$out/metadata.txt"
+
+printf 'START views %s\n' "$(date -u +%FT%TZ)" | tee -a "$out/metadata.txt"
+if XDG_DATA_HOME="$out/xdg-views" XDG_CACHE_HOME="$out/cache-views" \
+    timeout --signal=TERM --kill-after=10s 300 stdbuf -oL -eL "$godot_bin" --path "$project" --fixed-fps 60 --audio-driver Dummy \
+    --rendering-method gl_compatibility --resolution 640x360 res://tests/tower_batch_views.tscn -- "$out/views" room_01 > "$out/views.log" 2>&1; then rc=0; else rc=$?; fi
+printf 'END views rc=%d %s\n' "$rc" "$(date -u +%FT%TZ)" | tee -a "$out/metadata.txt"
+if [[ "$rc" != 0 ]]; then printf 'Views did not complete; performance skipped\n' >&2; exit 1; fi
+python3 "$project/tests/tower_batch_gate.py" views "$out/views.log" "$out/views" > "$out/view-gate.log" 2>&1
+gate=$?
+cat "$out/view-gate.log"
+if [[ "$gate" != 0 && "$gate" != 3 ]]; then printf 'View gate failed; performance skipped\n' >&2; exit 1; fi
+dirty=0
+if [[ "$gate" == 3 ]]; then dirty=1; fi
+if [[ "$run_perf" == 0 ]]; then
+    if [[ "$dirty" == 1 ]]; then
+        printf 'Visual comparison completed but exit GL texture errors remain; run is not clean\n' >&2
+        exit 1
+    fi
+    printf 'Visual comparison completed; performance was not started\n'
+    exit 0
+fi
+
+printf 'START perf %s\n' "$(date -u +%FT%TZ)" | tee -a "$out/metadata.txt"
+if XDG_DATA_HOME="$out/xdg-perf" XDG_CACHE_HOME="$out/cache-perf" \
+    timeout --signal=TERM --kill-after=10s 360 stdbuf -oL -eL "$godot_bin" --path "$project" --fixed-fps 60 --audio-driver Dummy \
+    --rendering-method gl_compatibility --resolution 320x180 res://tests/tower_batch_perf.tscn -- "$out/perf" > "$out/perf.log" 2>&1; then rc=0; else rc=$?; fi
+printf 'END perf rc=%d %s\n' "$rc" "$(date -u +%FT%TZ)" | tee -a "$out/metadata.txt"
+if [[ "$rc" != 0 ]]; then printf 'Performance did not complete; full log preserved\n' >&2; exit 1; fi
+python3 "$project/tests/tower_batch_gate.py" perf "$out/perf.log" "$out/perf/tower_perf_samples.json" > "$out/perf-gate.log" 2>&1
+gate=$?
+cat "$out/perf-gate.log"
+if [[ "$gate" != 0 && "$gate" != 3 ]]; then printf 'Performance gate failed\n' >&2; exit 1; fi
+if [[ "$gate" == 3 ]]; then dirty=1; fi
+rg 'TOWER_SAMPLE |TOWER_PERF_END|ERROR:' "$out/perf.log" || true
+if [[ "$dirty" == 1 ]]; then
+    printf 'Measurements were saved, but the run is not clean: exit GL texture errors remain\n' >&2
+    exit 1
+fi
+printf 'Visual and first A/B/B/A data saved; repeat and test Forward+/hardware before drawing conclusions\n'
