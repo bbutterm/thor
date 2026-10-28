@@ -39,6 +39,7 @@ func _run() -> void:
 	_test_shop_greeting_history()
 	_test_content()
 	_test_finale_gating()
+	_test_loki_finale_branches()
 	_test_story_order()
 	await _test_box()
 	await _test_run_start_scene()
@@ -238,10 +239,10 @@ func _test_finale_gating() -> void:
 	check(Dialogue.pick_scene("meet").get("id", "") == "finale_a", "финал доступен и после признания Локи между забегами")
 	# Если до финала не встретились сцены с разгадкой, они не возвращают уже
 	# раскрытый обман в состояние загадки при следующих смертях.
-	for pair in [["ravens_gossip", ["loki_intro"]], ["loki_reveal", ["loki_intro", "ravens_gossip"]],
+	for pair in [["loki_intro", []], ["ravens_gossip", ["loki_intro"]], ["loki_reveal", ["loki_intro", "ravens_gossip"]],
 			["dwarves_secret", ["dwarves_intro"]]]:
 		Save.reset()
-		Save.data.stats.deaths = 14
+		Save.data.stats.deaths = 5 if pair[0] == "loki_intro" else 14
 		for prerequisite in pair[1]:
 			Save.mark_seen(prerequisite)
 		var matches := Dialogue.scenes.filter(func(sc: Dictionary) -> bool: return sc.get("id", "") == pair[0])
@@ -255,6 +256,65 @@ func _test_finale_gating() -> void:
 			check(Dialogue.check(sc._conds, Dialogue.context("death")), "Брокк может предложить доказательство после признания Локи")
 		Save.mark_seen("finale_a")
 		check(not Dialogue.check(sc._conds, Dialogue.context("death")), "%s не возникает после разгадки финала" % pair[0])
+	Save.reset()
+
+## Альтернативная встреча и её визиты не пересекаются с обычным знакомством Локи.
+func _test_loki_finale_branches() -> void:
+	print("-- Локи после раннего финала")
+	Save.reset()
+	Save.data.stats.deaths = 5
+	var alternate: Dictionary = {}
+	for sc in Dialogue.scenes:
+		if sc.get("id", "") == "loki_intro_after_finale":
+			alternate = sc
+			break
+	check(not alternate.is_empty() and alternate.get("draft", false), "альтернативная сцена существует и остаётся черновиком")
+	if alternate.is_empty():
+		return
+	var post_pool: Array = Dialogue.pools.get("loki.post_finale.visit", [])
+	check(post_pool.size() == 3, "в альтернативном пуле три реплики")
+	var ids := {}
+	var repeated: Array[String] = []
+	var new_lines: Array = alternate.lines.duplicate()
+	for item in post_pool:
+		check(item.get("draft", false), "послефинальный визит остаётся черновиком")
+		new_lines.append_array(item.lines)
+	for line in new_lines:
+		var id := str(line.get("id", ""))
+		if id == "" or ids.has(id):
+			repeated.append(id)
+		ids[id] = true
+	check(repeated.is_empty(), "у новых реплик нет пустых или повторных id")
+	var translation: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/dialogues/en/loki.json"))
+	var localized: Dictionary = (translation as Dictionary).get("lines", {}) if translation is Dictionary else {}
+	for line in new_lines:
+		var text: Dictionary = localized.get(str(line.id), {})
+		check(text.get("ru", "") == line.text and str(text.get("en", "")).strip_edges() != "", "%s переведена на en" % line.id)
+	check(not Dialogue.check(alternate._conds, Dialogue.context("death")), "альтернативная встреча недоступна до финала")
+	check(Dialogue.pool_lines("loki.post_finale.visit").is_empty(), "новые визиты недоступны до финала")
+	Save.mark_seen("finale_a")
+	check(Dialogue.check(alternate._conds, Dialogue.context("death")), "финал без старого знакомства открывает альтернативную встречу")
+	check(Dialogue.pool_lines("loki.post_finale.visit").is_empty(), "финал сам по себе не открывает новые визиты")
+	for prerequisite in ["odin_first_death", "ravens_intro", "sif_intro"]:
+		Save.mark_seen(prerequisite)
+	check(Dialogue.pick_scene("death").get("id", "") == "loki_intro_after_finale", "сцена выбирается при следующем подходящем событии смерти")
+	Save.mark_seen("loki_intro_after_finale")
+	check(Dialogue.pick_scene("death").get("id", "") != "loki_intro_after_finale", "альтернативная встреча не повторяется")
+	check(Dialogue.pool_lines("loki.visit").is_empty(), "прежние визиты не включаются без старого знакомства")
+	var all_pools := Dialogue.pools
+	Dialogue.pools = {"loki.post_finale.visit": post_pool}
+	var visitor := Dialogue.visitor_lines()
+	Dialogue.pools = all_pools
+	check(not visitor.is_empty() and ids.has(str(visitor[0].get("id", ""))), "общий выбор визитов находит новый пул")
+	Save.reset()
+	Save.data.stats.deaths = 5
+	Save.mark_seen("loki_intro")
+	Save.mark_seen("finale_a")
+	check(not Dialogue.check(alternate._conds, Dialogue.context("death")), "после обычного знакомства альтернативная сцена не выбирается")
+	check(not Dialogue.pool_lines("loki.visit").is_empty(), "после обычного знакомства доступны прежние визиты")
+	check(Dialogue.pool_lines("loki.post_finale.visit").is_empty(), "новый пул не дублирует прежние визиты")
+	Save.mark_seen("loki_intro_after_finale")
+	check(Dialogue.pool_lines("loki.post_finale.visit").is_empty(), "при двух отметках новый пул также не дублирует прежний")
 	Save.reset()
 
 ## Симуляция 30 смертей: какие сцены открываются и когда (для отчёта)

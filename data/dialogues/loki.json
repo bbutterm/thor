@@ -17,7 +17,8 @@
 			"trigger": "death",
 			"priority": 75,
 			"conditions": [
-				"deaths >= 5"
+				"deaths >= 5",
+				"!seen:finale_a"
 			],
 			"lines": [
 				{
@@ -169,6 +170,56 @@
 				}
 			],
 			"note": "Вариант А причины скуфа (STORY.md): письма о переносе Рагнарёка подделал Локи"
+		},
+		{
+			"id": "loki_intro_after_finale",
+			"trigger": "death",
+			"priority": 75,
+			"conditions": [
+				"seen:finale_a",
+				"!seen:loki_intro"
+			],
+			"draft": true,
+			"note": "Черновик: альтернативная встреча после финала, если знакомство у дивана ещё не было показано.",
+			"backdrop": "couch",
+			"lines": [
+				{
+					"id": "loki_intro_after_finale_01",
+					"speaker": "loki",
+					"emotion": "smug",
+					"text": "Брат! Я пришёл забрать чек. Ну что тебе от него — кроме доказательства?"
+				},
+				{
+					"id": "loki_intro_after_finale_02",
+					"speaker": "thor",
+					"emotion": "smug",
+					"text": "Вороны сняли копии. Очень любят статистику."
+				},
+				{
+					"id": "loki_intro_after_finale_03",
+					"speaker": "loki",
+					"emotion": "shocked",
+					"text": "Да сколько же их?!"
+				},
+				{
+					"id": "loki_intro_after_finale_04",
+					"speaker": "odin",
+					"emotion": "smug",
+					"text": "Писем или копий? Я веду отдельные тетрадки."
+				},
+				{
+					"id": "loki_intro_after_finale_05",
+					"speaker": "loki",
+					"emotion": "embarrassed",
+					"text": "Ладно. В следующий раз обойдусь без писем."
+				},
+				{
+					"id": "loki_intro_after_finale_06",
+					"speaker": "thor",
+					"emotion": "neutral",
+					"text": "И без переносов Рагнарёка."
+				}
+			]
 		}
 	],
 	"pools": {
@@ -336,6 +387,56 @@
 				"emotion": "smug",
 				"text": "Ой, лава остыла. Ты тоже, кажется.",
 				"id": "loki.trial_fail.02"
+			}
+		],
+		"post_finale.visit": [
+			{
+				"draft": true,
+				"conditions": [
+					"seen:finale_a",
+					"seen:loki_intro_after_finale",
+					"!seen:loki_intro"
+				],
+				"lines": [
+					{
+						"id": "loki.post_finale.visit.01",
+						"speaker": "loki",
+						"emotion": "smug",
+						"text": "Если найдёшь мой следующий план — пожалуйста, не скрепляй его чеком."
+					}
+				]
+			},
+			{
+				"draft": true,
+				"conditions": [
+					"seen:finale_a",
+					"seen:loki_intro_after_finale",
+					"!seen:loki_intro"
+				],
+				"lines": [
+					{
+						"id": "loki.post_finale.visit.02",
+						"speaker": "loki",
+						"emotion": "embarrassed",
+						"text": "Письма я больше не пишу. Теперь тренируюсь говорить правду. Понемногу."
+					}
+				]
+			},
+			{
+				"draft": true,
+				"conditions": [
+					"seen:finale_a",
+					"seen:loki_intro_after_finale",
+					"!seen:loki_intro"
+				],
+				"lines": [
+					{
+						"id": "loki.post_finale.visit.03",
+						"speaker": "loki",
+						"emotion": "happy",
+						"text": "Вороны вернули мне чек. Копию. Не самые щедрые птицы."
+					}
+				]
 			}
 		]
 	}
