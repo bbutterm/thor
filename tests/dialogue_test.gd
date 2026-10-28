@@ -40,6 +40,7 @@ func _run() -> void:
 	_test_visit_outcomes()
 	_test_heimdall_visit_history()
 	_test_boss_death_reactions()
+	_test_mercenary_death_reactions()
 	_test_content()
 	_test_finale_gating()
 	_test_loki_finale_branches()
@@ -394,6 +395,50 @@ func _test_boss_death_reactions() -> void:
 		actor.free()
 		tracker.free()
 	Dialogue.pools = saved_pools
+	Dialogue.body_death_chance = saved_body_chance
+	TranslationServer.set_locale(saved_locale)
+	Dialogue.refresh_locale()
+	Save.reset()
+
+## Наёмник Локи — живой смертный, хотя для общего выбора он в категории draugr.
+func _test_mercenary_death_reactions() -> void:
+	print("-- Реакции на наёмника и драугров")
+	var saved_locale: String = TranslationServer.get_locale()
+	var saved_body_chance: float = Dialogue.body_death_chance
+	Dialogue.body_death_chance = 0.0
+	var items: Array = Dialogue.pools.get("odin.death_draugr", [])
+	var loc_data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/dialogues/en/odin.json"))
+	var loc_lines: Dictionary = (loc_data as Dictionary).get("lines", {}) if loc_data is Dictionary else {}
+	for source_id in ["loki_merc", "draugr_warrior", "shieldbearer", "draugr_thrower"]:
+		Save.reset()
+		Save.end_run({"won": false, "cause": RunTracker.cause_of(source_id), "killed_by": source_id, "tags": []})
+		check(Dialogue.reaction_pool(false) == "odin.death_draugr", "%s: общий пул найден" % source_id)
+		var eligible: Dictionary = {}
+		for item in items:
+			var id: String = str(item.lines[0].get("id", ""))
+			if Dialogue.check(item._conds, Dialogue.context()):
+				eligible[id] = item.lines[0]
+		check(eligible.size() >= 3, "%s: осталось не менее трёх реплик" % source_id)
+		check(eligible.has("odin.death_draugr.01") == (source_id == "draugr_warrior"),
+			"%s: реплика об обычном драугре учитывает источник" % source_id)
+		for id in ["odin.death_draugr.02", "odin.death_draugr.05"]:
+			check(eligible.has(id) == (source_id != "loki_merc"), "%s: %s не называет живого наёмника мёртвым" % [source_id, id])
+		for language in ["ru", "en"]:
+			I18n.apply(language)
+			Dialogue.refresh_locale()
+			var samples_ok: bool = true
+			for i in 20:
+				var sample: Array = Dialogue.pool_lines("odin.death_draugr")
+				if sample.is_empty():
+					samples_ok = false
+					continue
+				var id: String = str(sample[0].get("id", ""))
+				var base: Dictionary = eligible.get(id, {})
+				var translation: Dictionary = loc_lines.get(id, {})
+				var expected: String = str(base.get("text", "")) if language == "ru" else str(translation.get("en", ""))
+				if base.is_empty() or expected == "" or str(sample[0].get("text", "")) != expected:
+					samples_ok = false
+			check(samples_ok, "%s/%s: случайные реплики доступны и переведены" % [source_id, language])
 	Dialogue.body_death_chance = saved_body_chance
 	TranslationServer.set_locale(saved_locale)
 	Dialogue.refresh_locale()
