@@ -47,17 +47,21 @@ func _run() -> void:
 		return
 	for enemy in game.room.alive_enemies():
 		enemy.set_physics_process(false)
+	# Начальная реплика Одина временно прикрывает медальон: скрываем пузырь только в этом сценарии кадров.
+	if game.tutorial:
+		game.tutorial.active = false
+	game.hud._odin_panel.visible = false
 	var player := game.player
 	player.set_physics_process(false)
 	# Смотреть вдоль прохода: в центре «Зала бочек» стоит колонна, за ней дверь не видно.
-	player.global_position = game.room.to_global(Vector3(-4, 0.1, 4))
+	player.global_position = game.room.to_global(Vector3(-4, 0.1, 2))
 	player.rotation = Vector3.ZERO
 	player.head.rotation.x = 0.2
 	var before := def.duplicate() as RewardDef
 	before.icon_name = "boss_before"
 	var door_before := RewardDoor.create(before, "boss")
 	game.room.add_child(door_before)
-	door_before.global_position = game.room.to_global(Vector3(-4, 0, -6))
+	door_before.global_position = game.room.to_global(Vector3(-4, 0, -5))
 	await wait_frames(20)
 	if not await shot("before"):
 		get_tree().quit(1)
@@ -66,7 +70,7 @@ func _run() -> void:
 	await wait_frames(2)
 	var door_after := RewardDoor.create(def, "boss")
 	game.room.add_child(door_after)
-	door_after.global_position = game.room.to_global(Vector3(-4, 0, -6))
+	door_after.global_position = game.room.to_global(Vector3(-4, 0, -5))
 	await wait_frames(20)
 	if not await shot("after"):
 		get_tree().quit(1)
