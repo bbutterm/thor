@@ -69,7 +69,8 @@ static func prefetch(paths: Array) -> void:
 		var path := str(p)
 		if path == "" or _cache.has(path) or _requested.has(path) or not ResourceLoader.exists(path):
 			continue
-		if ResourceLoader.has_cached(path):
+		# В Dummy не создаём ресурсы на фоне одновременно с главным потоком.
+		if DisplayServer.get_name() == "headless" or ResourceLoader.has_cached(path):
 			_cache[path] = load(path)
 			continue
 		if ResourceLoader.load_threaded_request(path, "", false) == OK:

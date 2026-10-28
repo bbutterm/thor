@@ -69,7 +69,8 @@ static func prefetch(speakers: PackedStringArray) -> void:
 	for p in want:
 		if _held.has(p):
 			continue
-		if ResourceLoader.has_cached(p):
+		# Dummy может повредить RID, если текстуры грузятся параллельно созданию ресурсов.
+		if DisplayServer.get_name() == "headless" or ResourceLoader.has_cached(p):
 			_held[p] = load(p)
 		elif ResourceLoader.load_threaded_request(p) == OK:
 			_pending.append(p)
