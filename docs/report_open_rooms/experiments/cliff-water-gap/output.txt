@@ -1,0 +1,43 @@
+Nominal mesh triangles (no frustum/LOD/pass accounting):
+backdrop groups 45 instances 154 triangles 86584 exact_duplicate_instances 0
+  Cliff1 groups/instances/triangles 6 6 51576
+  Pine groups/instances/triangles 16 120 14400
+  Rock1 groups/instances/triangles 9 12 9192
+  Rock3 groups/instances/triangles 6 7 4984
+  Rock5 groups/instances/triangles 5 6 4296
+  Rock4 groups/instances/triangles 3 3 2136
+room_scatter groups 64 instances 148 triangles 42462 exact_duplicate_instances 0
+  Rock2 groups/instances/triangles 3 3 9216
+  Rock5 groups/instances/triangles 7 11 7876
+  Rock1 groups/instances/triangles 6 9 6894
+  Rock4 groups/instances/triangles 6 9 6408
+  Rock3 groups/instances/triangles 5 7 4984
+  Brick3 groups/instances/triangles 4 15 1890
+  Brick4 groups/instances/triangles 4 14 1764
+  Pilaster groups/instances/triangles 6 8 1056
+  Brick1 groups/instances/triangles 4 8 864
+  Brick2 groups/instances/triangles 3 9 846
+  Beam groups/instances/triangles 3 32 384
+  Post groups/instances/triangles 12 22 264
+  Log groups/instances/triangles 1 1 16
+Source duplicate / exact-degenerate check:
+  Environment_Cliff1 triangles 8596 repeated-position-degenerate 0 identical-same-winding 0
+  Environment_Rock_1 triangles 766 repeated-position-degenerate 0 identical-same-winding 0
+  Environment_Rock_2 triangles 3072 repeated-position-degenerate 0 identical-same-winding 0
+  Environment_Rock_3 triangles 712 repeated-position-degenerate 0 identical-same-winding 0
+  Environment_Rock_4 triangles 712 repeated-position-degenerate 0 identical-same-winding 0
+  Environment_Rock_5 triangles 716 repeated-position-degenerate 0 identical-same-winding 0
+common triangles below water on all six cliffs 2617 per instance, 15702 total
+Cliff1_-2_-4 fully under water 2617 centroids not blocked by water/ground 0 facing source winding 0
+Cliff1_-2_4 fully under water 3021 centroids not blocked by water/ground 0 facing source winding 0
+Cliff1_-5_-2 fully under water 2635 centroids not blocked by water/ground 0 facing source winding 0
+Cliff1_0_-4 fully under water 3087 centroids not blocked by water/ground 0 facing source winding 0
+Cliff1_0_2 fully under water 2975 centroids not blocked by water/ground 23 facing source winding 12
+Cliff1_4_-2 fully under water 3061 centroids not blocked by water/ground 0 facing source winding 0
+Cliff1_0_2 facing candidates not blocked by own front faces 12
+example triangle 3992 world center (27.167, -3.042, 114.539) water crossing radius 69.502 water inner radius 69.784 ground outer radius 77.76 ray y there -1.433 ground y -1.5
+room scatter AABBs hit []
+backdrop scatter AABBs hit [('Pine_0_1', 11), ('Rock5_0_1', 0)]
+Pine_0_1[11] two-sided triangle hits before target 0
+Rock5_0_1[0] two-sided triangle hits before target 0
+Other room geometry, particles, LOD, fog and actual pixels are NOT checked.
