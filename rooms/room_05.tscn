@@ -848,6 +848,7 @@ _surfaces = [{
 [node name="Room05" type="Node3D" unique_id=1883903756]
 script = ExtResource("1_apjnd")
 room_title = "Мост Биврёст (сломан)"
+max_alive = 60
 
 [node name="Geometry" type="Node3D" parent="." unique_id=412665826]
 
@@ -1136,81 +1137,115 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 2.1, 8.5)
 
 [node name="Spawns" type="Node3D" parent="." unique_id=1884101670]
 
-[node name="grunt_0" type="Marker3D" parent="Spawns" unique_id=663860048]
+[node name="grunt_0" type="Marker3D" parent="Spawns" unique_id=1478364731]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="grunt_1" type="Marker3D" parent="Spawns" unique_id=819328282]
+[node name="grunt_1" type="Marker3D" parent="Spawns" unique_id=360919187]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="grunt_2" type="Marker3D" parent="Spawns" unique_id=1308730909]
+[node name="grunt_2" type="Marker3D" parent="Spawns" unique_id=1478857772]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -6)
 metadata/kind = "grunt"
 metadata/wave = 0
 
-[node name="thrower_3" type="Marker3D" parent="Spawns" unique_id=36865195]
+[node name="thrower_3" type="Marker3D" parent="Spawns" unique_id=1078877587]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, 6)
 metadata/kind = "thrower"
 metadata/wave = 0
 
-[node name="fodder_4" type="Marker3D" parent="Spawns" unique_id=1896612779]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, -2)
+[node name="grunt_4" type="Marker3D" parent="Spawns" unique_id=1033371018]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, 4)
+metadata/kind = "grunt"
+metadata/wave = 0
+
+[node name="grunt_5" type="Marker3D" parent="Spawns" unique_id=991486791]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 3)
+metadata/kind = "grunt"
+metadata/wave = 0
+
+[node name="grunt_6" type="Marker3D" parent="Spawns" unique_id=902180808]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 2.05, 2.5)
+metadata/kind = "grunt"
+metadata/wave = 0
+
+[node name="fodder_7" type="Marker3D" parent="Spawns" unique_id=2129374631]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.25, 2.05, 4)
 metadata/kind = "fodder"
 metadata/wave = 0
-metadata/count = 6
-metadata/spread = 1.5
+metadata/count = 14
+metadata/spread = 2.75
+metadata/entry_mode = "balcony"
+metadata/entry_target = Vector3(4.4, 0.05, 4)
+metadata/spread_axes = Vector2(0.35, 3.5)
+metadata/entry_batch = 1
 
-[node name="grunt_5" type="Marker3D" parent="Spawns" unique_id=1097699901]
+[node name="grunt_8" type="Marker3D" parent="Spawns" unique_id=52102133]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, 4)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="grunt_6" type="Marker3D" parent="Spawns" unique_id=1892076028]
+[node name="grunt_9" type="Marker3D" parent="Spawns" unique_id=195925051]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, 2)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="thrower_7" type="Marker3D" parent="Spawns" unique_id=939710048]
+[node name="thrower_10" type="Marker3D" parent="Spawns" unique_id=1309596170]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 2.05, -8)
 metadata/kind = "thrower"
 metadata/wave = 1
 
-[node name="grunt_8" type="Marker3D" parent="Spawns" unique_id=2140184533]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 3)
+[node name="grunt_11" type="Marker3D" parent="Spawns" unique_id=372906148]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.05, 2)
 metadata/kind = "grunt"
 metadata/wave = 1
 
-[node name="merc_9" type="Marker3D" parent="Spawns" unique_id=1930567407]
+[node name="merc_12" type="Marker3D" parent="Spawns" unique_id=809930016]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2.05, -8)
 metadata/kind = "merc"
 metadata/wave = 1
 
-[node name="fodder_10" type="Marker3D" parent="Spawns" unique_id=1091583317]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 5)
+[node name="fodder_13" type="Marker3D" parent="Spawns" unique_id=227641347]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 3)
 metadata/kind = "fodder"
 metadata/wave = 1
-metadata/count = 6
-metadata/spread = 1.5
+metadata/count = 10
+metadata/spread = 2.25
 
-[node name="shaman_11" type="Marker3D" parent="Spawns" unique_id=1304566811]
+[node name="shaman_14" type="Marker3D" parent="Spawns" unique_id=1611198438]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2.05, -5)
 metadata/kind = "shaman"
 metadata/wave = 2
 
-[node name="shieldbearer_12" type="Marker3D" parent="Spawns" unique_id=497962287]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.1499999, -2)
+[node name="shieldbearer_15" type="Marker3D" parent="Spawns" unique_id=252985478]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.15, -2)
 metadata/kind = "shieldbearer"
 metadata/wave = 2
 
-[node name="fodder_13" type="Marker3D" parent="Spawns" unique_id=882759049]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -8)
+[node name="grunt_16" type="Marker3D" parent="Spawns" unique_id=1585028048]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, 4)
+metadata/kind = "grunt"
+metadata/wave = 2
+
+[node name="grunt_17" type="Marker3D" parent="Spawns" unique_id=324274837]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.05, -6)
+metadata/kind = "grunt"
+metadata/wave = 2
+
+[node name="grunt_18" type="Marker3D" parent="Spawns" unique_id=92807772]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.05, 2)
+metadata/kind = "grunt"
+metadata/wave = 2
+
+[node name="fodder_19" type="Marker3D" parent="Spawns" unique_id=272959304]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 2.5)
 metadata/kind = "fodder"
 metadata/wave = 2
-metadata/count = 6
-metadata/spread = 1.5
+metadata/count = 11
+metadata/spread = 2.375
 
 [node name="Props" type="Node3D" parent="." unique_id=1795739818]
 

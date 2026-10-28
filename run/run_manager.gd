@@ -41,6 +41,10 @@ const TRIALS_DIR := "res://run/trials/"
 @export var glory_per_kill: int = 3
 @export var glory_combo_finisher_bonus: int = 0
 @export var glory_multikill_bonus: int = 1
+## Корм получает и увеличивает денежный бонус мультикилла; по умолчанию не участвует.
+@export var glory_fodder_multikill: bool = false
+## У обычного корма фиксированная базовая Слава без множителей оружия и ранга.
+@export var glory_fodder_flat: bool = true
 @export var glory_wall_splat_bonus: int = 1
 @export var glory_room_clear: int = 5
 @export var glory_boss_kill: int = 150
@@ -103,6 +107,7 @@ var forced_offers: Array = []
 ## без несовместимых; уровни (id → 1..max_level). Связки сюда не входят — Run.active_combos()
 var mjolnir_traits: Array[MjolnirTrait] = []
 var mjolnir_trait_levels: Dictionary = {}
+## История денежного бонуса; шкала стиля и комикс считают свою серию независимо.
 var _recent_kill_times: Array[float] = []
 ## Непрерывное реальное время кадров. Работает при паузе и хит-стопе, как прежние системные часы,
 ## но также остаётся корректным при ускоренном headless с --fixed-fps.
@@ -222,7 +227,7 @@ func add_glory(amount: int) -> void:
 	glory_changed.emit(glory)
 
 ## Вызывается при убийстве врага. Считает мультикиллы и серии.
-func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: String = "", base_glory: int = -1) -> void:
+func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: String = "", base_glory: int = -1, is_fodder: bool = false) -> void:
 	kills += 1
 	streak += 1
 	best_streak = maxi(best_streak, streak)
@@ -232,20 +237,23 @@ func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: Stri
 		amount += glory_combo_finisher_bonus
 	if wall_splat:
 		amount += glory_wall_splat_bonus
-	# «Один не уважает тех, кто стреляет издалека»
-	if source.begins_with("melee"):
-		amount = int(round(amount * glory_melee_kill_mult))
-	elif source == "ranged":
-		amount = int(round(amount * glory_ranged_kill_mult))
-	# Ранг шкалы стиля (Скуф ×1 … ДОСТОЙНЕЙШИЙ! ×1.6, player/style_tuning.tres) — на сам враг, без бонуса босса
-	amount = int(round(amount * style_glory_mult))
+	# Большая пачка корма сохраняет малую награду; тело и руна всё ещё
+	# применяются в add_glory, а серия и события стиля остаются общими.
+	if not is_fodder or not glory_fodder_flat:
+		# «Один не уважает тех, кто стреляет издалека»
+		if source.begins_with("melee"):
+			amount = int(round(amount * glory_melee_kill_mult))
+		elif source == "ranged":
+			amount = int(round(amount * glory_ranged_kill_mult))
+		# Ранг шкалы стиля — на самого врага, без бонуса босса.
+		amount = int(round(amount * style_glory_mult))
 	if is_boss:
 		amount += glory_boss_kill
 	var now := combat_clock
 	_recent_kill_times = _recent_kill_times.filter(func(t: float) -> bool: return now - t <= multikill_window)
-	if not _recent_kill_times.is_empty():
+	if not is_fodder or glory_fodder_multikill:
 		amount += glory_multikill_bonus * _recent_kill_times.size()
-	_recent_kill_times.append(now)
+		_recent_kill_times.append(now)
 	# Серия из 10+ убийств без урона — +10 (GDD 15.2)
 	if streak > 0 and streak % 10 == 0:
 		amount += glory_streak_bonus

@@ -463,7 +463,7 @@ func build_enemies() -> void:
 		"thrower": {"kind": Enemy.Kind.THROWER, "hp": 40.0, "speed": 3.8, "range": 12.0, "dmg": 10.0, "windup": 0.55, "recover": 0.4, "cd": 2.2, "color": Color(0.42, 0.33, 0.55), "scale": 1.0, "resist": 0.0},
 		"boss": {"kind": Enemy.Kind.BOSS, "hp": 480.0, "speed": 3.6, "range": 3.6, "dmg": 20.0, "windup": 0.8, "recover": 0.9, "cd": 1.1, "color": Color(0.5, 0.26, 0.2), "scale": 2.1, "resist": 0.75},
 		# Мидгард (GDD 12.1). HP/скорость/урон перекрывает EnemyDef (enemies/defs) при спавне в зале.
-		"fodder": {"kind": Enemy.Kind.FODDER, "hp": 17.6, "speed": 3.5, "range": 1.8, "dmg": 5.0, "windup": 0.55, "recover": 0.6, "cd": 1.1, "color": Color(0.4, 0.5, 0.45), "scale": 0.95, "resist": 0.0,
+		"fodder": {"kind": Enemy.Kind.FODDER, "hp": 7.7, "speed": 3.5, "range": 1.8, "dmg": 5.0, "windup": 0.55, "recover": 0.6, "cd": 1.1, "color": Color(0.4, 0.5, 0.45), "scale": 0.95, "resist": 0.0,
 			"extra": {"max_debris": 10}},
 		"bloated": {"kind": Enemy.Kind.BLOATED, "hp": 22.0, "speed": 5.0, "range": 2.4, "dmg": 44.0, "windup": 0.7, "recover": 0.5, "cd": 0.5, "color": Color(0.6, 0.65, 0.35), "scale": 1.05, "resist": 0.2,
 			"extra": {"boss_slam_radius": 3.0, "boss_slam_windup": 0.7, "bloat_trigger_range": 2.4}},
@@ -648,7 +648,7 @@ func build_player() -> void:
 	hitbox.collide_with_areas = true
 	hitbox.collide_with_bodies = true
 	hitbox.enabled = false
-	hitbox.max_results = 16
+	hitbox.max_results = 128
 	cam.add_child(hitbox)
 
 	var svc := SubViewportContainer.new()
@@ -779,7 +779,7 @@ func build_player() -> void:
 # ---------------- Залы ----------------
 
 ## Описание залов. Координаты в метрах; y — высота центра блока.
-## Блоки: [центр, размер, материал]; врагов: [kind, позиция, волна, (сколько, разброс м)]; пропсы: [тип, позиция].
+## Блоки: [центр, размер, материал]; врагов: [kind, позиция, волна, (сколько, разброс м, вход)]; пропсы: [тип, позиция].
 ## Волны по GDD 12.5: корм толпой (60–70 %), бойцы, 1–2 особых на волну.
 ## Графика мира (комплект владельца): "decor" — картинки на стенах [ключ assets/decor/, позиция, поворот Y, высота м],
 ## "decals" — декали на полу [ключ assets/decals/, позиция, поворот Y, размер м, (glow)], "no_auto" — без авто-знамён/щитов
@@ -788,7 +788,7 @@ func room_defs() -> Array:
 	var r: Array = []
 	# 1. Зал Бочек — разминка, много физики
 	r.append({
-		"file": "room_01", "title": "Зал бочек", "w": 24.0, "d": 24.0,
+		"file": "room_01", "title": "Зал бочек", "w": 24.0, "d": 24.0, "max_alive": 60,
 		"blocks": [
 			[Vector3(-6, 0.75, -3), Vector3(4, 1.5, 4), "wood"],
 			[Vector3(6, 0.75, 2), Vector3(4, 1.5, 4), "wood"],
@@ -797,14 +797,14 @@ func room_defs() -> Array:
 		# Открытая вышка: ступени с севера, площадка для удара-приземления.
 		"watchtowers": [Vector3(9, 0, -2.5)],
 		"jump_pads": [[Vector3(9.5, 0, 4.8), 8.0]],
-		"enemies": [["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(4, 0, -7), 0], ["grunt", Vector3(0, 0, -9), 0], ["fodder", Vector3(0, 0, -7), 0, 5, 2.0],
-			["grunt", Vector3(-8, 0, -8), 1], ["grunt", Vector3(8, 0, -8), 1], ["thrower", Vector3(-6, 1.6, -3), 1], ["fodder", Vector3(-3, 0, -9), 1, 6, 2.0], ["bloated", Vector3(7, 0, -9), 1],
-			["shieldbearer", Vector3(0, 0, -9), 2], ["fodder", Vector3(5, 0, -6), 2, 6, 2.0]],
+		"enemies": [["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(4, 0, -7), 0], ["grunt", Vector3(1, 0, -9), 0], ["bloated", Vector3(7, 0, -9), 0], ["grunt", Vector3(-8, 0, -8), 0], ["fodder", Vector3(-8.5, 0, -10.5), 0, 10, 2.25, {"entry_mode": "edge", "entry_target": Vector3(-8.5, 0.05, -7), "spread_axes": Vector2(1.2, 0.35), "entry_batch": 1}],
+			["grunt", Vector3(-8, 0, -8), 1], ["grunt", Vector3(7.5, 0, -8), 1], ["thrower", Vector3(-6, 1.6, -3), 1], ["grunt", Vector3(4, 0, -7), 1], ["grunt", Vector3(7, 0, -9), 1], ["fodder", Vector3(-3, 0, -8.5), 1, 11, 2.375],
+			["shieldbearer", Vector3(0, 0, -9), 2], ["grunt", Vector3(-8, 0, -8), 2], ["grunt", Vector3(-5.5, 0, -5.5), 2], ["grunt", Vector3(7.5, 0, -8), 2], ["grunt", Vector3(7, 0, -9), 2], ["grunt", Vector3(-10, 0, 8), 2], ["fodder", Vector3(-3.5, 0, -8.5), 2, 12, 2.5]],
 		"props": _ring_props(Vector3(0, 0, -3), 3.5, 6, "barrel") + [["crate", Vector3(-9, 0, 3)], ["crate", Vector3(-9, 0.95, 3)], ["crate", Vector3(9, 0, 7)], ["barrel", Vector3(8, 0, 8)]],
 	})
 	# 2. Ярусы — центральная платформа 2.6 м: нужен двойной или супер-прыжок
 	r.append({
-		"file": "room_02", "title": "Ярусы Ётунов", "w": 26.0, "d": 24.0,
+		"file": "room_02", "title": "Ярусы Ётунов", "w": 26.0, "d": 24.0, "max_alive": 60,
 		"blocks": [
 			[Vector3(0, 1.3, -3), Vector3(7, 2.6, 7), "stone_dark"],
 			[Vector3(-10, 1.0, -6), Vector3(4, 2, 8), "stone_dark"],
@@ -813,15 +813,14 @@ func room_defs() -> Array:
 		],
 		"pillars": [Vector3(-7, 0, 6), Vector3(7, 0, 6)],
 		"jump_pads": [[Vector3(0, 0, 5), 8.0]],
-		"enemies": [["grunt", Vector3(-5, 0, -8), 0], ["grunt", Vector3(5, 0, -8), 0], ["thrower", Vector3(0, 2.7, -4), 0], ["fodder", Vector3(-6, 0, 0), 0, 5, 1.5],
-			["thrower", Vector3(-10, 2.1, -7), 1], ["thrower", Vector3(10, 2.1, -7), 1], ["grunt", Vector3(-3, 0, 4), 1], ["grunt", Vector3(3, 0, 4), 1],
-			["shaman", Vector3(0, 2.7, -2), 1], ["fodder", Vector3(5, 0, 2), 1, 6, 1.5],
-			["merc", Vector3(-8, 0, 0), 2], ["bloated", Vector3(6, 0, -10), 2], ["fodder", Vector3(0, 0, -10), 2, 6, 2.0]],
+		"enemies": [["grunt", Vector3(-5, 0, -8), 0], ["grunt", Vector3(5, 0, -8), 0], ["thrower", Vector3(0, 2.7, -4), 0], ["thrower", Vector3(-10, 2.1, -7), 0], ["grunt", Vector3(-8, 0, 0), 0], ["fodder", Vector3(3, 0, 5.5), 0, 11, 2.375],
+			["thrower", Vector3(10, 2.1, -7), 1], ["grunt", Vector3(-3, 0, 4), 1], ["grunt", Vector3(0.5, 0, 2), 1], ["shaman", Vector3(0, 2.7, -2), 1], ["grunt", Vector3(-5, 0, -8), 1], ["grunt", Vector3(-8, 0, 0), 1], ["fodder", Vector3(3.5, 0, 4), 1, 12, 2.5],
+			["merc", Vector3(-8, 0, 0), 2], ["bloated", Vector3(6, 0, -10), 2], ["grunt", Vector3(3, 0, 4), 2], ["grunt", Vector3(-3, 0, 4), 2], ["grunt", Vector3(-5.5, 0, -6), 2], ["grunt", Vector3(5, 0, -8), 2], ["fodder", Vector3(-4.5, 0, -9), 2, 13, 2.25]],
 		"props": [["barrel", Vector3(-1, 2.6, -1)], ["barrel", Vector3(1, 2.6, -5)], ["crate", Vector3(-8, 0, 3)], ["crate", Vector3(8, 0, 3)], ["barrel", Vector3(0, 0, 3)]],
 	})
 	# 3. Кольцо колонн — вокруг башни 5 м (супер-прыжок + двойной на неё)
 	r.append({
-		"file": "room_03", "title": "Кольцо колонн", "w": 28.0, "d": 28.0,
+		"file": "room_03", "title": "Кольцо колонн", "w": 28.0, "d": 28.0, "max_alive": 60,
 		"blocks": [
 			[Vector3(0, 2.5, -2), Vector3(4, 5, 4), "stone_dark"],
 			[Vector3(0, 0.6, 4), Vector3(3, 1.2, 3), "wood"],
@@ -830,57 +829,58 @@ func room_defs() -> Array:
 		"jump_pads": [[Vector3(-3.5, 0, 6.5), 9.0], [Vector3(3.5, 0, 6.5), 9.0]],
 		# Башня — круглая (каменный барабан и деревянная площадка по коллизии 4 × 4)
 		"dress": {"styles": {0: "tower"}},
-		"enemies": [["grunt", Vector3(-6, 0, -8), 0], ["grunt", Vector3(6, 0, -8), 0], ["grunt", Vector3(-8, 0, 0), 0], ["grunt", Vector3(8, 0, 0), 0], ["fodder", Vector3(0, 0, -10), 0, 6, 1.5],
-			["thrower", Vector3(0, 5.1, -2), 1], ["thrower", Vector3(-10, 0, -10), 1], ["grunt", Vector3(10, 0, -10), 1], ["grunt", Vector3(0, 0, -11), 1],
-			["bloated", Vector3(-10, 0, -6), 1], ["fodder", Vector3(7, 0, -6), 1, 5, 1.5],
-			["shaman", Vector3(0.5, 5.1, -1.5), 2], ["shieldbearer", Vector3(0, 0, -8), 2], ["fodder", Vector3(-7, 0, -6), 2, 6, 1.5]],
+		"enemies": [["grunt", Vector3(-5.5, 0, -7), 0], ["grunt", Vector3(6, 0, -8), 0], ["grunt", Vector3(-8, 0, -0.5), 0], ["grunt", Vector3(7.5, 0, 0), 0], ["bloated", Vector3(-10, 0, -6), 0], ["grunt", Vector3(10, 0, -10), 0], ["fodder", Vector3(-7.5, 0, -10), 0, 12, 2.5],
+			["thrower", Vector3(0, 5.1, -2), 1], ["thrower", Vector3(-10, 0, -10), 1], ["grunt", Vector3(11, 0, -10), 1], ["grunt", Vector3(0, 0, -11), 1], ["grunt", Vector3(-8, 0, -0.5), 1], ["grunt", Vector3(-6, 0, -8), 1], ["fodder", Vector3(7.5, 0, -9.5), 1, 13, 2.625],
+			["shaman", Vector3(0.5, 5.1, -1.5), 2], ["shieldbearer", Vector3(0, 0, -8), 2], ["grunt", Vector3(10, 0, -10), 2], ["grunt", Vector3(7.5, 0, 0), 2], ["grunt", Vector3(6, 0, -8), 2], ["grunt", Vector3(-8, 0, -0.5), 2], ["grunt", Vector3(0, 0, -11), 2], ["fodder", Vector3(-8, 0, -10), 2, 14, 2.75]],
 		"props": _ring_props(Vector3(0, 0, -2), 5.5, 8, "crate"),
 	})
 	# 4. Коридор Хель — длинный зал, метатели в конце, укрытия
 	r.append({
-		"file": "room_04", "title": "Коридор Хель", "w": 16.0, "d": 34.0,
+		"file": "room_04", "title": "Коридор Хель", "w": 16.0, "d": 34.0, "max_alive": 60,
 		"blocks": [
 			[Vector3(-4, 0.6, 6), Vector3(4, 1.2, 1), "stone_dark"],
 			[Vector3(4, 0.6, 0), Vector3(4, 1.2, 1), "stone_dark"],
 			[Vector3(-4, 0.6, -6), Vector3(4, 1.2, 1), "stone_dark"],
 			[Vector3(0, 1.0, -13), Vector3(10, 2, 3), "stone_dark"],
+			# Открытые ворота внутри западной границы: боковые стены и перемычка,
+			# пол и невидимая внешняя граница остаются непрерывными.
+			[Vector3(-6.75, 1.8, 9.1), Vector3(2.5, 3.6, 0.6), "wood"],
+			[Vector3(-6.75, 1.8, 13.9), Vector3(2.5, 3.6, 0.6), "wood"],
+			[Vector3(-5.5, 3.45, 11.5), Vector3(0.7, 0.7, 5.4), "wood"],
 		],
 		"pillars": [],
-		"enemies": [["thrower", Vector3(-3, 2.1, -13), 0], ["thrower", Vector3(3, 2.1, -13), 0], ["grunt", Vector3(-4, 0, -3), 0], ["grunt", Vector3(4, 0, -9), 0], ["fodder", Vector3(0, 0, -9), 0, 6, 1.5],
-			["grunt", Vector3(-5, 0, -10), 1], ["grunt", Vector3(5, 0, -10), 1], ["grunt", Vector3(0, 0, -8), 1], ["grunt", Vector3(0, 0, 2), 1],
-			["merc", Vector3(0, 2.1, -13), 1], ["fodder", Vector3(-2, 0, -3), 1, 5, 1.2],
-			["shieldbearer", Vector3(0, 0, -8), 2], ["bloated", Vector3(-5, 0, -10), 2], ["bloated", Vector3(5, 0, -10), 2], ["fodder", Vector3(0, 0, -4), 2, 6, 1.2]],
-		"props": [["barrel", Vector3(-6, 0, 10)], ["barrel", Vector3(6, 0, 4)], ["crate", Vector3(-6, 0, -2)], ["crate", Vector3(6, 0, -6)], ["barrel", Vector3(0, 0, -4)]],
+		"enemies": [["thrower", Vector3(-3, 2.1, -13), 0], ["thrower", Vector3(3, 2.1, -13), 0], ["grunt", Vector3(-4, 0, -3), 0], ["grunt", Vector3(4.5, 0, -9), 0], ["grunt", Vector3(0, 0, 2), 0], ["grunt", Vector3(-5, 0, -10), 0], ["fodder", Vector3(-7.2, 0, 11.5), 0, 13, 2.625, {"entry_mode": "gate", "entry_target": Vector3(-3.5, 0.05, 11.5), "spread_axes": Vector2(0.1, 1.5), "entry_batch": 1}],
+			["grunt", Vector3(-5, 0, -10), 1], ["grunt", Vector3(0, 0, -8), 1], ["grunt", Vector3(0.5, 0, 2.5), 1], ["merc", Vector3(0, 2.1, -13), 1], ["bloated", Vector3(5, 0, -10), 1], ["grunt", Vector3(4, 0, -9), 1], ["grunt", Vector3(-6, 0, 15), 1], ["fodder", Vector3(-2, 0, -0.5), 1, 14, 2.75],
+			["shieldbearer", Vector3(0, 0, -8), 2], ["bloated", Vector3(-5, 0, -10), 2], ["grunt", Vector3(5, 0, -10), 2], ["grunt", Vector3(0, 0, 2), 2], ["grunt", Vector3(-4, 0, -3), 2], ["fodder", Vector3(-1.5, 0, -1), 2, 10, 2.25]],
+		"props": [["barrel", Vector3(-6.8, 0, 6.8)], ["barrel", Vector3(6, 0, 4)], ["crate", Vector3(-6, 0, -2)], ["crate", Vector3(6, 0, -6)], ["barrel", Vector3(0, 0, -4)]],
 	})
 	# 5. Мост — пониженная середина, два «берега»
 	r.append({
-		"file": "room_05", "title": "Мост Биврёст (сломан)", "w": 30.0, "d": 22.0,
+		"file": "room_05", "title": "Мост Биврёст (сломан)", "w": 30.0, "d": 22.0, "max_alive": 60,
 		"blocks": [
 			[Vector3(-10.5, 1.0, 0), Vector3(9, 2, 22), "stone_dark"],
 			[Vector3(10.5, 1.0, 0), Vector3(9, 2, 22), "stone_dark"],
 			[Vector3(0, 1.75, -2), Vector3(12, 0.5, 2.5), "wood"],
 		],
 		"pillars": [Vector3(-3, 0, 6), Vector3(3, 0, -7)],
-		"enemies": [["grunt", Vector3(-10, 2, -6), 0], ["grunt", Vector3(10, 2, -6), 0], ["grunt", Vector3(0, 0, -6), 0], ["thrower", Vector3(10, 2, 6), 0], ["fodder", Vector3(10, 2, -2), 0, 6, 1.5],
-			["grunt", Vector3(-10, 2, 4), 1], ["grunt", Vector3(10, 2, 2), 1], ["thrower", Vector3(-11, 2, -8), 1], ["grunt", Vector3(0, 0, 3), 1],
-			["merc", Vector3(12, 2, -8), 1], ["fodder", Vector3(0, 0, 5), 1, 6, 1.5],
-			["shaman", Vector3(12, 2, -5), 2], ["shieldbearer", Vector3(2, 2.1, -2), 2], ["fodder", Vector3(0, 0, -8), 2, 6, 1.5]],
+		"enemies": [["grunt", Vector3(-10, 2, -6), 0], ["grunt", Vector3(10, 2, -6), 0], ["grunt", Vector3(0, 0, -6), 0], ["thrower", Vector3(10, 2, 6), 0], ["grunt", Vector3(-10, 2, 4), 0], ["grunt", Vector3(0, 0, 3), 0], ["grunt", Vector3(12.5, 2, 2.5), 0], ["fodder", Vector3(7.25, 2, 4), 0, 14, 2.75, {"entry_mode": "balcony", "entry_target": Vector3(4.4, 0.05, 4), "spread_axes": Vector2(0.35, 3.5), "entry_batch": 1}],
+			["grunt", Vector3(-10, 2, 4), 1], ["grunt", Vector3(10, 2, 2), 1], ["thrower", Vector3(-11, 2, -8), 1], ["grunt", Vector3(-3, 0, 2), 1], ["merc", Vector3(12, 2, -8), 1], ["fodder", Vector3(0, 0, 3), 1, 10, 2.25],
+			["shaman", Vector3(12, 2, -5), 2], ["shieldbearer", Vector3(2, 2.1, -2), 2], ["grunt", Vector3(-10, 2, 4), 2], ["grunt", Vector3(-10, 2, -6), 2], ["grunt", Vector3(10, 2, 2), 2], ["fodder", Vector3(0, 0, 2.5), 2, 11, 2.375]],
 		"props": [["barrel", Vector3(-12, 2, 3)], ["barrel", Vector3(12, 2, -3)], ["crate", Vector3(0, 2.0, -2)], ["crate", Vector3(2, 0, 6)], ["barrel", Vector3(-2, 0, -8)]],
 		"spawn_y": 2.0,
 	})
 	# 6. Склад медовухи — штабеля ящиков, крушить всё
 	r.append({
-		"file": "room_06", "title": "Склад медовухи", "w": 26.0, "d": 26.0,
+		"file": "room_06", "title": "Склад медовухи", "w": 26.0, "d": 26.0, "max_alive": 60,
 		"blocks": [
 			[Vector3(-7, 1.0, -5), Vector3(5, 2, 3), "wood"],
 			[Vector3(7, 1.0, 1), Vector3(5, 2, 3), "wood"],
 		],
 		"pillars": [Vector3(0, 0, -4)],
 		"watchtowers": [Vector3(10, 0, -4)],
-		"enemies": [["grunt", Vector3(-4, 0, -9), 0], ["grunt", Vector3(4, 0, -9), 0], ["grunt", Vector3(0, 0, -10), 0], ["fodder", Vector3(0, 0, -7), 0, 6, 1.5],
-			["thrower", Vector3(-7, 2.1, -5), 1], ["thrower", Vector3(7, 2.1, 1), 1], ["grunt", Vector3(-6, 0, 4), 1], ["grunt", Vector3(6, 0, -6), 1],
-			["bloated", Vector3(-4, 0, -9), 1], ["fodder", Vector3(6, 0, -9), 1, 5, 1.5],
-			["shaman", Vector3(-7.5, 2.1, -5.5), 2], ["merc", Vector3(8, 0, -9), 2], ["shieldbearer", Vector3(0, 0, -9), 2], ["fodder", Vector3(-6, 0, 7), 2, 6, 1.2]],
+		"enemies": [["grunt", Vector3(4, 0, -9.5), 0], ["grunt", Vector3(0.5, 0, -11), 0], ["bloated", Vector3(-4, 0, -9), 0], ["merc", Vector3(8, 0, -9), 0], ["grunt", Vector3(-6, 0, 4), 0], ["fodder", Vector3(-0.5, 0, -8), 0, 10, 2.25],
+			["thrower", Vector3(-7, 2.1, -5), 1], ["thrower", Vector3(7, 2.1, 1), 1], ["grunt", Vector3(-6, 0, 4), 1], ["grunt", Vector3(6, 0, -6), 1], ["grunt", Vector3(-4, 0, -9), 1], ["fodder", Vector3(6.5, 0, -10), 1, 11, 2],
+			["shaman", Vector3(-7.5, 2.1, -5.5), 2], ["shieldbearer", Vector3(0, 0, -9), 2], ["grunt", Vector3(8, 0, -9), 2], ["grunt", Vector3(-4, 0, -9), 2], ["grunt", Vector3(4, 0, -9.5), 2], ["grunt", Vector3(6, 0, -6), 2], ["fodder", Vector3(-5.5, 0, 7.5), 2, 12, 2.5]],
 		"props": _stack_props(Vector3(-3, 0, 3)) + _stack_props(Vector3(3, 0, -8)) + _stack_props(Vector3(-9, 0, 5)) + [["barrel", Vector3(9, 0, 8)], ["barrel", Vector3(10, 0, 7)], ["barrel", Vector3(-10, 0, -10)]],
 		# Плакат «Разыскивается» (Локи) на западной стене склада, у входа
 		"decor": [["wanted_poster", Vector3(-13 + WALL_INSET, 1.9, 1.0), 90.0, 1.5]],
@@ -890,7 +890,7 @@ func room_defs() -> Array:
 	# 7. Причал с драккаром (GDD 16) — корабль (модель Quaternius Pirate Kit поверх невидимой коллизии: палуба 2.2 м,
 	# нос 3.2 м), склад на берегу 3 м. Наверх: сходни-ящики 1.1 м → палуба (залезание), прыжковая руна у склада.
 	r.append({
-		"file": "room_07", "title": "Причал с драккаром", "w": 26.0, "d": 30.0,
+		"file": "room_07", "title": "Причал с драккаром", "w": 26.0, "d": 30.0, "max_alive": 60,
 		"blocks": [
 			[Vector3(6, 1.1, 0), Vector3(5, 2.2, 15), "none"],
 			[Vector3(6, 1.6, -9.0), Vector3(3, 3.2, 2), "none"],
@@ -901,16 +901,16 @@ func room_defs() -> Array:
 		"pillars": [],
 		"models": [["res://assets/quaternius/pirate/Ship_Large.gltf", Vector3(6, SHIP_Y, 0), 90.0, 1.0]],
 		"jump_pads": [[Vector3(-3, 0, 9), 8.0]],
-		"enemies": [["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(-8, 0, -6), 0], ["thrower", Vector3(6, 2.3, 5), 0], ["fodder", Vector3(-4, 0, -2), 0, 6, 1.8],
-			["shaman", Vector3(-8, 3.1, 4), 1], ["merc", Vector3(6, 3.3, -9.5), 1], ["grunt", Vector3(6, 2.3, -4), 1], ["bloated", Vector3(-9, 0, -9), 1], ["fodder", Vector3(-6, 0, 0), 1, 6, 1.8],
-			["shieldbearer", Vector3(-2, 0, -8), 2], ["thrower", Vector3(6, 2.3, -6), 2], ["fodder", Vector3(0, 0, -9), 2, 6, 1.6], ["grunt", Vector3(6, 2.3, 6), 2]],
+		"enemies": [["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(-8, 0, -6), 0], ["thrower", Vector3(6, 2.3, 5), 0], ["bloated", Vector3(-9, 0, -9), 0], ["grunt", Vector3(6, 2.3, -4), 0], ["fodder", Vector3(-4, 0, -2), 0, 11, 2.375],
+			["shaman", Vector3(-8, 3.1, 4), 1], ["merc", Vector3(6, 3.3, -9.5), 1], ["grunt", Vector3(6, 2.3, -4), 1], ["grunt", Vector3(6, 2.3, 5.5), 1], ["grunt", Vector3(-9, 0, -9), 1], ["grunt", Vector3(-8, 0, -6), 1], ["fodder", Vector3(-4, 0, -4), 1, 12, 2.5],
+			["shieldbearer", Vector3(-2, 0, -8), 2], ["thrower", Vector3(6, 2.3, -6), 2], ["grunt", Vector3(6, 2.3, 5.5), 2], ["grunt", Vector3(-9, 0, -9), 2], ["grunt", Vector3(-8, 0, -6), 2], ["grunt", Vector3(-4, 0, -6), 2], ["fodder", Vector3(-5, 0, -10), 2, 13, 2.625]],
 		"props": [["barrel", Vector3(-11, 0, -2)], ["barrel", Vector3(-10, 0, -1)], ["barrel", Vector3(-11, 0, 0)], ["crate", Vector3(-4, 0, 6)], ["crate", Vector3(-4, 0.92, 6)],
 			["barrel", Vector3(5, 2.2, 6)], ["barrel", Vector3(7, 2.2, -3)], ["crate", Vector3(-11, 3.0, 6)], ["barrel", Vector3(-1, 0, -11)]],
 	})
 	# 8. Яма-колизей (GDD 16) — яма с кормом посередине, трибуны-террасы 2 м по бокам, ложи 4 м в углах.
 	# Наверх: ступени 1 м → террасы → ложи (залезание), прыжковая руна в центре ямы — 10 м над ареной.
 	r.append({
-		"file": "room_08", "title": "Яма-колизей", "w": 28.0, "d": 28.0,
+		"file": "room_08", "title": "Яма-колизей", "w": 28.0, "d": 28.0, "max_alive": 60,
 		"blocks": [
 			[Vector3(-11, 1.0, 0), Vector3(6, 2, 20), "stone_dark"],
 			[Vector3(11, 1.0, 0), Vector3(6, 2, 20), "stone_dark"],
@@ -923,15 +923,15 @@ func room_defs() -> Array:
 		"jump_pads": [[Vector3(0, 0, 0), 10.0]],
 		# Следы прошлых боёв в яме: подпалины и засохший ихор
 		"decals": [["scorch", Vector3(-4.5, 0, 3.5), 15.0, 3.2], ["scorch", Vector3(4, 0, -9), 120.0, 2.6], ["ichor_splat_02", Vector3(3, 0, 4.5), 70.0, 1.8]],
-		"enemies": [["fodder", Vector3(0, 0, -4), 0, 6, 2.0], ["grunt", Vector3(-4, 0, -2), 0], ["grunt", Vector3(4, 0, -4), 0], ["thrower", Vector3(-11, 2.1, -3), 0], ["thrower", Vector3(11, 2.1, 3), 0],
-			["shaman", Vector3(-11, 4.1, -9), 1], ["shaman", Vector3(11, 4.1, 9), 1], ["bloated", Vector3(0, 0, -8), 1], ["merc", Vector3(11, 2.1, -6), 1], ["fodder", Vector3(-3, 0, 3), 1, 6, 1.8],
-			["shieldbearer", Vector3(0, 0, -6), 2], ["fodder", Vector3(3, 0, -2), 2, 6, 1.8], ["fodder", Vector3(-3, 0, -8), 2, 5, 1.6], ["grunt", Vector3(-11, 2.1, 6), 2]],
+		"enemies": [["grunt", Vector3(-4, 0, -2), 0], ["grunt", Vector3(4, 0, -4), 0], ["thrower", Vector3(-11, 2.1, -3), 0], ["thrower", Vector3(11, 2.1, 3), 0], ["grunt", Vector3(-11, 2.1, 6), 0], ["grunt", Vector3(0, 0, -8), 0], ["fodder", Vector3(0, 0, -3), 0, 12, 2.5],
+			["shaman", Vector3(-11, 4.1, -9), 1], ["merc", Vector3(11, 2.1, -6), 1], ["grunt", Vector3(0, 0, -8), 1], ["grunt", Vector3(-11, 2.1, 6), 1], ["grunt", Vector3(4, 0, -4), 1], ["grunt", Vector3(-4, 0, -2), 1], ["fodder", Vector3(-2, 0, 2), 1, 13, 2.625],
+			["bloated", Vector3(0, 0, -8), 2], ["shieldbearer", Vector3(0, 0, -6), 2], ["grunt", Vector3(-11, 2.1, 6), 2], ["grunt", Vector3(-3, 0, 2), 2], ["grunt", Vector3(-4, 0, -2), 2], ["grunt", Vector3(4, 0, 4), 2], ["grunt", Vector3(-12, 0, -12), 2], ["fodder", Vector3(2, 0, -2), 2, 14, 2.75]],
 		"props": _ring_props(Vector3(0, 0, 0), 6.5, 8, "barrel") + [["crate", Vector3(-13, 2.0, 8)], ["crate", Vector3(13, 2.0, -8)], ["crate", Vector3(-12, 4.0, -10)]],
 	})
 	# 9. Деревня (GDD 16) — дома с плоскими крышами 2.5–3 м, мост между домами над улицей, площадь.
 	# Наверх: ящики-ступени 1 м → крыши (залезание), прыжковая руна на площади, мост.
 	r.append({
-		"file": "room_09", "title": "Деревня у фьорда", "w": 30.0, "d": 28.0,
+		"file": "room_09", "title": "Деревня у фьорда", "w": 30.0, "d": 28.0, "max_alive": 60,
 		"blocks": [
 			[Vector3(-9, 1.5, -5), Vector3(6, 3, 5), "wood"],
 			[Vector3(9, 1.5, -5), Vector3(6, 3, 5), "wood"],
@@ -947,9 +947,9 @@ func room_defs() -> Array:
 		# Улица деревни — утоптанная земля с соломой (assets/textures/midgard/dirt_straw)
 		"floor_tex": "dirt_straw",
 		"jump_pads": [[Vector3(0, 0, 3), 8.0]],
-		"enemies": [["grunt", Vector3(-3, 0, -9), 0], ["grunt", Vector3(3, 0, -9), 0], ["thrower", Vector3(-9, 3.1, -5), 0], ["fodder", Vector3(0, 0, -1), 0, 6, 1.8],
-			["thrower", Vector3(9, 3.1, -5), 1], ["shaman", Vector3(0, 3.1, -5), 1], ["merc", Vector3(9, 2.6, 6), 1], ["bloated", Vector3(-12, 0, 0), 1], ["fodder", Vector3(4, 0, -1), 1, 6, 1.8],
-			["shieldbearer", Vector3(0, 0, -8), 2], ["thrower", Vector3(-9, 3.1, 6), 2], ["fodder", Vector3(-3, 0, 1), 2, 6, 1.6], ["grunt", Vector3(12, 0, 0), 2]],
+		"enemies": [["grunt", Vector3(-3, 0, -9), 0], ["grunt", Vector3(3, 0, -9), 0], ["thrower", Vector3(-10, 3.1, -4), 0], ["bloated", Vector3(-12, 0, 0), 0], ["grunt", Vector3(12, 0, 0), 0], ["grunt", Vector3(0, 0, -8), 0], ["fodder", Vector3(0, 0, -1), 0, 13, 2.625],
+			["shaman", Vector3(0, 3.1, -5), 1], ["merc", Vector3(10, 2.6, 5), 1], ["grunt", Vector3(-12, 0, 0), 1], ["grunt", Vector3(12, 0, 0), 1], ["grunt", Vector3(-3, 0, -9), 1], ["grunt", Vector3(3, 0, -9), 1], ["grunt", Vector3(0, 0, -8), 1], ["fodder", Vector3(3, 0, -1), 1, 14, 2.75],
+			["shieldbearer", Vector3(0, 0, -8), 2], ["thrower", Vector3(-9, 3.1, 6), 2], ["grunt", Vector3(12, 0, 0), 2], ["grunt", Vector3(-12, 0, 0), 2], ["grunt", Vector3(-3, 0, -9), 2], ["fodder", Vector3(1, 0, 0), 2, 10, 2.25]],
 		"props": [["barrel", Vector3(-12, 0, -10)], ["barrel", Vector3(12, 0, -10)], ["crate", Vector3(-13, 0, 1)], ["crate", Vector3(13, 0, 1)], ["barrel", Vector3(2, 0, 7)],
 			["barrel", Vector3(-2, 0, 8)], ["crate", Vector3(-9, 3.0, -5.5)], ["barrel", Vector3(9, 3.0, -4)], ["crate", Vector3(9, 2.5, 7)]],
 		# Плакаты на южных стенах домов (лицевая сторона модулей — z = −2.31): «Разыскивается» и Один «Качайся!»
@@ -1063,6 +1063,7 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	root.name = d.file.capitalize().replace(" ", "")
 	root.set_script(load("res://rooms/room.gd"))
 	root.set("room_title", d.title)
+	root.set("max_alive", int(d.get("max_alive", 0)))
 	var w: float = d.w
 	var dep: float = d.d
 	var h := 6.0
@@ -1180,6 +1181,11 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		if e.size() > 3:
 			m.set_meta("count", e[3])
 			m.set_meta("spread", e[4] if e.size() > 4 else 1.5)
+		if e.size() > 5:
+			var entry: Dictionary = e[5]
+			for key in ["entry_mode", "entry_target", "spread_axes", "entry_batch"]:
+				if entry.has(key):
+					m.set_meta(key, entry[key])
 		spawns.add_child(m)
 
 	# Особые точки (не волны): {"Имя": Vector3} — один маркер, {"Имя": [Vector3...]} — группа маркеров

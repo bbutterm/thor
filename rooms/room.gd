@@ -24,10 +24,21 @@ signal wave_started(index: int)
 @export var spawn_interval: float = 0.12
 ## Сколько врагов появляется за раз (GDD 12.5: 2–3 за кадр)
 @export var spawn_batch: int = 3
+## 0 — без ограничения; в обычных залах враги сверх лимита ждут в очереди.
+@export var max_alive: int = 0
 ## Следующая волна, когда живых меньше этой доли текущей волны (GDD 12.5: 30 %)...
 @export_range(0.0, 1.0) var next_wave_fraction: float = 0.3
 ## ...или через столько секунд после её начала
 @export var next_wave_timeout: float = 25.0
+
+@export_group("Вход врагов")
+## Высота и длительность прыжка/входа; настройки доступны отдельно у каждого зала.
+@export_range(1.0, 15.0, 0.1) var entry_jump_speed: float = 8.0
+@export_range(0.2, 10.0, 0.1) var entry_timeout: float = 4.0
+@export_range(0.1, 10.0, 0.1) var entry_min_drop: float = 0.6
+@export_range(0.1, 20.0, 0.1) var entry_max_drop: float = 5.0
+@export_range(1.0, 30.0, 0.5) var entry_max_distance: float = 10.0
+@export_range(0.05, 1.0, 0.01) var entry_arrival_tolerance: float = 0.18
 
 @export_group("Оружие и элита")
 ## Шанс, что враг (не босс) появится элитой: светится, ×2.5 HP, роняет оружие
@@ -136,10 +147,17 @@ func _physics_process(delta: float) -> void:
 	if _spawn_timer > 0.0:
 		return
 	_spawn_timer = spawn_interval
+	var spawned_by_marker := {}
 	for i in maxi(1, spawn_batch):
-		if _spawn_queue.is_empty():
+		if _spawn_queue.is_empty() or not _has_spawn_capacity():
+			break
+		var marker := _spawn_queue.front() as Node3D
+		var marker_batch := clampi(int(marker.get_meta("entry_batch", spawn_batch)), 1, maxi(1, spawn_batch))
+		var spawned: int = spawned_by_marker.get(marker, 0)
+		if spawned >= marker_batch:
 			break
 		_spawn_enemy(_spawn_queue.pop_front() as Node3D)
+		spawned_by_marker[marker] = spawned + 1
 
 ## GDD 12.5: следующая волна, не дожидаясь полной зачистки — когда осталось меньше 30 % или прошло 25 с.
 func _check_next_wave() -> void:
@@ -172,9 +190,12 @@ func _register(enemy: Enemy) -> void:
 		boss_spawned.emit(enemy)
 	enemy_count_changed.emit(_alive.size() + _spawn_queue.size())
 
+func _has_spawn_capacity() -> bool:
+	return max_alive <= 0 or _alive.size() < max_alive
+
 ## Враг сверх волн (Шаман поднимает корм, элита-Призыватель): сразу в зал, считается в зачистке.
 func spawn_extra(kind: String, global_pos: Vector3) -> Enemy:
-	if _is_cleared:
+	if _is_cleared or not _has_spawn_capacity():
 		return null
 	var enemy := _make_enemy(kind)
 	enemy.position = to_local(global_pos) + Vector3(0, 0.05, 0)
@@ -198,13 +219,33 @@ func _spawn_enemy(marker: Node3D) -> void:
 	# Позиция до add_child: в _ready враг рисует кольцо появления там, где стоит
 	enemy.position = to_local(marker.global_position)
 	var spread := float(marker.get_meta("spread", 0.0))
-	if spread > 0.0:
+	var axes: Vector2 = marker.get_meta("spread_axes", Vector2(spread, spread))
+	if axes.x > 0.0 or axes.y > 0.0:
 		var a := randf() * TAU
-		enemy.position += Vector3(cos(a), 0, sin(a)) * sqrt(randf()) * spread
+		var r := sqrt(randf())
+		enemy.position += Vector3(cos(a) * axes.x, 0, sin(a) * axes.y) * r
 	enemy.rotation.y = marker.global_rotation.y - global_rotation.y
 	Loot.maybe_make_elite(self, enemy, elite_chance, max_elites)
 	add_child(enemy)
 	_register(enemy)
+	# Смещаем источник и цель одинаково: каждый участник идёт своей линией.
+	var entry_mode := str(marker.get_meta("entry_mode", ""))
+	if entry_mode != "":
+		var ok := false
+		if marker.has_meta("entry_target"):
+			var shift := enemy.global_position - marker.global_position
+			shift.y = 0.0
+			var destination: Vector3 = to_global(marker.get_meta("entry_target")) + shift
+			var tuning := {"jump_speed": entry_jump_speed, "timeout": entry_timeout,
+				"min_drop": entry_min_drop, "max_drop": entry_max_drop,
+				"max_distance": entry_max_distance, "arrival_tolerance": entry_arrival_tolerance}
+			ok = enemy.begin_spawn_entry(entry_mode, destination, tuning)
+		if not ok:
+			# Маркер не имитирует выполненный вход: враг остаётся обычным.
+			enemy.set_meta("entry_failed", true)
+			if not marker.has_meta("_entry_warned"):
+				push_warning("Вход не запущен: %s / %s" % [name, marker.name])
+				marker.set_meta("_entry_warned", true)
 
 ## Враги волны, которые ещё не появились.
 func pending_spawns() -> int:

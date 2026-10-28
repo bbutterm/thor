@@ -45,6 +45,41 @@ func _run() -> void:
 		var inst := ps.instantiate() if ps else null
 		check(inst != null and inst.get_node_or_null("Spawns") != null and inst.get_node("Spawns").get_child_count() >= 8 and inst.get_node_or_null("PlayerSpawn") != null, "%s: маркеры волн и точка появления" % p.get_file())
 		if inst:
+			var matches: Array = defs.filter(func(d: Dictionary) -> bool: return "res://rooms/%s.tscn" % d.file == p)
+			var definition: Dictionary = matches[0] if matches.size() == 1 else {}
+			var expected: Array = definition.get("enemies", [])
+			var markers := inst.get_node("Spawns").get_children()
+			var same: bool = markers.size() == expected.size() and inst.max_alive == 60 and definition.get("max_alive", 0) == 60
+			var wave_totals := {}
+			for i in mini(markers.size(), expected.size()):
+				var marker := markers[i] as Node3D
+				var spec: Array = expected[i]
+				var amount := int(marker.get_meta("count", 1))
+				var spread := float(marker.get_meta("spread", 0.0))
+				var expected_amount := int(spec[3]) if spec.size() > 3 else 1
+				var expected_spread := float(spec[4]) if spec.size() > 4 else 0.0
+				same = same and str(marker.get_meta("kind", "grunt")) == str(spec[0]) and int(marker.get_meta("wave", 0)) == int(spec[2])
+				same = same and amount == expected_amount and is_equal_approx(spread, expected_spread) and marker.position.is_equal_approx((spec[1] as Vector3) + Vector3(0, 0.05, 0))
+				if spec.size() > 5:
+					var entry: Dictionary = spec[5]
+					for key in entry:
+						same = same and marker.has_meta(key) and marker.get_meta(key) == entry[key]
+				var wave := int(spec[2])
+				if not wave_totals.has(wave):
+					wave_totals[wave] = {"all": 0, "fodder": 0, "special": 0, "packs": 0}
+				wave_totals[wave].all += amount
+				var kind := str(marker.get_meta("kind", "grunt"))
+				if kind == "fodder":
+					wave_totals[wave].fodder += amount
+					wave_totals[wave].packs += 1
+					same = same and amount >= 10 and amount <= 20 and spread > 0.0
+				elif kind != "grunt":
+					wave_totals[wave].special += amount
+			for wave in wave_totals:
+				var stats: Dictionary = wave_totals[wave]
+				var ratio := float(stats.fodder) / float(stats.all) if stats.all > 0 else 0.0
+				same = same and ratio >= 0.6 and ratio <= 0.7 and stats.special >= 1 and stats.special <= 2 and stats.packs >= 1
+			check(same and wave_totals.size() >= 2, "%s: сцена соответствует составу волн, 60–70 %% корма и 1–2 особых" % p.get_file())
 			# Открытый периметр: физическая граница остаётся, непрерывные видимые стены удалены.
 			var geo := inst.get_node_or_null("Geometry")
 			var edges_ok := geo != null

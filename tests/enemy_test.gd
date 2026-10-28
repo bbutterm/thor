@@ -124,6 +124,8 @@ func _run() -> void:
 	await _load_room(0)
 	await _empty_room()
 	await _test_fodder()
+	await _test_horde_hits()
+	await _test_horde_wide_hit()
 	await _test_bloated()
 	await _test_death_marks()
 	await _test_shield()
@@ -137,6 +139,7 @@ func _run() -> void:
 	await _test_warning_saturation("merc", "merc_aim", "sounds/sfx/gun_reload.wav", true)
 	await _test_warning_saturation("merc", "merc_aim", "sounds/sfx/gun_reload.wav", false)
 	await _test_interrupted_warning()
+	await _test_horde_glory_and_corpses()
 	await _test_waves()
 	await _test_fall_and_reflect()
 	_finish()
@@ -145,11 +148,152 @@ func _test_fodder() -> void:
 	print("-- Драугр-корм")
 	var e := _spawn("fodder", Vector3(0, 0, -4))
 	check(e != null and e.kind == Enemy.Kind.FODDER, "корм появился")
-	check(is_equal_approx(e.max_health, 0.8 * EnemyDef.U), "HP корма 0.8 У (%.1f)" % e.max_health)
+	check(is_equal_approx(e.max_health, 0.35 * EnemyDef.U), "HP корма 0.35 У (%.1f)" % e.max_health)
+	var scene_enemy := (load("res://enemies/fodder.tscn") as PackedScene).instantiate() as Enemy
+	check(is_equal_approx(scene_enemy.max_health, e.max_health), "сцена и данные корма задают одинаковое HP")
+	scene_enemy.free()
+	var candidate := room._make_enemy("fodder")
+	Loot.maybe_make_elite(room, candidate, 1.0, 100)
+	check(not candidate.has_meta("elite"), "корм не превращается в элиту даже при 100%% шансе")
+	candidate.free()
 	check(e._humanoid != null and e._humanoid.parts.is_empty() and e.hand_weapon == "", "корм облегчённый: одна модель, без оружия и частей")
 	var ok := await wait_until(8.0, func() -> bool: return _hurts.size() > 0)
 	check(ok, "корм дошёл и ударил (%s)" % str(_hurts))
 	check(ok and absf(_hurts[0] - 5.0) < 0.01, "удар корма — 5")
+	await _clear()
+
+## Настоящие попадания при минимальном уроне тел Батрака и Гонца (удар спереди).
+func _test_horde_hits() -> void:
+	print("-- Одно попадание по корму слабым телом")
+	var old_body: BodyDef = Run.body
+	var old_crit := p.crit_chance_base
+	var keeper := _spawn("grunt", Vector3(0, 0, 30))
+	keeper.set_physics_process(false)
+	for body_id in ["thrall", "courier"]:
+		Run.body = load("res://run/bodies/" + body_id + ".tres") as BodyDef
+		p.apply_body_and_runes(Run.body, Run)
+		p.crit_chance_base = 0.0
+		for mode in ["axe", "sword", "staff", "axe_dive", "hammer"]:
+			FX.reset_time()
+			p.style.reset()
+			var weapon := "axe" if mode in ["axe_dive", "hammer"] else str(mode)
+			p.weapons.equip(Loot.get_def(weapon), 1, false)
+			p.weapons.switch_to(WeaponHolder.MELEE, true)
+			var e := _spawn("fodder", Vector3(0, 0, -1.5))
+			e.set_physics_process(false)
+			e.rotation.y = 0.0  # смотрит на Тора, действует изъян Гонца
+			await frames(2)
+			var amount := 0.0
+			if mode == "hammer":
+				var proj := MjolnirProjectile.new()
+				room.add_child(proj)
+				proj.set_physics_process(false)
+				proj.hand = p.mjolnir
+				proj.global_position = e.global_position + Vector3.UP
+				amount = proj.damage() * p.outgoing_damage_mult(e, "hammer")
+				proj._on_hit(e, Vector3.FORWARD)
+				proj.queue_free()
+			elif mode == "axe_dive":
+				amount = p.axe._skill_damage(p.axe.def.skill_dive_damage_mult) * p.outgoing_damage_mult(e, "melee_heavy")
+				p.axe._skill_mode = "axe_dive"
+				p.axe._on_weapon_skill_landed("axe_dive")
+			else:
+				p.axe._begin_stage(0)
+				amount = p.axe._stage_damage() * p.outgoing_damage_mult(e, "melee")
+				p.axe._do_hitbox()
+			check(e.is_dead, "%s: %s одним попаданием (%.1f урона, %.1f HP)" % [body_id, mode, amount, e.max_health])
+			if mode == "axe_dive":
+				check(absf(amount - 8.4) < 0.01, "%s: минимальный урон воздушной рубки 8.4" % body_id)
+			for n in get_tree().get_nodes_in_group("debris"):
+				n.queue_free()
+			await frames(2)
+	Run.body = old_body
+	p.apply_body_and_runes(old_body, Run)
+	p.crit_chance_base = old_crit
+	p.style.reset()
+	FX.reset_time()
+	await _clear()
+
+## Больше прежних 16 пересечений: один взмах поражает всех внутри хитбокса по одному разу.
+func _test_horde_wide_hit() -> void:
+	print("-- Широкий взмах по толпе")
+	p.weapons.equip(Loot.get_def("axe"), 1, false)
+	p.weapons.switch_to(WeaponHolder.MELEE, true)
+	p.style.reset()
+	var targets: Array[Enemy] = []
+	for i in 24:
+		var x := (float(i % 6) - 2.5) * 0.35
+		var z := -1.3 - float(int(i / 6)) * 0.2
+		var e := _spawn("fodder", Vector3(x, 0, z))
+		e.set_physics_process(false)
+		e.max_health = 1000.0  # мишень переживает взмах, чтобы измерить число попаданий
+		e.health = 1000.0
+		targets.append(e)
+	await frames(3)
+	p.axe._begin_stage(0)
+	p.axe._do_hitbox()
+	var damaged := targets.filter(func(e: Enemy) -> bool: return e.health < 1000.0).size()
+	check(damaged == targets.size(), "взмах задел всех %d врагов (%d)" % [targets.size(), damaged])
+	var health_after: Array[float] = []
+	for e in targets:
+		health_after.append(e.health)
+	p.axe._do_hitbox()
+	var once := true
+	for i in targets.size():
+		once = once and is_equal_approx(targets[i].health, health_after[i])
+	check(once, "повторный расчёт того же взмаха не наносит повторный урон")
+	FX.reset_time()
+	await _clear()
+
+## Массовая награда считается через реальные смерти; трупы не копятся бесконечно.
+func _test_horde_glory_and_corpses() -> void:
+	print("-- Слава и тела орды")
+	var keeper := _spawn("grunt", Vector3(0, 0, 30))
+	keeper.set_physics_process(false)
+	for n in get_tree().get_nodes_in_group("debris"):
+		n.queue_free()
+	await frames(2)
+	Run.glory = 0
+	Run.kills = 0
+	Run.streak = 0
+	Run.best_streak = 0
+	Run._recent_kill_times.clear()
+	Run.glory_fodder_multikill = false
+	Run.glory_fodder_flat = true
+	p.style.reset()
+	ComicFX._kill_times.clear()
+	for i in 20:
+		Run.style_glory_mult = 1.0
+		var e := _spawn("fodder", Vector3(float(i) * 0.1, 3, -3))
+		e.set_physics_process(false)
+		e.take_hit(100.0, Vector3(8, 3, 0), "melee")
+	check(Run.glory == 40 and Run.kills == 20 and Run.streak == 20 and Run._recent_kill_times.is_empty(),
+		"20 настоящих смертей корма дают 40 Славы и сохраняют серию (%d)" % Run.glory)
+	check(p.style._kill_times.size() == 20 and ComicFX._kill_times.size() == 20,
+		"все убийства корма учтены для шкалы и комикса")
+	var bodies := get_tree().get_nodes_in_group("debris").filter(func(n: Node) -> bool: return not n.is_queued_for_deletion())
+	check(bodies.size() == 10, "из 20 смертей остаётся 10 тел (%d)" % bodies.size())
+	var layers_ok := bodies.all(func(n: Node) -> bool:
+		return n is RigidBody3D and n.collision_layer == 1 << 6 and n.collision_mask == (1 | (1 << 3) | (1 << 6)))
+	check(layers_ok, "тела на слое 7, сталкиваются с миром, пропсами и другими телами")
+	await frames(1)
+	var moving := bodies.any(func(n: Node) -> bool:
+		return is_instance_valid(n) and (n as RigidBody3D).linear_velocity.x > 1.0)
+	check(moving, "тело корма летит по направлению толчка")
+	var payouts: Array[int] = []
+	for i in 5:
+		Run.style_glory_mult = 1.0
+		var before := Run.glory
+		var fighter := _spawn("grunt", Vector3(0, 0, -8))
+		fighter._die("melee")
+		payouts.append(Run.glory - before)
+	check(payouts == [5, 6, 7, 8, 9] and Run.glory == 75,
+		"после корма пять бойцов дают 5+6+7+8+9, всего %d" % Run.glory)
+	Run.style_glory_mult = 1.0
+	var before := Run.glory
+	var special := _spawn("thrower", Vector3(0, 0, -8))
+	special._die("melee")
+	check(Run.glory - before == 13, "особый получает 8 базовых + 5 мультикилл за бойцов")
 	await _clear()
 
 func _test_bloated() -> void:
@@ -463,6 +607,12 @@ func _test_interrupted_warning() -> void:
 func _test_waves() -> void:
 	print("-- Волны (GDD 12.5)")
 	await _load_room(0)
+	# Game запускает зал таймером; дождаться его до ручного перезапуска, иначе
+	# штатный старт добавит вторую первую волну в уже созданную очередь.
+	var started := await wait_until(3.0, func() -> bool: return room._started)
+	check(started, "зал начал первую волну штатным запуском")
+	if not started:
+		return
 	room.set_physics_process(false)
 	await frames(5)
 	# Пересоберём старт: очередь первой волны и замер пачек
@@ -471,13 +621,14 @@ func _test_waves() -> void:
 	room._alive.clear()
 	room._spawn_queue.clear()
 	room._wave_index = 0
+	room.next_wave_timeout = 999.0  # проверяем именно порог, а не таймаут
 	room._spawn_wave(0)
 	var size0 := room._wave_size
 	check(size0 >= 6, "в первой волне толпа корма (%d врагов)" % size0)
 	room.set_physics_process(true)
 	var max_per_frame := 0
 	var last := room.alive_count()
-	for i in 120:
+	for i in 300:
 		await get_tree().physics_frame
 		p.health = p.max_health
 		var now := room.alive_count()
@@ -486,12 +637,25 @@ func _test_waves() -> void:
 		if room.pending_spawns() == 0:
 			break
 	check(max_per_frame >= 2 and max_per_frame <= room.spawn_batch, "поток пачками по 2–3 (до %d за кадр)" % max_per_frame)
+	check(room.pending_spawns() == 0, "первая волна полностью вышла из очереди")
+	if room.pending_spawns() != 0:
+		return
 	# Убиваем всех, кроме одного: меньше 30 % — следующая волна, не дожидаясь последнего
 	var alive := room.alive_enemies().duplicate()
+	if alive.is_empty():
+		check(false, "для проверки порога остался живой враг")
+		return
+	var survivor := alive.back() as Enemy
 	for k in alive.size() - 1:
 		(alive[k] as Enemy).take_hit(9999.0, Vector3.ZERO, "test")
+	var below_threshold := is_instance_valid(survivor) and not survivor.is_dead \
+		and room.alive_count() == 1 and room.alive_count() < size0 * room.next_wave_fraction
+	check(below_threshold, "живой враг остался ниже порога следующей волны")
+	if not below_threshold:
+		return
 	var ok := await wait_until(3.0, func() -> bool: return room._wave_index == 1 and room.alive_count() > 1)
 	check(ok, "волна 2 пошла при остатке < 30 %% (живы %d)" % room.alive_count())
+	check(is_instance_valid(survivor) and not survivor.is_dead, "враг первой волны жив при начале второй")
 	check(not room._is_cleared, "зал не зачищен, пока жив враг прошлой волны")
 	# Таймаут: волна 3 через next_wave_timeout, даже если все живы
 	await wait_until(3.0, func() -> bool: return room.pending_spawns() == 0)

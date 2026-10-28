@@ -56,7 +56,9 @@ func _run() -> void:
 	var p := game.player
 	var h := p.weapons
 	await wait(1.6)
-	# Враги не мешают: замораживаем и уводим
+	# Враги не мешают: останавливаем очередь и уводим уже появившихся.
+	# Иначе при поштучном входе оставшийся корм появляется во время теста.
+	game.room.set_physics_process(false)
 	for e in game.room.alive_enemies():
 		e.global_position = game.room.global_position + Vector3(14, 0.1, -14)
 		e.set_physics_process(false)
@@ -151,6 +153,13 @@ func _run() -> void:
 	print("-- Приём топора (зажать ЛКМ)")
 	await wait(0.5)
 	dummy.global_position = p.global_position + _fwd(p) * 1.6
+	dummy.velocity = Vector3.ZERO
+	dummy.knockback_velocity = Vector3.ZERO
+	dummy._set_state(Enemy.State.CHASE)
+	var toward_player := p.global_position - dummy.global_position
+	dummy.rotation.y = atan2(toward_player.x, toward_player.z)
+	p.health = p.max_health  # кровавая ярость не должна менять базовый урон приёма
+	p.style.reset()
 	var hp2 := dummy.health
 	var crit0 := p.crit_chance_base
 	p.crit_chance_base = 0.0  # случайный крит (5 %) удваивал урон — проверка нестабильна

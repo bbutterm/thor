@@ -12,6 +12,8 @@ signal died(enemy: Enemy)
 ## Удар врага дошёл до Тора (amount — сколько HP снято на самом деле). Для модификаторов элиты.
 signal struck_player(amount: float)
 
+const SpawnEntry = preload("res://enemies/spawn_entry.gd")
+
 ## Новые виды — только в конец (номера сохранены в сценах).
 ## FODDER — драугр-корм, BLOATED — Раздутый, SHIELD — Щитоносец, SHAMAN — Шаман, MERC — Наёмник Локи (GDD 12.1)
 enum Kind { GRUNT, THROWER, BOSS, FODDER, BLOATED, SHIELD, SHAMAN, MERC }
@@ -147,6 +149,11 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var anim_stun: String = "Hit_Knockback"
 @export var anim_death: String = "Death01"
 
+@export_group("Дальняя массовка")
+## Корм дальше этого расстояния обновляет направление и позу реже; физика и таймеры идут каждый кадр.
+@export var fodder_lod_distance: float = 20.0
+@export_range(1, 8, 1) var fodder_lod_frames: int = 3
+
 var health: float
 ## Описание по GDD 12 (EnemyDef), если враг появился в зале; Слава за убийство (-1 — по умолчанию забега)
 var enemy_def: EnemyDef
@@ -154,6 +161,8 @@ var glory_value: int = -1
 var is_dead: bool = false
 var state: State = State.SPAWNING
 var knockback_velocity: Vector3 = Vector3.ZERO
+## Создаётся только для маркера с активным входом.
+var _spawn_entry: SpawnEntry
 var player: Player
 ## Каждый враг запоминает обнаруженного игрока до смерти или смены игрока.
 var _notice_player_id: int = 0
@@ -212,6 +221,11 @@ var elite_handlers: Array[Node] = []
 var elite_glow: Color = Color(0, 0, 0, 0)
 ## Подсветка состояния стихии (ElementStatus ставит каждый кадр; сила — в альфе, уже с пульсом)
 var status_glow: Color = Color(0, 0, 0, 0)
+var _fodder_lod_move := Vector3.ZERO
+var _fodder_lod_move_valid := false
+var _fodder_anim_lod := false
+var _fodder_anim_delta := 0.0
+var _fodder_anim_previous_mode: int = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_IDLE
 
 func _ready() -> void:
 	if RenderingServer.get_current_rendering_method() == "gl_compatibility":
@@ -222,13 +236,14 @@ func _ready() -> void:
 	health = max_health
 	_strafe_sign = 1.0 if randf() < 0.5 else -1.0
 	_visual = get_node_or_null("Visual")
-	if _visual == null and model_outfit != "":
+	if _visual == null and (model_outfit != "" or kind == Kind.FODDER):
 		_humanoid = HumanoidModel.new()
 		_humanoid.name = "Visual"
-		_humanoid.body = model_body
-		_humanoid.outfit = model_outfit
-		_humanoid.hair = model_hair
-		if randomize_look:
+		# У корма уже одетый персонаж в одном заранее собранном меше/материале.
+		_humanoid.body = "base/Fodder_Midgard.glb" if kind == Kind.FODDER else model_body
+		_humanoid.outfit = "" if kind == Kind.FODDER else model_outfit
+		_humanoid.hair = "" if kind == Kind.FODDER else model_hair
+		if randomize_look and kind != Kind.FODDER:
 			var rng := RandomNumberGenerator.new()
 			rng.randomize()
 			var look := HumanoidModel.random_look(rng, rng.randf() < 0.3)
@@ -242,9 +257,9 @@ func _ready() -> void:
 			_humanoid.part_tints = tints
 			if not weapon_pool.is_empty():
 				hand_weapon = weapon_pool[rng.randi() % weapon_pool.size()]
-		_humanoid.skin_tint = skin_tint
+		_humanoid.skin_tint = Color.WHITE if kind == Kind.FODDER else skin_tint
 		_humanoid.cloth_tint = cloth_tint
-		_humanoid.eye_glow = eye_glow
+		_humanoid.eye_glow = Color(0, 0, 0, 0) if kind == Kind.FODDER else eye_glow
 		add_child(_humanoid)
 		_humanoid.scale = Vector3.ONE * model_scale
 		_visual = _humanoid
@@ -255,6 +270,9 @@ func _ready() -> void:
 	if _visual == null:
 		_visual = _build_procedural_model()
 	_collect_meshes(_visual)
+	if kind == Kind.FODDER:
+		for mesh in _flash_meshes:
+			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	FX.ring(get_parent(), global_position, 1.5 * model_scale, Color(0.7, 0.2, 1.0, 0.8), 0.45)
 	if _humanoid:
 		# Появление: драугр поднимается с земли
@@ -270,6 +288,15 @@ func _ready() -> void:
 		tw.tween_property(_visual, "scale", Vector3.ONE * model_scale, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_setup_special()
 
+## Запуск входа из метаданных маркера. Непроверенный путь возвращает false.
+func begin_spawn_entry(mode: String, target: Vector3, tuning: Dictionary = {}) -> bool:
+	if _spawn_entry == null:
+		_spawn_entry = SpawnEntry.new()
+	var ok := _spawn_entry.begin(self, mode, target, move_speed, gravity, tuning)
+	if ok and _humanoid:
+		_humanoid.play(anim_move, 0.1)
+	return ok
+
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
@@ -281,11 +308,15 @@ func _physics_process(delta: float) -> void:
 	var move_dir := Vector3.ZERO
 	match state:
 		State.SPAWNING:
-			if _state_time >= _spawn_time:
+			if _spawn_entry != null and _spawn_entry.active:
+				move_dir = _spawn_entry.desired_velocity(self, accel) / maxf(move_speed, 0.01)
+			elif _state_time >= _spawn_time:
 				_set_state(State.CHASE)
 		State.CHASE:
 			if _notice_tick(delta):
-				move_dir = _think_chase()
+				move_dir = _think_chase_lod(delta)
+			else:
+				_fodder_lod_move_valid = false
 		State.WINDUP:
 			_face_player(delta * 0.5)
 			var wt := boss_slam_windup if _doing_slam else windup_time
@@ -305,13 +336,20 @@ func _physics_process(delta: float) -> void:
 				_set_state(State.CHASE)
 
 	_apply_movement(move_dir, delta)
+	if _spawn_entry != null:
+		_spawn_entry.after_step(self, delta)
 	_update_special(delta)
 	_update_visual_feedback(delta)
 	_update_animation(delta)
+	_update_fodder_animation_lod(delta)
 
 func _set_state(s: State) -> void:
+	if s != State.SPAWNING and _spawn_entry != null:
+		_spawn_entry.cancel()
 	state = s
 	_state_time = 0.0
+	if s != State.CHASE:
+		_fodder_lod_move_valid = false
 	if s != State.WINDUP:
 		_windup_glow = 0.0
 	if s == State.STUNNED and _humanoid:
@@ -337,6 +375,56 @@ func _update_animation(delta: float) -> void:
 				_humanoid.play(anim_idle, 0.25)
 
 # --- Мышление ---
+
+## Только ближний корм: дальние стрелки и боссы по-прежнему думают каждый кадр.
+## Если дальность атаки переопределили, её область тоже остаётся на полной частоте.
+func _fodder_lod_active() -> bool:
+	if kind != Kind.FODDER or state != State.CHASE or not is_instance_valid(player) or player.is_dead:
+		return false
+	var d := player.global_position - global_position
+	var distance := maxf(maxf(0.0, fodder_lod_distance), attack_range + 1.0)
+	return d.x * d.x + d.z * d.z > distance * distance and fodder_lod_frames > 1
+
+## Задерживаем только пересчёт направления и раздвигания толпы. Движение, гравитация,
+## обнаружение, таймеры и все фазы удара продолжают обновляться каждый физический кадр.
+func _think_chase_lod(delta: float) -> Vector3:
+	if not _fodder_lod_active():
+		_fodder_lod_move_valid = false
+		return _think_chase()
+	var interval := maxi(1, fodder_lod_frames)
+	if not _fodder_lod_move_valid or Engine.get_physics_frames() % interval == get_instance_id() % interval:
+		_fodder_lod_move = _think_chase()
+		_fodder_lod_move_valid = true
+	else:
+		_face_player(delta)
+	return _fodder_lod_move
+
+## У дальнего корма обновляем именно позу анимации, а не просто повторный вызов play().
+func _update_fodder_animation_lod(delta: float) -> void:
+	if not _fodder_lod_active() or _humanoid == null or _humanoid.anim == null:
+		_restore_fodder_animation()
+		return
+	var ap := _humanoid.anim
+	if not _fodder_anim_lod:
+		_fodder_anim_previous_mode = ap.callback_mode_process
+		ap.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
+		_fodder_anim_delta = 0.0
+		_fodder_anim_lod = true
+	_fodder_anim_delta += delta
+	var interval := maxi(1, fodder_lod_frames)
+	if Engine.get_physics_frames() % interval == (get_instance_id() + 1) % interval:
+		ap.advance(_fodder_anim_delta)
+		_fodder_anim_delta = 0.0
+
+func _restore_fodder_animation() -> void:
+	if not _fodder_anim_lod:
+		return
+	if _humanoid and is_instance_valid(_humanoid) and _humanoid.anim:
+		if _fodder_anim_delta > 0.0:
+			_humanoid.anim.advance(_fodder_anim_delta)
+		_humanoid.anim.callback_mode_process = _fodder_anim_previous_mode
+	_fodder_anim_delta = 0.0
+	_fodder_anim_lod = false
 
 ## Новая цель не наследует знание прошлой. Без живого игрока время поиска не идёт.
 func _sync_notice_player() -> bool:
@@ -853,6 +941,8 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	Perf.mark("enemy_hit")
 	if is_dead:
 		return
+	if _spawn_entry != null:
+		_spawn_entry.cancel()
 	# Даже блок щитом или поглощение брони сообщает врагу о присутствии игрока.
 	alert_to_player()
 	if kind == Kind.SHIELD and damage < DEBUG_KILL_DAMAGE and _shield_blocks(knockback, source):
@@ -897,6 +987,8 @@ func apply_knockback_only(knockback: Vector3) -> Vector3:
 	if is_dead:
 		return Vector3.ZERO
 	if knockback.length_squared() > 0.0001:
+		if _spawn_entry != null:
+			_spawn_entry.cancel()
 		alert_to_player()
 	var k := knockback * (1.0 - knock_resist)
 	if k.length_squared() > 0.0001:
@@ -936,7 +1028,7 @@ func apply_stun(time: float, strong: bool = false) -> void:
 	_set_state(State.STUNNED)
 
 func _apply_movement(move_dir: Vector3, delta: float) -> void:
-	var can_move := state == State.CHASE
+	var can_move: bool = state == State.CHASE or (state == State.SPAWNING and _spawn_entry != null and _spawn_entry.active)
 	var target := move_dir * move_speed if can_move else Vector3.ZERO
 	var horiz := Vector3(velocity.x, 0, velocity.z)
 	# Базовая скорость стремится к цели, отбрасывание добавляется сверху
@@ -1036,6 +1128,8 @@ func _check_wall_splat(pre_horiz: Vector3) -> void:
 func _die(source: String) -> void:
 	if is_dead:
 		return
+	# Тело продолжает анимацию смерти после передачи в RigidBody3D.
+	_restore_fodder_animation()
 	is_dead = true
 	# Смерть отмечаем до эффектов и взрыва: Раздутый и самоподрыв не создают обычный труп.
 	Perf.mark("enemy_death")
@@ -1054,7 +1148,9 @@ func _die(source: String) -> void:
 	# Мини-босс — тоже Kind.BOSS (поведение босса), но Славу за него даёт MinibossDef
 	# Слава по GDD 15.2: по слою врага (EnemyDef), элита — 15
 	var glory_base := Run.glory_elite_kill if has_meta("elite") else glory_value
-	Run.register_kill(source == "melee_finisher", now - _last_splat_time < 0.6, kind == Kind.BOSS and not has_meta("miniboss"), source, glory_base)
+	Run.register_kill(source == "melee_finisher", now - _last_splat_time < 0.6,
+		kind == Kind.BOSS and not has_meta("miniboss"), source, glory_base,
+		kind == Kind.FODDER and not has_meta("elite"))
 	ComicFX.on_enemy_killed(self, source)
 	FX.enemy_died(self, source)
 	if player and is_instance_valid(player) and not player.is_dead:
