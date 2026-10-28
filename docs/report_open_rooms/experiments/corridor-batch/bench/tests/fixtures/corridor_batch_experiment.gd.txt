@@ -1,0 +1,223 @@
+extends RefCounted
+## Только стенд: исходные стеновые модули и их коллизии остаются в дереве.
+## Рисование переключается между отдельными мешами и идентичными MultiMesh.
+
+
+static func _mesh_children(node: Node, output: Array[MeshInstance3D]) -> void:
+	if node is MeshInstance3D:
+		output.append(node as MeshInstance3D)
+	for child in node.get_children():
+		_mesh_children(child, output)
+
+
+static func _parts(room: Node3D) -> Dictionary:
+	var parent := room.get_node_or_null("Geometry/WallModels") as Node3D
+	if parent == null:
+		return {"error": "missing Geometry/WallModels"}
+	var records: Array[Dictionary] = []
+	var shared_mesh: Mesh
+	var properties: Dictionary = {}
+	for child in parent.get_children():
+		var tokens := String(child.name).split("_")
+		if tokens.size() != 3 or tokens[0] not in ["CL", "CR", "CE"]:
+			continue
+		if tokens[1] not in ["0", "1"] or not tokens[2].is_valid_int():
+			return {"error": "unexpected corridor node %s" % child.name}
+		var meshes: Array[MeshInstance3D] = []
+		_mesh_children(child, meshes)
+		if meshes.size() != 1:
+			return {"error": "%s has %d meshes" % [child.name, meshes.size()]}
+		var mi := meshes[0]
+		if mi.mesh == null or mi.mesh.get_surface_count() != 3:
+			return {"error": "%s must have a 3-surface mesh" % child.name}
+		if not mi.visible or mi.skin != null or mi.custom_aabb != AABB():
+			return {"error": "%s has visibility, skin or custom bounds" % child.name}
+		if mi.material_override != null or mi.material_overlay != null:
+			return {"error": "%s has an override/overlay" % child.name}
+		for surface in mi.mesh.get_surface_count():
+			if mi.get_active_material(surface) != mi.mesh.surface_get_material(surface):
+				return {"error": "%s has a surface material override" % child.name}
+		var current := _geometry_properties(mi)
+		if shared_mesh == null:
+			shared_mesh = mi.mesh
+			properties = current
+		elif mi.mesh != shared_mesh or current != properties:
+			return {"error": "%s has different mesh or render properties" % child.name}
+		records.append({"name": String(child.name), "side": tokens[0], "row": tokens[1],
+			"mi": mi, "local": parent.global_transform.affine_inverse() * mi.global_transform,
+			"world": mi.global_transform, "bounds": mi.global_transform * mi.get_aabb()})
+	if records.size() != 18:
+		return {"error": "expected 18 corridor modules, got %d" % records.size()}
+	return {"parent": parent, "records": records, "mesh": shared_mesh, "properties": properties}
+
+
+static func _geometry_properties(node: GeometryInstance3D) -> Dictionary:
+	return {"cast_shadow": node.cast_shadow, "layers": node.layers, "gi_mode": node.gi_mode,
+		"lod_bias": node.lod_bias, "extra_cull_margin": node.extra_cull_margin,
+		"ignore_occlusion_culling": node.ignore_occlusion_culling,
+		"visibility_range_begin": node.visibility_range_begin,
+		"visibility_range_end": node.visibility_range_end,
+		"visibility_range_begin_margin": node.visibility_range_begin_margin,
+		"visibility_range_end_margin": node.visibility_range_end_margin,
+		"visibility_range_fade_mode": node.visibility_range_fade_mode,
+		"transparency": node.transparency}
+
+
+static func _copy_geometry_properties(node: GeometryInstance3D, properties: Dictionary) -> void:
+	for property in properties:
+		node.set(property, properties[property])
+
+
+static func _create_batches(data: Dictionary, by_row: bool) -> Array[Dictionary]:
+	var buckets := {}
+	for record in data.records:
+		var key: String = record.side + ("_" + record.row if by_row else "")
+		if not buckets.has(key):
+			buckets[key] = []
+		buckets[key].append(record)
+	var batches: Array[Dictionary] = []
+	for key in buckets:
+		var group: Array = buckets[key]
+		var multimesh := MultiMesh.new()
+		multimesh.transform_format = MultiMesh.TRANSFORM_3D
+		multimesh.mesh = data.mesh
+		multimesh.instance_count = group.size()
+		var mi := MultiMeshInstance3D.new()
+		mi.name = "EXPERIMENT_%s_%s" % ["row" if by_row else "side", key]
+		mi.multimesh = multimesh
+		_copy_geometry_properties(mi, data.properties)
+		mi.visible = false
+		(data.parent as Node3D).add_child(mi)
+		var bounds: AABB = group[0].bounds
+		for i in group.size():
+			multimesh.set_instance_transform(i, group[i].local)
+			bounds = bounds.merge(group[i].bounds)
+		batches.append({"key": key, "mi": mi, "records": group, "bounds": bounds})
+	return batches
+
+
+static func prepare(room: Node3D) -> Dictionary:
+	var result := _parts(room)
+	if result.has("error"):
+		return result
+	result.rows = _create_batches(result, true)
+	result.sides = _create_batches(result, false)
+	if result.rows.size() != 6 or result.sides.size() != 3:
+		return {"error": "expected six rows and three sides"}
+	return result
+
+
+static func select(data: Dictionary, mode: String) -> void:
+	for record in data.records:
+		(record.mi as MeshInstance3D).visible = mode == "original"
+	for group in data.rows:
+		(group.mi as MultiMeshInstance3D).visible = mode == "rows"
+	for group in data.sides:
+		(group.mi as MultiMeshInstance3D).visible = mode == "sides"
+
+
+static func verify(data: Dictionary) -> bool:
+	for groups in [data.rows, data.sides]:
+		var seen := {}
+		for group in groups:
+			var node: MultiMeshInstance3D = group.mi
+			if node.multimesh == null or node.multimesh.mesh != data.mesh or node.multimesh.instance_count != group.records.size():
+				print("BATCH VERIFY: mismatched mesh or instance count, ", group.key)
+				return false
+			if _geometry_properties(node) != data.properties:
+				print("BATCH VERIFY: render properties differ, ", group.key, ": ", _geometry_properties(node), " vs ", data.properties)
+				return false
+			for i in group.records.size():
+				var record: Dictionary = group.records[i]
+				var original: MeshInstance3D = record.mi
+				if seen.has(original.get_instance_id()):
+					print("BATCH VERIFY: duplicate source ", record.name)
+					return false
+				seen[original.get_instance_id()] = true
+				if original.mesh != data.mesh or original.material_override != null or original.material_overlay != null:
+					print("BATCH VERIFY: source mesh or overrides changed, ", record.name)
+					return false
+				if _geometry_properties(original) != data.properties:
+					print("BATCH VERIFY: source render properties changed, ", record.name)
+					return false
+				for surface in original.mesh.get_surface_count():
+					if original.get_active_material(surface) != data.mesh.surface_get_material(surface):
+						print("BATCH VERIFY: surface material changed, ", record.name, " surface=", surface)
+						return false
+				# Dummy renderer в headless возвращает identity вместо записанного
+				# instance transform (см. DressScatter). Там проверяем входную
+				# матрицу; фактическое чтение буфера обязательно проверяется в GL.
+				var actual_local: Transform3D = record.local if DisplayServer.get_name() == "headless" else node.multimesh.get_instance_transform(i)
+				var new_world := node.global_transform * actual_local
+				if not new_world.is_equal_approx(record.world) or not original.global_transform.is_equal_approx(record.world):
+					print("BATCH VERIFY: transform differs ", record.name, " candidate=", new_world, " expected=", record.world)
+					return false
+		if seen.size() != data.records.size():
+			print("BATCH VERIFY: lost sources, count=", seen.size())
+			return false
+	return true
+
+
+static func _visit(node: Node, property: String, output: Array[Dictionary]) -> void:
+	if property == "collision" and node is CollisionShape3D:
+		var shape := node as CollisionShape3D
+		var body := shape.get_parent() as CollisionObject3D
+		if body != null:
+			output.append({"node": shape, "shape": shape.shape, "transform": shape.global_transform,
+				"disabled": shape.disabled, "layer": body.collision_layer, "mask": body.collision_mask})
+	elif property == "light" and node is Light3D:
+		var light := node as Light3D
+		var config := {}
+		for descriptor in light.get_property_list():
+			var name: String = descriptor.name
+			if (int(descriptor.usage) & PROPERTY_USAGE_STORAGE) == 0:
+				continue
+			if name.begins_with("light_") or name.begins_with("shadow_") or name.begins_with("omni_") or name.begins_with("spot_") or name.begins_with("directional_"):
+				config[name] = light.get(name)
+		output.append({"node": light, "transform": light.global_transform, "color": light.light_color,
+			"energy": light.light_energy, "visible": light.visible, "mask": light.light_cull_mask,
+			"shadow": light.shadow_enabled, "config": config,
+			"range": (light as OmniLight3D).omni_range if light is OmniLight3D else -1.0})
+	for child in node.get_children():
+		_visit(child, property, output)
+
+
+static func snapshot(room: Node3D, property: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var root: Node = room.get_node("Geometry") if property == "collision" else room
+	_visit(root, property, result)
+	return result
+
+
+static func snapshots_equal(before: Array[Dictionary], after: Array[Dictionary]) -> bool:
+	if before.size() != after.size():
+		return false
+	for i in before.size():
+		if before[i] != after[i]:
+			return false
+	return true
+
+
+static func count_extra_light_bounds(data: Dictionary, lights: Array[Dictionary], mode: String) -> int:
+	# Грубая консервативная оценка AABB влияния OmniLight: дополнительные пересечения
+	# не доказывают, что движок действительно выбрал иной набор источников.
+	var count := 0
+	var groups: Array = data.rows if mode == "rows" else data.sides
+	for group in groups:
+		var group_bounds: AABB = group.bounds
+		for light in lights:
+			if float(light.range) <= 0.0:
+				continue
+			var radius: float = light.range
+			var light_transform: Transform3D = light.transform
+			var light_scale := light_transform.basis.get_scale().abs()
+			radius *= maxf(light_scale.x, maxf(light_scale.y, light_scale.z))
+			var position: Vector3 = light_transform.origin
+			var light_bounds := AABB(position - Vector3.ONE * radius, Vector3.ONE * radius * 2.0)
+			if not group_bounds.intersects(light_bounds):
+				continue
+			for record in group.records:
+				var item_bounds: AABB = record.bounds
+				if not item_bounds.intersects(light_bounds):
+					count += 1
+	return count

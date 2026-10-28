@@ -165,8 +165,8 @@ var _strafe_sign: float = 1.0
 var _visual: Node3D
 ## Меши врага — для общего оверлея вспышки/свечения (см. shaders/hit_flash.gdshader)
 var _flash_meshes: Array[GeometryInstance3D] = []
-## GL Compatibility: один материал на врага, общий для всех частей его модели.
-## Создаётся при появлении и переиспользуется для попаданий, замахов и стихий.
+## GL Compatibility: one material per enemy, shared by all of its meshes.
+## Allocated at spawn and reused through hits, windups and status changes.
 var _flash_material_gl: ShaderMaterial
 var _overlay_on: bool = false
 var _hurt_flash: float = 0.0
@@ -790,7 +790,7 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 		if damage <= 0.0:
 			return
 	health -= damage
-	_last_hit_time = Time.get_ticks_msec() / 1000.0
+	_last_hit_time = Run.combat_clock
 	ComicFX.on_enemy_hit(self, damage, source)
 	_hurt_flash = 1.0
 	var big := source == "melee_finisher" or source == "melee_heavy" or source == "slam"
@@ -880,7 +880,7 @@ func _check_fall() -> void:
 		if not _airborne:
 			_airborne = true
 			_fall_peak_y = global_position.y
-			_fall_forced = state != State.SPAWNING and Time.get_ticks_msec() / 1000.0 - _last_hit_time <= fall_hit_window
+			_fall_forced = state != State.SPAWNING and Run.combat_clock - _last_hit_time <= fall_hit_window
 		_fall_peak_y = maxf(_fall_peak_y, global_position.y)
 		return
 	if not _airborne:
@@ -932,7 +932,7 @@ func _check_wall_splat(pre_horiz: Vector3) -> void:
 			continue
 		if pre_horiz.normalized().dot(-n) < 0.3:
 			continue
-		_last_splat_time = Time.get_ticks_msec() / 1000.0
+		_last_splat_time = Run.combat_clock
 		knockback_velocity = n * 2.0
 		FX.burst(get_parent(), col.get_position(), 0.8, Color(1, 1, 1, 0.6), 0.2)
 		if player:
@@ -960,7 +960,7 @@ func _die(source: String) -> void:
 		died.emit(self)
 		queue_free()
 		return
-	var now := Time.get_ticks_msec() / 1000.0
+	var now := Run.combat_clock
 	# Мини-босс — тоже Kind.BOSS (поведение босса), но Славу за него даёт MinibossDef
 	# Слава по GDD 15.2: по слою врага (EnemyDef), элита — 15
 	var glory_base := Run.glory_elite_kill if has_meta("elite") else glory_value
@@ -1067,6 +1067,8 @@ func _set_overlay(flash: float, glow: float) -> void:
 		return
 	var use_gl_material := _flash_material_gl != null
 	if on and use_gl_material:
+		if not _overlay_on:
+			_flash_material_gl.next_pass = Outline.flash_next_pass()
 		_flash_material_gl.set_shader_parameter("flash", flash)
 		_flash_material_gl.set_shader_parameter("glow", glow)
 		_flash_material_gl.set_shader_parameter("elite", Color(el_color.r, el_color.g, el_color.b, el))
@@ -1074,7 +1076,8 @@ func _set_overlay(flash: float, glow: float) -> void:
 		if not is_instance_valid(g):
 			continue
 		if on != _overlay_on:
-			g.material_overlay = (_flash_material_gl if use_gl_material else FLASH_MATERIAL) if on else null
+			# Погасла — обратно комиксовая обводка (scripts/outline.gd; при вспышке она — next_pass FLASH_MATERIAL)
+			g.material_overlay = (_flash_material_gl if use_gl_material else FLASH_MATERIAL) if on else Outline.overlay()
 		if on and not use_gl_material:
 			g.set_instance_shader_parameter("flash", flash)
 			g.set_instance_shader_parameter("glow", glow)
@@ -1087,6 +1090,8 @@ func _collect_meshes(root: Node) -> void:
 		# Глаза и брови (Eyes, Eyebrows*) вспышку не показывают — светятся сами и крошечные.
 		if mi is MeshInstance3D and not mi.name.begins_with("Eye"):
 			_flash_meshes.append(mi as GeometryInstance3D)
+	# Комиксовая обводка (GDD 20) — тот же слот оверлея, те же меши
+	Outline.add_meshes(_flash_meshes)
 
 ## Оружие в правую руку (процедурное, в текстурах Quaternius).
 func _attach_weapon(kind_name: String) -> void:

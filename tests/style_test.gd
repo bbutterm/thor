@@ -190,7 +190,7 @@ func _test_hooks() -> void:
 	_fresh(s)
 	var f := _dummy(fp + Vector3(4, 9.0, -6), 10.0, "res://enemies/fodder.tscn")
 	f.state = Enemy.State.CHASE
-	f._last_hit_time = Time.get_ticks_msec() / 1000.0
+	f._last_hit_time = Run.combat_clock
 	f.set_physics_process(true)
 	for i in 180:
 		await get_tree().physics_frame

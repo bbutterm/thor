@@ -79,6 +79,8 @@ func _ready() -> void:
 	add_to_group("destructibles")
 	# Причина смерти Тора от взрыва бочки (RunTracker.note_hit → «barrel», реплики Одина)
 	set_meta("death_source_id", "barrel")
+	# Комиксовая обводка (GDD 20): модель пропса (метка взрывной бочки — нет)
+	Outline.add(get_node_or_null("Model"))
 
 static func tuning() -> DestructTuning:
 	return PropDebris.cfg()

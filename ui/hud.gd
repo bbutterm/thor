@@ -308,6 +308,8 @@ func _on_setting_changed(section: String, key: String) -> void:
 		_odin_label.label_settings.font_size = int(19 * GameSettings.text_scale())
 		if key == "language":
 			_retranslate()
+	elif section in ["input", "pad_input", "input_device"]:
+		_hammer_state = ""
 
 ## Смена языка посреди забега: подписи, которые сами не обновляются каждый кадр
 func _retranslate() -> void:
@@ -469,18 +471,18 @@ func _update_hammer() -> void:
 		"hand":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_ready")
 			_hammer_icon.tint = Color.WHITE
-			_hammer_label.text = tr("МЬЁЛЬНИР В РУКЕ · ПКМ")
+			_hammer_label.text = GameSettings.throw_hint(tr("МЬЁЛЬНИР В РУКЕ · ПКМ"))
 			_hammer_label.label_settings.font_color = UIStyle.ICE
 			_hammer_icon.pop()
 		"out":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_thrown")
 			_hammer_icon.tint = Color.WHITE
-			_hammer_label.text = tr("ЛЕТИТ · ПКМ — ВЕРНУТЬ")
+			_hammer_label.text = GameSettings.throw_hint(tr("ЛЕТИТ · ПКМ — ВЕРНУТЬ"))
 			_hammer_label.label_settings.font_color = Color(1, 0.85, 0.4)
 		"stuck":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_thrown")
 			_hammer_icon.tint = Color(1.0, 0.8, 0.55)
-			_hammer_label.text = tr("ВОТКНУТ · ПКМ — ВЕРНУТЬ")
+			_hammer_label.text = GameSettings.throw_hint(tr("ВОТКНУТ · ПКМ — ВЕРНУТЬ"))
 			_hammer_label.label_settings.font_color = Color(1, 0.7, 0.35)
 		"return":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_returning")

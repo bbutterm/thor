@@ -308,7 +308,7 @@ func _test_fall_and_reflect() -> void:
 	g.max_health = 200.0
 	g.health = 200.0
 	for e in [f, g]:
-		e._last_hit_time = Time.get_ticks_msec() / 1000.0
+		e._last_hit_time = Run.combat_clock
 		e.global_position += Vector3(0, 9.0, 0)
 	# Корм разбивается и исчезает — в лямбде держим слабую ссылку (захват удалённого узла — ошибка движка)
 	var fref: WeakRef = weakref(f)

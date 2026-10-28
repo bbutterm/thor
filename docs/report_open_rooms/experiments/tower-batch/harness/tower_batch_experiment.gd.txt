@@ -1,0 +1,154 @@
+extends RefCounted
+## Эксперимент только для тестов: семь групп повторяющихся частей одной вышки.
+## Исходные MeshInstance3D, все StaticBody3D и CollisionShape3D остаются в сцене.
+
+static func _group_names() -> Array:
+	var groups: Array = [
+		["Post_-1_-1", "Post_-1_1", "Post_1_-1", "Post_1_1"],
+		["Step0", "Step1", "Step2", "Step3"],
+	]
+	for i in 4:
+		groups.append(["StepPost%d_-1" % i, "StepPost%d_1" % i])
+	groups.append(["Rail_-1", "Rail_1"])
+	return groups
+
+static func _properties(node: GeometryInstance3D) -> Dictionary:
+	return {"cast_shadow": node.cast_shadow, "layers": node.layers, "gi_mode": node.gi_mode,
+		"lod_bias": node.lod_bias, "extra_cull_margin": node.extra_cull_margin,
+		"ignore_occlusion_culling": node.ignore_occlusion_culling,
+		"visibility_range_begin": node.visibility_range_begin, "visibility_range_end": node.visibility_range_end,
+		"visibility_range_begin_margin": node.visibility_range_begin_margin,
+		"visibility_range_end_margin": node.visibility_range_end_margin,
+		"visibility_range_fade_mode": node.visibility_range_fade_mode, "transparency": node.transparency}
+
+static func _mesh_matches(a: BoxMesh, b: BoxMesh) -> bool:
+	if a == null or b == null or a.size != b.size or a.get_surface_count() != 1 or b.get_surface_count() != 1:
+		return false
+	# Distinct resources must contain the same vertex/index attributes, not just the same bounding box.
+	return a.surface_get_arrays(0) == b.surface_get_arrays(0)
+
+static func prepare(room: Node3D) -> Dictionary:
+	var tower := room.get_node_or_null("Geometry/Watchtower0") as Node3D
+	if tower == null:
+		return {"error": "missing Geometry/Watchtower0"}
+	var pending: Array = []
+	for names in _group_names():
+		var records: Array = []
+		var reference: MeshInstance3D
+		for part in names:
+			var mi := tower.get_node_or_null(String(part) + "/Mesh") as MeshInstance3D
+			if mi == null or not mi.mesh is BoxMesh or not mi.visible or mi.skin != null or mi.custom_aabb != AABB():
+				return {"error": "unexpected box/visibility/skin/bounds for %s" % part}
+			if mi.material_override == null or mi.material_overlay != null:
+				return {"error": "unexpected material/overlay for %s" % part}
+			if mi.get_active_material(0) != mi.material_override:
+				return {"error": "unexpected surface material for %s" % part}
+			var local := tower.global_transform.affine_inverse() * mi.global_transform
+			if not local.basis.is_equal_approx(Basis.IDENTITY):
+				return {"error": "non-translation transform for %s" % part}
+			if reference == null:
+				reference = mi
+			elif not _mesh_matches(reference.mesh as BoxMesh, mi.mesh as BoxMesh) \
+					or mi.material_override != reference.material_override or _properties(mi) != _properties(reference):
+				return {"error": "mesh, material or render properties differ for %s" % part}
+			records.append({"name": String(part), "source": mi, "local": local, "world": mi.global_transform,
+				"bounds": mi.global_transform * mi.get_aabb()})
+		pending.append({"mesh": reference.mesh, "material": reference.material_override,
+			"properties": _properties(reference), "records": records})
+	var batches: Array = []
+	for group in pending:
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = group.mesh
+		mm.instance_count = group.records.size()
+		var mi := MultiMeshInstance3D.new()
+		mi.name = "EXPERIMENT_TowerBatch%d" % batches.size()
+		mi.multimesh = mm
+		mi.material_override = group.material
+		for property in group.properties:
+			mi.set(property, group.properties[property])
+		mi.visible = false
+		tower.add_child(mi)
+		var bounds: AABB = group.records[0].bounds
+		for i in group.records.size():
+			mm.set_instance_transform(i, group.records[i].local)
+			bounds = bounds.merge(group.records[i].bounds)
+		group.batch = mi
+		group.bounds = bounds
+		batches.append(group)
+	return {"tower": tower, "groups": batches}
+
+static func select(data: Dictionary, mode: String) -> void:
+	for group in data.groups:
+		for record in group.records:
+			(record.source as MeshInstance3D).visible = mode == "original"
+		(group.batch as MultiMeshInstance3D).visible = mode == "batch"
+
+static func verify(data: Dictionary) -> bool:
+	if data.has("error") or data.groups.size() != 7:
+		return false
+	var seen := {}
+	for group in data.groups:
+		var batch := group.batch as MultiMeshInstance3D
+		if batch == null or batch.multimesh == null or batch.multimesh.mesh != group.mesh \
+				or batch.multimesh.instance_count != group.records.size() or batch.material_override != group.material \
+				or _properties(batch) != group.properties:
+			return false
+		for i in group.records.size():
+			var record: Dictionary = group.records[i]
+			var source := record.source as MeshInstance3D
+			if seen.has(source.get_instance_id()) or not _mesh_matches(group.mesh as BoxMesh, source.mesh as BoxMesh) \
+					or source.material_override != group.material or _properties(source) != group.properties:
+				return false
+			seen[source.get_instance_id()] = true
+			# Dummy does not read the instance buffer; a real renderer must check it.
+			var local: Transform3D = record.local if DisplayServer.get_name() == "headless" else batch.multimesh.get_instance_transform(i)
+			if not (batch.global_transform * local).is_equal_approx(record.world) \
+					or not source.global_transform.is_equal_approx(record.world):
+				return false
+	return seen.size() == 18
+
+static func _visit(node: Node, property: String, output: Array[Dictionary]) -> void:
+	if property == "collision" and node is CollisionShape3D:
+		var shape := node as CollisionShape3D
+		var body := shape.get_parent() as CollisionObject3D
+		if body != null:
+			output.append({"node": shape, "shape": shape.shape, "transform": shape.global_transform,
+				"disabled": shape.disabled, "layer": body.collision_layer, "mask": body.collision_mask})
+	elif property == "light" and node is Light3D:
+		var light := node as Light3D
+		var config := {}
+		for descriptor in light.get_property_list():
+			var name: String = descriptor.name
+			if (int(descriptor.usage) & PROPERTY_USAGE_STORAGE) != 0 and \
+					(name.begins_with("light_") or name.begins_with("shadow_") or name.begins_with("omni_") \
+					or name.begins_with("spot_") or name.begins_with("directional_")):
+				config[name] = light.get(name)
+		output.append({"node": light, "transform": light.global_transform, "visible": light.visible, "config": config})
+	for child in node.get_children():
+		_visit(child, property, output)
+
+static func snapshot(room: Node3D, property: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var root: Node = room.get_node("Geometry") if property == "collision" else room
+	_visit(root, property, result)
+	return result
+
+static func extra_light_bounds(data: Dictionary, room: Node3D) -> int:
+	# Conservative AABB overlaps: diagnostic only, not proof of renderer light selection.
+	var lights: Array[Node] = room.find_children("*", "OmniLight3D", true, false)
+	var count := 0
+	for group in data.groups:
+		for item in lights:
+			var light := item as OmniLight3D
+			var scale := light.global_transform.basis.get_scale().abs()
+			var radius := light.omni_range * maxf(scale.x, maxf(scale.y, scale.z))
+			var light_bounds := AABB(light.global_position - Vector3.ONE * radius, Vector3.ONE * radius * 2.0)
+			var group_bounds: AABB = group.bounds
+			if not group_bounds.intersects(light_bounds):
+				continue
+			for record in group.records:
+				var part_bounds: AABB = record.bounds
+				if not part_bounds.intersects(light_bounds):
+					count += 1
+	return count

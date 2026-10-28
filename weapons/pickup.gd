@@ -29,6 +29,8 @@ func _ready() -> void:
 		_spin.add_child(_model)
 		for mi in _model.find_children("*", "GeometryInstance3D", true, false):
 			(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		# Комиксовая обводка (GDD 20) — только модель, не кольцо и не луч
+		Outline.add(_model)
 	var ring := MeshInstance3D.new()
 	ring.name = "Ring"
 	ring.mesh = FX.shared_mesh("ring")
@@ -79,7 +81,7 @@ func prompt_text(holder: WeaponHolder) -> String:
 		txt = tr("[E] Забрать патроны: %s") % tr(item.def.display_name)
 	elif cur:
 		txt += tr(" — бросить %s") % cur.title()
-	return txt
+	return txt.replace("[E]", "[%s]" % GameSettings.current_binding("interact"))
 
 func interact(holder: WeaponHolder) -> void:
 	if not can_interact():

@@ -34,6 +34,7 @@ func _ready() -> void:
 	UIStyle.full_rect(self)
 	UISkin.apply(self)
 	_build()
+	GameSettings.events.changed.connect(_on_setting_changed)
 
 func _build() -> void:
 	var box := VBoxContainer.new()
@@ -99,7 +100,7 @@ func _build() -> void:
 		_slots.append(slot)
 		_names.append(n)
 		_subs.append(s)
-	_hint = UIStyle.label(tr("Q / колесо — сменить · R — перезарядка"), 13, UIStyle.TEXT_DIM, 3)
+	_hint = UIStyle.label("", 13, UIStyle.TEXT_DIM, 3)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	box.add_child(_hint)
 	_prompt = UIStyle.label("", 22, UIStyle.GOLD, 6)
@@ -128,6 +129,8 @@ func _refresh() -> void:
 		var it: WeaponItem = items[i]
 		var on := holder.active_slot == i
 		var slot := _slots[i]
+		slot.key_text = "" if GameSettings.using_gamepad() else GameSettings.current_binding("weapon_melee" if i == 0 else "weapon_ranged")
+		slot.queue_redraw()
 		var was := slot.active
 		slot.active = on
 		slot.custom_minimum_size = Vector2.ONE * (active_slot_size if on else slot_size)
@@ -156,6 +159,11 @@ func _refresh() -> void:
 		_ammo_label.label_settings.font_color = UIStyle.BLOOD if cur.mag == 0 else UIStyle.TEXT
 	else:
 		_ammo_label.text = ""
+	_hint.text = tr("%s — сменить · %s — перезарядка") % [GameSettings.current_binding("weapon_switch"), GameSettings.current_binding("reload")]
+
+func _on_setting_changed(section: String, _key: String) -> void:
+	if section in ["input", "pad_input", "input_device", "text"]:
+		_refresh()
 
 func _on_reload(active: bool, progress: float) -> void:
 	_reload_bar.visible = active

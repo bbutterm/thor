@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""Сравнить 7 × 2 изображения; скрытые стены контролируют видимость объектов."""
+from pathlib import Path
+import sys
+from PIL import Image, ImageChops
+
+
+def pixels(image):
+    return image.get_flattened_data() if hasattr(image, "get_flattened_data") else image.getdata()
+
+
+def compare(folder: Path, view: str, mode: str):
+    with Image.open(folder / f"{view}_original.png") as image:
+        original = image.convert("RGB")
+    with Image.open(folder / f"{view}_{mode}.png") as image:
+        other = image.convert("RGB")
+    if original.size != other.size:
+        raise ValueError(f"{view}/{mode}: image sizes differ: {original.size} / {other.size}")
+    diff = ImageChops.difference(original, other)
+    changes = sum(pixel != (0, 0, 0) for pixel in pixels(diff))
+    extrema = diff.getextrema()
+    max_delta = max(channel[1] for channel in extrema)
+    colors = original.getcolors(maxcolors=256)
+    color_count = 257 if colors is None else len(colors)
+    return changes, max_delta, color_count, original.size
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        print(f"usage: {sys.argv[0]} SHOT_DIR", file=sys.stderr)
+        return 2
+    folder = Path(sys.argv[1])
+    failures = 0
+    for view in ("floor", "entrance", "left", "right", "torch", "tower", "above"):
+        for mode in ("rows", "sides", "hidden"):
+            try:
+                changes, max_delta, colors, size = compare(folder, view, mode)
+                # Для hidden ожидаются отличия: иначе ракурс не проверяет стены коридора.
+                good = colors > 16 and (changes > 0 if mode == "hidden" else changes == 0)
+                failures += int(not good)
+                print(f"{'OK' if good else 'FAIL'} {view}/{mode}: {size[0]}x{size[1]}, different={changes}, max_delta={max_delta}, colors>={colors}")
+            except (OSError, ValueError) as exc:
+                failures += 1
+                print(f"FAIL {view}/{mode}: {exc}")
+    print(f"PIXEL RESULTS: {21 - failures} OK, {failures} FAIL")
+    return int(failures != 0)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

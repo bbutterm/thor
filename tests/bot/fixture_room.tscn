@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://rooms/room.gd" id="1_room"]
+
+[sub_resource type="BoxShape3D" id="FloorShape"]
+size = Vector3(28, 1, 28)
+
+[node name="BotFixtureRoom" type="Node3D"]
+script = ExtResource("1_room")
+room_title = "Тестовая площадка бота"
+elite_chance = 0.0
+
+[node name="Floor" type="StaticBody3D" parent="."]
+position = Vector3(0, -0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("FloorShape")
+
+[node name="PlayerSpawn" type="Marker3D" parent="."]
+position = Vector3(0, 0.05, 0)
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="Fodder" type="Marker3D" parent="Spawns"]
+position = Vector3(0, 0.05, -3)
+metadata/kind = "fodder"
+metadata/wave = 0

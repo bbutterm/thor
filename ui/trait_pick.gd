@@ -60,7 +60,7 @@ func _ready() -> void:
 	_title = UIStyle.label(tr(TITLE_DEFAULT), 40, UIStyle.ICE, 10)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(_title)
-	var hint := UIStyle.label(tr("Стихия — чем бьёт молот, приём — как ты им играешь. Кликни или нажми 1 / 2 / 3"), 18, UIStyle.TEXT_DIM, 4)
+	var hint := UIStyle.label(tr("Стихия — чем бьёт молот, приём — как ты им играешь. Мышь, 1 / 2 / 3 или геймпад"), 18, UIStyle.TEXT_DIM, 4)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(hint)
 	_cards = HBoxContainer.new()
@@ -81,18 +81,28 @@ func open(choices: Array[MjolnirTrait], title: String = "") -> void:
 	_confirm_index = -1
 	_status_labels.clear()
 	for c in _cards.get_children():
+		_cards.remove_child(c)
 		c.queue_free()
 	for i in choices.size():
 		_cards.add_child(_make_card(choices[i], i))
 	_reroll_btn.visible = Run.trait_rerolls > 0
 	_reroll_btn.text = tr("ПЕРЕБРОС ОТ ЭЙТРИ (%d)  [R]") % Run.trait_rerolls
 	visible = true
+	_focus_first_card.call_deferred()
 	_open_time = Time.get_ticks_msec() / 1000.0
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_root.modulate.a = 0.0
 	var tw := _root.create_tween()
 	tw.tween_property(_root, "modulate:a", 1.0, 0.25)
+
+## Переброс может пересоздать карточки до выполнения отложенного вызова.
+func _focus_first_card() -> void:
+	if not is_inside_tree() or not visible or _cards.get_child_count() == 0:
+		return
+	var first := _cards.get_child(0) as Button
+	if is_instance_valid(first) and first.is_inside_tree():
+		first.grab_focus()
 
 func _status(t: MjolnirTrait) -> Array:
 	var lv := Run.mjolnir_trait_level(t.id)
@@ -119,7 +129,7 @@ func _make_card(t: MjolnirTrait, index: int) -> Button:
 		b.set_icon(null, t.glyph, t.color)
 	b.add_text(tr(t.title), 19, t.color.lightened(0.45), 5)
 	b.add_text(kind_line(t, lv + 1), 13, Color(t.color, 0.85), 3)
-	b.add_text(tr(t.level_description(lv + 1)), 13, UIStyle.TEXT, 3)
+	b.add_text(GameSettings.throw_hint(tr(t.level_description(lv + 1))), 13, UIStyle.TEXT, 3)
 	var st := _status(t)
 	var s := b.add_text(st[0], 15, st[1], 4)
 	_fit_card_text(b)
@@ -185,7 +195,7 @@ static func kind_line(t: MjolnirTrait, lv: int) -> String:
 		return I18n.t("СТИХИЯ · %s") % I18n.t(DELIVERY[clampi(lv, 1, DELIVERY.size() - 1)])
 	if t.is_combo():
 		return I18n.t("СВЯЗКА")
-	return I18n.t("ПРИЁМ · %s") % I18n.t(t.group) if t.group != "" else I18n.t("ПРИЁМ")
+	return I18n.t("ПРИЁМ · %s") % GameSettings.throw_hint(I18n.t(t.group)) if t.group != "" else I18n.t("ПРИЁМ")
 
 static func roman(lv: int) -> String:
 	return ROMAN[clampi(lv, 0, ROMAN.size() - 1)]

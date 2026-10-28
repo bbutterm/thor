@@ -1,0 +1,10 @@
+extends Node
+## Загружает скрипт стенда в обычном контексте проекта с его автозагрузками.
+func _ready() -> void:
+	var script := load("res://tests/corridor_batch_bench.gd") as GDScript
+	if script == null or not script.can_instantiate():
+		push_error("Cannot parse corridor benchmark")
+		get_tree().quit(1)
+		return
+	print("BENCH PARSE CHECK OK")
+	get_tree().quit(0)

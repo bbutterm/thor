@@ -218,15 +218,17 @@ static func fx_material(kind: String) -> ShaderMaterial:
 	materials_created += 1
 	return m
 
-## Буфер instance-переменных: каждый узел, у материала которого есть instance uniform, занимает в нём
-## 16 ячеек (ShaderLanguage::MAX_INSTANCE_UNIFORM_INDICES), пока узел жив и материал назначен — даже
-## невидимый. В GL Compatibility буфер — 4096 ячеек (= 256 таких узлов на сцену); сверх — ошибка
-## «Too many instances using shader instance variables», и у новых эффектов пропадают цвет и кадр.
+## В GL Compatibility выделенный блок instance-переменных занимает 16 ячеек независимо от их числа.
+## Номинальный буфер на 4096 ячеек даёт до 256 блоков; запас зависит от настроек и глобальных параметров.
+## Снятие материала не гарантирует освобождения блока: ранее заданные параметры могут жить до удаления RID.
+## При переполнении появляется «Too many instances using shader instance variables», и эффекты теряют параметры.
 const INSTANCE_SLOTS_GL := 256
 
 static var _iu_shaders: Dictionary = {}
 
-## Сколько узлов под root сейчас занимают буфер instance-переменных (диагностика: Perf F3, тесты).
+## Узлы под root с текущим override/overlay, чей шейдер совпадает с текстовым признаком _has_iu.
+## Это не занятые слоты: поверхностные материалы, next_pass, сохранённые параметры и удалённые из дерева RID
+## здесь не учитываются; текстовый признак также может ошибаться (диагностика: Perf F3, тесты).
 static func instance_uniform_users(root: Node) -> int:
 	if root == null:
 		return 0
@@ -270,7 +272,7 @@ static func uses_fade_emulation() -> bool:
 static func _track_fade(gi: GeometryInstance3D) -> void:
 	if not uses_fade_emulation():
 		return
-	# Материал назначен заново — значения instance-переменных на сервере сброшены: отправим fade снова
+	# Материал назначен заново — принудительно отправим fade, независимо от состояния сервера
 	gi.set_meta("_fade", -1.0)
 	if not gi.has_meta("_fade_tracked"):
 		gi.set_meta("_fade_tracked", true)
@@ -469,8 +471,8 @@ static func _take(kind: String, parent: Node, limit: int) -> MeshInstance3D:
 		mi = MeshInstance3D.new()
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
-		# Спрятанный (свободный) узел отдаёт материал — и вместе с ним 16 ячеек буфера instance-переменных
-		# (INSTANCE_SLOTS_GL). При взятии из пула _sprite назначает материал заново (тот же общий — без компиляции).
+		# Скрытый свободный узел снимает override; прежние instance-параметры могут удерживать блок до удаления RID.
+		# При повторном использовании _sprite назначает тот же общий материал, без создания нового.
 		mi.visibility_changed.connect(func() -> void:
 			if not mi.visible:
 				mi.material_override = null)

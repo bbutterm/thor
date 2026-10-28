@@ -636,6 +636,7 @@ func _spawn_rolling_head() -> void:
 	h.eye_glow = _humanoid.eye_glow
 	rb.add_child(h)
 	get_parent().add_child(rb)
+	Outline.add(h)
 	var head_pos := sk.global_transform * sk.get_bone_global_pose(head_bone).origin
 	rb.global_position = head_pos
 	h.scale = Vector3.ONE * model_scale

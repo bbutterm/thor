@@ -1,6 +1,6 @@
 extends CanvasLayer
 class_name RunePick
-## Выбор 1 из 3 рун после зачистки зала. Мышь или клавиши 1/2/3. На время выбора игра на паузе.
+## Выбор 1 из 3 рун после зачистки зала. Мышь, клавиши 1/2/3 или геймпад. На время выбора игра на паузе.
 
 signal picked(rune: RuneDef)
 
@@ -35,7 +35,7 @@ func _ready() -> void:
 	_title = UIStyle.label(tr(DEFAULT_TITLE), 40, UIStyle.GOLD, 10)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(_title)
-	var hint := UIStyle.label(tr("Кликни по руне или нажми 1 / 2 / 3"), 18, UIStyle.TEXT_DIM, 4)
+	var hint := UIStyle.label(tr("Выбери руну: мышь, 1 / 2 / 3 или геймпад"), 18, UIStyle.TEXT_DIM, 4)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(hint)
 	_cards = HBoxContainer.new()
@@ -49,10 +49,13 @@ func open(choices: Array[RuneDef], title: String = "") -> void:
 	_choices = choices
 	_title.text = title if title != "" else tr(DEFAULT_TITLE)
 	for c in _cards.get_children():
+		_cards.remove_child(c)
 		c.queue_free()
 	for i in choices.size():
 		_cards.add_child(_make_card(choices[i], i))
 	visible = true
+	if _cards.get_child_count() > 0:
+		(_cards.get_child(0) as Button).grab_focus.call_deferred()
 	_open_time = Time.get_ticks_msec() / 1000.0
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

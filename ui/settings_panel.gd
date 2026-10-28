@@ -2,8 +2,8 @@ extends Control
 class_name SettingsPanel
 ## Экран настроек (GDD 22) поверх главного меню и паузы: вкладки «Звук», «Управление», «Клавиши»,
 ## «Экран», «Интерфейс», «Доступность». Значения — GameSettings (user://settings.cfg), меняются и
-## применяются сразу. Клавиши: клик по кнопке действия → нажми клавишу или кнопку мыши (Esc — отмена);
-## «Сбросить клавиши» — как в project.godot. Рамка и кнопки — на скине комплекта (UISkin).
+## применяются сразу. Клавиатура/мышь и геймпад переназначаются независимо;
+## Esc или Start отменяет захват. Рамка и кнопки — на скине комплекта (UISkin).
 
 signal closed
 
@@ -16,8 +16,11 @@ var _scroll: ScrollContainer
 var _current: int = 0
 var _capture_action: String = ""
 var _capture_btn: Button
+var _capture_pad: bool = false
 var _key_buttons: Dictionary = {}
+var _pad_buttons: Dictionary = {}
 var _key_note: Label
+var _back_btn: Button
 ## Обновить подписи контролов после «Сбросить всё»: [секция, ключ, Callable(значение)]
 var _refreshers: Array = []
 
@@ -47,11 +50,23 @@ func _rebuild() -> void:
 	_tab_buttons.clear()
 	_pages.clear()
 	_key_buttons.clear()
+	_pad_buttons.clear()
 	_refreshers.clear()
 	_build()
 	show_tab(tab)
-	if tab < _tab_buttons.size():
-		_tab_buttons[tab].grab_focus.call_deferred()
+	_focus_current_tab.call_deferred()
+
+## При нескольких перестройках за кадр фокус должен попасть на новые кнопки.
+func _focus_current_tab() -> void:
+	if not is_inside_tree() or _current >= _tab_buttons.size():
+		return
+	var button := _tab_buttons[_current]
+	if is_instance_valid(button) and button.is_inside_tree():
+		button.grab_focus()
+
+func _focus_back() -> void:
+	if is_inside_tree() and is_instance_valid(_back_btn) and _back_btn.is_inside_tree():
+		_back_btn.grab_focus()
 
 func _build() -> void:
 	var dim := ColorRect.new()
@@ -87,6 +102,7 @@ func _build() -> void:
 		_tab_buttons.append(b)
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.follow_focus = true
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.custom_minimum_size = Vector2(0, 360)
 	vb.add_child(_scroll)
@@ -114,11 +130,11 @@ func _build() -> void:
 	reset.custom_minimum_size = Vector2(240, 50)
 	reset.pressed.connect(_reset_all)
 	foot.add_child(reset)
-	var back := UIStyle.button(tr("Назад"), 22)
-	back.custom_minimum_size = Vector2(260, 54)
-	back.pressed.connect(close)
-	foot.add_child(back)
-	back.grab_focus.call_deferred()
+	_back_btn = UIStyle.button(tr("Назад"), 22)
+	_back_btn.custom_minimum_size = Vector2(260, 54)
+	_back_btn.pressed.connect(close)
+	foot.add_child(_back_btn)
+	_focus_back.call_deferred()
 
 func tab_count() -> int:
 	return TABS.size()
@@ -262,31 +278,64 @@ func _build_controls(page: Control) -> void:
 	_slider(page, tr("Чувствительность стика"), "controls", "gamepad_sensitivity", 0.1, 3.0, 0.05,
 		func(v: float) -> String: return "×%.2f" % v)
 	_check(page, tr("Инверсия по вертикали"), "controls", "invert_y")
-	_note(page, tr("Клавиши переназначаются на вкладке «Клавиши»."))
+	_note(page, tr("Клавиатура и геймпад переназначаются на вкладке «Клавиши»."))
 
 func _build_keys(page: Control) -> void:
-	_header(page, tr("КЛАВИШИ — клик по кнопке, затем нажми клавишу или кнопку мыши (Esc — отмена)"))
+	_header(page, tr("УПРАВЛЕНИЕ — выбери столбец и нажми новую кнопку"))
+	_note(page, tr("Слева клавиатура и мышь, справа геймпад. Esc или Start — отмена."))
 	for pair in GameSettings.REMAP_ACTIONS:
 		var action: String = pair[0]
+		var box := HBoxContainer.new()
+		box.add_theme_constant_override("separation", 8)
 		var b := Button.new()
 		b.theme_type_variation = &"SecondaryButton"
-		b.custom_minimum_size = Vector2(300, 44)
+		b.custom_minimum_size = Vector2(180, 44)
 		b.text = GameSettings.action_label(action)
 		b.focus_mode = Control.FOCUS_ALL
 		b.pressed.connect(_start_capture.bind(action, b))
-		var box := HBoxContainer.new()
 		box.add_child(b)
+		var pad := _pad_capture_button(action)
+		box.add_child(pad)
 		_row(page, tr(pair[1]), box)
 		_key_buttons[action] = b
+	for pair in GameSettings.PAD_CAMERA_ACTIONS:
+		var action: String = pair[0]
+		var box := HBoxContainer.new()
+		box.add_theme_constant_override("separation", 8)
+		var blank := Control.new()
+		blank.custom_minimum_size.x = 180
+		box.add_child(blank)
+		box.add_child(_pad_capture_button(action))
+		_row(page, tr(pair[1]), box)
+	var reset_box := HBoxContainer.new()
+	reset_box.add_theme_constant_override("separation", 8)
 	var reset := UIStyle.button(tr("Сбросить клавиши"), 18, "danger")
-	reset.custom_minimum_size = Vector2(260, 48)
+	reset.custom_minimum_size = Vector2(220, 48)
 	reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	reset.pressed.connect(func() -> void:
 		GameSettings.reset_input()
 		_refresh_keys()
 		_key_note.text = tr("Клавиши — как по умолчанию."))
-	page.add_child(reset)
-	_key_note = _note(page, tr("Esc — пауза, 1/2/3 — выбор карточек; геймпад не меняется."))
+	reset_box.add_child(reset)
+	var reset_pad := UIStyle.button(tr("Сбросить геймпад"), 18, "danger")
+	reset_pad.custom_minimum_size = Vector2(220, 48)
+	reset_pad.pressed.connect(func() -> void:
+		GameSettings.reset_pad_input()
+		_refresh_keys()
+		_key_note.text = tr("Геймпад — как по умолчанию."))
+	reset_box.add_child(reset_pad)
+	page.add_child(reset_box)
+	_key_note = _note(page, tr("Esc и Start — пауза; стрелки и A/B — навигация в меню."))
+
+func _pad_capture_button(action: String) -> Button:
+	var b := Button.new()
+	b.theme_type_variation = &"SecondaryButton"
+	b.custom_minimum_size = Vector2(180, 44)
+	b.text = GameSettings.pad_action_label(action)
+	b.focus_mode = Control.FOCUS_ALL
+	b.pressed.connect(_start_capture.bind(action, b, true))
+	_pad_buttons[action] = b
+	return b
 
 func _build_video(page: Control) -> void:
 	_header(page, tr("ОКНО"))
@@ -301,6 +350,15 @@ func _build_video(page: Control) -> void:
 		func(v: float) -> String: return "%d°" % roundi(v))
 	_slider(page, tr("Тряска камеры"), "video", "shake", 0.0, 1.0, 0.05, _pct)
 	_check(page, tr("Покачивание и наклон камеры"), "video", "head_bob")
+	# Комиксовая обводка врагов и предметов (scripts/outline.gd) — применяется сразу, без перезапуска
+	_header(page, tr("ОБВОДКА"))
+	var holder: Array = [null]
+	_check(page, tr("Обводка врагов и предметов"), "video", "outline", func() -> void:
+		if holder[0]:
+			(holder[0] as HSlider).editable = Outline.enabled())
+	var width := _slider(page, tr("Толщина обводки"), "video", "outline_width", Outline.WIDTH_MIN, Outline.WIDTH_MAX, 0.05, _pct)
+	width.editable = Outline.enabled()
+	holder[0] = width
 
 func _build_interface(page: Control) -> void:
 	_header(page, tr("ЯЗЫК"))
@@ -353,12 +411,13 @@ func _build_access(page: Control) -> void:
 
 # --- Переназначение клавиш ---
 
-func _start_capture(action: String, b: Button) -> void:
+func _start_capture(action: String, b: Button, pad: bool = false) -> void:
 	_cancel_capture()
 	_capture_action = action
 	_capture_btn = b
-	b.text = tr("нажми клавишу…")
-	_key_note.text = tr("Esc — отмена.")
+	_capture_pad = pad
+	b.text = tr("нажми кнопку…") if pad else tr("нажми клавишу…")
+	_key_note.text = tr("Esc или Start — отмена.")
 
 func _cancel_capture() -> void:
 	if _capture_action == "":
@@ -366,7 +425,7 @@ func _cancel_capture() -> void:
 	var a := _capture_action
 	_capture_action = ""
 	if _capture_btn and is_instance_valid(_capture_btn):
-		_capture_btn.text = GameSettings.action_label(a)
+		_capture_btn.text = GameSettings.pad_action_label(a) if _capture_pad else GameSettings.action_label(a)
 	_capture_btn = null
 
 func _input(event: InputEvent) -> void:
@@ -380,9 +439,18 @@ func _input(event: InputEvent) -> void:
 			_cancel_capture()
 			_key_note.text = tr("Отменено.")
 			return
-		ok = true
+		ok = not _capture_pad
 	elif event is InputEventMouseButton and event.pressed:
+		ok = not _capture_pad
+	elif event is InputEventJoypadButton and event.pressed and _capture_pad:
+		if event.button_index == JOY_BUTTON_START:
+			get_viewport().set_input_as_handled()
+			_cancel_capture()
+			_key_note.text = tr("Отменено.")
+			return
 		ok = true
+	elif event is InputEventJoypadMotion and _capture_pad:
+		ok = absf(event.axis_value) >= GameSettings.PAD_CAPTURE_THRESHOLD
 	if not ok:
 		return
 	get_viewport().set_input_as_handled()
@@ -394,17 +462,18 @@ func apply_capture(event: InputEvent) -> void:
 	if action == "":
 		return
 	_capture_action = ""
-	var taken := GameSettings.rebind(action, event)
+	var taken := GameSettings.rebind_pad(action, event) if _capture_pad else GameSettings.rebind(action, event)
 	_refresh_keys()
 	_capture_btn = null
-	var label := GameSettings.binding_label(GameSettings.event_to_string(event))
+	var encoded := GameSettings.event_to_string(event)
+	var label := GameSettings.pad_binding_label(encoded) if _capture_pad else GameSettings.binding_label(encoded)
 	if taken != "":
 		_key_note.text = tr("%s — теперь «%s» (снято с «%s»).") % [label, _title(action), _title(taken)]
 	else:
 		_key_note.text = tr("%s — теперь «%s».") % [label, _title(action)]
 
 func _title(action: String) -> String:
-	for pair in GameSettings.REMAP_ACTIONS:
+	for pair in GameSettings.REMAP_ACTIONS + GameSettings.PAD_CAMERA_ACTIONS:
 		if pair[0] == action:
 			return tr(pair[1])
 	return action
@@ -412,6 +481,8 @@ func _title(action: String) -> String:
 func _refresh_keys() -> void:
 	for a in _key_buttons:
 		(_key_buttons[a] as Button).text = GameSettings.action_label(a)
+	for a in _pad_buttons:
+		(_pad_buttons[a] as Button).text = GameSettings.pad_action_label(a)
 
 func _reset_all() -> void:
 	GameSettings.reset_all()
