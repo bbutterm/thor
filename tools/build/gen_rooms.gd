@@ -7,6 +7,35 @@ class_name GenRooms
 
 const K = preload("res://tools/rooms/room_kit.gd")
 
+## Вид Мидгарда в генерируемых залах (срез графики зала 10 → все залы, Н1 29.10): профиль света и тумана
+## (холодное небо и дымка против тёплых факелов) — Room.visual_map; ключ зала "visual_map" перекрывает
+## ("" — без профиля, карта мира Run.map). Ручные арены (длинный дом, погреб Свена) остаются на карте мира.
+const DEFAULT_VISUAL_MAP := "res://run/maps/midgard_slice.tres"
+## Поверхности среза вместо штатных surface_* (rooms/materials, RoomDresser.SURFACES): крупнее пятна, меньше
+## шума, тёплая палитра. Ключ "dress": {"surface_materials": {...}} зала дополняет и перекрывает.
+const SLICE_SURFACES := {
+	"surface_plank": "res://rooms/materials/slice_plank.tres",
+	"surface_wood": "res://rooms/materials/slice_wood.tres",
+	"surface_floor_dirt": "res://rooms/materials/slice_dirt.tres",
+	"surface_floor_brick": "res://rooms/materials/slice_floor_brick.tres",
+	"surface_rock": "res://rooms/materials/slice_rock.tres",
+	"surface_stone": "res://rooms/materials/slice_stone.tres",
+	"surface_pillar": "res://rooms/materials/slice_pillar.tres",
+}
+## Ориентиры (Н1): у подъёмов (низ пандуса, ступени вышки, прыжковая руна) — факел на стойке и знамя.
+## Факел не добавляется, а переносится ближайший боковой (свет — проходы в GL Compatibility), не больше
+## LANDMARK_MAX на зал; ключ зала "torch_overrides" (ручная расстановка) или "landmarks": false отключает.
+const LANDMARK_MAX := 2
+const LANDMARK_TORCH_Y := 2.8
+const LANDMARK_SIDE := 0.8
+const LANDMARK_BANNERS := ["banner_hammer", "banner_raven"]
+
+## Поверхности одевания зала: общий вид среза + свои ключа "dress"/"surface_materials".
+func _surface_materials(d: Dictionary) -> Dictionary:
+	var out := SLICE_SURFACES.duplicate()
+	out.merge((d.get("dress", {}) as Dictionary).get("surface_materials", {}), true)
+	return out
+
 var gen: SceneBuilder
 
 func _init(owner_node: SceneBuilder) -> void:
@@ -128,7 +157,7 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	root.name = d.file.capitalize().replace(" ", "")
 	root.set_script(load("res://rooms/room.gd"))
 	root.set("room_title", d.title)
-	var visual_map_path := str(d.get("visual_map", ""))
+	var visual_map_path := str(d.get("visual_map", DEFAULT_VISUAL_MAP))
 	if visual_map_path != "":
 		root.set("visual_map", load(visual_map_path) as RunMap)
 	root.set("max_alive", int(d.get("max_alive", 0)))
@@ -201,7 +230,7 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		# "none" — только коллизия (вид даёт декоративная модель из "models", например корпус корабля)
 		gen._box(geo, "Block%d" % i, b[0], b[1], null if b[2] == "none" else mats.get(b[2], mats.stone_dark))
 	var ramps: Array = d.get("ramps", [])
-	var surface_materials: Dictionary = (d.get("dress", {}) as Dictionary).get("surface_materials", {})
+	var surface_materials := _surface_materials(d)
 	var plank_override := str(surface_materials.get("surface_plank", ""))
 	_build_ramps(geo, ramps, mats, plank_override)
 	# Небольшие наблюдательные вышки: реальные ступени и настил, декоративные опоры.
@@ -366,6 +395,24 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 			torch_pos[int(entry[0])] = entry[1]
 		else:
 			push_error("torch_overrides: нужен индекс факела и позиция Vector3")
+	# Ориентиры у подъёмов: ближайший боковой факел (0–3) переезжает на стойку у подъёма, под ним — знамя
+	var landmark_decor: Array = []
+	if not d.has("torch_overrides") and d.get("landmarks", true):
+		var moved := {}
+		var spots := _landmarks(d, w, dep, openings)
+		for li in spots.size():
+			var spot: Vector3 = spots[li]
+			var best := -1
+			for ti in 4:
+				if moved.has(ti):
+					continue
+				if best < 0 or Vector2(torch_pos[ti].x - spot.x, torch_pos[ti].z - spot.z).length() < Vector2(torch_pos[best].x - spot.x, torch_pos[best].z - spot.z).length():
+					best = ti
+			if best < 0:
+				break
+			moved[best] = true
+			torch_pos[best] = spot
+			landmark_decor.append([LANDMARK_BANNERS[li % LANDMARK_BANNERS.size()], spot - Vector3(0, 0.8, 0), 0.0, 1.5])
 	var flame := gen._mat("flame", Color(1.0, 0.6, 0.2), 0.5, false, 5.0)
 	var holder := gen._mat("holder", Color(0.25, 0.22, 0.2), 0.6, false)
 	for i in torch_pos.size():
@@ -391,7 +438,7 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 
 	# Знамёна, щиты и плакаты на стенах (комплект владельца assets/decor/, rooms/wall_decor.gd): авто-расстановка
 	# по стенам + ключ "decor" зала. Квады собираются при запуске из общего материала WorldArt.
-	_build_wall_art(root, d, w, dep, gap)
+	_build_wall_art(root, d, w, dep, gap, landmark_decor)
 	# Статичные декали на полу (assets/decals/, rooms/floor_decal.gd): [декаль, позиция, поворот Y, размер м, (glow)]
 	var decals: Array = d.get("decals", [])
 	if not decals.is_empty():
@@ -429,6 +476,7 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 
 	# Одевание (блок Б0): коллизия та же, вид — модели, MultiMesh и общий шейдер поверхностей
 	var opts: Dictionary = (d.get("dress", {}) as Dictionary).duplicate()
+	opts["surface_materials"] = surface_materials
 	var styles := {}
 	for i in d.blocks.size():
 		styles["Block%d" % i] = _block_style(d, i)
@@ -439,7 +487,78 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	gen.room_floor._build_enemy_navigation(root, d, openings, w, dep)
 	gen._save(root, "res://rooms/%s.tscn" % d.file)
 
-func _build_wall_art(root: Node, d: Dictionary, w: float, dep: float, gap: float) -> void:
+## Точки ориентиров (позиции факела): низ пандусов, низ ступеней вышек, прыжковые руны — сбоку от подъёма,
+## к ближней стене; не в блоке, не у пропсов и не над вырезом в полу. Не больше LANDMARK_MAX, не ближе 5 м друг к другу.
+func _landmarks(d: Dictionary, w: float, dep: float, openings: Array[Rect2]) -> Array:
+	# Кандидаты: [основание подъёма, ось подъёма (xz), полуширина]
+	var cands: Array = []
+	for r in d.get("ramps", []):
+		var spec: Array = r
+		var size: Vector3 = spec[1]
+		var axis := Basis.from_euler(Vector3(deg_to_rad(float(spec[2])), deg_to_rad(float(spec[4]) if spec.size() > 4 else 0.0), 0.0)) * Vector3(0, 0, size.z * 0.5)
+		var c: Vector3 = spec[0]
+		var foot := c + axis if (c + axis).y < (c - axis).y else c - axis
+		# Верх нижнего конца; пандус с пола уходит концом чуть под пол — тогда основание на полу
+		foot.y = foot.y + size.y * 0.5 if foot.y > 0.5 else 0.0
+		cands.append([foot, Vector3(axis.x, 0, axis.z), size.x * 0.5])
+	for t in d.get("watchtowers", []):
+		# Без ступеней (Array с false) вышку соединяет пандус — его низ уже в списке
+		if t is Array and not bool(t[1]):
+			continue
+		var tc: Vector3 = t[0] if t is Array else t
+		cands.append([tc + Vector3(0, 0, -4.8), Vector3(0, 0, 1), 0.75])
+	for jp in d.get("jump_pads", []):
+		cands.append([(jp as Array)[0], Vector3(0, 0, 1), 1.0])
+	var out: Array = []
+	for cand in cands:
+		if out.size() >= LANDMARK_MAX:
+			break
+		var base: Vector3 = cand[0]
+		var axis2: Vector3 = cand[1]
+		var side := Vector3(axis2.z, 0, -axis2.x).normalized() if axis2.length() > 0.01 else Vector3.RIGHT
+		# Сначала — сторона дальше от центра зала (к стене)
+		var dirs: Array = [side, -side]
+		if (base + side).length() < (base - side).length():
+			dirs = [-side, side]
+		for dir in dirs:
+			var p: Vector3 = base + dir * (float(cand[2]) + LANDMARK_SIDE)
+			p.y = base.y + LANDMARK_TORCH_Y
+			if _landmark_free(d, p, w, dep, openings, out):
+				out.append(p)
+				break
+	return out
+
+func _landmark_free(d: Dictionary, p: Vector3, w: float, dep: float, openings: Array[Rect2], taken: Array) -> bool:
+	if absf(p.x) > w * 0.5 - 0.5 or absf(p.z) > dep * 0.5 - 0.5:
+		return false
+	for o in taken:
+		if Vector2(p.x - o.x, p.z - o.z).length() < 5.0:
+			return false
+	for opening in openings:
+		if opening.grow(0.6).has_point(Vector2(p.x, p.z)):
+			return false
+	for b in d.blocks:
+		var bc: Vector3 = b[0]
+		var bs: Vector3 = b[1]
+		if absf(p.x - bc.x) < bs.x * 0.5 + 0.4 and absf(p.z - bc.z) < bs.z * 0.5 + 0.4 and bc.y - bs.y * 0.5 < p.y:
+			return false
+	for r in d.get("ramps", []):
+		var rc: Vector3 = r[0]
+		var rs: Vector3 = r[1]
+		if Vector2(p.x - rc.x, p.z - rc.z).length() < maxf(rs.x, rs.z) * 0.5 and absf(p.x - rc.x) < rs.x * 0.5 + 0.3:
+			return false
+	for pr in d.props:
+		if Vector2(p.x - pr[1].x, p.z - pr[1].z).length() < 1.2:
+			return false
+	for jp in d.get("jump_pads", []):
+		if Vector2(p.x - jp[0].x, p.z - jp[0].z).length() < 1.6:
+			return false
+	for pp in d.pillars:
+		if Vector2(p.x - pp.x, p.z - pp.z).length() < 1.2:
+			return false
+	return true
+
+func _build_wall_art(root: Node, d: Dictionary, w: float, dep: float, gap: float, landmark_decor: Array = []) -> void:
 	var art := Node3D.new()
 	art.name = "Banners"
 	root.add_child(art)
@@ -472,7 +591,7 @@ func _build_wall_art(root: Node, d: Dictionary, w: float, dep: float, gap: float
 		for sx in [-1.0, 1.0]:
 			_wall_decor(art, "ShieldS%d" % int(sx), WorldArt.SHIELDS[(ri + k) % 8], Vector3(sx * w / 4, 4.3, dep / 2 - K.WALL_INSET), 180.0, 1.15)
 			k += 1
-	var extra: Array = d.get("decor", [])
+	var extra: Array = d.get("decor", []) + landmark_decor
 	for i in extra.size():
 		var e: Array = extra[i]
 		_wall_decor(art, "%s_%d" % [(e[0] as String).to_pascal_case(), i], e[0], e[1], e[2], e[3])

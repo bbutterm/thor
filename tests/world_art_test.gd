@@ -52,22 +52,28 @@ func world_mat_ok(gi: GeometryInstance3D) -> bool:
 func _run() -> void:
 	print("=== WORLD ART TEST ===")
 	await open("res://rooms/room_09.tscn")
-	var map := Run.map
+	# Генерируемые залы — с профилем графики среза (Room.visual_map, Н1); небо — та же панорама мира
+	var map: RunMap = game.room.visual_map if game.room.visual_map != null else Run.map
 
 	print("-- Небо мира")
-	check(map != null and map.sky == "res://assets/sky/midgard.webp", "у Мидгарда в run/maps/midgard.tres панорама неба")
+	check(Run.map != null and Run.map.sky == "res://assets/sky/midgard.webp" and map.sky == Run.map.sky, "у Мидгарда в run/maps/midgard.tres панорама неба, профиль зала — та же")
 	var we := game.get_node("WorldEnvironment") as WorldEnvironment
 	var env := we.environment
-	var psm := env.sky.sky_material as PanoramaSkyMaterial if env and env.sky else null
-	check(psm != null and psm.panorama != null and psm.panorama.resource_path == map.sky, "небо зала — PanoramaSkyMaterial(midgard.webp)")
+	var sky_mat: Material = env.sky.sky_material if env and env.sky else null
+	var pano: Texture2D = null
+	if sky_mat is PanoramaSkyMaterial:
+		pano = (sky_mat as PanoramaSkyMaterial).panorama
+	elif sky_mat is ShaderMaterial:
+		pano = (sky_mat as ShaderMaterial).get_shader_parameter("panorama") as Texture2D
+	check(pano != null and pano.resource_path == map.sky, "небо зала — панорама midgard.webp (тонированная профилем)")
 	check(is_equal_approx(env.fog_sky_affect, map.fog_sky_affect) and env.fog_sky_affect < 0.5, "дымка не закрывает небо (fog_sky_affect %.2f)" % env.fog_sky_affect)
-	check(is_equal_approx(env.tonemap_exposure, map.exposure) and is_equal_approx(env.ambient_light_energy, map.ambient_energy), "экспозиция и рассеянный свет — из карты мира")
+	check(is_equal_approx(env.tonemap_exposure, map.exposure) and is_equal_approx(env.ambient_light_energy, map.ambient_energy), "экспозиция и рассеянный свет — из карты (профиля) зала")
 	var shared_env := load("res://scenes/game_environment.tres") as Environment
 	check(env != shared_env and shared_env.sky.sky_material is ProceduralSkyMaterial, "общий game_environment.tres не тронут (процедурное небо для мира без панорамы)")
 	var sky1 := env.sky
 	var no_sky := RunMap.new()
 	check(not WorldArt.apply_world(game, no_sky), "мир без панорамы — небо сцены не меняется")
-	check(WorldArt.sky_for(map.sky, map.sky_energy) == sky1, "небо мира одно на файл (кешируется)")
+	check(WorldArt.sky_for(map.sky, map.sky_energy, map.sky_tint, map.sky_tint_strength) == sky1, "небо мира одно на файл (кешируется)")
 
 	print("-- Атмосфера зала")
 	var atm := game.room.get_node_or_null("Atmosphere")
@@ -190,20 +196,38 @@ func _run() -> void:
 	var text_mat := ComicFX.get("_text_mat") as ShaderMaterial
 	check(slice_map != null and is_equal_approx(float(Outline.material().get_shader_parameter("width_px")), Outline.cfg().width_px * slice_map.room_outline_multiplier), "профиль меняет базовую толщину общей обводки")
 	check(slice_map != null and text_mat != null and is_equal_approx(float(text_mat.get_shader_parameter("dot_strength")), 0.22 * slice_map.room_halftone_multiplier), "профиль меняет полутон общего материала слов")
-	Run.room_order.assign(["res://rooms/room_10.tscn", "res://rooms/room_09.tscn", Run.BOSS_SCENE])
+	# Н1: тот же вид — во всех генерируемых залах (GenRooms.DEFAULT_VISUAL_MAP, SLICE_SURFACES)
+	Run.room_order.assign(["res://rooms/room_10.tscn", "res://rooms/room_09.tscn", "res://rooms/sven_arena.tscn", Run.BOSS_SCENE])
 	Run.room_index = 1
 	game._load_room()
-	var restored := false
-	for i in 180:
-		await get_tree().physics_frame
-		if is_instance_valid(game.room) and game.room.scene_file_path == "res://rooms/room_09.tscn":
-			restored = true
-			break
+	var reached := await _wait_room("res://rooms/room_09.tscn")
+	var env09 := (game.get_node("WorldEnvironment") as WorldEnvironment).environment
+	check(reached and game.room.visual_map == slice_map and Run.map == world_map, "обычный зал 9 — тот же профиль среза, карта забега не меняется")
+	check(reached and env09 != null and env09.sky != null and env09.sky.sky_material is ShaderMaterial, "в зале 9 — тонированное небо среза")
+	var floor09 := game.room.get_node_or_null("Dress/FloorVisual") as MeshInstance3D
+	check(reached and floor09 != null and floor09.material_override != null and floor09.material_override.resource_path.begins_with("res://rooms/materials/slice_"), "пол зала 9 — материал среза")
+	var landmark := game.room.get_node_or_null("Banners/BannerHammer_2") as Node3D
+	var moved_torch := false
+	for t in game.room.get_node("Torches").get_children():
+		if landmark and Vector2((t as Node3D).position.x - landmark.position.x, (t as Node3D).position.z - landmark.position.z).length() < 0.1:
+			moved_torch = true
+	check(reached and landmark != null and moved_torch and game.room.get_node("Torches").get_child_count() == 6, "ориентир у прыжковой руны: знамя под перенесённым факелом, факелов столько же")
+	# Ручная арена Свена — на карте мира: профиль снимается, обводка и полутон восстанавливаются
+	Run.room_index = 2
+	game._load_room()
+	var restored := await _wait_room("res://rooms/sven_arena.tscn")
 	var next_env := (game.get_node("WorldEnvironment") as WorldEnvironment).environment
-	check(restored and Run.map == world_map and game.room.visual_map == null and next_env != null and next_env.sky != null and next_env.sky.sky_material is PanoramaSkyMaterial, "после перехода обычный зал снова использует небо и карту мира")
+	check(restored and Run.map == world_map and game.room.visual_map == null and next_env != null and next_env.sky != null and next_env.sky.sky_material is PanoramaSkyMaterial, "после перехода ручная арена снова использует небо и карту мира")
 	check(restored and is_equal_approx(float(Outline.material().get_shader_parameter("width_px")), Outline.cfg().width_px) and text_mat != null and is_equal_approx(float(text_mat.get_shader_parameter("dot_strength")), 0.22), "после перехода обводка и полутон восстановлены")
 
 	print("=== ИТОГ WORLD ART: %d OK, %d FAIL ===" % [_passes, _fails.size()])
 	for f in _fails:
 		print("   FAIL: ", f)
 	get_tree().quit(0 if _fails.is_empty() else 1)
+
+func _wait_room(path: String) -> bool:
+	for i in 240:
+		await get_tree().physics_frame
+		if is_instance_valid(game.room) and game.room.scene_file_path == path:
+			return true
+	return false

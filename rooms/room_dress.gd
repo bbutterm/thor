@@ -38,7 +38,9 @@ const MESHES := {
 
 ## Материалы на шейдере world_surface (один шейдер — одни пайплайны) и прочие общие
 const SURFACES := ["surface_floor_brick", "surface_floor_dirt", "surface_stone", "surface_rock", "surface_cliff",
-	"surface_wood", "surface_plank", "surface_pillar", "surface_ground"]
+	"surface_wood", "surface_plank", "surface_pillar", "surface_ground",
+	# Вид Мидгарда в генерируемых залах (срез зала 10, Н1): тот же шейдер, другие параметры
+	"slice_dirt", "slice_plank", "slice_rock", "slice_wood", "slice_floor_brick", "slice_stone", "slice_pillar"]
 const OTHER := ["rocktrim", "woodtrim", "grime", "pine", "water"]
 
 static var _held: Array = []

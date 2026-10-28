@@ -9,8 +9,7 @@ static func def() -> Dictionary:
 		"file": "room_10", "title": "Двор частокола", "w": 30.0, "d": 30.0, "max_alive": 60,
 		"tutorial_vertical": true,
 		"floor_tex": "dirt_straw",
-		"visual_map": "res://run/maps/midgard_slice.tres",
-		# Те же факелы: перемещены к путям, а не добавлены новые источники света.
+		# Те же факелы: перемещены к путям вручную (вместо авто-ориентиров GenRooms._landmarks).
 		"torch_overrides": [[2, Vector3(-12.3, 2.8, 8.5)], [1, Vector3(11.3, 5.6, -6.8)]],
 		"decor": [
 			["banner_hammer", Vector3(-12.3, 2.0, 8.5), 0.0, 1.5],
@@ -124,12 +123,8 @@ static func def() -> Dictionary:
 		],
 		"props": [["barrel", Vector3(-12, 0, -11)], ["crate", Vector3(12, 0, -11)]],
 		# Не ставить случайные угловые пропсы и декали поверх проектного проёма.
-		"dress": {"corner_props": false, "decals": 0, "surface_materials": {
-			"surface_plank": "res://rooms/materials/slice_plank.tres",
-			"surface_wood": "res://rooms/materials/slice_wood.tres",
-			"surface_floor_dirt": "res://rooms/materials/slice_dirt.tres",
-			"surface_rock": "res://rooms/materials/slice_rock.tres",
-		}, "palisade_rows": [
+		# Профиль света и поверхности среза — общие для залов (GenRooms.DEFAULT_VISUAL_MAP, SLICE_SURFACES).
+		"dress": {"corner_props": false, "decals": 0, "palisade_rows": [
 			[Vector3(-13, 0, -12), Vector3(-13, 0, -7)],
 			[Vector3(13, 0, -11), Vector3(13, 0, -6)],
 			[Vector3(-13, 0, 8), Vector3(-13, 0, 12)],
