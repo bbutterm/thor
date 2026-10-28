@@ -2,7 +2,7 @@
 
 Все числа — `@export`-поля: открой сцену в Godot, выдели узел, меняй в инспекторе. Код трогать не нужно.
 
-## Игрок — `player/player.tscn`, узел **Player** (`player/player.gd`)
+## Игрок — `player/player.tscn`, узел **Player** (`player/player.gd`; логика — компоненты `player/player_*.gd`, см. `player/CLAUDE.md`)
 
 | Группа | Параметр | По умолчанию | Что делает |
 |---|---|---|---|
@@ -276,7 +276,7 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 
 ## Тела и руны — ресурсы `run/bodies/*.tres`, `run/runes/*.tres`
 
-Дублируй файл → поменяй поля в инспекторе → новое тело/руна появится в игре само. Эффекты рун по `id` — в `player.gd → recalc_from_runes()` и `scenes/game.gd → _on_rune_picked()`.
+Дублируй файл → поменяй поля в инспекторе → новое тело/руна появится в игре само. Эффекты рун по `id` — в `player/player_runes.gd → recalc_from_runes()` и `scenes/game.gd → _on_rune_picked()`.
 
 ## Реплики Одина — `data/dialogues/odin.json`, раздел `pools`
 

@@ -265,6 +265,24 @@ var rage: StyleMeter:
 ## Анимация рук от первого лица (блок Б2), см. player/viewmodel_motion.gd
 var view_motion: ViewmodelMotion
 
+## Компоненты (этап 2 рефакторинга): логика по файлам player/player_*.gd, состояние — поля выше.
+var movement: PlayerMovement
+var jumps: PlayerJumps
+var slam: PlayerSlam
+var dash: PlayerDash
+var vitals: PlayerHealth
+var skills: PlayerWeaponSkills
+var runes: PlayerRunes
+
+func _init() -> void:
+	movement = PlayerMovement.new(self)
+	jumps = PlayerJumps.new(self)
+	slam = PlayerSlam.new(self)
+	dash = PlayerDash.new(self)
+	vitals = PlayerHealth.new(self)
+	skills = PlayerWeaponSkills.new(self)
+	runes = PlayerRunes.new(self)
+
 func _ready() -> void:
 	add_to_group("player")
 	_setup_weapons()
@@ -275,7 +293,7 @@ func _ready() -> void:
 	dash_charges = dash_charges_max
 	rotation_target = Vector2(head.rotation.x, rotation.y)
 	if Run.has_signal("kill_registered"):
-		Run.kill_registered.connect(_on_kill_registered)
+		Run.kill_registered.connect(vitals._on_kill_registered)
 	# Настройки игрока: чувствительность, инверсия, FOV, тряска, покачивание (scripts/settings.gd)
 	GameSettings.apply_to_player(self)
 	_emit_all()
@@ -290,36 +308,14 @@ func apply_body_and_runes(body: BodyDef, run: Node) -> void:
 		hammer_damage_mult = body.hammer_damage_mult
 		axe.set_hand_color(body.hand_color, body.sleeve_color)
 		mjolnir.set_hand_color(body.hand_color, body.sleeve_color)
-		apply_movement_profile(body.movement_profile())
+		movement.apply_movement_profile(body.movement_profile())
 		setup_body_traits(body)
 		weapons.apply_body(body, int(modify_stat(&"start_weapon_level", 1)))
-	recalc_from_runes(run, true)
-
-func recalc_from_runes(run: Node, full_heal: bool = false) -> void:
-	var body: BodyDef = run.body if run else null
-	var base_hp := body.max_health if body else max_health
-	var old_max := max_health
-	# Руны по уровням (GDD 11, Run.rune_value: уровень 1–3, у жреца ×2)
-	max_health = base_hp + run.rune_value("max_health")
-	dash_charges_max = (body.dash_charges if body else dash_charges_base) + int(run.rune_value("dash_charge")) + int(run.rune_value("loki_spin"))
-	_rune_dash_recharge_mult = run.rune_value("dash_charge", true) if run.rune_level("dash_charge") > 0 else 1.0
-	axe.damage_mult = (body.axe_damage_mult if body else 1.0) * (1.0 + run.rune_value("axe_damage"))
-	mjolnir.damage_mult = (body.hammer_damage_mult if body else 1.0) * (1.0 + run.rune_value("hammer_power"))
-	mjolnir.return_speed_mult = 1.0 + run.rune_value("hammer_power", true)
-	extra_jumps = (movement_profile.extra_jumps if movement_profile else 1) + int(run.rune_value("valkyrie_wings"))
-	shield_max = run.rune_value("sif_shield")
-	shield = maxf(shield, shield_max) if full_heal else minf(shield, shield_max)
-	if full_heal:
-		health = max_health
-		dash_charges = dash_charges_max
-	else:
-		health = minf(max_health, health + maxf(0.0, max_health - old_max))
-		dash_charges = mini(dash_charges + 1, dash_charges_max)
-	_emit_all()
+	runes.recalc_from_runes(run, true)
 
 func _emit_all() -> void:
 	health_changed.emit(health, max_health)
-	dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
+	dash_charges_changed.emit(dash_charges, dash_charges_max, dash._rune_recharge_progress())
 
 # --- Ввод мышью ---
 
@@ -347,7 +343,7 @@ func _process(delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
-		weapon_skill_cancel_motion()
+		skills.weapon_skill_cancel_motion()
 		velocity.x = move_toward(velocity.x, 0, ground_decel * delta)
 		velocity.z = move_toward(velocity.z, 0, ground_decel * delta)
 		velocity.y -= gravity * delta
@@ -362,94 +358,94 @@ func _physics_process(delta: float) -> void:
 	wish = wish.normalized() if wish.length() > 0.01 else Vector3.ZERO
 
 	_update_timers(delta)
-	_rune_tick(delta)
-	_slam_assist_tick()
+	runes._rune_tick(delta)
+	slam._slam_assist_tick()
 	if is_climbing:
-		_process_climb(delta)
+		jumps._process_climb(delta)
 		camera_fx.update_motion(self, input_dir, false, delta)
 		return
-	var on_floor := is_on_floor() and not _weapon_skill_enemy_only_floor()
+	var on_floor := is_on_floor() and not skills._weapon_skill_enemy_only_floor()
 
 	if on_floor:
 		_coyote_left = coyote_time
 		_jumps_left = extra_jumps
 		_wall_jumps_left = wall_jumps
 	if input_enabled and Input.is_action_just_pressed("jump"):
-		if weapon_skill_lunge_active() or _weapon_skill_dive_speed > 0.0:
-			weapon_skill_cancel_motion()
+		if skills.weapon_skill_lunge_active() or _weapon_skill_dive_speed > 0.0:
+			skills.weapon_skill_cancel_motion()
 		_jump_buffer_left = jump_buffer
 
 	# Рывок (на земле с зажатым Ctrl — подкат)
 	if input_enabled and Input.is_action_just_pressed("dash") and dash_charges > 0:
-		if (weapon_skill_lunge_active() or not _weapon_skill_landing_id.is_empty()) and can_dash(on_floor):
-			weapon_skill_cancel_motion()
+		if (skills.weapon_skill_lunge_active() or not _weapon_skill_landing_id.is_empty()) and dash.can_dash(on_floor):
+			skills.weapon_skill_cancel_motion()
 		if is_slamming and slam_cancel_by_dash and not on_floor:
-			_cancel_slam()
+			slam._cancel_slam()
 		if not is_slamming:
-			_try_dash(wish, on_floor)
+			dash._try_dash(wish, on_floor)
 	_dive_window_left = maxf(0.0, _dive_window_left - delta)
 
 	# Удар-приземление
 	if input_enabled and Input.is_action_just_pressed("slam") and not on_floor and not is_slamming:
-		_start_slam()
+		slam._start_slam()
 
-	var lunge_step := weapon_skill_lunge_active()
+	var lunge_step := skills.weapon_skill_lunge_active()
 	if lunge_step:
-		_process_weapon_skill_lunge(on_floor, delta)
+		skills._process_weapon_skill_lunge(on_floor, delta)
 	elif _weapon_skill_dive_speed > 0.0:
-		_process_walk(wish, on_floor, delta)
+		movement._process_walk(wish, on_floor, delta)
 		# После отскока от головы сначала завершаем подъём, потом продолжаем пике.
 		if velocity.y > 0.0:
-			_process_gravity(false, delta)
+			jumps._process_gravity(false, delta)
 		else:
 			velocity.y = -_weapon_skill_dive_speed
 	elif _dash_time_left > 0.0:
-		_process_dash(delta)
+		dash._process_dash(delta)
 	elif is_slamming:
 		velocity = _slam_velocity
 	elif is_sliding:
-		_process_slide(wish, on_floor, delta)
-		_process_jump(on_floor)
-		_process_gravity(on_floor, delta)
+		movement._process_slide(wish, on_floor, delta)
+		jumps._process_jump(on_floor)
+		jumps._process_gravity(on_floor, delta)
 	else:
-		_process_walk(wish, on_floor, delta)
-		_process_jump(on_floor)
-		_process_gravity(on_floor, delta)
+		movement._process_walk(wish, on_floor, delta)
+		jumps._process_jump(on_floor)
+		jumps._process_gravity(on_floor, delta)
 
 	var pre_velocity := velocity
 	var lunge_from := global_position
 	move_and_slide()
 	if lunge_step:
 		weapon_skill_lunge_step.emit(lunge_from, global_position)
-	_push_rigid_bodies(pre_velocity)
-	var skill_floor := _weapon_skill_floor_contact_flags() if _weapon_skill_waiting_for_ground() and is_on_floor() else 0
+	movement._push_rigid_bodies(pre_velocity)
+	var skill_floor := skills._weapon_skill_floor_contact_flags() if skills._weapon_skill_waiting_for_ground() and is_on_floor() else 0
 	var enemy_only_floor := skill_floor == SKILL_FLOOR_ENEMY
 	var peak_before_stomp := _air_peak_y
 	# Одновременная опора на мир/предмет — посадка, даже если рядом есть голова врага.
 	if (skill_floor & SKILL_FLOOR_OTHER) == 0:
-		_check_stomp(pre_velocity)
+		jumps._check_stomp(pre_velocity)
 	if enemy_only_floor:
 		_air_peak_y = maxf(_air_peak_y, peak_before_stomp)
 	if lunge_step:
-		_finish_weapon_skill_lunge_step(delta)
+		skills._finish_weapon_skill_lunge_step(delta)
 	elif _weapon_skill_dive_speed <= 0.0:
-		_check_ledge(wish)
+		jumps._check_ledge(wish)
 
 	var now_on_floor := is_on_floor() and not enemy_only_floor
 	if not now_on_floor:
 		_air_peak_y = maxf(_air_peak_y, global_position.y)
 	if now_on_floor and not _was_on_floor:
-		_on_landed()
+		slam._on_landed()
 	if now_on_floor:
 		_air_peak_y = global_position.y
 	_was_on_floor = now_on_floor
 
-	_update_footsteps(now_on_floor)
+	movement._update_footsteps(now_on_floor)
 	camera_fx.crouch_target = slide_camera_drop if is_sliding else 0.0
 	camera_fx.update_motion(self, input_dir, now_on_floor, delta)
 
 	if global_position.y < -25.0:
-		take_damage(9999.0, Vector3.ZERO, true)
+		vitals.take_damage(9999.0, Vector3.ZERO, true)
 
 func _update_timers(delta: float) -> void:
 	_coyote_left = maxf(0.0, _coyote_left - delta)
@@ -460,813 +456,16 @@ func _update_timers(delta: float) -> void:
 	_stomp_cooldown = maxf(0.0, _stomp_cooldown - delta)
 	_slam_hint_left = maxf(0.0, _slam_hint_left - delta)
 	_climb_check_cooldown = maxf(0.0, _climb_check_cooldown - delta)
-	if dash_charges < dash_charges_max and is_on_floor() and not _weapon_skill_enemy_only_floor() and not is_climbing:
+	if dash_charges < dash_charges_max and is_on_floor() and not skills._weapon_skill_enemy_only_floor() and not is_climbing:
 		_dash_recharge_timer += delta
 		if _dash_recharge_timer >= dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult:
 			_dash_recharge_timer = 0.0
 			dash_charges += 1
-		dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
+		dash_charges_changed.emit(dash_charges, dash_charges_max, dash._rune_recharge_progress())
 	elif dash_charges >= dash_charges_max:
 		_dash_recharge_timer = 0.0
 
-func _process_walk(wish: Vector3, on_floor: bool, delta: float) -> void:
-	# Скорость бега с учётом оружия в руке (мили быстрее, ренж медленнее)
-	var ms := effective_move_speed()
-	var horiz := Vector3(velocity.x, 0, velocity.z)
-	var target := wish * ms
-	var speed := horiz.length()
-	# Управление в воздухе — 70 % от наземного (GDD 7.4)
-	var air_accel := ground_accel * air_control
-	var air_drag := 0.0 if keep_air_momentum else air_overspeed_drag
-	if on_floor:
-		if speed > ms * 1.05:
-			# Скорость выше нормы (после рывка/супер-прыжка) — гасим плавно
-			horiz = horiz.move_toward(target, ground_overspeed_drag * delta)
-		elif wish != Vector3.ZERO:
-			horiz = horiz.move_toward(target, ground_accel * delta)
-		else:
-			horiz = horiz.move_toward(Vector3.ZERO, ground_decel * delta)
-	else:
-		if wish != Vector3.ZERO:
-			if speed > ms:
-				# Сохраняем инерцию, но позволяем рулить
-				var steered := horiz.move_toward(wish * speed, air_accel * delta)
-				horiz = steered.normalized() * maxf(ms, speed - air_drag * delta)
-			else:
-				horiz = horiz.move_toward(target, air_accel * delta)
-		elif speed > ms:
-			horiz = horiz.move_toward(horiz.normalized() * ms, air_drag * delta)
-	# Импульс складывается, но не выше предела (GDD 7.4)
-	horiz = horiz.limit_length(momentum_limit())
-	velocity.x = horiz.x
-	velocity.z = horiz.z
-
-func _process_jump(on_floor: bool) -> void:
-	if _jump_buffer_left <= 0.0:
-		return
-	if _bounce_window_left > 0.0:
-		# Прыжок в окне отскока от удара-приземления — подбрасывает выше
-		_jump_buffer_left = 0.0
-		_bounce_window_left = 0.0
-		_slam_ready = true
-		velocity.y = maxf(velocity.y, _bounce_boost_velocity)
-		camera_fx.kick_fov(8.0)
-		Audio.play("sounds/sfx/super_jump.wav")
-		Perf.mark("slam_bounce_boost")
-		return
-	if _super_jump_left > 0.0:
-		_jump_buffer_left = 0.0
-		_super_jump_left = 0.0
-		_slam_ready = true
-		velocity.y = jump_velocity * sqrt(super_jump_height_mult)
-		camera_fx.kick_fov(10.0)
-		camera_fx.add_trauma(0.25)
-		Audio.play("sounds/sfx/super_jump.wav")
-		FX.ring(get_parent(), global_position, 2.0, Color(0.6, 0.85, 1.0, 0.8), 0.3)
-		return
-	if on_floor or _coyote_left > 0.0:
-		_jump_buffer_left = 0.0
-		_coyote_left = 0.0
-		_slam_ready = false
-		velocity.y = jump_velocity
-		Audio.play("sounds/jump_a.ogg, sounds/jump_b.ogg")
-		if is_sliding:
-			# Прыжок из подката: скорость подката сохраняется (bunny-hop)
-			is_sliding = false
-			Perf.mark("slide_jump")
-		for h in body_handlers:
-			h.on_jump(self)
-	elif _jumps_left > 0 and dash_charges > 0:
-		_jump_buffer_left = 0.0
-		_jumps_left -= 1
-		_spend_dash_charge()
-		_slam_ready = true
-		# Крылья валькирии ур. 2+: прыжки в воздухе выше
-		velocity.y = jump_velocity * 0.92 * (Run.rune_value("valkyrie_wings", true) if Run.rune_level("valkyrie_wings") > 0 else 1.0)
-		camera_fx.kick_fov(3.0)
-		Audio.sfx("double_jump", "sounds/jump_b.ogg, sounds/jump_c.ogg")
-	elif _wall_jumps_left > 0 and _try_wall_jump():
-		# Отскок от стены бесплатный, когда воздушных прыжков или рун не осталось.
-		_jump_buffer_left = 0.0
-
-func _process_gravity(on_floor: bool, delta: float) -> void:
-	if on_floor and velocity.y <= 0.0:
-		velocity.y = -0.5
-		return
-	var g := gravity * (fall_gravity_mult if velocity.y < 0.0 else 1.0)
-	velocity.y -= g * delta
-	velocity.y = maxf(velocity.y, -45.0)
-
-# --- Рывок ---
-
-## Рывок разрешён стилем и изъяном: на земле (Прыгун — нет) / в воздухе (Кузнец — нет).
-func can_dash(on_floor: bool) -> bool:
-	if on_floor:
-		return dash_on_ground
-	return dash_in_air and bool(modify_stat(&"air_dash", true))
-
-## Движение приёмов оружия не расходует руны и использует обычный move_and_slide игрока.
-func weapon_skill_start_lunge(direction: Vector3, distance: float, duration: float) -> bool:
-	var horizontal := Vector3(direction.x, 0.0, direction.z)
-	if is_dead or is_climbing or is_slamming or weapon_skill_lunge_active() \
-			or horizontal.length_squared() < 0.0001 or distance <= 0.0 or duration <= 0.0:
-		return false
-	weapon_skill_cancel_motion()
-	_dash_time_left = 0.0
-	_end_ram()
-	is_sliding = false
-	_weapon_skill_lunge_dir = horizontal.normalized()
-	_weapon_skill_lunge_speed = distance / duration
-	_weapon_skill_lunge_left = duration
-	_weapon_skill_lunge_mask = collision_mask
-	# Враги — слой 3; стены и предметы остаются физическими препятствиями.
-	collision_mask &= ~(1 << 2)
-	return true
-
-func weapon_skill_lunge_active() -> bool:
-	return _weapon_skill_lunge_left > 0.0
-
-## Второй выпад разрешён только после естественного завершения первого.
-func weapon_skill_lunge_completed() -> bool:
-	return not is_dead and _weapon_skill_lunge_completed
-
-func _weapon_skill_waiting_for_ground() -> bool:
-	return _weapon_skill_landing_id in ["axe_dive", "staff_wave"]
-
-## Учитываем только нормали, которые движок признаёт полом, включая все контакты одного столкновения.
-func _weapon_skill_floor_contact_flags() -> int:
-	var flags := 0
-	var min_floor_dot := cos(floor_max_angle + 0.01)
-	for i in get_slide_collision_count():
-		var collision := get_slide_collision(i)
-		for j in collision.get_collision_count():
-			if collision.get_normal(j).dot(up_direction) < min_floor_dot:
-				continue
-			if collision.get_collider(j) is Enemy:
-				flags |= SKILL_FLOOR_ENEMY
-			else:
-				flags |= SKILL_FLOOR_OTHER
-	return flags
-
-func _weapon_skill_enemy_only_floor() -> bool:
-	return _weapon_skill_waiting_for_ground() and is_on_floor() \
-		and _weapon_skill_floor_contact_flags() == SKILL_FLOOR_ENEMY
-
-func _process_weapon_skill_lunge(on_floor: bool, delta: float) -> void:
-	# Последний короткий шаг не должен добавлять расстояние сверх заданного.
-	var fraction := minf(1.0, _weapon_skill_lunge_left / maxf(delta, 0.000001))
-	velocity.x = _weapon_skill_lunge_dir.x * _weapon_skill_lunge_speed * fraction
-	velocity.z = _weapon_skill_lunge_dir.z * _weapon_skill_lunge_speed * fraction
-	_process_gravity(on_floor, delta)
-
-func _finish_weapon_skill_lunge_step(delta: float) -> void:
-	_weapon_skill_lunge_left = maxf(0.0, _weapon_skill_lunge_left - delta)
-	var blocked := false
-	for i in get_slide_collision_count():
-		var normal := get_slide_collision(i).get_normal()
-		if absf(normal.y) < 0.7 and normal.dot(_weapon_skill_lunge_dir) < -0.4:
-			blocked = true
-			break
-	if blocked:
-		_end_weapon_skill_lunge()
-	elif _weapon_skill_lunge_left <= 0.0:
-		_end_weapon_skill_lunge(true)
-
-func _end_weapon_skill_lunge(completed: bool = false) -> void:
-	_weapon_skill_lunge_completed = completed and _weapon_skill_lunge_mask >= 0
-	if _weapon_skill_lunge_mask >= 0:
-		collision_mask = _weapon_skill_lunge_mask
-		_weapon_skill_lunge_mask = -1
-		velocity.x = 0.0
-		velocity.z = 0.0
-	_weapon_skill_lunge_left = 0.0
-	_weapon_skill_lunge_speed = 0.0
-	_weapon_skill_lunge_dir = Vector3.ZERO
-
-## Рубка топором вниз — отдельное пике, не удар-приземление и без расхода руны.
-func weapon_skill_start_dive(speed: float) -> bool:
-	if speed <= 0.0 or not weapon_skill_arm_landing("axe_dive"):
-		return false
-	_end_weapon_skill_lunge()
-	_dash_time_left = 0.0
-	_end_ram()
-	is_sliding = false
-	_weapon_skill_dive_speed = speed
-	velocity.y = -speed
-	return true
-
-## Зарегистрировать один удар при следующей настоящей посадке.
-func weapon_skill_arm_landing(skill_id: String) -> bool:
-	if skill_id.is_empty() or is_dead or is_on_floor() or is_climbing or is_slamming \
-			or _weapon_skill_landing_used:
-		return false
-	_weapon_skill_landing_id = skill_id
-	_weapon_skill_landing_used = true
-	return true
-
-## Оружие может обнаружить отмену ожидания до касания земли.
-func weapon_skill_landing_pending(skill_id: String) -> bool:
-	return not is_dead and not skill_id.is_empty() and _weapon_skill_landing_id == skill_id
-
-## Прыжок с посохом: множитель задан по высоте, поэтому скорость растёт на sqrt(mult).
-func weapon_skill_start_vault(height_mult: float) -> bool:
-	if height_mult <= 0.0 or is_dead or not is_on_floor() or is_climbing or is_slamming \
-			or (_weapon_skill_landing_used and _weapon_skill_floor_contact_flags() == SKILL_FLOOR_ENEMY):
-		return false
-	weapon_skill_cancel_motion()
-	_dash_time_left = 0.0
-	_end_ram()
-	is_sliding = false
-	_weapon_skill_landing_used = false
-	_jump_buffer_left = 0.0
-	_coyote_left = 0.0
-	velocity.y = jump_velocity * sqrt(height_mult)
-	_slam_ready = true
-	return true
-
-## Отмена не меняет накопленную высоту полёта и не возвращает право на удар в этом полёте.
-func weapon_skill_cancel_motion() -> void:
-	_end_weapon_skill_lunge()
-	_weapon_skill_dive_speed = 0.0
-	_weapon_skill_landing_id = ""
-	weapon_skill_speed_mult = 1.0
-
-## Shift: на земле с зажатым Ctrl — подкат (GDD 5), иначе рывок (если стиль/изъян позволяют).
-func _try_dash(wish: Vector3, on_floor: bool) -> void:
-	if not can_dash(on_floor):
-		return
-	if on_floor and Input.is_action_pressed("slam"):
-		_spend_dash_charge()
-		_start_slide(_dir_or_forward(wish), maxf(slide_speed, horizontal_speed()))
-		for h in body_handlers:
-			h.on_dash(self)
-		return
-	_start_dash(wish)
-
-func _dir_or_forward(wish: Vector3) -> Vector3:
-	if wish != Vector3.ZERO:
-		return wish
-	var dir := -transform.basis.z
-	dir.y = 0
-	return dir.normalized()
-
-## Восстановление рун при ловле Мьёльнира и от приёмов.
-func restore_mjolnir_runes(amount: int) -> void:
-	dash_charges = mini(dash_charges_max, dash_charges + maxi(0, amount))
-	if dash_charges >= dash_charges_max:
-		_dash_recharge_timer = 0.0
-	dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
-
-## В воздухе таймер приостановлен, но его сохранённая доля остаётся видимой в HUD.
-func _rune_recharge_progress() -> float:
-	var duration := maxf(dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult, 0.001)
-	return clampf(_dash_recharge_timer / duration, 0.0, 1.0)
-
-func _spend_dash_charge() -> void:
-	dash_charges -= 1
-	_dash_recharge_timer = 0.0 if dash_charges == dash_charges_max - 1 else _dash_recharge_timer
-	dash_charges_changed.emit(dash_charges, dash_charges_max, _rune_recharge_progress())
-
-func _start_dash(wish: Vector3) -> void:
-	_spend_dash_charge()
-	_dash_entry_speed = horizontal_speed()
-	is_sliding = false
-	_dash_dir = _dir_or_forward(wish)
-	_dash_time_left = dash_duration
-	_dash_in_air = not is_on_floor()
-	_invuln_left = dash_invuln
-	_dash_hit.clear()
-	if dash_ram:
-		_start_ram()
-	camera_fx.kick_fov(14.0)
-	camera_fx.speed_lines_pulse()
-	Audio.play("sounds/sfx/dash.wav")
-	Perf.mark("dash_ram" if dash_ram else "dash")
-	for h in body_handlers:
-		h.on_dash(self)
-	_rune_on_dash()
-
-func _process_dash(delta: float) -> void:
-	_dash_time_left -= delta
-	velocity = _dash_dir * dash_speed
-	velocity.y = 0.0
-	if Run.rune_count("dash_damage") > 0:
-		_dash_damage_tick()
-	if dash_ram:
-		_ram_tick()
-	if _dash_time_left <= 0.0:
-		_end_ram()
-		if _dash_in_air:
-			_dive_window_left = dive_window
-		# Импульс складывается: к скорости до рывка добавляется бонус, но не ниже обычного выхода и не выше предела
-		var exit_speed := minf(maxf(dash_speed * dash_exit_keep, _dash_entry_speed + dash_momentum_bonus), momentum_limit())
-		velocity = _dash_dir * exit_speed
-		velocity.y = 1.5
-		if dash_to_slide and is_on_floor():
-			# Скользящий: скорость рывка не гасится — подкат на ней (до предела ×2.2)
-			velocity.y = 0.0
-			_start_slide(_dash_dir, dash_speed)
-
-## Предел горизонтальной скорости от импульсов (GDD 7.4)
-func momentum_limit() -> float:
-	return effective_move_speed() * momentum_cap
-
-# --- Таран (стиль ram): рывок сквозь врагов ---
-
-func _start_ram() -> void:
-	_ram_hit.clear()
-	if _ram_saved_mask < 0:
-		_ram_saved_mask = collision_mask
-	# Сквозь врагов (слой 3) — бочки и ящики (слой 4) по-прежнему толкаем телом
-	collision_mask = _ram_saved_mask & ~(1 << 2)
-
-func _end_ram() -> void:
-	if _ram_saved_mask >= 0:
-		collision_mask = _ram_saved_mask
-		_ram_saved_mask = -1
-
-## Каждый кадр тарана: враги рядом получают урон и отлетают в стороны, бочки — толчок.
-func _ram_tick() -> void:
-	var space := get_world_3d().direct_space_state
-	var q := PhysicsShapeQueryParameters3D.new()
-	var s := SphereShape3D.new()
-	s.radius = ram_radius
-	q.shape = s
-	q.transform = Transform3D(Basis.IDENTITY, global_position + Vector3(0, 0.9, 0))
-	q.collision_mask = (1 << 2) | (1 << 3)
-	q.exclude = [get_rid()]
-	var right := _dash_dir.cross(Vector3.UP)
-	for hit in space.intersect_shape(q, 16):
-		var c: Object = hit.collider
-		if c == null or _ram_hit.has(c.get_instance_id()):
-			continue
-		_ram_hit[c.get_instance_id()] = true
-		var c3 := c as Node3D
-		var side := signf(right.dot(c3.global_position - global_position))
-		if side == 0.0:
-			side = 1.0
-		var knock := (_dash_dir * 0.6 + right * side).normalized() * ram_knockback + Vector3.UP * ram_knock_up
-		if c is Enemy:
-			if not (c as Enemy).is_dead:
-				deal_damage(c, ram_damage, knock, "dash")
-				camera_fx.add_trauma(0.18)
-				FX.hitstop(0.03)
-				Audio.play("sounds/sfx/axe_hit_1.wav, sounds/sfx/axe_hit_2.wav")
-		elif c is Destructible:
-			# Бочки и ящики на пути тарана разлетаются
-			_dash_hit[c.get_instance_id()] = true
-			(c as Destructible).take_hit(PropDebris.cfg().dash_damage, knock.normalized() * ram_prop_impulse, "dash")
-		elif c is RigidBody3D:
-			var rb := c as RigidBody3D
-			rb.apply_central_impulse(knock.normalized() * ram_prop_impulse * rb.mass)
-			rb.apply_torque_impulse(Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * rb.mass * 2.0)
-	Perf.mark("ram_tick")
-
-# --- Подкат (Ctrl + Shift на земле; у Скользящего — продолжение рывка) ---
-
-func _start_slide(dir: Vector3, speed: float) -> void:
-	is_sliding = true
-	_slide_dir = dir
-	_slide_speed = minf(speed, momentum_limit())
-	_slide_left = slide_duration
-	camera_fx.kick_fov(6.0)
-	Audio.play("sounds/sfx/dash.wav")
-	Perf.mark("slide")
-
-func _process_slide(wish: Vector3, on_floor: bool, delta: float) -> void:
-	_slide_left -= delta
-	_slide_speed = maxf(0.0, _slide_speed - slide_friction * delta)
-	if wish != Vector3.ZERO:
-		var ang := _slide_dir.signed_angle_to(wish, Vector3.UP)
-		_slide_dir = _slide_dir.rotated(Vector3.UP, clampf(ang, -slide_steer * delta, slide_steer * delta)).normalized()
-	velocity.x = _slide_dir.x * _slide_speed
-	velocity.z = _slide_dir.z * _slide_speed
-	if not on_floor or _slide_left <= 0.0 or _slide_speed < effective_move_speed() * slide_min_speed_ratio:
-		# Слетел с края или подкат кончился — скорость остаётся, дальше обычный бег/полёт
-		is_sliding = false
-
-func _dash_damage_tick() -> void:
-	var space := get_world_3d().direct_space_state
-	var q := PhysicsShapeQueryParameters3D.new()
-	var s := SphereShape3D.new()
-	s.radius = 1.3
-	q.shape = s
-	q.transform = Transform3D(Basis.IDENTITY, global_position + Vector3(0, 0.6, 0))
-	q.collision_mask = 1 << 2
-	q.exclude = [get_rid()]
-	var dmg := dash_damage * Run.rune_count("dash_damage")
-	for hit in space.intersect_shape(q, 16):
-		var c: Object = hit.collider
-		if c and c.has_method("take_hit") and not _dash_hit.has(c.get_instance_id()):
-			_dash_hit[c.get_instance_id()] = true
-			deal_damage(c, dmg, _dash_dir * 9.0 + Vector3.UP * 3.0, "dash")
-
-# --- Удар-приземление ---
-
-## Доступен после воздушного прыжка/специального подброса или на достаточной высоте над поверхностью.
-func can_start_slam() -> bool:
-	if is_dead or is_on_floor() or is_climbing or is_slamming:
-		return false
-	if _slam_ready:
-		return true
-	return slam_surface_hit(slam_min_height).is_empty()
-
-## Ближайшая поверхность под ногами для проверки удара и его шкалы в HUD.
-func slam_surface_hit(distance: float) -> Dictionary:
-	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + Vector3.DOWN * distance,
-		collision_mask & SLAM_SURFACE_MASK, [get_rid()])
-	return get_world_3d().direct_space_state.intersect_ray(q)
-
-## allow_latched — уже разрешённое при броске пике в том же полёте; само оно не обходит проверку смерти/посадки.
-func _start_slam(allow_latched: bool = false) -> bool:
-	if not can_start_slam():
-		if not allow_latched or is_dead or is_on_floor() or is_climbing or is_slamming:
-			if _slam_hint_left <= 0.0:
-				_slam_hint_left = slam_hint_cooldown
-				slam_unavailable.emit()
-			return false
-	weapon_skill_cancel_motion()
-	# Пике (GDD 7.2): сразу после рывка в воздухе — наклонно по направлению взгляда
-	is_diving = (_dash_time_left > 0.0 and _dash_in_air) or _dive_window_left > 0.0
-	_dive_window_left = 0.0
-	_slam_velocity = Vector3(0, -slam_speed, 0)
-	if is_diving:
-		var f := get_aim_forward()
-		f.y = 0.0
-		f = f.normalized() if f.length() > 0.01 else _dash_dir
-		_slam_velocity = f * dive_horizontal_speed + Vector3.DOWN * dive_down_speed
-		camera_fx.speed_lines_pulse()
-		Perf.mark("dive")
-	is_slamming = true
-	_dash_time_left = 0.0
-	_end_ram()
-	is_sliding = false
-	camera_fx.kick_fov(-6.0)
-	Audio.play("sounds/jump_c.ogg")
-	Audio.thor_grunt()
-	return true
-
-## Отмена удара-приземления (GDD 7.2): рывок во время падения — дальше обычное падение
-func _cancel_slam() -> void:
-	is_slamming = false
-	is_diving = false
-	velocity = Vector3(velocity.x, maxf(velocity.y, -4.0), velocity.z)
-	Perf.mark("slam_cancel")
-
-func _on_landed() -> void:
-	# Контакт с головой врага может считаться полом в тот же кадр: это отскок, а не посадка.
-	if _stomp_cooldown > 0.0 and velocity.y > 0.0:
-		return
-	var skill_id := _weapon_skill_landing_id
-	_weapon_skill_landing_id = ""
-	_weapon_skill_dive_speed = 0.0
-	_weapon_skill_landing_used = false
-	_slam_ground_contacts += 1
-	_slam_ready = false
-	var fall := maxf(0.0, _air_peak_y - global_position.y)
-	if is_slamming:
-		is_slamming = false
-		is_diving = false
-		_do_slam_impact(fall)
-		velocity.x = 0
-		velocity.z = 0
-		if _last_slam_hits > 0:
-			_slam_bounce(fall)
-		else:
-			_super_jump_left = super_jump_window
-	else:
-		if fall > 1.5:
-			camera_fx.land_dip(clampf(fall / 10.0, 0.05, 0.35))
-			Audio.play("sounds/land.ogg")
-	if not skill_id.is_empty() and not is_dead:
-		weapon_skill_landed.emit(skill_id)
-
-func _do_slam_impact(height: float) -> void:
-	# Тяжёлый стиль: ×1.5 по радиусу и урону (slam_radius_mult / slam_damage_mult)
-	# Руны: Тяжесть горы (радиус), Падение звезды (урон за метр высоты)
-	var radius := (slam_base_radius + height * slam_radius_per_meter) * slam_radius_mult * (1.0 + Run.rune_value("mountain_weight"))
-	var damage := (slam_base_damage + height * slam_damage_per_meter * Run.rune_value("star_fall")) * slam_damage_mult
-	var knock := slam_base_knockback + height * slam_knockback_per_meter
-	var center := global_position
-	_last_slam_hits = 0
-	var space := get_world_3d().direct_space_state
-	_slam_break_floor(space, height)
-	var q := PhysicsShapeQueryParameters3D.new()
-	var s := SphereShape3D.new()
-	s.radius = radius
-	q.shape = s
-	q.transform = Transform3D(Basis.IDENTITY, center)
-	q.collision_mask = (1 << 2) | (1 << 3) | (1 << 6)
-	q.exclude = [get_rid()]
-	for hit in space.intersect_shape(q, 64):
-		var c: Object = hit.collider
-		if c == null:
-			continue
-		var c3 := c as Node3D
-		var dir := (c3.global_position - center)
-		dir.y = 0
-		var dist := dir.length()
-		dir = dir.normalized() if dist > 0.01 else Vector3.FORWARD
-		var falloff := clampf(1.0 - dist / radius, 0.35, 1.0)
-		var push := dir * knock * falloff + Vector3.UP * knock * 0.55 * falloff
-		if c is Destructible:
-			# Бочки и ящики в радиусе — без спада урона к краю (DestructTuning.slam_full_damage)
-			(c as Destructible).take_hit(damage if PropDebris.cfg().slam_full_damage else damage * falloff, push, "slam")
-		elif c.has_method("take_hit"):
-			deal_damage(c, damage * falloff, push, "slam")
-			if c is Enemy:
-				_last_slam_hits += 1
-				# Руна «Оглушающий гром» — оглушение ударом-приземлением (берётся большее из стиля и руны)
-				var stun_time := maxf(slam_stun, Run.rune_value("stun_thunder"))
-				if stun_time > 0.0 and is_instance_valid(c) and c.has_method("stun"):
-					c.call("stun", stun_time)
-		elif c is RigidBody3D:
-			(c as RigidBody3D).apply_central_impulse(push * (c as RigidBody3D).mass * 0.6)
-	if Run.rune_level("slam_fire") > 0:
-		var fire := preload("res://weapons/fire_zone.gd").new()
-		get_parent().add_child(fire)
-		fire.setup(center, radius * 0.8, Run.rune_value("slam_fire"), 22.0)
-	var power := clampf(0.25 + height / 14.0, 0.25, 1.0)
-	camera_fx.add_trauma(power)
-	camera_fx.land_dip(0.25 + power * 0.2)
-	FX.ring(get_parent(), center, radius, Color(1.0, 0.85, 0.5, 0.9), 0.4)
-	FX.burst(get_parent(), center + Vector3(0, 0.3, 0), radius * 0.35, Color(1, 0.9, 0.6, 0.45), 0.25)
-	FX.sparks(get_parent(), center + Vector3(0, 0.2, 0), Color(0.55, 0.47, 0.4), 26 + int(power * 20), 7.0 + power * 6.0, 18.0, 0.14, 0.7)
-	FX.slam_impact(get_parent(), center, radius, height)  # волна и трещина (VFX-комплект)
-	FX.hitstop(0.06 + power * 0.04)
-	ComicFX.on_slam(center, height)
-	Audio.play("sounds/sfx/slam.wav")
-	slammed.emit(power)
-	for h in body_handlers:
-		h.on_slam(self, power, _last_slam_hits)
-	if height >= big_slam_height:
-		Odin.say("big_slam")
-		Dialogue.thor_bark("slam", 0.6)
-
-## Удар-приземление по деревянному мосту/настилу (Balcony со slam_breakable) — настил ломается (GDD 16).
-func _slam_break_floor(space: PhysicsDirectSpaceState3D, height: float) -> void:
-	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 0.3, 0), global_position + Vector3(0, -0.6, 0), 1, [get_rid()])
-	var hit := space.intersect_ray(q)
-	var deck := hit.get("collider") as Balcony if not hit.is_empty() else null
-	if deck:
-		deck.on_slam(height)
-
-# --- Прыжки по GDD 7.2: отскок, прыжок по головам, залезание на уступ ---
-
-## Удар-приземление задел врагов — подбрасывает на долю высоты падения, двойной прыжок восстанавливается.
-func _slam_bounce(fall: float) -> void:
-	# Тяжёлый стиль: отскок выше (slam_bounce_mult)
-	var h := maxf(fall * slam_bounce_ratio, slam_bounce_min_height) * slam_bounce_mult
-	velocity.y = sqrt(2.0 * gravity * h)
-	# Прыжок в окне — не ниже супер-прыжка: отскок от врагов не должен отнимать супер-прыжок
-	_bounce_boost_velocity = maxf(sqrt(2.0 * gravity * h * slam_bounce_boost), jump_velocity * sqrt(super_jump_height_mult))
-	_bounce_window_left = maxf(slam_bounce_window, super_jump_window)
-	_slam_ready = true
-	_jumps_left = extra_jumps
-	_air_peak_y = global_position.y
-	Perf.mark("slam_bounce")
-	StyleMeter.event(&"slam_bounce")
-
-## Приземлился на врага сверху (без удара-приземления) — отскок, как в Mario.
-func _check_stomp(pre_velocity: Vector3) -> void:
-	if _stomp_cooldown > 0.0 or is_slamming or pre_velocity.y > -1.0 or not can_stomp():
-		return
-	for i in get_slide_collision_count():
-		var col := get_slide_collision(i)
-		var e := col.get_collider() as Enemy
-		if e == null or e.is_dead or col.get_normal().y < 0.6:
-			continue
-		deal_damage(e, stomp_damage, Vector3(0, -1, 0), "stomp")
-		if e.has_method("stun"):
-			e.stun(stomp_stun)
-		velocity.y = stomp_bounce_velocity
-		_slam_ready = true
-		_jumps_left = extra_jumps
-		_air_peak_y = global_position.y
-		_stomp_cooldown = 0.2
-		camera_fx.add_trauma(0.12)
-		FX.ring(get_parent(), e.global_position + Vector3(0, 1.8 * e.model_scale, 0), 0.8, Color(1, 0.95, 0.7, 0.8), 0.2)
-		Audio.sfx("helmet_bonk", "sounds/jump_b.ogg")
-		Perf.mark("stomp")
-		StyleMeter.event(&"stomp")
-		return
-
-## Прыжок по головам и залезание зависят от оружия в руке (этап 1): с ренжем по головам не прыгаем.
-func can_stomp() -> bool:
-	return not (has_method("is_ranged_active") and call("is_ranged_active"))
-
-## Край на уровне груди или чуть выше, игрок жмёт вперёд в стену — залезаем сами за ledge_climb_time.
-func _check_ledge(wish: Vector3) -> void:
-	if _climb_check_cooldown > 0.0 or is_slamming or _dash_time_left > 0.0 or wish == Vector3.ZERO:
-		return
-	if velocity.y > 4.0:
-		return
-	var fwd := -global_transform.basis.z
-	fwd.y = 0
-	fwd = fwd.normalized()
-	if wish.dot(fwd) < 0.5:
-		return
-	var space := get_world_3d().direct_space_state
-	var base := global_position
-	# 1) Стена перед грудью
-	var chest := PhysicsRayQueryParameters3D.create(base + Vector3(0, 1.0, 0), base + Vector3(0, 1.0, 0) + fwd * 0.75, 1)
-	chest.exclude = [get_rid()]
-	var wall := space.intersect_ray(chest)
-	if wall.is_empty() or absf((wall.normal as Vector3).y) > 0.3:
-		return
-	# 2) Верх уступа: луч вниз чуть за стеной
-	var probe_xz: Vector3 = (wall.position as Vector3) + fwd * 0.4
-	var top_q := PhysicsRayQueryParameters3D.create(Vector3(probe_xz.x, base.y + ledge_max_height + 0.3, probe_xz.z), Vector3(probe_xz.x, base.y + ledge_min_height - 0.05, probe_xz.z), 1)
-	top_q.exclude = [get_rid()]
-	var top := space.intersect_ray(top_q)
-	if top.is_empty() or (top.normal as Vector3).y < 0.7:
-		return
-	var top_y: float = (top.position as Vector3).y
-	var h := top_y - base.y
-	if h < ledge_min_height or h > ledge_max_height:
-		return
-	# 3) Место наверху: капсула игрока помещается
-	var dest := Vector3(probe_xz.x, top_y + 0.05, probe_xz.z) + fwd * 0.2
-	var col := get_node_or_null("Collider") as CollisionShape3D
-	if col and col.shape:
-		var q := PhysicsShapeQueryParameters3D.new()
-		q.shape = col.shape
-		q.transform = Transform3D(Basis.IDENTITY, dest + col.position + Vector3(0, 0.05, 0))
-		q.collision_mask = 1
-		q.exclude = [get_rid()]
-		if not space.intersect_shape(q, 1).is_empty():
-			return
-	_start_climb(dest)
-
-## Отскок от стены: стена рядом (лучи по 8 направлениям на уровне груди) — толчок от неё и вверх.
-func _try_wall_jump() -> bool:
-	var space := get_world_3d().direct_space_state
-	var origin := global_position + Vector3(0, 1.0, 0)
-	var best_n := Vector3.ZERO
-	var best_d := 0.75
-	for i in 8:
-		var a := TAU * i / 8.0
-		var dir := Vector3(cos(a), 0, sin(a))
-		var q := PhysicsRayQueryParameters3D.create(origin, origin + dir * 0.75, 1)
-		q.exclude = [get_rid()]
-		var hit := space.intersect_ray(q)
-		if hit.is_empty() or absf((hit.normal as Vector3).y) > 0.3:
-			continue
-		var d := origin.distance_to(hit.position)
-		if d < best_d:
-			best_d = d
-			best_n = hit.normal
-	if best_n == Vector3.ZERO:
-		return false
-	_wall_jumps_left -= 1
-	var n := Vector3(best_n.x, 0, best_n.z).normalized()
-	var horiz := Vector3(velocity.x, 0, velocity.z)
-	# Гасим скорость в стену, добавляем толчок от неё
-	horiz -= n * minf(horiz.dot(n), 0.0)
-	horiz += n * wall_jump_push * wall_jump_mult
-	velocity = Vector3(horiz.x, wall_jump_up * wall_jump_mult, horiz.z)
-	camera_fx.kick_fov(4.0)
-	FX.ring(get_parent(), global_position + Vector3(0, 1.0, 0) - n * best_d, 0.6, Color(0.8, 0.9, 1.0, 0.7), 0.2)
-	Audio.play("sounds/jump_b.ogg, sounds/jump_c.ogg")
-	Perf.mark("wall_jump")
-	return true
-
-func _start_climb(dest: Vector3) -> void:
-	weapon_skill_cancel_motion()
-	is_climbing = true
-	_climb_t = 0.0
-	_climb_time = ledge_climb_time * (ledge_climb_ranged_mult if (has_method("is_ranged_active") and call("is_ranged_active")) else 1.0)
-	_climb_from = global_position
-	_climb_mid = Vector3(global_position.x, dest.y + 0.1, global_position.z)
-	_climb_to = dest
-	velocity = Vector3.ZERO
-	camera_fx.land_dip(0.12)
-	Audio.play("sounds/jump_a.ogg")
-	Perf.mark("ledge_climb")
-
-func _process_climb(delta: float) -> void:
-	_climb_t += delta
-	var k := clampf(_climb_t / maxf(_climb_time, 0.01), 0.0, 1.0)
-	# Сначала вверх (60 % времени), потом вперёд на уступ
-	if k < 0.6:
-		global_position = _climb_from.lerp(_climb_mid, ease(k / 0.6, 0.6))
-	else:
-		global_position = _climb_mid.lerp(_climb_to, (k - 0.6) / 0.4)
-	if k >= 1.0:
-		is_climbing = false
-		_slam_ground_contacts += 1
-		_weapon_skill_landing_used = false
-		_climb_check_cooldown = 0.3
-		var fwd := -global_transform.basis.z
-		fwd.y = 0
-		velocity = fwd.normalized() * 3.0
-		_jumps_left = extra_jumps
-		_air_peak_y = global_position.y
-		_was_on_floor = true
-
-func _push_rigid_bodies(pre_velocity: Vector3) -> void:
-	for i in get_slide_collision_count():
-		var col := get_slide_collision(i)
-		var body := col.get_collider() as RigidBody3D
-		if body == null:
-			continue
-		var speed := pre_velocity.length()
-		var dir := -col.get_normal()
-		dir.y = maxf(dir.y, 0.15)
-		var dashing := _dash_time_left > 0.0
-		if dashing and body is Destructible and not _dash_hit.has(body.get_instance_id()):
-			# Рывок в бочку/ящик — ломает (один раз за рывок)
-			_dash_hit[body.get_instance_id()] = true
-			(body as Destructible).take_hit(PropDebris.cfg().dash_damage, _dash_dir * 8.0 + Vector3.UP * 2.0, "dash")
-			continue
-		var force := push_force * (speed * (2.2 if dashing else 0.35))
-		body.apply_central_impulse(dir.normalized() * force)
-
-func _update_footsteps(on_floor: bool) -> void:
-	var moving := Vector2(velocity.x, velocity.z).length() > 1.5
-	footsteps.stream_paused = not (on_floor and moving and _dash_time_left <= 0.0)
-
-# --- Урон ---
-
-func is_invulnerable() -> bool:
-	return _invuln_left > 0.0 or is_dead
-
-func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln: bool = false) -> void:
-	Perf.mark("player_hurt")
-	if is_dead:
-		return
-	if is_invulnerable() and not ignore_invuln:
-		return
-	# Пассивки/изъяны тела могут уменьшить урон (скальд: первый удар в зале не ранит)
-	for h in body_handlers:
-		amount = h.on_damaged(self, amount)
-	if amount <= 0.0:
-		_invuln_left = 0.25
-		RunTracker.pending_source = ""
-		return
-	amount = _rune_on_damaged(amount)
-	if amount <= 0.0:
-		_invuln_left = 0.25
-		return
-	health -= amount
-	# Берсерк: Тора не сбивают — удары не отбрасывают
-	if not (style and style.is_stun_immune()):
-		velocity += knockback
-	# Урон сбивает шкалу стиля
-	if style:
-		style.on_damaged(amount)
-	_invuln_left = 0.25
-	camera_fx.add_trauma(clampf(amount / 30.0, 0.15, 0.6))
-	Run.register_player_hit()
-	hurt.emit(amount)
-	health_changed.emit(maxf(health, 0.0), max_health)
-	Audio.play("sounds/sfx/player_hurt.wav")
-	Audio.thor_pain()
-	if health <= 0.0 and not _rune_second_wind():
-		_die()
-
-## Подброс прыжковой руной (rooms/jump_pad.gd): на height метров, прыжки в воздухе восстановлены, удар-приземление прерван.
-func launch_up(height: float) -> void:
-	weapon_skill_cancel_motion()
-	if is_slamming:
-		_cancel_slam()
-	_dash_time_left = 0.0
-	_end_ram()
-	velocity.y = sqrt(2.0 * gravity * maxf(height, 0.5))
-	_slam_ready = true
-	_jumps_left = extra_jumps
-	_wall_jumps_left = wall_jumps
-	_coyote_left = 0.0
-	camera_fx.kick_fov(10.0)
-	camera_fx.speed_lines_pulse()
-
-## Плата здоровьем (сделка Локи, «Кот в мешке»): без защиты рун/тела, не убивает (остаётся ≥ 1 HP).
-func pay_health(amount: float) -> void:
-	if is_dead or amount <= 0.0:
-		return
-	health = maxf(1.0, health - amount)
-	camera_fx.add_trauma(0.2)
-	hurt.emit(amount)
-	health_changed.emit(health, max_health)
-	Audio.play("sounds/sfx/player_hurt.wav")
-
-func heal(amount: float) -> void:
-	# Изъян Берсерка: лечение −50 %
-	amount *= float(modify_stat(&"heal_mult", 1.0))
-	health = minf(max_health, health + amount)
-	health_changed.emit(health, max_health)
-
-func _die() -> void:
-	is_dead = true
-	input_enabled = false
-	weapon_skill_cancel_motion()
-	_end_ram()
-	is_sliding = false
-	footsteps.stream_paused = true
-	var tw := create_tween()
-	tw.tween_property(head, "position:y", 0.25, 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BOUNCE)
-	tw.parallel().tween_property(camera, "rotation:z", deg_to_rad(35), 0.6)
-	died.emit()
+# --- Прицел и скорость ---
 
 func get_aim_origin() -> Vector3:
 	return camera.global_position
@@ -1288,11 +487,8 @@ func _setup_weapons() -> void:
 		weapons = WeaponHolder.new()
 		weapons.name = "Weapons"
 		add_child(weapons)
-	if not weapons.active_changed.is_connected(_on_weapon_skill_slot_changed):
-		weapons.active_changed.connect(_on_weapon_skill_slot_changed)
-
-func _on_weapon_skill_slot_changed(_slot: int) -> void:
-	weapon_skill_cancel_motion()
+	if not weapons.active_changed.is_connected(skills._on_weapon_skill_slot_changed):
+		weapons.active_changed.connect(skills._on_weapon_skill_slot_changed)
 
 ## Скорость бега с учётом оружия в руке.
 func effective_move_speed() -> float:
@@ -1326,45 +522,6 @@ func is_ranged_active() -> bool:
 ## Стиль мили в слоте: blade / blunt / pierce (для слов-ударов этапа 4).
 func current_melee_style() -> String:
 	return weapons.melee_style() if weapons else "blade"
-
-## Лечение за убийство: базовое + бонус за добивание мили.
-func kill_heal(source: String) -> float:
-	return heal_per_kill + (melee_kill_heal if source.begins_with("melee") else 0.0)
-
-# --- Стиль движения тела (GDD 7.3) ---
-
-## Кладёт числа и флаги стиля в поля игрока. Заряды рывка — у тела (BodyDef.dash_charges).
-func apply_movement_profile(mp: MovementProfile) -> void:
-	if mp == null:
-		return
-	movement_profile = mp
-	dash_speed = mp.dash_speed
-	dash_duration = mp.dash_duration
-	dash_recharge = mp.dash_recharge
-	dash_on_ground = mp.dash_on_ground
-	dash_in_air = mp.dash_in_air
-	dash_ram = mp.dash_ram
-	ram_damage = mp.ram_damage
-	ram_knockback = mp.ram_knockback
-	ram_knock_up = mp.ram_knock_up
-	ram_radius = mp.ram_radius
-	ram_prop_impulse = mp.ram_prop_impulse
-	dash_to_slide = mp.dash_to_slide
-	slide_friction = mp.slide_friction
-	extra_jumps = mp.extra_jumps
-	_jumps_left = extra_jumps
-	wall_jumps = mp.wall_jumps
-	_wall_jumps_left = wall_jumps
-	wall_jump_mult = mp.wall_jump_mult
-	slam_radius_mult = mp.slam_radius_mult
-	slam_damage_mult = mp.slam_damage_mult
-	slam_stun = mp.slam_stun
-	slam_bounce_mult = mp.slam_bounce_mult
-	momentum_cap = mp.momentum_cap
-	keep_air_momentum = mp.keep_air_momentum
-
-func movement_style() -> String:
-	return movement_profile.id if movement_profile else "base"
 
 # --- Пассивки и изъяны тела (GDD 6) ---
 
@@ -1414,32 +571,23 @@ func deal_damage(target: Object, amount: float, knock: Vector3, source: String) 
 	if target is Destructible:
 		(target as Destructible).take_hit(amount, knock, source)
 		return amount
-	var dmg := amount * outgoing_damage_mult(target, source) * _rune_damage_mult(target, source)
-	var crit := _roll_crit(source)
+	var dmg := amount * outgoing_damage_mult(target, source) * runes._rune_damage_mult(target, source)
+	var crit := runes._roll_crit(source)
 	if crit:
 		dmg *= crit_mult
-		_on_crit(target)
+		runes._on_crit(target)
 	target.call("take_hit", dmg, knock, source)
-	_rune_on_hit(target, source)
+	runes._rune_on_hit(target, source)
 	for h in body_handlers:
 		h.on_hit(self, target, dmg, source)
 	return dmg
 
 ## Начало зала (Game._load_room): скальд снова «не чувствует» первый удар.
 func on_room_start() -> void:
-	weapon_skill_cancel_motion()
+	skills.weapon_skill_cancel_motion()
 	_weapon_skill_landing_used = false
 	for h in body_handlers:
 		h.on_room_start(self)
-
-func _on_kill_registered(source: String) -> void:
-	if is_dead:
-		return
-	# Клык Фенрира: лечение за добивание мили
-	if source.begins_with("melee") and Run.rune_level("fenrir_fang") > 0:
-		heal(Run.rune_value("fenrir_fang"))
-	for h in body_handlers:
-		h.on_kill(self, source)
 
 # --- Шкала стиля «ДОСТОЙНО!» (блок Б3, GDD 8) ---
 
@@ -1466,125 +614,160 @@ func is_berserk() -> bool:
 func music_intensity(fighting: bool) -> int:
 	return style.music_level(fighting) if style else (1 if fighting else 0)
 
+# --- Функции компонентов, доступные на Player ---
+# API игрока (take_damage, heal, can_start_slam…) и приватные функции, которые зовут тесты и трейты
+# (## совместимость). Реализация и описание — в компоненте.
 
-# --- Руны по GDD 11 (блок Т): значения — Run.rune_value(id) по уровню руны ---
+# PlayerMovement (player_movement.gd)
 
-## Множитель урона от рун: «Нож в спину Локи» (удар мили в спину), проклятые руны Локи.
-func _rune_damage_mult(target: Object, source: String) -> float:
-	var m := 1.0
-	if Run.rune_level("loki_hiccup") > 0:
-		m *= Run.rune_value("loki_hiccup")
-	if Run.rune_level("loki_glass") > 0:
-		m *= Run.rune_value("loki_glass")
-	var e := target as Enemy
-	if e and source.begins_with("melee") and Run.rune_level("loki_backstab") > 0:
-		var to_p := global_position - e.global_position
-		to_p.y = 0
-		if to_p.length() > 0.01 and e.global_transform.basis.z.dot(to_p.normalized()) < -0.35:
-			m *= Run.rune_value("loki_backstab")
-	return m
+## API игрока → movement.momentum_limit (описание там)
+func momentum_limit() -> float:
+	return movement.momentum_limit()
 
-## Крит (GDD 8): базовые 5 % + «Глаз ворона». Молнии, огонь и стены не критуют.
-func _roll_crit(source: String) -> bool:
-	if not (source.begins_with("melee") or source == "ranged" or source == "hammer"):
-		return false
-	return randf() < crit_chance_base + Run.rune_value("raven_eye")
+## API игрока → movement.apply_movement_profile (описание там)
+func apply_movement_profile(mp: MovementProfile) -> void:
+	movement.apply_movement_profile(mp)
 
-func _on_crit(target: Object) -> void:
-	Perf.mark("crit")
-	FX.hitstop(crit_hitstop)
-	Audio.sfx("critical_hit")
-	var t3 := target as Node3D
-	if t3:
-		FX.sparks(get_parent(), t3.global_position + Vector3(0, 1.4, 0), Color(1, 0.9, 0.2), 12, 6.0)
+## API игрока → movement.movement_style (описание там)
+func movement_style() -> String:
+	return movement.movement_style()
 
-## «Зов грома»: каждый N-й удар мили — молния с неба по цели (1 У).
-func _rune_on_hit(target: Object, source: String) -> void:
-	if not source.begins_with("melee") or Run.rune_level("thunder_call") == 0:
-		return
-	_thunder_hits += 1
-	if _thunder_hits < int(Run.rune_value("thunder_call")):
-		return
-	_thunder_hits = 0
-	var t3 := target as Node3D
-	if t3 == null or not is_instance_valid(t3):
-		return
-	var top := t3.global_position + Vector3(randf_range(-0.5, 0.5), 9.0, randf_range(-0.5, 0.5))
-	FX.lightning(get_parent(), top, t3.global_position + Vector3(0, 1.0, 0), 0.3)
-	Audio.play("sounds/sfx/lightning.wav")
-	Perf.mark("thunder_call")
-	if t3.has_method("take_hit") and not t3.get("is_dead"):
-		t3.call("take_hit", thunder_call_damage, Vector3.UP * 2.0, "lightning")
+# PlayerJumps (player_jumps.gd)
 
-## «Огненный шаг»: рывок оставляет огонь.
-func _rune_on_dash() -> void:
-	if Run.rune_level("fire_step") == 0:
-		return
-	var fire := preload("res://weapons/fire_zone.gd").new()
-	get_parent().add_child(fire)
-	fire.setup(global_position, 1.6, Run.rune_value("fire_step"), 18.0)
+## совместимость → jumps._process_jump
+func _process_jump(on_floor: bool) -> void:
+	jumps._process_jump(on_floor)
 
-## Входящий урон: «Стеклянная пушка» (×1.5), «Шкура медведя» (−%), «Щит Сиф» принимает урон первым.
-func _rune_on_damaged(amount: float) -> float:
-	if Run.rune_level("loki_glass") > 0:
-		amount *= 1.5
-	amount *= 1.0 - minf(0.6, Run.rune_value("bear_skin"))
-	if shield > 0.0:
-		var absorbed := minf(shield, amount)
-		shield -= absorbed
-		amount -= absorbed
-		health_changed.emit(health, max_health)
-	return amount
+## API игрока → jumps.can_stomp (описание там)
+func can_stomp() -> bool:
+	return jumps.can_stomp()
 
-## «Второе дыхание»: один раз за забег встать с частью HP вместо смерти.
-func _rune_second_wind() -> bool:
-	if _second_wind_used or Run.rune_level("second_wind") == 0:
-		return false
-	_second_wind_used = true
-	health = max_health * Run.rune_value("second_wind")
-	_invuln_left = 1.5
-	health_changed.emit(health, max_health)
-	FX.ring(get_parent(), global_position, 3.0, Color(0.5, 1.0, 0.6, 0.9), 0.5)
-	FX.hitstop(0.15)
-	camera_fx.add_trauma(0.4)
-	Perf.mark("second_wind")
-	Odin.say("second_wind")
-	return true
+## API игрока → jumps.launch_up (описание там)
+func launch_up(height: float) -> void:
+	jumps.launch_up(height)
 
-## «Щит Сиф» восстанавливается между волнами (Game → Room.wave_started).
+# PlayerSlam (player_slam.gd)
+
+## API игрока → slam.can_start_slam (описание там)
+func can_start_slam() -> bool:
+	return slam.can_start_slam()
+
+## API игрока → slam.slam_surface_hit (описание там)
+func slam_surface_hit(distance: float) -> Dictionary:
+	return slam.slam_surface_hit(distance)
+
+## совместимость → slam._start_slam
+func _start_slam(allow_latched: bool = false) -> bool:
+	return slam._start_slam(allow_latched)
+
+## совместимость → slam._cancel_slam
+func _cancel_slam() -> void:
+	slam._cancel_slam()
+
+## совместимость → slam._do_slam_impact
+func _do_slam_impact(height: float) -> void:
+	slam._do_slam_impact(height)
+
+## совместимость → slam._slam_bounce
+func _slam_bounce(fall: float) -> void:
+	slam._slam_bounce(fall)
+
+# PlayerDash (player_dash.gd)
+
+## API игрока → dash.can_dash (описание там)
+func can_dash(on_floor: bool) -> bool:
+	return dash.can_dash(on_floor)
+
+## API игрока → dash.restore_mjolnir_runes (описание там)
+func restore_mjolnir_runes(amount: int) -> void:
+	dash.restore_mjolnir_runes(amount)
+
+## совместимость → dash._spend_dash_charge
+func _spend_dash_charge() -> void:
+	dash._spend_dash_charge()
+
+## совместимость → dash._start_dash
+func _start_dash(wish: Vector3) -> void:
+	dash._start_dash(wish)
+
+## совместимость → dash._end_ram
+func _end_ram() -> void:
+	dash._end_ram()
+
+# PlayerHealth (player_health.gd)
+
+## API игрока → vitals.is_invulnerable (описание там)
+func is_invulnerable() -> bool:
+	return vitals.is_invulnerable()
+
+## API игрока → vitals.take_damage (описание там)
+func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln: bool = false) -> void:
+	vitals.take_damage(amount, knockback, ignore_invuln)
+
+## API игрока → vitals.pay_health (описание там)
+func pay_health(amount: float) -> void:
+	vitals.pay_health(amount)
+
+## API игрока → vitals.heal (описание там)
+func heal(amount: float) -> void:
+	vitals.heal(amount)
+
+## совместимость → vitals._die
+func _die() -> void:
+	vitals._die()
+
+## API игрока → vitals.kill_heal (описание там)
+func kill_heal(source: String) -> float:
+	return vitals.kill_heal(source)
+
+## API игрока → vitals.refill_shield (описание там)
 func refill_shield() -> void:
-	if shield_max > 0.0 and shield < shield_max:
-		shield = shield_max
-		health_changed.emit(health, max_health)
+	vitals.refill_shield()
 
-## Помощь «замедление при ударе-приземлении» (GDD 22, облегчённый режим без штрафа к Славе):
-## пока падаешь ударом-приземлением и в окне супер-прыжка/отскока после него — время идёт медленнее.
-## Hit-stop главнее: пока он идёт, масштаб не трогаем (FX вернёт 1.0 сам).
-func _slam_assist_tick() -> void:
-	var want := GameSettings.slam_slowmo() and not is_dead and (is_slamming or _super_jump_left > 0.0 or _bounce_window_left > 0.0)
-	if FX._hitstop_left > 0.0 or FX._slow_left > 0.0:
-		return
-	if want and not is_equal_approx(Engine.time_scale, slam_assist_time_scale):
-		FX._set_time_scale(slam_assist_time_scale)
-		_slam_assist_on = true
-	elif not want and _slam_assist_on:
-		_slam_assist_on = false
-		FX._set_time_scale(1.0)
+# PlayerWeaponSkills (player_weapon_skills.gd)
 
-## Проклятые руны Локи: икота (подпрыгивает сам) и «вертушка» (камера крутится на 180°).
-func _rune_tick(delta: float) -> void:
-	if Run.rune_level("loki_hiccup") > 0:
-		_hiccup_t += delta
-		if _hiccup_t >= hiccup_period:
-			_hiccup_t = 0.0
-			if is_on_floor():
-				velocity.y = jump_velocity * 0.6
-			camera_fx.add_trauma(0.1)
-			Perf.mark("loki_hiccup")
-	if Run.rune_level("loki_spin") > 0:
-		_spin_t -= delta
-		if _spin_t <= 0.0 and randf() < spin_chance_per_sec * delta:
-			_spin_t = 6.0
-			rotation_target.y += PI
-			camera_fx.add_trauma(0.2)
-			Perf.mark("loki_spin")
+## API игрока → skills.weapon_skill_start_lunge (описание там)
+func weapon_skill_start_lunge(direction: Vector3, distance: float, duration: float) -> bool:
+	return skills.weapon_skill_start_lunge(direction, distance, duration)
+
+## API игрока → skills.weapon_skill_lunge_active (описание там)
+func weapon_skill_lunge_active() -> bool:
+	return skills.weapon_skill_lunge_active()
+
+## API игрока → skills.weapon_skill_lunge_completed (описание там)
+func weapon_skill_lunge_completed() -> bool:
+	return skills.weapon_skill_lunge_completed()
+
+## совместимость → skills._weapon_skill_enemy_only_floor
+func _weapon_skill_enemy_only_floor() -> bool:
+	return skills._weapon_skill_enemy_only_floor()
+
+## API игрока → skills.weapon_skill_start_dive (описание там)
+func weapon_skill_start_dive(speed: float) -> bool:
+	return skills.weapon_skill_start_dive(speed)
+
+## API игрока → skills.weapon_skill_arm_landing (описание там)
+func weapon_skill_arm_landing(skill_id: String) -> bool:
+	return skills.weapon_skill_arm_landing(skill_id)
+
+## API игрока → skills.weapon_skill_landing_pending (описание там)
+func weapon_skill_landing_pending(skill_id: String) -> bool:
+	return skills.weapon_skill_landing_pending(skill_id)
+
+## API игрока → skills.weapon_skill_start_vault (описание там)
+func weapon_skill_start_vault(height_mult: float) -> bool:
+	return skills.weapon_skill_start_vault(height_mult)
+
+## API игрока → skills.weapon_skill_cancel_motion (описание там)
+func weapon_skill_cancel_motion() -> void:
+	skills.weapon_skill_cancel_motion()
+
+# PlayerRunes (player_runes.gd)
+
+## API игрока → runes.recalc_from_runes (описание там)
+func recalc_from_runes(run: Node, full_heal: bool = false) -> void:
+	runes.recalc_from_runes(run, full_heal)
+
+## совместимость → runes._rune_on_dash
+func _rune_on_dash() -> void:
+	runes._rune_on_dash()

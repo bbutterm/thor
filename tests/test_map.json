@@ -5,6 +5,10 @@
   "default": ["smoke_test", "generator_test", "ai_test"],
   "rules": [
     {"paths": ["player/"], "tests": ["jump_test", "runes_test", "slam_gate_test", "dive_gate_test", "body_test", "style_test", "hands_test", "combat_clock_test", "catch_test", "bot_control_test", "smoke_test"]},
+    {"paths": ["player/player_slam", "player/player_jumps"], "tests": ["destructible_test", "comic_test", "trait_test"]},
+    {"paths": ["player/player_dash"], "tests": ["destructible_test", "rune_test", "ui_test"]},
+    {"paths": ["player/player_weapon_skills"], "tests": ["weapon_skill_test", "weapon_test"]},
+    {"paths": ["player/player_runes", "player/player_health"], "tests": ["rune_test", "enemy_test", "shop_test", "ui_test"]},
     {"paths": ["player/style_"], "tests": ["style_test", "ui_test"]},
     {"paths": ["player/viewmodel_"], "tests": ["hands_test", "weapon_test"]},
 

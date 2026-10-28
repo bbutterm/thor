@@ -47,3 +47,38 @@
 - До: 3 мин 38 с (`THOR_TEST_JOBS=4`), 58 PASS, 1 FAIL — `comic_test` (плавающий, см. выше).
 - После: 2 мин 57 с (`run_tests.py --all --jobs 4`); единственный FAIL — тот же плавающий `comic_test`, исправлен отдельным коммитом.
 - Цель промта «быстрее 25 минут» уже выполнена.
+
+## Этап 2. Игрок: `player/player.gd` → компоненты (28.10)
+
+### Было → стало
+`player.gd` — 1590 строк → 773 (из них ~280 — `@export`-числа и поля состояния, ~190 — обёртки). Логика (~1000 строк) — в семи компонентах:
+
+| Было (`player.gd`) | Стало |
+|---|---|
+| `_process_walk`, `momentum_limit`, `_start_slide`, `_process_slide`, `_push_rigid_bodies`, `_update_footsteps`, `apply_movement_profile`, `movement_style` | `player_movement.gd` — `PlayerMovement`, `player.movement` (122 строки) |
+| `_process_jump`, `_process_gravity`, `_check_stomp`, `can_stomp`, `_check_ledge`, `_try_wall_jump`, `_start_climb`, `_process_climb`, `launch_up` | `player_jumps.gd` — `PlayerJumps`, `player.jumps` (219) |
+| `can_start_slam`, `slam_surface_hit`, `_start_slam`, `_cancel_slam`, `_on_landed`, `_do_slam_impact`, `_slam_break_floor`, `_slam_bounce`, `_slam_assist_tick` | `player_slam.gd` — `PlayerSlam`, `player.slam` (187) |
+| `can_dash`, `_try_dash`, `_dir_or_forward`, `restore_mjolnir_runes`, `_rune_recharge_progress`, `_spend_dash_charge`, `_start_dash`, `_process_dash`, `_start_ram`, `_end_ram`, `_ram_tick`, `_dash_damage_tick` | `player_dash.gd` — `PlayerDash`, `player.dash` (157) |
+| `is_invulnerable`, `take_damage`, `pay_health`, `heal`, `_die`, `refill_shield`, `_rune_on_damaged`, `_rune_second_wind`, `kill_heal`, `_on_kill_registered` | `player_health.gd` — `PlayerHealth`, `player.vitals` (121; имя `health` занято полем HP) |
+| `weapon_skill_*`, `_weapon_skill_*`, `_process_weapon_skill_lunge`, `_finish_weapon_skill_lunge_step`, `_end_weapon_skill_lunge`, `_on_weapon_skill_slot_changed` | `player_weapon_skills.gd` — `PlayerWeaponSkills`, `player.skills` (139) |
+| `recalc_from_runes`, `_rune_damage_mult`, `_roll_crit`, `_on_crit`, `_rune_on_hit`, `_rune_on_dash`, `_rune_tick` | `player_runes.gd` — `PlayerRunes`, `player.runes` (106) |
+
+На `Player` остались: все `@export` и поля состояния, сигналы, `_ready`, `apply_body_and_runes`, ввод, `_physics_process` (порядок шагов кадра не менялся), `_update_timers`, прицел и скорость, оружие правой руки, пассивки тела, `deal_damage`, шкала стиля и руки.
+
+### Решения
+- **Компоненты — `RefCounted`, а не узлы.** Создаются в `Player._init` (раньше `_ready`, поэтому доступны и до входа в дерево), не меняют дерево сцены и порядок `_process`; `player.tscn` не перегенерировался.
+- **Состояние осталось на `Player`.** Тесты, HUD, трейты и тела читают и пишут поля напрямую (`p._slam_ready`, `p.set("_invuln_left", …)`, `p.dash_charges`), а сцена и `apply_movement_profile` ставят `@export`. Перенос полей в компоненты потребовал бы менять тесты — по правилам этапа нельзя.
+- Перенос сделан скриптом (по токенам, без строк и комментариев): к полям и методам игрока дописано `p.`, к функциям другого компонента — `p.<компонент>.`, `self` → `p`. Тела функций не менялись. Поэтому этап — один коммит, а не семь: все функции перенесены одним механическим проходом и проверены одним полным прогоном.
+
+### Обёртки совместимости (в конце `player.gd`)
+- `## API игрока →` (публичные, их зовёт игровой код): `momentum_limit`, `apply_movement_profile`, `movement_style`, `can_stomp`, `launch_up`, `can_start_slam`, `slam_surface_hit`, `can_dash`, `restore_mjolnir_runes`, `is_invulnerable`, `take_damage`, `pay_health`, `heal`, `kill_heal`, `refill_shield`, все `weapon_skill_*`, `recalc_from_runes`.
+- `## совместимость →` (приватные, их зовут тесты и трейты): `_process_jump` (runes_test), `_start_slam` (hammer_dive, тесты), `_cancel_slam` (trait_test), `_do_slam_impact` (mjolnir_element, balcony, тесты), `_slam_bounce` (slam_gate_test), `_spend_dash_charge` (runes_test), `_start_dash`, `_end_ram` (destructible_test, hands_test), `_die` (enemy_test), `_weapon_skill_enemy_only_floor` (smoke_test), `_rune_on_dash` (rune_test).
+- Тесты не менялись.
+
+### Найдено и не тронуто
+- Ничего нового.
+
+### Проверка
+- `godot --headless --path . --import` — без ошибок.
+- `python3 tools/run_tests.py --all --jobs 4` — 59 из 59 PASS за 3 мин 13 с, без SCRIPT ERROR; предупреждений в логах не больше, чем до этапа (22 против 27).
+- Карта тестов: для `player/player_slam|jumps|dash|weapon_skills|runes|health` добавлены свои тесты сверх общего правила `player/`.
