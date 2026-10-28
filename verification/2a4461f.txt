@@ -1,0 +1,21 @@
+ПРЕДВАРИТЕЛЬНЫЙ WINDOWS-ПЛЕЙТЕСТ
+Исходный коммит: 2a4461f463e786a721d902ab3643f1ebdc4ec6fa
+ZIP: ThorDostoynayaSmert-preview-2a4461f.zip, 94 838 917 байт
+ZIP SHA-256: 6d24f1fdd9009f889a7a95f065df9752ff18639b848287d0ee476cfea00ecb1e
+EXE: ThorDostoynayaSmert.exe, 171 134 864 байта
+EXE SHA-256: d344eae8a7552d4ac1ab8ab8da195e64d9491dc54fbb328b5045d5b2393ad989
+ZIP CRC32 EXE: 88513f6e; содержимое ZIP сверено с исходным EXE по SHA-256.
+
+Строгий headless-набор: TOTAL 48, FAILED 0; намеренные и сообщения завершения сохранены отдельно в исходных логах.
+Hitch headless: 10 из 10 залов, 35 настоящих ударов-приземлений, 0 фризов > +50 мс вне загрузки. Это не проверка графического рендеринга.
+Аудит: 35 тестов диалогового аудита, 12 тестов декора, 1 тест упаковщика; import/export без предупреждений или ошибок.
+Четыре исключённых файла проверены по export.log: две заготовки листов декора, thatch и кадр неподключённого финала. Семь новых портретов, используемые элементы декора и first_death присутствуют.
+
+Wine headless selftest: все три запуска завершились с кодом 0, SELFTEST OK, по три врага.
+Запуск 1: WARNING: ObjectDB instances leaked at exit; ERROR: 4 resources still in use at exit. Имена не указаны.
+Запуск 2 (--verbose): сообщений очистки нет.
+Запуск 3 (--verbose): WARNING: ObjectDB instances leaked at exit; ERROR: 2 resources still in use at exit.
+Resource still in use: res://sounds/walking.ogg::OggPacketSequence_skgro (OggPacketSequence)
+Resource still in use: res://sounds/walking.ogg (AudioStreamOggVorbis)
+
+Открыто: полный графический GL/Forward+ прогон на текущем коде, проверка реального GPU и производительности Н3, тест физического Steam Deck/Steam Input/Proton, калибровка Славы. Это предварительная сборка.
