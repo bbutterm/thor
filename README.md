@@ -1,5 +1,11 @@
 # Тор: Достойная смерть — предварительный Windows-плейтест
 
+## Актуальная сборка
+
+[Скачать Windows ZIP из main 3ab177d](ThorDostoynayaSmert-preview-3ab177d.zip?raw=1), распаковать и запустить `ThorDostoynayaSmert.exe`. [Отчёт и что проверить](REPORT_2026-10-28-day.md).
+
+## Предыдущая сборка 2a4461f
+
 Версия из проверенного коммита [2a4461f](https://github.com/bbutterm/thor/tree/2a4461f463e786a721d902ab3643f1ebdc4ec6fa). Скачайте [один ZIP-архив ThorDostoynayaSmert-preview-2a4461f.zip](ThorDostoynayaSmert-preview-2a4461f.zip?raw=1), распакуйте и запустите `ThorDostoynayaSmert.exe`.
 
 Архив занимает **94 838 917 байт**, SHA-256: `6d24f1fdd9009f889a7a95f065df9752ff18639b848287d0ee476cfea00ecb1e`. Внутри один EXE; SHA-256 EXE: `d344eae8a7552d4ac1ab8ab8da195e64d9491dc54fbb328b5045d5b2393ad989`.
