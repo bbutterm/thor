@@ -231,7 +231,14 @@ func _test_hammer(p: Player) -> void:
 		if not is_instance_valid(dd) or dd.health < dd.max_health:
 			hit += 1
 	check(hit == 3, "молот задел все 3 манекена (%d/3)" % hit)
-	check(p.mjolnir.in_hand, "молот вернулся в руку")
+	# П5: автовозврата нет — молот ждёт ПКМ
+	check(not p.mjolnir.in_hand, "молот сам не вернулся (ждёт ПКМ)")
+	p.mjolnir.request_throw_or_recall()
+	for i in 180:
+		if p.mjolnir.in_hand:
+			break
+		await get_tree().physics_frame
+	check(p.mjolnir.in_hand, "по ПКМ молот вернулся в руку")
 	# Ручной возврат
 	p.mjolnir.throw_hammer()
 	await wait(0.3)

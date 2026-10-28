@@ -33,7 +33,8 @@ func at_level(values: Array) -> Variant:
 	return values[clampi(level - 1, 0, values.size() - 1)]
 
 ## Изменение параметров броска. stat: "sticks" (bool), "wall_bounces" (int), "chain_targets" (int),
-## "throw_speed", "max_range", "auto_return_after", "stuck_auto_return" (float),
+## "throw_speed", "max_range", "catch_cooldown", "perfect_catch_cooldown" (float),
+## старое под FeelSwitch (F6): "throw_cooldown", "perfect_cooldown_refund", "auto_return_after", "stuck_auto_return",
 ## "hold_throw" (bool — бросок по отпусканию ПКМ: Праща, Заряд).
 func modify(_stat: StringName, value: Variant) -> Variant:
 	return value
@@ -61,7 +62,8 @@ func on_hit_world(_proj: MjolnirProjectile, _pos: Vector3, _normal: Vector3, _st
 func on_stuck_tick(_proj: MjolnirProjectile, _delta: float) -> void:
 	pass
 
-## Начало возврата. by_player — по ПКМ (а не по таймеру/дальности). Чтобы управлять возвратом самому
+## Начало возврата. by_player — по ПКМ; false — служебный возврат или приём со своим возвратом
+## (Бумеранг, Буря, копии Двух молотов). Автовозврата у базы нет (П5). Чтобы управлять возвратом самому
 ## (например, тянуть игрока к молоту), вызови proj.take_recall_control(self) и реализуй control_recall_tick.
 func on_recall_start(_proj: MjolnirProjectile, _by_player: bool) -> void:
 	pass

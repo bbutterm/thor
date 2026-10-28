@@ -27,7 +27,7 @@ const LVL_SKY := 4
 @export var aura_interval: float = 1.0
 @export var aura_radius: float = 4.0
 @export var aura_damage: float = 8.0
-## Сколько воткнутый молот ждёт ПКМ (с аурой)
+## Сколько воткнутый молот ждёт ПКМ (с аурой) — только при старом автовозврате (FeelSwitch hammer_recall); по умолчанию ждёт ПКМ всегда
 @export var aura_stuck_hold: float = 5.0
 
 @export_group("4. Удар с неба (идеальный хват)")

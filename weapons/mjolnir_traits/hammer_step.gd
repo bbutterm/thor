@@ -8,7 +8,7 @@ extends MjolnirTraitHandler
 ## Насколько выше прыжок со ступеньки (множитель вертикальной скорости прыжка)
 @export var jump_mult: float = 1.5
 @export var jump_mult_lvl2: float = 1.85
-## Сколько воткнутый в стену молот ждёт ПКМ (с)
+## Сколько воткнутый в стену молот ждёт ПКМ (с) — только при старом автовозврате (FeelSwitch hammer_recall); по умолчанию ждёт ПКМ всегда
 @export var stuck_hold: float = 6.0
 @export var stuck_hold_lvl2: float = 10.0
 ## Размер площадки (ширина вдоль стены, толщина, вынос от стены), м

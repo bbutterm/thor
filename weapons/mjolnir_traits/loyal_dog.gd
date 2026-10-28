@@ -9,7 +9,7 @@ extends MjolnirTraitHandler
 ## 0.7 У
 @export var damage: float = 15.0
 @export var knockback: float = 6.0
-## Сколько воткнутый молот ждёт ПКМ (с)
+## Сколько воткнутый молот ждёт ПКМ (с) — только при старом автовозврате (FeelSwitch hammer_recall); по умолчанию ждёт ПКМ всегда
 @export var stuck_hold: float = 6.0
 @export var stuck_hold_lvl2: float = 9.0
 

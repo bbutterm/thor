@@ -1031,7 +1031,8 @@ func _shoot(p: Player, holder: WeaponHolder, dist: float) -> void:
 		tap("attack", 1)
 		_attack_t = maxf(it.def.fire_interval, 0.12) + rng.randf_range(0.02, 0.12)
 
-## Мьёльнир: бросок по дальним/высоким/опасным целям, возврат, идеальный хват (ПКМ сразу после поимки).
+## Мьёльнир: бросок по дальним/высоким/опасным целям, возврат по ПКМ (сам молот не возвращается — П5),
+## идеальный хват (ПКМ в окне до/сразу после поимки).
 func _hammer(p: Player, dist: float, dy: float, dt: float) -> void:
 	var h := p.mjolnir
 	if h == null:
@@ -1080,9 +1081,13 @@ func _hammer(p: Player, dist: float, dy: float, dt: float) -> void:
 					tap("throw", 2)
 					_catch_attempt = false
 			else:
+				# Автовозврата нет (П5): зовём сами — после попадания, втыкания, падения на промахе или просто
+				# если давно летит. ПКМ возврата — тоже ввод, как у игрока; ловим в окне (ветка RETURN выше).
 				var stuck := proj.state in [MjolnirProjectile.State.STUCK, MjolnirProjectile.State.HOVER]
-				if (stuck and _hammer_out_t > 0.5) or _hammer_out_t > rng.randf_range(1.1, 2.2):
+				var hit := proj.hits_done > 0 or proj.dropping
+				if (stuck and _hammer_out_t > 0.5) or (hit and _hammer_out_t > 0.35) or _hammer_out_t > rng.randf_range(1.1, 2.2):
 					tap("throw", 1)
+					stats.recalls = int(stats.get("recalls", 0)) + 1
 
 func _press_throw(h: MjolnirHand) -> void:
 	if bool(h.trait_modify(&"hold_throw", false)):

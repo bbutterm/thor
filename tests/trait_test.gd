@@ -661,10 +661,17 @@ func _hp(e: Enemy) -> float:
 	return e.health if is_instance_valid(e) else -1.0
 
 ## Ждать, пока молот в руке (или timeout). Возвращает true, если вернулся.
-func _wait_in_hand(timeout: float) -> bool:
+## Автовозврата нет (П5): как игрок, зовём ПКМ, если через recall_after с молот ещё не летит к руке
+## (recall_after < 0 — не звать: приёмы со своим возвратом — Бумеранг, Буря).
+func _wait_in_hand(timeout: float, recall_after: float = 0.8) -> bool:
+	var pressed := false
 	for i in int(timeout * 60):
 		if hand.in_hand:
 			return true
+		if recall_after >= 0.0 and not pressed and i >= int(recall_after * 60) and hand.projectile \
+				and is_instance_valid(hand.projectile) and hand.projectile.state != MjolnirProjectile.State.RETURN:
+			pressed = true
+			hand.request_throw_or_recall()
 		await get_tree().physics_frame
 	return hand.in_hand
 
@@ -715,8 +722,11 @@ func _test_base() -> void:
 	var stuck := await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
 	check(stuck, "молот воткнулся в стену")
 	check(_hurt(d), "попал по манекену на пути")
-	var back := await _wait_in_hand(3.0)
-	check(back, "воткнутый молот сам вернулся (stuck_auto_return %.1f с)" % hand.stuck_auto_return)
+	# П5: автовозврата нет — воткнутый молот ждёт ПКМ сколько угодно
+	await wait(2.0)
+	check(hand.projectile != null and is_instance_valid(hand.projectile) and hand.projectile.is_stuck(), "воткнутый молот ждёт ПКМ (сам не возвращается)")
+	var back := await _wait_in_hand(3.0, 0.0)
+	check(back, "по ПКМ воткнутый молот вернулся")
 	# Без трейтов удержания ПКМ бросает сразу по нажатию
 	check(not bool(hand.trait_modify(&"hold_throw", false)), "без Пращи/Заряда — бросок по нажатию")
 	_clear_dummies()
@@ -742,6 +752,100 @@ func _test_base() -> void:
 	check(hand.projectile != null and is_equal_approx(hand.projectile.damage_mult, 1.0), "без идеального хвата — обычный урон")
 	await _wait_in_hand(4.0)
 	_clear_dummies()
+	await _test_manual_return()
+
+## П5 (GDD 26.4): возврат только по ПКМ; сквозь корм и бойцов, останавливают тяжёлые/щитоносцы/боссы;
+## промах — падает и втыкается в землю; иконка «где молот»; Один ворчит раз за зал; новый зал — молот в руке.
+func _test_manual_return() -> void:
+	print("-- Возврат только по ПКМ (П5)")
+	check(not FeelSwitch.is_old(&"hammer_recall"), "по умолчанию — новое: автовозврата нет")
+	# Старое под переключателем F6 (FeelSwitch hammer_recall): воткнутый возвращается сам через stuck_auto_return
+	FeelSwitch.set_old(&"hammer_recall", true)
+	_reset_player()
+	await frames(5)
+	hand.throw_hammer()
+	var old_stuck := await _wait_state(MjolnirProjectile.State.STUCK, 2.0)
+	check(old_stuck and await _wait_in_hand(3.0, -1.0), "старое (F6): воткнутый молот вернулся сам (%.1f с)" % hand.stuck_auto_return)
+	# Переключение на лету: молот в полёте, включили новое — сам уже не вернётся
+	hand.throw_hammer()
+	await wait(0.1)
+	FeelSwitch.set_old(&"hammer_recall", false)
+	await wait(2.0)
+	check(not hand.in_hand, "переключили на новое в полёте — молот ждёт ПКМ")
+	await _wait_in_hand(3.0, 0.0)
+	# Сквозь толпу: корм и боец пробиты, молот долетел до стены
+	_reset_player()
+	await frames(5)
+	var f := _dummy(0.3, 3.0, false, "fodder")
+	f.max_health = 500
+	f.health = 500
+	var g := _dummy(-0.3, 5.5)
+	hand.throw_hammer()
+	var stuck := await _wait_state(MjolnirProjectile.State.STUCK, 2.0)
+	check(_hurt(f) and _hurt(g), "молот пробил корм и бойца")
+	check(stuck and absf(hand.projectile.stuck_normal.y) < 0.5 and hand.projectile.global_position.distance_to(START) > 8.0,
+		"пробил толпу и воткнулся в стену")
+	await _wait_in_hand(3.0, 0.0)
+	_clear_dummies()
+	await frames(3)
+	# Останавливают: щитоносец (лицом к Тору), Раздутый, босс — отскок, падение, втыкается в пол рядом
+	for sc in ["shieldbearer", "bloated", "boss"]:
+		_reset_player()
+		await frames(5)
+		var e := _dummy(0.0, 6.0, false, sc)
+		e.max_health = 5000
+		e.health = 5000
+		e.state = Enemy.State.CHASE
+		var to := p.global_position - e.global_position
+		e.rotation.y = atan2(to.x, to.z)
+		await frames(2)
+		hand.throw_hammer()
+		var st := await _wait_state(MjolnirProjectile.State.STUCK, 2.5)
+		var pr := hand.projectile
+		check(st and pr.stuck_normal.y > 0.6 and _flat_dist(e, pr.global_position) < 5.0,
+			"%s остановил молот — воткнулся в пол рядом (%.1f м)" % [sc, _flat_dist(e, pr.global_position) if pr else -1.0])
+		await _wait_in_hand(3.0, 0.0)
+		_clear_dummies()
+		await frames(3)
+	# Промах: на пределе дальности молот падает дугой и втыкается в землю рукоятью вверх
+	_reset_player()
+	await frames(5)
+	var saved_range := hand.max_range
+	hand.max_range = 5.0
+	hand.throw_hammer()
+	var dropped := false
+	for i in 90:
+		await get_tree().physics_frame
+		if hand.projectile and hand.projectile.dropping:
+			dropped = true
+			break
+	check(dropped, "на пределе дальности молот теряет скорость и падает")
+	stuck = await _wait_state(MjolnirProjectile.State.STUCK, 2.0)
+	check(stuck and hand.projectile.stuck_normal.y > 0.6, "промах — молот воткнулся в землю")
+	hand.max_range = saved_range
+	# Воткнутый ждёт ПКМ; за спиной — иконка на краю экрана; через forgot_nag_after — Один ворчит, раз за зал
+	var saved_nag := hand.forgot_nag_after
+	hand.forgot_nag_after = 1.0
+	hand.away_time = 0.0
+	Odin.reset_cooldown()
+	var said := [0]
+	var cb := func(_t: String) -> void: said[0] += 1
+	Odin.line_spoken.connect(cb)
+	p.rotation_target = Vector2(0.0, PI)
+	await wait(1.5)
+	check(hand.projectile != null and hand.projectile.is_stuck(), "воткнутый молот ждёт ПКМ")
+	var ind := game.hud._offscreen
+	check(ind != null and not ind.hammer_shown.is_empty(), "молот за спиной — иконка «где молот» на краю экрана")
+	check(said[0] == 1 and hand.forgot_nagged, "забыл молот — Один ворчит (%d)" % said[0])
+	Odin.reset_cooldown()
+	await wait(1.5)
+	check(said[0] == 1, "ворчит раз за зал")
+	Odin.line_spoken.disconnect(cb)
+	hand.on_room_start()
+	await frames(2)
+	check(hand.in_hand and not hand.forgot_nagged and hand.cooldown_left == 0.0, "новый зал — молот в руке сам, без перезарядки")
+	check(ind == null or ind.hammer_shown.is_empty(), "молот в руке — иконки нет")
+	hand.forgot_nag_after = saved_nag
 
 # --- Окружение ---
 
@@ -1001,7 +1105,7 @@ func _scenario_generic(t: MjolnirTrait) -> void:
 	match t.id:
 		&"boomerang":
 			check(not saw_stuck, "Бумеранг не втыкается")
-			check(await _wait_in_hand(3.0), "Бумеранг вернулся сам, без ПКМ")
+			check(await _wait_in_hand(3.0, -1.0), "Бумеранг вернулся сам, без ПКМ")
 			return
 		&"ricochet":
 			check(side.any(_hurt), "рикошет задел врага в стороне")
@@ -1010,7 +1114,7 @@ func _scenario_generic(t: MjolnirTrait) -> void:
 	if t.id != &"ricochet":
 		check(saw_stuck, "молот воткнулся")
 	if saw_stuck:
-		await wait(1.2 if t.handler.get("stuck_hold") != null else 0.3)
+		await wait(1.2 if t.id in [&"magnet", &"pull_to_hammer"] else 0.3)
 		if t.id == &"magnet":
 			var d1 := _flat_dist(wall_l, hand.projectile.global_position)
 			check(d1 < wall_d0 - 0.5, "Магнит стянул врага (%.1f → %.1f м)" % [wall_d0, d1])
@@ -1044,7 +1148,7 @@ func _scenario_storm() -> void:
 	check(hand.projectile != null and hand.projectile.state == MjolnirProjectile.State.HOVER, "висит, пока ПКМ зажата")
 	check(_hurt(side), "Буря: урон по кругу")
 	hand.hold_override = false
-	check(await _wait_in_hand(3.0), "отпустил ПКМ — вернулся")
+	check(await _wait_in_hand(3.0, -1.0), "отпустил ПКМ — вернулся")
 
 func _scenario_step(lv: int) -> void:
 	_reset_player()
@@ -1310,7 +1414,8 @@ func _test_combo(c: MjolnirTrait) -> void:
 			var f := _dummy(1.5, 3.3, false, "fodder")
 			var g := _dummy(-1.5, 3.3)
 			hand.throw_hammer()
-			await _wait_in_hand(3.0)
+			# Пике само возвращает молот в руку — не зовём, пока Тор летит за ним
+			await _wait_in_hand(3.0, 2.0)
 			await frames(3)
 			check(int(h.get("craters")) == 1, "Кратер после пике")
 			check(not is_instance_valid(f) or f.is_dead, "корм в кратере упал замертво")

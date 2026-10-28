@@ -1,8 +1,10 @@
 extends Node3D
 class_name MjolnirProjectile
 ## Летящий Мьёльнир. Кинематический (не RigidBody): двигаем сами, проверяем попадания вдоль отрезка.
-## База (GDD 10): летит до max_range, бьёт всех на пути, втыкается в стену или пол; возврат по дуге
-## сквозь стены (ПКМ или сам через auto_return_after / stuck_auto_return). Бьёт врагов в обе стороны.
+## База (GDD 10, П5 — GDD 26.4): летит сквозь корм и бойцов, бьёт всех на пути; останавливают стена/пол
+## (втыкается), тяжёлые, щитоносцы и боссы (отскок, падение, втыкается рядом). Промах — на max_range теряет
+## скорость, падает по дуге и втыкается в землю. Возврат — только по ПКМ (по дуге сквозь стены, бьёт на
+## обратном пути); свой возврат — у приёмов, где он суть (Бумеранг, Буря) и у копий Двух молотов.
 ## Трейты (MjolnirTraitHandler) подключаются через хуки — см. вызовы _trait(...) (→ hand.trait_call).
 ##
 ## Точки событий (для эффектов/комиксовых слов): _on_hit (попал по врагу), _on_world_hit (стена/пол:
@@ -27,7 +29,7 @@ var bounces_done: int = 0
 var damage_mult: float = 1.0
 ## Копия броска (трейт «Два молота»): без трейтов, не втыкается, у руки просто исчезает
 var is_clone: bool = false
-## Возврат начат игроком (ПКМ), а не таймером
+## Возврат начат игроком (ПКМ), а не приёмом/служебно
 var recalled_by_player: bool = false
 ## Возврат начат из воткнутого состояния (stuck_normal — нормаль поверхности)
 var recalled_from_stuck: bool = false
@@ -47,8 +49,16 @@ var _mesh_root: Node3D
 var _light: OmniLight3D
 var _sticks: bool = true
 var _max_range: float = 25.0
+## Копия Двух молотов: через сколько секунд сама летит к руке
+var _clone_return_after: float = 1.0
+## Старое (FeelSwitch hammer_recall): автовозврат полёта / воткнутого (трейты продлевают — modify, hold_stuck)
 var _auto_return_after: float = 1.5
 var _stuck_auto_return: float = 0.8
+## Падает по дуге (промах на max_range или отскок от тяжёлого/босса) — потом втыкается в землю
+var dropping: bool = false
+var drop_time: float = 0.0
+## Попаданий по врагам за этот бросок (туда и обратно) — для hit-stop по убыванию и бота
+var hits_done: int = 0
 var _spin_speed: float = 22.0
 var _redirected: bool = false
 const HIT_RADIUS := 0.6
@@ -76,6 +86,7 @@ func launch_clone(owner_hand: MjolnirHand, origin: Vector3, velocity_: Vector3, 
 	_sticks = false
 	bounces_left = 0
 	_max_range = hand.max_range
+	_clone_return_after = hand.clone_return_after
 	_auto_return_after = hand.auto_return_after
 	_stuck_auto_return = hand.stuck_auto_return
 	_build_visual()
@@ -124,7 +135,7 @@ func apply_throw_mods(mods: Dictionary) -> void:
 		_light.light_color = Color(1.0, 0.95, 0.75)
 		_light.light_energy = 2.5
 
-## Воткнутый молот ждёт ПКМ не меньше sec секунд (приёмы «воткнутого молота»: ступенька, пёс, пике)
+## Старое (FeelSwitch hammer_recall): воткнутый молот ждёт ПКМ не меньше sec секунд (ступенька, пёс, пике)
 func hold_stuck(sec: float) -> void:
 	if _stuck_auto_return > 0.0:
 		_stuck_auto_return = maxf(_stuck_auto_return, sec)
@@ -155,15 +166,16 @@ func is_stuck() -> bool:
 func damage() -> float:
 	return hand.current_damage() * damage_mult
 
-## Сменить направление полёта «туда» (рикошет). Сбрасывает таймеры дальности и автовозврата.
+## Сменить направление полёта «туда» (рикошет). Сбрасывает дальность и падение.
 func redirect(new_vel: Vector3) -> void:
 	vel = new_vel
 	flight_time = 0.0
 	travelled = 0.0
+	dropping = false
 	hit_ids.clear()
 	_redirected = true
 
-## Зависнуть на месте (Буря). Пока висит — on_flight_tick продолжает вызываться, автовозврата нет.
+## Зависнуть на месте (Буря). Пока висит — on_flight_tick продолжает вызываться; вернётся, когда Буря отпустит.
 func hover(on: bool) -> void:
 	if on and state == State.OUT:
 		state = State.HOVER
@@ -188,6 +200,7 @@ func start_return(by_player: bool = false) -> void:
 		return
 	var was_stuck := state == State.STUCK
 	state = State.RETURN
+	dropping = false
 	recalled_by_player = by_player
 	recalled_from_stuck = was_stuck
 	hit_ids.clear()
@@ -217,14 +230,15 @@ func _physics_process(delta: float) -> void:
 			_trait(&"on_flight_tick", [self, delta])
 			if state == State.OUT:
 				_step_out(delta)
-				if state == State.OUT and (flight_time >= _auto_return_after or travelled >= _max_range):
-					start_return(false)
+				if state == State.OUT:
+					_out_limits(delta)
 		State.HOVER:
 			_trait(&"on_flight_tick", [self, delta])
 		State.STUCK:
 			stuck_time += delta
 			_trait(&"on_stuck_tick", [self, delta])
-			if state == State.STUCK and _stuck_auto_return > 0.0 and stuck_time >= _stuck_auto_return:
+			if state == State.STUCK and FeelSwitch.is_old(&"hammer_recall") and _stuck_auto_return > 0.0 \
+					and stuck_time >= _stuck_auto_return:
 				start_return(false)
 		State.RETURN:
 			return_time += delta
@@ -236,7 +250,36 @@ func _physics_process(delta: float) -> void:
 			else:
 				_step_return(delta)
 
+## Предел полёта «туда»: копия возвращается сама; настоящий молот на max_range начинает падать по дуге.
+## Упал в пропасть (падает дольше drop_lost_time) — летит к руке сам, чтобы не потеряться.
+func _out_limits(delta: float) -> void:
+	if FeelSwitch.is_old(&"hammer_recall") and not dropping:
+		# Старое: сам летит обратно по таймеру или на дальности
+		if flight_time >= _auto_return_after or travelled >= _max_range:
+			start_return(false)
+		return
+	if is_clone:
+		if flight_time >= _clone_return_after or travelled >= _max_range:
+			start_return(false)
+		return
+	if dropping:
+		drop_time += delta
+		if drop_time >= hand.drop_lost_time:
+			start_return(false)
+	elif travelled >= _max_range:
+		begin_drop(vel * hand.drop_speed_keep)
+
+## Начать падение по дуге со скоростью v (промах на дальности, отскок от тяжёлого/босса).
+func begin_drop(v: Vector3) -> void:
+	Perf.mark("hammer_drop")
+	dropping = true
+	drop_time = 0.0
+	vel = v
+	_spin_speed = 12.0
+
 func _step_out(delta: float) -> void:
+	if dropping:
+		vel.y -= hand.drop_gravity * delta
 	var from := global_position
 	var to := from + vel * delta
 	var space := get_world_3d().direct_space_state
@@ -256,7 +299,7 @@ func _step_out(delta: float) -> void:
 
 ## Удар о стену/пол: отскок (если остались), иначе воткнуться (база) или вернуться (Бумеранг).
 func _on_world_hit(pos: Vector3, normal: Vector3) -> void:
-	if bounces_left > 0:
+	if bounces_left > 0 and not dropping:
 		bounces_left -= 1
 		bounces_done += 1
 		ComicFX.pop("ricochet", pos)
@@ -282,6 +325,7 @@ func _stick(pos: Vector3, normal: Vector3) -> void:
 	Perf.mark("hammer_stick")
 	state = State.STUCK
 	stuck_time = 0.0
+	dropping = false
 	stuck_normal = normal.normalized()
 	vel = Vector3.ZERO
 	global_position = pos + stuck_normal * 0.38
@@ -405,13 +449,45 @@ func _on_hit(c: Object, dir: Vector3) -> void:
 		hand.player.camera_fx.add_trauma(0.12)
 		FX.burst(get_parent(), global_position, 0.6, Color(0.55, 0.85, 1.0, 0.7), 0.15)
 		Audio.play("sounds/sfx/hammer_hit.wav")
+		hits_done += 1
 		var chain := 0 if is_clone else int(hand.trait_modify(&"chain_targets", hand.chain_targets))
 		if chain > 0:
 			chain_lightning(c as Node3D, dmg * hand.chain_damage_ratio, chain, hand.chain_radius)
 		_trait(&"on_hit_enemy", [self, c, dmg])
+		# Тяжёлый, щитоносец или босс остановил молот (рикошет мог уже развернуть его к следующей цели)
+		if state == State.OUT and not _redirected and en and is_instance_valid(en) and not en.is_dead and stops_hammer(en):
+			_stopped_by(en, dir)
 	elif c is RigidBody3D:
 		var rb := c as RigidBody3D
 		rb.apply_central_impulse(knock * rb.mass * 0.7)
+
+## Кто останавливает летящий «туда» молот: боссы, тяжёлые (Раздутый), щитоносцы (если бросок не пробивает).
+## Корм и бойцов молот пробивает и летит дальше.
+func stops_hammer(en: Enemy) -> bool:
+	if not hand.stopped_by_heavy or FeelSwitch.is_old(&"hammer_recall"):
+		return false
+	match en.kind:
+		Enemy.Kind.BOSS, Enemy.Kind.BLOATED:
+			return true
+		Enemy.Kind.SHIELD:
+			return not pierce
+	return false
+
+## Остановлен врагом: отскок назад-вверх и падение по дуге — воткнётся в пол рядом (ждёт ПКМ).
+## Бумеранг (не втыкается) и копии — сразу летят к руке (их свой возврат).
+func _stopped_by(en: Enemy, dir: Vector3) -> void:
+	Perf.mark("hammer_stopped")
+	_redirected = true
+	FX.sparks(get_parent(), global_position, Color(0.85, 0.92, 1.0), 14, 7.0)
+	Audio.play("sounds/sfx/hammer_bounce.wav")
+	if is_clone or not _sticks:
+		start_return(false)
+		return
+	var back := Vector3(-dir.x, 0, -dir.z).normalized()
+	if back.length() < 0.1:
+		back = (global_position - en.global_position) * Vector3(1, 0, 1)
+		back = back.normalized() if back.length() > 0.01 else Vector3.BACK
+	begin_drop(back * hand.stop_bounce_speed + Vector3.UP * hand.stop_bounce_up)
 
 ## Цепная молния: от source перескакивает к ближайшему ещё не задетому врагу, count раз.
 func chain_lightning(source: Node3D, dmg: float, count: int, radius: float) -> int:

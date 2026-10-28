@@ -336,6 +336,22 @@ func _run() -> void:
 	await wait(0.2)
 	hand.force_return_instant()
 	check(hand.in_hand and hand.cooldown_left == 0.0, "служебный возврат (новый зал) — молот в руке без перезарядки")
+	print("-- Старая перезарядка под переключателем F6 (FeelSwitch hammer_cooldown)")
+	check(not FeelSwitch.is_old(&"hammer_cooldown"), "по умолчанию — новая перезарядка")
+	FeelSwitch.set_old(&"hammer_cooldown", true)
+	hand.reset_cooldown()
+	_results.clear()
+	proj = await _throw_and_recall(hand, 1.0)
+	var old_before := hand.cooldown_left
+	check(old_before > hand.throw_cooldown - 1.5, "старое: перезарядка от броска ~%.0f с (%.1f)" % [hand.throw_cooldown, old_before])
+	await _wait_eta(proj, hand.perfect_window * 0.5)
+	hand.request_throw_or_recall()
+	await _wait_caught(hand)
+	var old_after := hand.cooldown_left
+	check(not _results.is_empty() and _results[-1][0] == &"perfect" and old_after < old_before - hand.perfect_cooldown_refund + 0.01,
+		"старое: идеальный хват снял %.0f с (%.1f → %.1f)" % [hand.perfect_cooldown_refund, old_before, old_after])
+	FeelSwitch.set_old(&"hammer_cooldown", false)
+	hand.reset_cooldown()
 	hand.catch_cooldown = 0.0
 	hand.reset_cooldown()
 	await _test_catch_perk(hand, assist)

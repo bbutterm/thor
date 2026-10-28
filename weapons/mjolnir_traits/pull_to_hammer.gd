@@ -16,7 +16,7 @@ extends MjolnirTraitHandler
 @export var exit_forward: float = 5.0
 ## Молот в стене, а над ним уступ не выше этого (м) — игрока перекидывает на уступ (залезание)
 @export var mantle_height: float = 2.2
-## Сколько воткнутый молот ждёт ПКМ
+## Сколько воткнутый молот ждёт ПКМ — только при старом автовозврате (FeelSwitch hammer_recall); по умолчанию ждёт ПКМ всегда
 @export var stuck_hold: float = 3.0
 ## Ур. 2: мини-удар-приземление на прилёте
 @export var arrive_slam_radius: float = 3.5
