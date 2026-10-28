@@ -5,6 +5,11 @@ extends CanvasLayer
 ## Путь к логу на Windows: %APPDATA%/ThorDostoynayaSmert/hitches.log (F4 — открыть папку, F5 — «Сообщить о лаге»: zip на рабочий стол).
 
 const LOG_PATH := "user://hitches.log"
+## Штатная папка журналов Godot в данных игры; обнаруженные ссылки и чужие пути пропускаем.
+const ENGINE_LOG_DIR := "user://logs"
+const ENGINE_LOG_MAX_BYTES := 256 * 1024
+const ENGINE_LOG_SCAN_LIMIT := 256
+const ENGINE_LOG_NAMES := ["godot-current.log", "godot-previous.log"]
 const HISTORY := 240
 
 ## Кадр дольше этого (мс) считается фризом и пишется в лог
@@ -72,7 +77,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_F5:
 			# «Сообщить о лаге»: zip с логом и сохранением на рабочий стол
 			var path := report_lag()
-			_flash(tr("Отчёт о лаге: %s") % path if path != "" else tr("Не удалось сохранить отчёт"))
+			_flash((tr("Отчёт о лаге: %s") % path + "\n" + tr("В архиве сохранение и системные данные; журналы могут содержать локальные пути.")) if path != "" else tr("Не удалось сохранить отчёт"))
 			get_viewport().set_input_as_handled()
 		KEY_F4:
 			# Папка с логом фризов — чтобы прислать его
@@ -140,6 +145,10 @@ func report_lag() -> String:
 			zip.start_file(f.get_file())
 			zip.write_file(FileAccess.get_file_as_bytes(f))
 			zip.close_file()
+	# Имена архива фиксированы, а входные файлы — только штатные журналы Godot.
+	if _engine_logging_is_default() and not _append_engine_logs(zip, ENGINE_LOG_DIR, _engine_session_start()):
+		zip.close()
+		return ""
 	var info := PackedStringArray([
 		"Тор: Достойная смерть — отчёт о лаге",
 		"Время: %s" % Time.get_datetime_string_from_system(),
@@ -148,6 +157,7 @@ func report_lag() -> String:
 		"Видеокарта: %s (%s)" % [RenderingServer.get_video_adapter_name(), RenderingServer.get_video_adapter_vendor()],
 		"API: %s, рендерер: %s" % [RenderingServer.get_video_adapter_api_version(), RenderingServer.get_current_rendering_method()],
 		"Godot: %s" % Engine.get_version_info().string,
+		"Журналы Godot: до 256 КиБ текущего и последнего ротированного журнала, если доступны; могут содержать локальные пути. Текущий журнал может быть неполным.",
 		"Окно: %s" % str(DisplayServer.window_get_size()),
 		"Фризов > %d мс за сессию: %d" % [int(hitch_ms), _hitch_count],
 		"",
@@ -161,6 +171,108 @@ func report_lag() -> String:
 	zip.close()
 	Perf.mark("lag_report")
 	return path
+
+## Если пользователь отключил лог или выбрал другой путь, не читаем старые файлы.
+func _engine_logging_is_default() -> bool:
+	return bool(ProjectSettings.get_setting_with_override("debug/file_logging/enable_file_logging")) \
+		and str(ProjectSettings.get_setting_with_override("debug/file_logging/log_path")) == ENGINE_LOG_DIR.path_join("godot.log")
+
+## Время старта процесса с запасом на секундную точность времени файла.
+func _engine_session_start() -> float:
+	return Time.get_unix_time_from_system() - Time.get_ticks_msec() / 1000.0 - 2.0
+
+## Godot на Windows возвращает путь в формате \\?\... при ошибке read_link.
+## Не угадываем в неоднозначных случаях; несовпадающий путь может вести наружу.
+func _windows_resolved_path_matches(path: String, resolved: String) -> bool:
+	if resolved.is_empty() or resolved.begins_with("\\\\?\\") or resolved.begins_with("//?/"):
+		return false
+	var expected := path.replace("\\", "/").simplify_path().to_lower()
+	var actual := resolved.replace("\\", "/").simplify_path().to_lower()
+	return not expected.is_empty() and resolved.is_absolute_path() and actual == expected
+
+func _engine_log_path_is_safe(directory: DirAccess, name: String, absolute: String) -> bool:
+	if directory.is_link(name):
+		return false
+	if OS.get_name() == "Windows":
+		# Wine может показывать POSIX-ссылку как обычный файл. Конечный путь
+		# должен совпадать с ожидаемым. Открытый godot.log может быть недоступен
+		# для read_link: в таком случае журнал пропускается.
+		return _windows_resolved_path_matches(absolute, directory.read_link(absolute))
+	return true
+
+## Только содержимое обычного журнала и самого нового файла ротации. Снимок может
+## быть неполным, поскольку текущая запись движка буферизуется. Не выбираем
+## файлы по произвольным именам и проверяем пути и символические ссылки.
+func _engine_log_fragments(directory: String, current_after: float = 0.0) -> Dictionary:
+	var result := {}
+	var absolute := ProjectSettings.globalize_path(directory).simplify_path()
+	var parent := DirAccess.open(absolute.get_base_dir())
+	if parent == null or not _engine_log_path_is_safe(parent, absolute.get_file(), absolute):
+		return result
+	var logs := DirAccess.open(absolute)
+	if logs == null or logs.list_dir_begin() != OK:
+		return result
+	var pattern := RegEx.new()
+	if pattern.compile("^godot[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}\\.[0-9]{2}\\.[0-9]{2}\\.log$") != OK:
+		logs.list_dir_end()
+		return result
+	var current := ""
+	var previous := ""
+	var scanned := 0
+	while true:
+		var name := logs.get_next()
+		if name.is_empty():
+			break
+		scanned += 1
+		# В норме Godot хранит до пяти файлов. Слишком большая папка пропускается
+		# целиком, чтобы чужие или повреждённые данные не тормозили F5.
+		if scanned > ENGINE_LOG_SCAN_LIMIT:
+			logs.list_dir_end()
+			return {}
+		if logs.current_is_dir() or (name != "godot.log" and pattern.search(name) == null):
+			continue
+		if not _engine_log_path_is_safe(logs, name, absolute.path_join(name)):
+			continue
+		if name == "godot.log":
+			current = name
+		elif previous.is_empty() or name > previous:
+			previous = name
+	logs.list_dir_end()
+	for item in [[current, ENGINE_LOG_NAMES[0]], [previous, ENGINE_LOG_NAMES[1]]]:
+		var source: String = item[0]
+		if source.is_empty():
+			continue
+		var path := absolute.path_join(source)
+		if not _engine_log_path_is_safe(logs, source, path):
+			continue
+		if source == current and current_after > 0.0:
+			var modified := FileAccess.get_modified_time(path)
+			if modified <= 0 or float(modified) < current_after:
+				continue
+		var file := FileAccess.open(path, FileAccess.READ)
+		if file == null:
+			continue
+		var size := file.get_length()
+		var count := mini(size, ENGINE_LOG_MAX_BYTES)
+		if size > count:
+			file.seek(size - count)
+		# Нулевой текущий лог тоже сохраняем: вывод может ещё быть в буфере.
+		var bytes := file.get_buffer(count) if count > 0 else PackedByteArray()
+		result[item[1]] = bytes
+	return result
+
+func _append_engine_logs(zip: ZIPPacker, directory: String, current_after: float = 0.0) -> bool:
+	var fragments := _engine_log_fragments(directory, current_after)
+	for name in ENGINE_LOG_NAMES:
+		if not fragments.has(name):
+			continue
+		if zip.start_file(name) != OK:
+			return false
+		var write_error := zip.write_file(fragments[name])
+		var close_error := zip.close_file()
+		if write_error != OK or close_error != OK:
+			return false
+	return true
 
 func _update_label() -> void:
 	var tree := get_tree()

@@ -286,6 +286,12 @@ class SelfTestRunner extends Node:
 			var info := zip.read_file("system.txt").get_string_from_utf8()
 			var log := zip.read_file("hitches.log").get_string_from_utf8()
 			ok = info.contains(OS.get_name()) and info.contains("API:") and info.contains("Godot:") and log.contains(marker)
+		# Штатные журналы доступны не на всех платформах. Если движок их создал,
+		# проверяем состав и ограничение размера, не ожидая полной записи буфера.
+		var expected_logs: Dictionary = Perf._engine_log_fragments(Perf.ENGINE_LOG_DIR, Perf._engine_session_start()) if Perf._engine_logging_is_default() else {}
+		for name in expected_logs:
+			if not name in files or zip.read_file(name).size() > Perf.ENGINE_LOG_MAX_BYTES:
+				ok = false
 		# Проверяем, что именно тестовые сохранение и настройки вошли в архив без изменений.
 		for name in ["save.json", "settings.cfg"]:
 			var user_path: String = "user://" + name

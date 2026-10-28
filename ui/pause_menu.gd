@@ -79,6 +79,7 @@ func _build() -> void:
 	vb.add_child(m)
 	# «Сообщить о лаге» (GDD 23): zip с логом фризов и сохранением на рабочий стол
 	var lag := UIStyle.button(tr("Сообщить о лаге"), 17, "secondary")
+	lag.tooltip_text = tr("В архиве сохранение и системные данные; журналы могут содержать локальные пути.")
 	lag.custom_minimum_size = Vector2(280, 46)
 	lag.pressed.connect(func() -> void:
 		var path := Perf.report_lag()
