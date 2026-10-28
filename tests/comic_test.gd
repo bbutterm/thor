@@ -117,15 +117,8 @@ func _run() -> void:
 	check(CF.active_count() == 0, "слова исчезли сами")
 
 	print("-- Настоящее комбо топора")
-	await fresh()
-	p.axe.request_attack()
-	await wait(0.35)
-	check(CF.history.is_empty(), "1-й удар комбо — без слова")
-	p.axe.request_attack()
-	await wait(0.1)
-	p.axe.request_attack()
-	await wait(0.6)
-	check(p.axe.stage == 2 and events().count("blade") == 1 and CF.history.size() == 1, "слово только на 3-м ударе комбо (%s)" % [events()])
+	await _test_axe_combo(p, d, false)
+	await _test_axe_combo(p, d, true)
 	d.take_hit(9999, Vector3.ZERO, "test")
 	await wait(0.6)
 
@@ -345,6 +338,52 @@ func _run() -> void:
 	GameSettings.set_comic_scale(saved_scale)
 	GameSettings.set_comic_enabled(saved_enabled)
 	_finish()
+
+## Ждём реальное попадание, а не число кадров: hit-stop меняет длину фаз атаки.
+func _wait_combo_hit(stages: Array[int], stage: int) -> bool:
+	for i in 240:
+		if stage in stages:
+			return true
+		await get_tree().physics_frame
+	return stage in stages
+
+func _test_axe_combo(p: Player, d: Enemy, force_crit: bool) -> void:
+	await fresh()
+	var saved_crit := p.crit_chance_base
+	p.crit_chance_base = 1.0 if force_crit else 0.0
+	d.health = d.max_health
+	p.axe.cancel()
+	var swings: Array[int] = []
+	var hits: Array[int] = []
+	var on_swing := func(stage: int) -> void: swings.append(stage)
+	var on_hit := func(count: int, stage: int) -> void:
+		if count > 0:
+			hits.append(stage)
+	p.axe.swung.connect(on_swing)
+	p.axe.hit_landed.connect(on_hit)
+	var label := "крит" if force_crit else "обычный"
+	var hp := d.health
+	p.axe.request_attack()
+	var first_hit := await _wait_combo_hit(hits, 0)
+	await frames(2)
+	check(first_hit and d.health < hp and swings == [0] and CF.history.is_empty(),
+		"%s: 1-й удар попал, без слова (%s)" % [label, events()])
+	hp = d.health
+	p.axe.request_attack()
+	var second_hit := await _wait_combo_hit(hits, 1)
+	await frames(2)
+	check(second_hit and d.health < hp and swings == [0, 1] and CF.history.is_empty(),
+		"%s: 2-й удар попал, без слова (%s)" % [label, events()])
+	hp = d.health
+	p.axe.request_attack()
+	var third_hit := await _wait_combo_hit(hits, 2)
+	await frames(2)
+	check(third_hit and d.health < hp and p.axe.stage == 2 and swings == [0, 1, 2]
+		and events() == ["blade"] and CF.history.size() == 1,
+		"%s: ровно одно слово на 3-м ударе комбо (%s)" % [label, events()])
+	p.axe.swung.disconnect(on_swing)
+	p.axe.hit_landed.disconnect(on_hit)
+	p.crit_chance_base = saved_crit
 
 func _make_dummy(p: Player, dist: float) -> Enemy:
 	var e := (load("res://enemies/grunt.tscn") as PackedScene).instantiate() as Enemy
