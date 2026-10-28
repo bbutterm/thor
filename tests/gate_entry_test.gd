@@ -105,8 +105,9 @@ func _check_room(test_seed: int, check_player: bool) -> void:
 		crossed += int(row.crossed)
 		active += int(row.entry)
 		invalid += int(row.invalid)
-	check(expected == 13 and seen.size() == expected and room.pending_spawns() == 0 and max_per_frame <= 1,
-		"seed %d: вся пачка из 13 появилась не чаще одного за кадр и очередь пуста" % test_seed)
+	# П3: пачка корма 5–8 (было 13)
+	check(expected >= 5 and expected <= 8 and seen.size() == expected and room.pending_spawns() == 0 and max_per_frame <= 1,
+		"seed %d: вся пачка из %d появилась не чаще одного за кадр и очередь пуста" % [test_seed, expected])
 	check(active == expected and invalid == 0 and crossed == expected,
 		"seed %d: %d/%d реально пересекли проём на полу, входов без пути: %d" % [test_seed, crossed, expected, invalid])
 	room.queue_free()

@@ -130,6 +130,7 @@ func _run() -> void:
 	var ap := e._humanoid.anim
 	var visual := e._visual
 	check(e._fodder_anim_lod, "дальний режим активен перед смертью")
+	e.gib_on_death = false  # П3: проверяем путь «целого трупа»; у корма по умолчанию куски (FodderGibs, enemy_test)
 	e.take_hit(9999, Vector3.ZERO, "test")
 	check(not e._fodder_anim_lod and ap.callback_mode_process != AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL,
 		"анимация смерти возвращена в обычный режим")

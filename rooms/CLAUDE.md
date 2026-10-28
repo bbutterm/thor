@@ -1,7 +1,7 @@
 # rooms/ — залы, волны, двери, одевание, декор
 
 ## Что здесь
-- `room.gd` + `*.tscn` — залы, волны (маркеры в `Spawns` с метаданными `kind`/`wave`, толпа — `count`/`spread`, отряд — `kind = "squad"` + `squad`/`squad_options`/`squad_override` (`enemies/squad_def.gd`); лимиты снарядов и зон `max_projectiles`/`max_zones`; поток пачками, следующая волна при < 30 % или через 25 с; `spawn_extra` — враг сверх волн), дверь, выход. `Room.add_wave`, `Room.indoor`.
+- `room.gd` + `*.tscn` — залы, волны (маркеры в `Spawns` с метаданными `kind`/`wave`, толпа — `count`/`spread`, отряд — `kind = "squad"` + `squad`/`squad_options`/`squad_override` (`enemies/squad_def.gd`); лимиты снарядов и зон `max_projectiles`/`max_zones`; поток пачками, следующая волна при < 30 % или через 25 с; на экране не больше `max_alive` (в обычных залах 20 — П3, плейтест 28.10; состав: 2 волны по ~16, корм пачками 5–8, 1–2 особых; башня `room_11` — 4 волны 12/12/12/16; «старое / новое» по F6 — `FeelSwitch.is_old(&"enemy_count")`: корм ×`legacy_fodder_mult`, лимит `legacy_max_alive`, проверка `horde_wave_test`); `spawn_extra` — враг сверх волн), дверь, выход. `Room.add_wave`, `Room.indoor`.
 - `balcony.gd` (`Balcony`) — балконы Ярла и ломаемые мосты/настилы (`slam_breakable`).
 - `reward_door.gd` (`RewardDoor`) — арка с иконкой и триггером (см. `run/CLAUDE.md`, «Структура забега»).
 - `wall_decor.gd` (`WallDecor`: `art`, `height` — видимая высота), `floor_decal.gd` (`FloorDecal`: `art`, `size`, `glow`).

@@ -590,5 +590,25 @@ if not ONLY or any(name.startswith(prefix) for name in hammer_names for prefix i
     save("hammer_return_hum", mix(lp(hum, 1500), whoosh(0.6, 300, 2400) * 0.6), 0.65)
     # Низ броска: «вуф» под владельческий «вжух»
     save("hammer_throw_low", mix(thump(0.3, 90, 40) * 1.2, lp(rng.standard_normal(int(SR * 0.3)), 250) * env(int(SR * 0.3), 0.005, 2.0) * 0.6), 0.8)
+# --- П3/П4 (плейтест 28.10): мясо корма, мульти-килл, броня боссов; отдельный seed не меняет существующие звуки ---
+meat_names = ("gib_crunch_", "multikill_bass", "armor_tink")
+if not ONLY or any(name.startswith(prefix) for name in meat_names for prefix in ONLY):
+    rng = np.random.default_rng(281030)
+    # Корм разлетается на куски: влажный хруст (треск костей поверх шлепка) — три варианта
+    for i in range(3):
+        n = int(SR * (0.26 + 0.03 * i))
+        snaps = np.zeros(n)
+        for k in range(5 + i):
+            p0 = int(rng.uniform(0.0, 0.12) * SR)
+            m = int(SR * rng.uniform(0.004, 0.012))
+            snaps[p0:p0 + m] += bp(rng.standard_normal(m), 1500, 6500) * rng.uniform(0.6, 1.0)
+        squelch = lp(rng.standard_normal(n), 700 - 80 * i) * env(n, 0.002, 2.5)
+        save("gib_crunch_%d" % (i + 1), mix(snaps * 1.2, squelch * 0.8, thump(0.2, 150 - 15 * i, 55) * 0.9), 0.85)
+    # Мульти-килл: короткий бас-удар с саб-хвостом
+    tt = t(0.55)
+    sub = np.sin(2 * np.pi * np.cumsum(np.linspace(75, 38, len(tt))) / SR) * env(len(tt), 0.003, 1.6)
+    save("multikill_bass", mix(thump(0.3, 120, 40) * 1.2, sub, lp(rng.standard_normal(int(SR * 0.08)), 500) * 0.5), 0.95)
+    # Удар по броне босса: глухой «тынк» — короткий металл без звона и мягкий удар
+    save("armor_tink", mix(lp(metal(0.22, 340), 2200) * 0.9, thump(0.1, 230, 130) * 0.6), 0.6)
 
 print("Готово:", OUT)

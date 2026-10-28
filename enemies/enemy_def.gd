@@ -14,6 +14,11 @@ const U := 22.0
 @export var move_speed: float = 4.0
 ## Урон по Тору за удар (GDD 8: корм 5, боец 12, особый 15)
 @export var damage: float = 12.0
+## П4: множитель урона обычных ударов мили (melee / melee_finisher) — броня босса от спама; 1 — без брони.
+## Действует только на Kind.BOSS (Enemy.is_armored_against).
+@export_range(0.05, 1.0, 0.05) var melee_resist: float = 1.0
+## П4, «старое» по F6 (FeelSwitch boss_armor): HP в «У» до брони; 0 — как hp_u
+@export var legacy_hp_u: float = 0.0
 ## Слава за убийство (GDD 15.2: корм 1, боец 3, особый 5)
 @export var glory: int = 3
 ## Серебро за убийство (GDD 15.2), выпадет, когда появится серебро (блок К)
@@ -26,6 +31,8 @@ const U := 22.0
 @export var implemented: bool = false
 
 func max_health() -> float:
+	if legacy_hp_u > 0.0 and FeelSwitch.is_old(&"boss_armor"):
+		return legacy_hp_u * U
 	return hp_u * U
 
 static var _by_kind: Dictionary = {}

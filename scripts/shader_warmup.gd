@@ -67,6 +67,9 @@ func _build() -> void:
 			e._laser.scale = Vector3(0.018, 0.018, 1.0)
 			e._laser_dot.global_position = e.global_position + Vector3(0, 1.3, 1.1)
 		_enemies.append(e)
+		if e.kind == Enemy.Kind.FODDER:
+			# П3: куски корма (нарезка один раз на вид, свой формат вершин без скиннинга + обводка)
+			FodderGibs.warmup_sample(self, e, right * 0.4 + Vector3(0, 0.4, 0.6))
 		i += 1
 	# Все части одежды и волос на двух скелетах: случайная внешность драугров собирается из них,
 	# и у каждой части свой формат вершин — значит, свои пайплайны (в т.ч. тени и оверлей вспышки)

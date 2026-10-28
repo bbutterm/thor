@@ -69,6 +69,53 @@ func _hold_player(pos: Vector3) -> void:
 	p.global_position = pos
 	p.velocity = Vector3.ZERO
 
+## П4: броня от спама мили — обычный мили (melee / melee_finisher) ×melee_resist, молот, стихии,
+## удар-приземление и приёмы оружия — полный урон; раз за бой — подсказка Одина. HP после проверки возвращается.
+func _check_armor(b: Enemy, name: String, want_resist: float) -> void:
+	var start := b.health
+	var odin_lines: Array[String] = []
+	var catch_line := func(t: String) -> void: odin_lines.append(t)
+	Odin.line_spoken.connect(catch_line)
+	var dealt := {}
+	for src in ["hammer", "melee", "melee_finisher", "slam", "melee_heavy", "lightning"]:
+		var hp := b.health
+		b.take_hit(10.0, Vector3.ZERO, src)
+		dealt[src] = hp - b.health
+	var full: float = dealt.hammer
+	check(is_equal_approx(b.melee_resist, want_resist) and full > 0.0, "%s: броня от мили из данных ×%.2f" % [name, b.melee_resist])
+	check(absf(dealt.melee - full * b.melee_resist) < 0.05 and absf(dealt.melee_finisher - full * b.melee_resist) < 0.05,
+		"%s: обычный удар мили и добивание — ×%.1f (%.1f из %.1f)" % [name, b.melee_resist, dealt.melee, full])
+	check(absf(dealt.slam - full) < 0.05 and absf(dealt.melee_heavy - full) < 0.05 and absf(dealt.lightning - full) < 0.05,
+		"%s: молот, удар-приземление, приём и молния — полный урон" % name)
+	var hint_texts: Array = []
+	for item in Dialogue.pools.get("odin.boss_armor", []):
+		for l in item.lines:
+			hint_texts.append(Dialogue.format_text(str(l.get("text", ""))))
+	check(b.has_meta("_armor_hinted") and odin_lines.size() == 1 and odin_lines[0] in hint_texts, "%s: подсказка Одина «молотом!» (%s)" % [name, odin_lines])
+	b.take_hit(10.0, Vector3.ZERO, "melee")
+	check(odin_lines.size() == 1, "%s: подсказка — один раз за бой" % name)
+	Odin.line_spoken.disconnect(catch_line)
+	# F6 «старое / новое» (FeelSwitch boss_armor): старое — мили без брони
+	FeelSwitch.set_old(&"boss_armor", true)
+	var hp_old := b.health
+	b.take_hit(10.0, Vector3.ZERO, "melee")
+	var melee_old := hp_old - b.health
+	FeelSwitch.set_old(&"boss_armor", false)
+	check(absf(melee_old - full) < 0.05, "%s: «старое» (F6) — мили без брони (%.1f из %.1f)" % [name, melee_old, full])
+	b.health = start
+
+## HP мини-босса из его данных (П4 поднял HP — число живёт в minibosses/<id>.tres)
+func _mb_hp(id: String) -> float:
+	return (load("res://enemies/minibosses/%s.tres" % id) as MinibossDef).health()
+
+## П4, F6: «старое» — HP мини-босса до брони (legacy_max_health), по умолчанию — новое (max_health)
+func _check_legacy_hp_miniboss(d: MinibossDef, name: String) -> void:
+	FeelSwitch.set_old(&"boss_armor", true)
+	var hp_old := d.health()
+	FeelSwitch.set_old(&"boss_armor", false)
+	check(d.legacy_max_health > 0.0 and is_equal_approx(hp_old, d.legacy_max_health) and is_equal_approx(d.health(), d.max_health),
+		"%s: «старое» (F6) — HP %.0f, новое — %.0f" % [name, hp_old, d.health()])
+
 func _run() -> void:
 	print("=== BOSS TEST ===")
 	await _test_sven()
@@ -139,7 +186,7 @@ func _miniboss_run(id: String) -> Enemy:
 
 func _end_miniboss_run(boss: Enemy, death_pool: String, name: String) -> void:
 	if is_instance_valid(boss) and not boss.is_dead:
-		boss.take_hit(9999, Vector3.ZERO, "melee")
+		boss.take_hit(9999, Vector3.ZERO, "test")  # П4: «test» — без брони мили, только довести HP
 	await wait(0.3)
 	check(_said(death_pool), "смертная реплика: %s" % name)
 	_kill_all_but()
@@ -166,7 +213,7 @@ func _test_volva() -> void:
 		Run.miniboss_rooms = PackedInt32Array([3])
 		return
 	await wait(1.0)
-	check(is_equal_approx(v.max_health, 396.0) and game.hud._boss_title.text == "ВЁЛЬВА", "18 У, полоса HP «%s»" % game.hud._boss_title.text)
+	check(is_equal_approx(v.max_health, _mb_hp("volva")) and game.hud._boss_title.text == "ВЁЛЬВА", "HP из данных (%.0f), полоса HP «%s»" % [v.max_health, game.hud._boss_title.text])
 	check(_said("volva.intro"), "интро-реплика Вёльвы")
 	check(v.high_points.size() >= 2, "нашла высокие точки зала (%d)" % v.high_points.size())
 	_kill_all_but(v)
@@ -197,12 +244,12 @@ func _test_volva() -> void:
 	v.take_hit(20.0, Vector3(0, 0, -6), "hammer")
 	check(v.is_knocked() and v.knockdowns == 1, "Мьёльнир сбивает её (оглушена)")
 	var hp1 := v.health
-	v.take_hit(10.0, Vector3.ZERO, "melee")
+	v.take_hit(10.0, Vector3.ZERO, "melee_heavy")  # П4: приём оружия — полный урон (обычный мили по броне ×0.5)
 	check(hp1 - v.health > 10.0 * 1.4, "оглушённую бить больнее (%.0f)" % (hp1 - v.health))
 	check(hp0 > hp1, "молот ранит")
 	var up := await wait_until(func() -> bool: return not v.is_knocked(), v.knock_stun + 1.0)
 	check(up, "встаёт через %.1f с" % v.knock_stun)
-	v.take_hit(v.health - v.max_health * 0.45, Vector3.ZERO, "melee")
+	v.take_hit(v.health - v.max_health * 0.45, Vector3.ZERO, "test")  # П4: «test» — без брони мили, только довести HP
 	await wait(0.2)
 	check(v.engaged and v.fire_count == 3, "при 50 % HP — злее: больше кругов")
 	await _end_miniboss_run(v, "volva.death", "Вёльва")
@@ -219,7 +266,7 @@ func _test_berserker() -> void:
 		Run.miniboss_rooms = PackedInt32Array([3])
 		return
 	await wait(1.0)
-	check(is_equal_approx(b.max_health, 528.0) and game.hud._boss_title.text == "БЕРСЕРК", "24 У, полоса HP «%s»" % game.hud._boss_title.text)
+	check(is_equal_approx(b.max_health, _mb_hp("berserker")) and game.hud._boss_title.text == "БЕРСЕРК", "HP из данных (%.0f), полоса HP «%s»" % [b.max_health, game.hud._boss_title.text])
 	_kill_all_but(b)
 	var room_o := game.room.global_position
 	b.global_position = room_o + Vector3(-2, 0.05, -4)
@@ -237,13 +284,13 @@ func _test_berserker() -> void:
 	check(window and b.dashes == 3, "серия из 3 рывков, потом окно (%d)" % b.dashes)
 	check(hits[0] > 0, "рывок задевает стоящего Тора")
 	var hp0 := b.health
-	b.take_hit(10.0, Vector3.ZERO, "melee")
+	b.take_hit(10.0, Vector3.ZERO, "melee_heavy")  # П4: приём оружия — полный урон (обычный мили по броне ×0.5)
 	check(hp0 - b.health > 10.0 * 1.4, "в окне уязвимости урон больше (%.0f)" % (hp0 - b.health))
 	var ended := await wait_until(func() -> bool: return not b.is_vulnerable(), b.vulnerable_time + 1.0)
 	check(ended, "окно — %.1f с" % b.vulnerable_time)
 	var aim0 := b.current_aim()
 	var win0 := b.current_window()
-	b.take_hit(b.health - b.max_health * 0.3, Vector3.ZERO, "melee")
+	b.take_hit(b.health - b.max_health * 0.3, Vector3.ZERO, "test")  # П4: «test» — без брони мили, только довести HP
 	await wait(0.1)
 	check(b.raging and b.current_aim() < aim0 and b.current_window() < win0, "при 33 % HP — ярость: серии быстрее, окно короче")
 	check(_said("berserker.rage"), "реплика ярости")
@@ -280,7 +327,7 @@ func _test_hovding() -> void:
 		Run.miniboss_rooms = PackedInt32Array([3])
 		return
 	await wait(1.0)
-	check(hov.has_meta("miniboss") and hov.kind == Enemy.Kind.BOSS and is_equal_approx(hov.max_health, 484.0), "мини-босс 22 У (%.0f)" % hov.max_health)
+	check(hov.has_meta("miniboss") and hov.kind == Enemy.Kind.BOSS and is_equal_approx(hov.max_health, _mb_hp("hovding")), "мини-босс, HP из данных (%.0f)" % hov.max_health)
 	check(game.hud._boss_box.visible and game.hud._boss_title.text == "ХЁВДИНГ", "полоса HP «%s»" % game.hud._boss_title.text)
 	check(Dialogue.history.any(func(h: Dictionary) -> bool: return h.speaker == "hovding"), "интро-реплика Хёвдинга")
 	check(hov.get_node_or_null("Banner") != null, "знамя на спине")
@@ -309,7 +356,7 @@ func _test_hovding() -> void:
 	# Вторая фаза
 	check(not hov.engaged, "в начале держится за дружиной")
 	var s0 := hov.move_speed
-	hov.take_hit(hov.health - hov.max_health * 0.45, Vector3.ZERO, "melee")
+	hov.take_hit(hov.health - hov.max_health * 0.45, Vector3.ZERO, "test")  # П4: «test» — без брони мили, только довести HP
 	await wait(0.2)
 	check(hov.engaged and hov.move_speed > s0, "при 50 % HP сам идёт в бой")
 	check(_said("hovding.engage"), "реплика второй фазы")
@@ -318,7 +365,7 @@ func _test_hovding() -> void:
 	for g in guards:
 		if is_instance_valid(g) and not g.is_dead and HovdingBoss.has_aura(g):
 			keep.append(g)
-	hov.take_hit(9999, Vector3.ZERO, "melee")
+	hov.take_hit(9999, Vector3.ZERO, "test")  # П4: «test» — без брони мили, только довести HP
 	await wait(0.2)
 	check(not keep.is_empty() and keep.all(func(g: Enemy) -> bool: return not is_instance_valid(g) or (not HovdingBoss.has_aura(g) and g.get_node_or_null("AuraRing") == null)), "со смертью вожака аура пропала")
 	check(_said("hovding.death"), "смертная реплика Хёвдинга")
@@ -377,11 +424,15 @@ func _test_sven() -> void:
 	await wait(0.2)
 	_kill_all_but(sven)
 	check(sven.has_meta("miniboss") and sven.kind == Enemy.Kind.BOSS, "Свен — мини-босс (Kind.BOSS)")
-	check(is_equal_approx(sven.max_health, 550.0), "HP 25 У = 550 (%.0f)" % sven.max_health)
+	var sven_def := load("res://enemies/minibosses/fat_sven.tres") as MinibossDef
+	check(is_equal_approx(sven.max_health, sven_def.max_health), "HP из данных мини-босса: %.0f (%.0f У)" % [sven.max_health, sven.max_health / EnemyDef.U])
 	check(spot and Vector2(sven.global_position.x - spot.global_position.x, sven.global_position.z - spot.global_position.z).length() < 1.5, "появился у MinibossSpot")
 	check(game.hud._boss_box.visible and game.hud._boss_title.text == "ТОЛСТЫЙ СВЕН", "полоса HP «%s»" % game.hud._boss_title.text)
 	check(Dialogue.history.any(func(h: Dictionary) -> bool: return h.speaker == "sven"), "интро-реплика Свена")
 	await wait(sven._spawn_time + 0.2)
+	_check_armor(sven, "Свен", sven_def.melee_resist)
+	for mb_id in ["fat_sven", "hovding", "volva", "berserker"]:
+		_check_legacy_hp_miniboss(load("res://enemies/minibosses/%s.tres" % mb_id) as MinibossDef, mb_id)
 
 	var p := game.player
 	var hits := [0]
@@ -404,7 +455,7 @@ func _test_sven() -> void:
 	check(hits[0] > h0, "таран сбил Тора (попаданий %d)" % (hits[0] - h0))
 	check(stunned, "врезался в стену — оглушён")
 	var hp0 := sven.health
-	sven.take_hit(20.0, Vector3.ZERO, "melee")
+	sven.take_hit(20.0, Vector3.ZERO, "melee_heavy")  # П4: приём оружия — полный урон (обычный мили по броне ×0.5)
 	check(hp0 - sven.health > 25.0, "оглушённого бить больнее (×1.5: %.0f)" % (hp0 - sven.health))
 	await wait_until(func() -> bool: return sven.act == 0, 4.0)
 	check(sven.act == 0 and sven._barrel_pivot.position.y > 1.0, "очнулся, бочка снова на спине")
@@ -460,7 +511,7 @@ func _test_sven() -> void:
 	sven._charge_cd = 999.0
 	sven.global_position = room_o + Vector3(0, 0.05, -6)
 	_hold_player(room_o + Vector3(0, 0.1, 5))
-	sven.take_hit(sven.health - sven.max_health * 0.2, Vector3.ZERO, "melee")
+	sven.take_hit(sven.health - sven.max_health * 0.2, Vector3.ZERO, "test")  # П4: «test» — без брони мили, только довести HP
 	check(sven.act == FatSven.Act.SWELL, "на 20 % HP раздувается и бежит к Тору")
 	check(_said("sven.swell"), "реплика при раздувании")
 	var fused := await wait_until(func() -> bool: return sven.act == FatSven.Act.FUSE, 8.0)
@@ -492,9 +543,9 @@ func _test_sven() -> void:
 		game.room.add_child(s2)
 		s2.global_position = game.room.global_position + Vector3(0, 0.05, -4)
 	await wait(1.5)
-	s2.take_hit(s2.health - s2.max_health * 0.2, Vector3.ZERO, "melee")
+	s2.take_hit(s2.health - s2.max_health * 0.2, Vector3.ZERO, "test")  # П4: «test» — без брони мили, только довести HP
 	check(s2.act == FatSven.Act.SWELL, "второй Свен раздувается")
-	s2.take_hit(9999, Vector3.ZERO, "melee")
+	s2.take_hit(9999, Vector3.ZERO, "test")  # П4: «test» — без брони мили, только довести HP
 	var blasts := game.room.get_children().filter(func(n: Node) -> bool: return n is Blast)
 	check(not blasts.is_empty(), "убит раздутым — взрыв с телеграфом")
 	await wait(1.0)
@@ -533,7 +584,8 @@ func _test_jarl() -> void:
 	check(jarl != null, "Ярл появился")
 	if jarl == null:
 		return
-	check(is_equal_approx(jarl.max_health, 60.0 * 22.0), "HP 60 У = 1320 (%.0f)" % jarl.max_health)
+	var jarl_def := EnemyDef.for_kind("jarl")
+	check(is_equal_approx(jarl.max_health, jarl_def.max_health()), "HP из данных: %.0f У = %.0f" % [jarl_def.hp_u, jarl.max_health])
 	check(jarl.kind == Enemy.Kind.BOSS and not jarl.has_meta("miniboss"), "Ярл — босс")
 	await wait(0.2)
 	check(game.hud._boss_box.visible and game.hud._boss_title.text == "ЯРЛ БЬОРН МЁРТВЫЙ", "полоса HP «%s»" % game.hud._boss_title.text)
@@ -541,6 +593,12 @@ func _test_jarl() -> void:
 	check(_said("jarl.intro") or Dialogue.history.any(func(h: Dictionary) -> bool: return h.speaker == "jarl"), "интро-реплика Ярла")
 	await wait(jarl._spawn_time + 0.2)
 	_others_dead(jarl)
+	_check_armor(jarl, "Ярл", jarl_def.melee_resist)
+	FeelSwitch.set_old(&"boss_armor", true)
+	var jarl_old_hp := jarl_def.max_health()
+	FeelSwitch.set_old(&"boss_armor", false)
+	check(jarl_def.legacy_hp_u > 0.0 and is_equal_approx(jarl_old_hp, jarl_def.legacy_hp_u * EnemyDef.U) and jarl_def.max_health() > jarl_old_hp,
+		"Ярл: «старое» (F6) — HP до П4 (%.0f У), новое — %.0f У" % [jarl_def.legacy_hp_u, jarl_def.hp_u])
 	var p := game.player
 	var hits := [0]
 	p.hurt.connect(func(_a: float) -> void: hits[0] += 1)
@@ -549,7 +607,7 @@ func _test_jarl() -> void:
 	print("-- Фаза 1: рука-бумеранг")
 	check(jarl.phase == 1, "фаза 1")
 	var hp0 := jarl.health
-	jarl.take_hit(100.0, Vector3.ZERO, "melee")
+	jarl.take_hit(100.0, Vector3.ZERO, "melee_heavy")  # П4: приём оружия — полный урон (обычный мили по броне ×0.5)
 	check(absf((hp0 - jarl.health) - 100.0 * jarl.armed_damage_mult) < 0.5, "с рукой урон ×%.1f (%.0f)" % [jarl.armed_damage_mult, hp0 - jarl.health])
 	jarl.global_position = o + Vector3(0, 0.05, -8)
 	_hold_player(o + Vector3(0, 0.1, 4))
@@ -560,7 +618,7 @@ func _test_jarl() -> void:
 	check(arm_ok and jarl.is_armless(), "рука летит бумерангом, Ярл без руки")
 	var h0: int = hits[0]
 	hp0 = jarl.health
-	jarl.take_hit(100.0, Vector3.ZERO, "melee")
+	jarl.take_hit(100.0, Vector3.ZERO, "melee_heavy")  # П4: приём оружия — полный урон (обычный мили по броне ×0.5)
 	check(absf((hp0 - jarl.health) - 100.0 * jarl.window_damage_mult) < 0.5, "без руки — окно урона ×%.1f (%.0f)" % [jarl.window_damage_mult, hp0 - jarl.health])
 	var t_frames := [0]
 	await wait_until(func() -> bool:
@@ -572,7 +630,7 @@ func _test_jarl() -> void:
 	check(not jarl.is_armless(), "рука вернулась")
 
 	print("-- Фаза 2: балкон и корм")
-	jarl.take_hit((jarl.health - jarl.max_health * 0.6) / jarl.armed_damage_mult, Vector3.ZERO, "melee")
+	jarl.take_hit((jarl.health - jarl.max_health * 0.6) / jarl.armed_damage_mult, Vector3.ZERO, "test")  # П4: «test» — без брони мили, только довести HP
 	check(jarl._pending_phase == 2, "на 60 % HP — фаза 2")
 	var perched := await wait_until(func() -> bool: return jarl.act == JarlBoss.Act.PERCH, 8.0)
 	check(perched and jarl.phase == 2, "запрыгнул на балкон")
@@ -582,19 +640,19 @@ func _test_jarl() -> void:
 	var summoned := await wait_until(func() -> bool: return game.room.alive_enemies().any(func(e: Enemy) -> bool: return e.has_meta("jarl_summon")), jarl.summon_interval + 2.0)
 	check(summoned, "из ворот лезет корм")
 	hp0 = jarl.health
-	jarl.take_hit(100.0, Vector3.ZERO, "melee")
+	jarl.take_hit(100.0, Vector3.ZERO, "melee_heavy")  # П4: приём оружия — полный урон (обычный мили по броне ×0.5)
 	check(absf((hp0 - jarl.health) - 100.0 * jarl.perch_damage_mult) < 0.5 and jarl.act == JarlBoss.Act.PERCH, "наверху топором почти не ранить (%.0f)" % (hp0 - jarl.health))
 	jarl.take_hit(30.0, Vector3.ZERO, "slam")
 	var knocked := await wait_until(func() -> bool: return jarl.act == JarlBoss.Act.KNOCKED, 3.0)
 	check(knocked, "удар-приземление сбил с балкона")
 	check(jarl.global_position.y < o.y + 1.0, "упал на пол (y=%.1f)" % (jarl.global_position.y - o.y))
 	hp0 = jarl.health
-	jarl.take_hit(100.0, Vector3.ZERO, "melee")
+	jarl.take_hit(100.0, Vector3.ZERO, "melee_heavy")  # П4: приём оружия — полный урон (обычный мили по броне ×0.5)
 	check(absf((hp0 - jarl.health) - 100.0 * jarl.window_damage_mult) < 0.5, "сбитый оглушён — окно урона (%.0f)" % (hp0 - jarl.health))
 	check(_balconies_left() == 4, "в фазе 2 балконы целы")
 
 	print("-- Фаза 3: ломает балконы, бодается")
-	jarl.take_hit((jarl.health - jarl.max_health * 0.3) / jarl.window_damage_mult, Vector3.ZERO, "melee")
+	jarl.take_hit((jarl.health - jarl.max_health * 0.3) / jarl.window_damage_mult, Vector3.ZERO, "test")  # П4: «test» — без брони мили, только довести HP
 	check(jarl._pending_phase == 3, "на 30 % HP — фаза 3")
 	var broke := await wait_until(func() -> bool: return jarl.phase == 3 and _balconies_left() == 0, 12.0)
 	check(broke, "все балконы сломаны (осталось %d)" % _balconies_left())

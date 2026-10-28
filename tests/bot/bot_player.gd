@@ -24,6 +24,10 @@ var skill := {
 	"search_turn": 3.0,     # рад/с — оглядывается, когда никого не видит
 }
 
+## П4: по боссу в броне — множитель шанса приёма и шанс броска вблизи (вместо 0.12)
+var armor_heavy_mult: float = 2.5
+var armor_close_throw: float = 0.5
+
 ## Профили навыка: «skilled» — опытный игрок (по умолчанию), «average» — средний, «novice» — новичок
 ## (не ловит молот идеально, почти не уворачивается, медленно целится).
 const PROFILES := {
@@ -979,6 +983,11 @@ func _floor_ahead(p: Player, dir: Vector3) -> bool:
 	var q := PhysicsRayQueryParameters3D.create(from, from + Vector3(0, -9.0, 0), 1)
 	return not space.intersect_ray(q).is_empty()
 
+## П4: цель в броне от мили (босс, Enemy.is_armored_against) — бот, как игрок после подсказки Одина,
+## чаще бьёт приёмом, бросает молот вблизи и прыгает в удар-приземление по одиночному боссу.
+func _armored_target() -> bool:
+	return _target != null and is_instance_valid(_target) and _target.is_armored_against("melee")
+
 func _melee(p: Player, _dt: float) -> void:
 	var axe := p.axe
 	if axe == null or not axe.active:
@@ -989,6 +998,8 @@ func _melee(p: Player, _dt: float) -> void:
 	var d := axe.def
 	var has_skill := d != null and d.skill_kind in ["whirl", "lunge", "vault"]
 	var chance := float(skill.heavy) * (1.0 if tough else 0.5)
+	if _armored_target():
+		chance = minf(1.0, chance * armor_heavy_mult)
 	var can_hold := not axe.is_busy() and (tough or has_skill)
 	if has_skill:
 		can_hold = can_hold and p.is_on_floor()
@@ -1063,7 +1074,7 @@ func _hammer(p: Player, dist: float, dy: float, dt: float) -> void:
 			want = want or rng.randf() < 0.6
 		if _target is JarlBoss and (_target as JarlBoss).is_perched():
 			want = true
-		if dist <= 4.5 and rng.randf() < 0.12:
+		if dist <= 4.5 and rng.randf() < (armor_close_throw if _armored_target() else 0.12):
 			want = true
 		_throw_t = rng.randf_range(0.6, 1.4)
 		if want and _has_los(p, _target):
@@ -1118,6 +1129,8 @@ func _slam_logic(p: Player, enemies: Array, dist: float, dy: float, dt: float) -
 				for e: Enemy in enemies:
 					if e.global_position.distance_to(p.global_position) < 5.0:
 						near += 1
+				if _armored_target() and _target.global_position.distance_to(p.global_position) < 5.0:
+					near = maxi(near, 3)
 				if near >= 3 and rng.randf() < float(skill.slam_jump) * 0.25:
 					tap("jump", 2)
 					_jump_plan = 1

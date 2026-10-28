@@ -46,6 +46,10 @@ class_name VfxTuning
 ## Пятно на полу: размер, м (мин, макс); при смерти — × splat_death_mult
 @export var splat_size: Vector2 = Vector2(0.9, 1.5)
 @export var splat_death_mult: float = 1.5
+## П3: смерть корма — мясо: брызги и пятно крупнее (× к обычной смерти), плюс брызги по кускам
+@export var fodder_death_splash_mult: float = 1.6
+@export var fodder_death_splat_mult: float = 1.5
+@export var fodder_death_extra_splashes: int = 2
 ## Сколько пятно лежит, с, и за сколько исчезает в конце
 @export var splat_life: float = 10.0
 @export var splat_fade: float = 2.0

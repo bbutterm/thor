@@ -6,7 +6,7 @@ const K = preload("res://tools/rooms/room_kit.gd")
 
 static func def() -> Dictionary:
 	return {
-		"file": "room_10", "title": "Двор частокола", "w": 30.0, "d": 30.0, "max_alive": 60,
+		"file": "room_10", "title": "Двор частокола", "w": 30.0, "d": 30.0, "max_alive": 20,
 		"tutorial_vertical": true,
 		"floor_tex": "dirt_straw",
 		# Те же факелы: перемещены к путям вручную (вместо авто-ориентиров GenRooms._landmarks).
@@ -97,23 +97,19 @@ static func def() -> Dictionary:
 		},
 
 		"enemies": [
-			# 10/15 корма, 2 особых; стрелки на средних помостах.
-			["fodder", Vector3(0, 0, -11.5), 0, 10, 2.25, {"entry_mode": "edge", "entry_target": Vector3(0, 0.05, -8), "spread_axes": Vector2(2, 0.2), "entry_batch": 1}],
+			# П3: 16 + 16 (было 15 + 17 + 18). 11/16 корма, 2 особых; стрелки на средних помостах.
+			["fodder", Vector3(0, 0, -11.5), 0, 6, 1.75, {"entry_mode": "edge", "entry_target": Vector3(0, 0.05, -8), "spread_axes": Vector2(2, 0.2), "entry_batch": 1}],
 			["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(4, 0, -6), 0],
 			["grunt", Vector3(0, 0, 0), 0],
 			["merc", Vector3(11, 3, -5.8), 0], ["thrower", Vector3(-10, 3, -3.5), 0],
+			["fodder", Vector3(0, 0, -11.5), 0, 5, 1.625, {"entry_mode": "edge", "entry_target": Vector3(0, 0.05, -8), "spread_axes": Vector2(2, 0.2), "entry_batch": 1}],
 
-			# 11/17 корма, 2 особых; один стрелок на верхнем ярусе.
-			["fodder", Vector3(0, 0, -11.5), 1, 11, 2.375, {"entry_mode": "edge", "entry_target": Vector3(0, 0.05, -8), "spread_axes": Vector2(2, 0.2), "entry_batch": 1}],
+			# 11/16 корма, 2 особых; один стрелок на верхнем ярусе.
+			["fodder", Vector3(0, 0, -11.5), 1, 6, 1.75, {"entry_mode": "edge", "entry_target": Vector3(0, 0.05, -8), "spread_axes": Vector2(2, 0.2), "entry_batch": 1}],
 			["grunt", Vector3(-4, 0, -6), 1], ["grunt", Vector3(4, 0, -6), 1],
-			["grunt", Vector3(-4, 0, 0), 1], ["grunt", Vector3(4, 0, 0), 1],
+			["grunt", Vector3(-4, 0, 0), 1],
 			["shaman", Vector3(11, 3, -5.8), 1], ["thrower", Vector3(-6.5, 6.75, 11.5), 1],
-
-			# 12/18 корма, 2 особых.
-			["fodder", Vector3(0, 0, -11.5), 2, 12, 2.5, {"entry_mode": "edge", "entry_target": Vector3(0, 0.05, -8), "spread_axes": Vector2(2, 0.2), "entry_batch": 1}],
-			["grunt", Vector3(-4, 0, -6), 2], ["grunt", Vector3(4, 0, -6), 2],
-			["grunt", Vector3(-4, 0, 0), 2], ["grunt", Vector3(4, 0, 0), 2],
-			["shieldbearer", Vector3(4, 0, -8), 2], ["merc", Vector3(11, 3, -5.8), 2],
+			["fodder", Vector3(0, 0, -11.5), 1, 5, 1.625, {"entry_mode": "edge", "entry_target": Vector3(0, 0.05, -8), "spread_axes": Vector2(2, 0.2), "entry_batch": 1}],
 		],
 		"models": [
 			["res://assets/quaternius/props/Cauldron.gltf", Vector3(-12.2, 0, -8.5), 0.0, 1.0],

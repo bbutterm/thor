@@ -117,8 +117,8 @@ func _run() -> void:
 
 func _test_data() -> void:
 	print("-- Данные отрядов")
-	var want := {"shield_wall": {"shieldbearer": 3, "thrower": 2}, "shaman_escort": {"shaman": 1, "fodder": 10},
-		"powder_keg": {"grunt": 4, "bloated": 2}, "loki_ambush": {"merc": 1, "grunt": 3}, "pack": {"fodder": 15, "grunt": 2}}
+	var want := {"shield_wall": {"shieldbearer": 3, "thrower": 2}, "shaman_escort": {"shaman": 1, "fodder": 6},
+		"powder_keg": {"grunt": 4, "bloated": 2}, "loki_ambush": {"merc": 1, "grunt": 3}, "pack": {"fodder": 7, "grunt": 2}}
 	for id in want:
 		var sq := SquadDef.find(id)
 		check(sq != null and sq.totals() == want[id], "%s: состав по GDD %s" % [id, str(sq.totals() if sq else {})])
@@ -159,12 +159,12 @@ func _test_shield_wall() -> void:
 func _test_shaman_escort() -> void:
 	print("-- Шаман и свита")
 	await _stage([_squad_marker("shaman_escort", Vector3(0, 0, -5))])
-	var ok := await _wait_spawned(11)
+	var ok := await _wait_spawned(7)
 	var sh: Enemy = null
 	for e in room.alive_enemies():
 		if e.kind == Enemy.Kind.SHAMAN:
 			sh = e
-	check(ok and sh != null and _count(Enemy.Kind.FODDER) == 10, "шаман + 10 корма")
+	check(ok and sh != null and _count(Enemy.Kind.FODDER) == 6, "шаман + 6 корма (П3: пачки 5–8)")
 	var ringed := 0
 	var anchored := 0
 	for e in room.alive_enemies():
@@ -174,8 +174,8 @@ func _test_shaman_escort() -> void:
 				ringed += 1
 			if e.has_meta("tactic_anchor") and e.get_meta("tactic_anchor") == sh and e._role == EnemyTactics.Role.ESCORT:
 				anchored += 1
-	check(ringed >= 8, "свита встала кольцом вокруг шамана (%d)" % ringed)
-	check(anchored == 10, "у свиты роль «свита» и якорь — шаман (%d)" % anchored)
+	check(ringed >= 5, "свита встала кольцом вокруг шамана (%d)" % ringed)
+	check(anchored == 6, "у свиты роль «свита» и якорь — шаман (%d)" % anchored)
 	# Свита держится у шамана, пока Тор далеко
 	p.global_position = room.global_position + Vector3(0, 0.1, 10)
 	await frames(120)
@@ -183,13 +183,13 @@ func _test_shaman_escort() -> void:
 	for e in room.alive_enemies():
 		if e.kind == Enemy.Kind.FODDER and sh and e.global_position.distance_to(sh.global_position) < 6.0:
 			near += 1
-	check(near >= 7, "свита не бросает шамана, пока Тор далеко (%d)" % near)
+	check(near >= 4, "свита не бросает шамана, пока Тор далеко (%d)" % near)
 
 func _test_pack() -> void:
 	print("-- Стая")
 	await _stage([_squad_marker("pack", Vector3(0, 0, -5))])
-	var ok := await _wait_spawned(17)
-	check(ok and _count(Enemy.Kind.FODDER) == 15 and _count(Enemy.Kind.GRUNT) == 2, "15 корма + 2 воина")
+	var ok := await _wait_spawned(9)
+	check(ok and _count(Enemy.Kind.FODDER) == 7 and _count(Enemy.Kind.GRUNT) == 2, "7 корма + 2 воина (П3: пачки 5–8)")
 
 func _test_ambush_behind() -> void:
 	print("-- Засада Локи")

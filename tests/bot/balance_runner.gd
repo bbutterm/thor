@@ -5,12 +5,13 @@ extends Node
 ## Аргументы: bodies (через запятую; пусто — все тела), runs, seed, out (JSON Lines — строка на забег),
 ## time_cap (с игрового времени на забег), room_cap (с на зал), max_rooms (остановиться после стольких залов — bot_test),
 ## trace=1 (событийная телеметрия в JSONL, по умолчанию выключена).
+## miniboss=<id MinibossDef> — мини-босс забега (Run.forced_miniboss; по умолчанию в тестах — первый, Свен); П4: время боя с каждым.
 ## progression=1 — один открытый персонаж, чистый тестовый профиль и покупки после каждого завершённого забега.
 ## Отчёт по файлам: python3 tests/bot/balance_report.py <out.jsonl> … (docs/balance_<дата>.md).
 
 const BotPlayer := preload("res://tests/bot/bot_player.gd")
 
-var args := {"bodies": "", "runs": "5", "seed": "1", "out": "", "time_cap": "1800", "room_cap": "300", "max_rooms": "0", "profile": "skilled", "trace": "0", "progression": "0"}
+var args := {"bodies": "", "runs": "5", "seed": "1", "out": "", "time_cap": "1800", "room_cap": "300", "max_rooms": "0", "profile": "skilled", "trace": "0", "progression": "0", "miniboss": ""}
 var bot: Node
 var results: Array = []
 var errors: int = 0
@@ -256,6 +257,7 @@ func play_one(body: String, run_no: int, seed_value: int) -> Dictionary:
 	get_tree().paused = false
 	FX.reset_time()
 	seed(seed_value)
+	Run.forced_miniboss = str(args.miniboss)
 	Run.start_run(body)
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 	var game: Game = null

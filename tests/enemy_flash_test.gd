@@ -163,6 +163,7 @@ func _test_death(room: Room, is_gl: bool, simulate_gl: bool = true) -> void:
 	var material_ref: WeakRef = weakref(dying._flash_material_gl) if dying._flash_material_gl != null else null
 	var visual := dying._visual
 	var parts := dying._flash_meshes.duplicate()
+	dying.gib_on_death = false  # П3: проверяем путь «целого трупа»; у корма по умолчанию куски (FodderGibs, enemy_test)
 	dying.take_hit(Enemy.DEBUG_KILL_DAMAGE, Vector3.ZERO, "ranged")
 	var cleared := true
 	var corpse_overlay := Outline.overlay()

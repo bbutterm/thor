@@ -342,6 +342,7 @@ func _test_flash_death() -> void:
 	dying._set_overlay(1.0, 0.5)
 	var visual := dying._visual
 	var material_ref: WeakRef = weakref(dying._flash_material_gl) if dying._flash_material_gl != null else null
+	dying.gib_on_death = false  # П3: проверяем путь «целого трупа»; у корма по умолчанию куски (FodderGibs, enemy_test)
 	dying.take_hit(9999.0, Vector3.ZERO, "test")
 	check(dying.is_dead and is_instance_valid(visual) and visual.get_parent() is RigidBody3D
 		and _all_outlined(visual), "при смерти свечение снято, тело остаётся с обводкой")
@@ -351,6 +352,7 @@ func _test_flash_death() -> void:
 
 func _test_budget() -> void:
 	print("-- Текущие instance-материалы (толпа 44, все со вспышкой; не занятые слоты)")
+	game.room.max_alive = 0  # П3: в зале до 20 на экране; бюджет проверяем на прежней толпе 44
 	var base := game.room.global_position
 	var crowd: Array[Enemy] = []
 	for i in 44:
