@@ -114,7 +114,22 @@
 - **Знамя-аура:** дружина в `aura_radius` 14 м — скорость ×`aura_speed_mult` 1.25, урон ×`aura_damage_mult` 1.3 (золотое кольцо под ногами); со смертью вожака — снимается.
 - **Рог:** раз в `horn_interval` 11 с телеграф `horn_windup` 1.2 с (рог над головой, звук `horn_call`), подкрепление `horn_reinforce_count` 2 × `horn_reinforce_kind` grunt (не больше `horn_cap` 24 врагов в зале) и круг под Тором `horn_zone_radius` 2.6 м / телеграф `horn_zone_telegraph` 1.0 с / `horn_zone_damage` 16.
 - **Фаза 1:** держится в `hold_min`–`hold_max` 7–11 м от Тора, топор раз в `axe_cooldown` 4 с (замах `axe_windup` 0.55, `axe_speed` 18, `axe_damage` 14). **Фаза 2** с `engage_hp_fraction` 0.5: сам в бою, скорость ×`engage_speed_mult` 1.3, рог реже (×1.5).
-- **Чередование:** `Run.miniboss_pool` (Свен, Хёвдинг) — случайный, кроме прошлого (`Save.data.last_miniboss`); арена — `MinibossDef.arena` (у Свена — `rooms/sven_arena.tscn`). В тестах — всегда первый, если не задан `Run.forced_miniboss` / `Run.miniboss_rotation_in_tests`.
+- **Чередование:** `Run.miniboss_pool` (Свен, Хёвдинг, Вёльва, Берсерк) — случайный, кроме прошлого (`Save.data.last_miniboss`); арена — `MinibossDef.arena` (у Свена — `rooms/sven_arena.tscn`). В тестах — всегда первый, если не задан `Run.forced_miniboss` / `Run.miniboss_rotation_in_tests`.
+
+### Вёльва-ведьма (ночь 29.10, Н6) — `enemies/minibosses/volva.tres`, `enemies/volva.tscn` (`enemies/bosses/volva.gd`, `VolvaBoss`)
+
+`max_health` 396 (18 У), `move_speed` 3.6, свита 2 корма, посох; реплики — `data/dialogues/volva.json` (портрет — заглушка).
+- **Телепорт** между высокими точками зала (выше пола на `high_min` 1.2 м, ищет сама) раз в `teleport_interval` 7 с, телеграф `teleport_time` 0.7 с (кольцо в точке выхода), не ближе `teleport_min_dist` 6 м к Тору; Тор подошёл — уходит раньше.
+- **Огненные круги:** раз в `fire_interval` 4.5 с (замах `fire_windup` 0.7) `fire_count` 2 круга `fire_radius` 2 м под Тором и в `fire_spread` 3.2 м, телеграф `fire_telegraph` 1.0 с, `fire_damage` 14, лужа огня `fire_puddle_time` 3 с по `fire_puddle_dps` 8.
+- **Корм:** раз в `raise_interval` 9 с (замах 1 с) `raise_count` 3, не больше `raise_cap` 24 в зале.
+- **Сбить молотом:** попадание Мьёльнира — падает, оглушена `knock_stun` 2 с, урон по ней ×`knock_damage_mult` 1.5. При `engage_hp_fraction` 0.5: +`engage_extra_fire` 1 круг, интервалы ×`engage_interval_mult` 0.75.
+
+### Берсерк-ульфхеднар (ночь 29.10, Н6) — `enemies/minibosses/berserker.tres`, `enemies/berserker.tscn` (`enemies/bosses/berserker.gd`, `BerserkerBoss`)
+
+`max_health` 528 (24 У), `move_speed` 4.6, без свиты; реплики — `data/dialogues/berserker.json` (портрет — драугр).
+- **Серия рывков:** раз в `series_interval` 5 с (Тор не ближе `series_min_dist` 3.5 м) `series_count` 3 рывка: полоса-телеграф `dash_aim` 0.6 с (направление замирает после `dash_lock_at` 0.75), `dash_speed` 17, до `dash_max_dist` 12 м, `dash_damage` 20, `dash_knock` 11, пауза `dash_pause` 0.25 с. Перепрыгнуть — `charge_jump_clear` (`BossEnemy`).
+- **Окно уязвимости** после серии `vulnerable_time` 2 с, урон ×`vulnerable_damage_mult` 1.5.
+- **Ярость** с `rage_hp_fraction` 0.33: телеграф ×`rage_aim_mult` 0.6, скорость ×`rage_speed_mult` 1.2, окно ×`rage_window_mult` 0.6, серии чаще (×0.7).
 
 ## Ярл Бьорн — `enemies/jarl.tscn` (`enemies/bosses/jarl.gd`), числа GDD — `enemies/defs/jarl.tres`
 

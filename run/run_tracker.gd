@@ -32,7 +32,7 @@ static var pending_source: String = ""
 ## Подписи источников для экрана смерти
 const SOURCE_NAMES := {
 	"draugr_warrior": "драугр-воин", "draugr_thrower": "драугр-метатель", "draugr_fodder": "драугр-корм",
-	"boss_jarl": "Ярл Бьорн", "miniboss_sven": "Толстый Свен", "miniboss_hovding": "Хёвдинг", "fall": "падение", "barrel": "бочка",
+	"boss_jarl": "Ярл Бьорн", "miniboss_sven": "Толстый Свен", "miniboss_hovding": "Хёвдинг", "miniboss_volva": "Вёльва", "miniboss_berserker": "Берсерк", "fall": "падение", "barrel": "бочка",
 	"own_fire": "собственный огонь", "shieldbearer": "щитоносец", "bloated": "раздутый", "shaman": "шаман",
 	"loki_merc": "наёмник Локи", "unknown": "что-то невнятное",
 }

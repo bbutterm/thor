@@ -64,7 +64,8 @@ const TRIALS_DIR := "res://run/trials/"
 ## Мини-боссы Мидгарда (GDD 14.1): 4-й зал берёт случайного, без повтора подряд в соседних забегах
 ## (последний — Save.data["last_miniboss"]). В тестах — всегда первый, если не задан forced_miniboss
 ## или miniboss_rotation_in_tests.
-@export var miniboss_pool: PackedStringArray = ["res://enemies/minibosses/fat_sven.tres", "res://enemies/minibosses/hovding.tres"]
+@export var miniboss_pool: PackedStringArray = ["res://enemies/minibosses/fat_sven.tres", "res://enemies/minibosses/hovding.tres",
+	"res://enemies/minibosses/volva.tres", "res://enemies/minibosses/berserker.tres"]
 ## Тесты: id мини-босса (MinibossDef.id) на следующие забеги; "" — по правилам
 var forced_miniboss: String = ""
 var miniboss_rotation_in_tests: bool = false

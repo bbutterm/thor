@@ -74,6 +74,8 @@ func _run() -> void:
 	await _test_sven()
 	await _test_rotation()
 	await _test_hovding()
+	await _test_volva()
+	await _test_berserker()
 	await _test_jarl()
 	_finish()
 
@@ -82,28 +84,170 @@ func _run() -> void:
 func _test_rotation() -> void:
 	print("-- Чередование мини-боссов")
 	Run.miniboss_rotation_in_tests = true
+	seed(29102026)
 	var ids: Array[String] = []
 	Save.data["last_miniboss"] = ""
-	for i in 10:
+	for i in 12:
 		Run.start_run("berserker")
 		ids.append((Run.miniboss_def() as MinibossDef).id)
 	var repeats := 0
 	for i in range(1, ids.size()):
 		if ids[i] == ids[i - 1]:
 			repeats += 1
-	check(repeats == 0 and "hovding" in ids and "fat_sven" in ids, "4-й зал — случайный мини-босс без повтора подряд (%s)" % ", ".join(ids))
+	var distinct := {}
+	for id in ids:
+		distinct[id] = true
+	check(repeats == 0 and distinct.size() >= 3, "4-й зал — случайный мини-босс без повтора подряд (%s)" % ", ".join(ids))
+	check(Run.miniboss_pool.size() == 4, "в чередовании Свен, Хёвдинг, Вёльва, Берсерк")
 	Save.data["last_miniboss"] = "fat_sven"
 	Run.start_run("berserker")
-	check((Run.miniboss_def() as MinibossDef).id == "hovding" and Run.miniboss_arena == "" and not "res://rooms/sven_arena.tscn" in Run.room_order,
-		"Хёвдинг дерётся в обычном зале (без арены Свена)")
-	Save.data["last_miniboss"] = "hovding"
-	Run.start_run("berserker")
-	check((Run.miniboss_def() as MinibossDef).id == "fat_sven" and Run.room_order.has(Run.miniboss_arena), "после Хёвдинга — Свен со своей ареной")
+	var picked := Run.miniboss_def() as MinibossDef
+	check(picked.id != "fat_sven" and Run.miniboss_arena == "" and not "res://rooms/sven_arena.tscn" in Run.room_order,
+		"после Свена — другой мини-босс (%s) в обычном зале" % picked.id)
 	Run.miniboss_rotation_in_tests = false
+	Run.forced_miniboss = "fat_sven"
+	Run.start_run("berserker")
+	check((Run.miniboss_def() as MinibossDef).id == "fat_sven" and Run.room_order.has(Run.miniboss_arena) and Run.miniboss_arena != "", "Свен — со своей ареной")
 	Run.forced_miniboss = "hovding"
 	Run.start_run("berserker")
 	check((Run.miniboss_def() as MinibossDef).id == "hovding", "принудительный выбор (Run.forced_miniboss)")
 	Run.forced_miniboss = ""
+
+## Забег с мини-боссом id в зале 1: дождаться его выхода (остальных убиваем). null — не вышел.
+func _miniboss_run(id: String) -> Enemy:
+	Dialogue.in_run_scenes = false
+	Run.forced_miniboss = id
+	Run.start_run("berserker")
+	Run.miniboss_rooms = PackedInt32Array([0])
+	Run.room_order.assign([Run.ROOM_SCENES[0], Run.BOSS_SCENE])
+	Run.room_index = 0
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	await wait(0.6)
+	game = get_tree().current_scene as Game
+	if game.tutorial:
+		game.tutorial.active = false
+	var boss: Enemy = null
+	for i in 60:
+		for e in game.room.alive_enemies():
+			if e.has_meta("miniboss"):
+				boss = e
+		if boss:
+			break
+		_kill_all_but(null)
+		await wait(0.3)
+	return boss
+
+func _end_miniboss_run(boss: Enemy, death_pool: String, name: String) -> void:
+	if is_instance_valid(boss) and not boss.is_dead:
+		boss.take_hit(9999, Vector3.ZERO, "melee")
+	await wait(0.3)
+	check(_said(death_pool), "смертная реплика: %s" % name)
+	_kill_all_but()
+	var picked := await wait_until(func() -> bool: return game.trait_pick.visible, 5.0)
+	check(picked, "после мини-босса «%s» — выбор трейта Мьёльнира" % name)
+	if game.trait_pick.visible:
+		game.trait_pick._open_time = -10.0
+		game.trait_pick.choose(0, true)
+		await wait(0.3)
+	get_tree().paused = false
+	Run.forced_miniboss = ""
+	Run.miniboss_rooms = PackedInt32Array([3])
+	await wait(0.2)
+
+# --- Вёльва-ведьма (GDD 14.1, ночь 29.10, Н6) ---
+
+func _test_volva() -> void:
+	print("-- Вёльва-ведьма")
+	var vb := await _miniboss_run("volva")
+	var v := vb as VolvaBoss
+	check(v != null, "Вёльва вышла последней волной")
+	if v == null:
+		Run.forced_miniboss = ""
+		Run.miniboss_rooms = PackedInt32Array([3])
+		return
+	await wait(1.0)
+	check(is_equal_approx(v.max_health, 396.0) and game.hud._boss_title.text == "ВЁЛЬВА", "18 У, полоса HP «%s»" % game.hud._boss_title.text)
+	check(_said("volva.intro"), "интро-реплика Вёльвы")
+	check(v.high_points.size() >= 2, "нашла высокие точки зала (%d)" % v.high_points.size())
+	_kill_all_but(v)
+	var room_o := game.room.global_position
+	_hold_player(room_o + Vector3(-2, 0.1, 9))
+	v._fire_cd = 99.0
+	v._raise_cd = 99.0
+	v._tp_cd = 0.0
+	var tele := await wait_until(func() -> bool: return v.is_teleporting(), 4.0)
+	check(tele and v._tp_ring != null, "телеграф телепорта (кольцо в точке выхода)")
+	var gone := await wait_until(func() -> bool: return v.teleports > 0, 3.0)
+	check(gone and v.is_elevated(), "телепорт на высокую точку (высота %.1f м)" % (v.global_position.y - room_o.y))
+	v._tp_cd = 99.0
+	v._fire_cd = 0.0
+	var fired := await wait_until(func() -> bool:
+		return get_tree().get_nodes_in_group("hazard_zones").filter(func(z: Node) -> bool: return z.get("source_node") == v).size() >= v.fire_count, 3.0)
+	check(fired, "огненные круги на полу (%d)" % v.fire_count)
+	var zones := get_tree().get_nodes_in_group("hazard_zones").filter(func(z: Node) -> bool: return z.get("source_node") == v)
+	check(not zones.is_empty() and is_equal_approx((zones[0] as HazardZone).telegraph, 1.0) and (zones[0] as HazardZone).puddle_time > 0.0, "телеграф 1 с, потом лужа огня")
+	v._fire_cd = 99.0
+	var alive0 := game.room.alive_count()
+	v._raise_cd = 0.0
+	var raised := await wait_until(func() -> bool: return game.room.alive_count() > alive0, 4.0)
+	check(raised, "поднимает корм")
+	_kill_all_but(v)
+	v._raise_cd = 99.0
+	var hp0 := v.health
+	v.take_hit(20.0, Vector3(0, 0, -6), "hammer")
+	check(v.is_knocked() and v.knockdowns == 1, "Мьёльнир сбивает её (оглушена)")
+	var hp1 := v.health
+	v.take_hit(10.0, Vector3.ZERO, "melee")
+	check(hp1 - v.health > 10.0 * 1.4, "оглушённую бить больнее (%.0f)" % (hp1 - v.health))
+	check(hp0 > hp1, "молот ранит")
+	var up := await wait_until(func() -> bool: return not v.is_knocked(), v.knock_stun + 1.0)
+	check(up, "встаёт через %.1f с" % v.knock_stun)
+	v.take_hit(v.health - v.max_health * 0.45, Vector3.ZERO, "melee")
+	await wait(0.2)
+	check(v.engaged and v.fire_count == 3, "при 50 % HP — злее: больше кругов")
+	await _end_miniboss_run(v, "volva.death", "Вёльва")
+
+# --- Берсерк-ульфхеднар (GDD 14.1, ночь 29.10, Н6) ---
+
+func _test_berserker() -> void:
+	print("-- Берсерк-ульфхеднар")
+	var bb := await _miniboss_run("berserker")
+	var b := bb as BerserkerBoss
+	check(b != null, "Берсерк вышел последней волной")
+	if b == null:
+		Run.forced_miniboss = ""
+		Run.miniboss_rooms = PackedInt32Array([3])
+		return
+	await wait(1.0)
+	check(is_equal_approx(b.max_health, 528.0) and game.hud._boss_title.text == "БЕРСЕРК", "24 У, полоса HP «%s»" % game.hud._boss_title.text)
+	_kill_all_but(b)
+	var room_o := game.room.global_position
+	b.global_position = room_o + Vector3(-2, 0.05, -4)
+	_hold_player(room_o + Vector3(-2, 0.1, 6))
+	b._series_cd = 0.0
+	var strip := [false]
+	var hits := [0]
+	game.player.hurt.connect(func(_a: float) -> void: hits[0] += 1)
+	var window := await wait_until(func() -> bool:
+		if b.act == BerserkerBoss.Act.DASH_AIM and b._strip and b._strip.visible:
+			strip[0] = true
+		_hold_player(room_o + Vector3(-2, 0.1, 6))
+		return b.is_vulnerable(), 10.0)
+	check(strip[0], "перед рывком — полоса-телеграф на полу")
+	check(window and b.dashes == 3, "серия из 3 рывков, потом окно (%d)" % b.dashes)
+	check(hits[0] > 0, "рывок задевает стоящего Тора")
+	var hp0 := b.health
+	b.take_hit(10.0, Vector3.ZERO, "melee")
+	check(hp0 - b.health > 10.0 * 1.4, "в окне уязвимости урон больше (%.0f)" % (hp0 - b.health))
+	var ended := await wait_until(func() -> bool: return not b.is_vulnerable(), b.vulnerable_time + 1.0)
+	check(ended, "окно — %.1f с" % b.vulnerable_time)
+	var aim0 := b.current_aim()
+	var win0 := b.current_window()
+	b.take_hit(b.health - b.max_health * 0.3, Vector3.ZERO, "melee")
+	await wait(0.1)
+	check(b.raging and b.current_aim() < aim0 and b.current_window() < win0, "при 33 % HP — ярость: серии быстрее, окно короче")
+	check(_said("berserker.rage"), "реплика ярости")
+	await _end_miniboss_run(b, "berserker.death", "Берсерк")
 
 # --- Хёвдинг с дружиной (GDD 14.1, ночь 29.10, Н5) ---
 

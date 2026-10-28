@@ -53,6 +53,22 @@ const MODEL_LOOKS := {
 		"anim_spawn": "LayToIdle", "anim_idle": "Sword_Idle", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.6,
 		"anim_attack": "Sword_Regular_C", "anim_attack_hit_at": 0.35, "anim_slam": "Sword_Regular_C", "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
 	},
+	# Вёльва: колдунья в лиловом с посохом (телепорт, огненные круги — enemies/bosses/volva.gd)
+	"volva": {
+		"model_body": "base/Superhero_Female_FullBody.gltf", "model_outfit": "outfits/Female_Ranger.gltf", "model_hair": "hair/Hair_Long.gltf",
+		"skin_tint": Color(0.62, 0.68, 0.78), "cloth_tint": Color(0.38, 0.22, 0.5), "eye_glow": Color(0.75, 0.4, 1.0, 1.0),
+		"hand_weapon": "staff", "randomize_look": false, "shield_chance": 0.0,
+		"anim_spawn": "LayToIdle", "anim_idle": "Sword_Idle", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.6,
+		"anim_attack": "Sword_Regular_C", "anim_attack_hit_at": 0.35, "anim_slam": "Sword_Regular_C", "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
+	# Берсерк-ульфхеднар: серый «волк» с топором (серии рывков — enemies/bosses/berserker.gd)
+	"berserker": {
+		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Ranger.gltf", "model_hair": "hair/Hair_Long.gltf",
+		"skin_tint": Color(0.6, 0.62, 0.66), "cloth_tint": Color(0.42, 0.4, 0.38), "eye_glow": Color(1.0, 0.25, 0.15, 1.0),
+		"hand_weapon": "q_axe", "randomize_look": false, "shield_chance": 0.0,
+		"anim_spawn": "LayToIdle", "anim_idle": "Sword_Idle", "anim_move": "Jog_Fwd_Loop", "anim_move_ref_speed": 3.0,
+		"anim_attack": "Sword_Regular_C", "anim_attack_hit_at": 0.35, "anim_slam": "Sword_Regular_C", "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+	},
 	# Корм — облегчённый: одно тело + один комплект одежды, без оружия, волос и случайной сборки
 	"fodder": {
 		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Peasant.gltf", "model_hair": "",
@@ -126,6 +142,11 @@ func build_enemies() -> void:
 		# Хёвдинг с дружиной — мини-босс (GDD 14.1): знамя-аура, рог, вторая фаза при 50 % HP; числа и вид перекрывает MinibossDef
 		"hovding": {"kind": Enemy.Kind.BOSS, "hp": 484.0, "speed": 4.0, "range": 2.6, "dmg": 18.0, "windup": 0.7, "recover": 0.85, "cd": 1.0, "color": Color(0.6, 0.3, 0.25), "scale": 1.35, "resist": 0.65,
 			"script": "res://enemies/bosses/hovding.gd", "extra": {"lunge_speed": 5.0, "wall_splat_speed": 99.0, "boss_slam_radius": 4.0, "boss_slam_damage": 18.0, "boss_slam_windup": 0.9, "boss_far_slam_chance": 0.0}},
+		# Вёльва-ведьма и Берсерк-ульфхеднар — мини-боссы (GDD 14.1); числа и вид перекрывает MinibossDef
+		"volva": {"kind": Enemy.Kind.BOSS, "hp": 396.0, "speed": 3.6, "range": 2.4, "dmg": 14.0, "windup": 0.7, "recover": 0.9, "cd": 1.2, "color": Color(0.5, 0.3, 0.6), "scale": 1.15, "resist": 0.5,
+			"script": "res://enemies/bosses/volva.gd", "extra": {"lunge_speed": 4.0, "wall_splat_speed": 99.0, "boss_slam_radius": 3.5, "boss_slam_damage": 14.0, "boss_slam_windup": 0.9, "boss_far_slam_chance": 0.0}},
+		"berserker": {"kind": Enemy.Kind.BOSS, "hp": 528.0, "speed": 4.6, "range": 2.4, "dmg": 18.0, "windup": 0.55, "recover": 0.7, "cd": 0.9, "color": Color(0.45, 0.42, 0.4), "scale": 1.3, "resist": 0.6,
+			"script": "res://enemies/bosses/berserker.gd", "extra": {"lunge_speed": 6.0, "wall_splat_speed": 99.0, "boss_slam_radius": 3.5, "boss_slam_damage": 16.0, "boss_slam_windup": 0.8, "boss_far_slam_chance": 0.0}},
 	}
 	var script := load("res://enemies/enemy.gd")
 	for key in defs:

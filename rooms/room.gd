@@ -89,6 +89,8 @@ const ENEMY_SCENES := {
 	# Боссы со своими атаками (enemies/bosses/)
 	"sven": "res://enemies/sven.tscn",
 	"hovding": "res://enemies/hovding.tscn",
+	"volva": "res://enemies/volva.tscn",
+	"berserker": "res://enemies/berserker.tscn",
 	"jarl": "res://enemies/jarl.tscn",
 }
 
