@@ -1,7 +1,10 @@
 name: Headless checks and tagged Windows build
 
 on:
+  # Только вручную (Actions → Run workflow) или по тегу v* — решение владельца 28.10: репозиторий приватный, минуты Actions ограничены.
+  workflow_dispatch:
   push:
+    tags: ['v*']
 
 permissions:
   contents: read
