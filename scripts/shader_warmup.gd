@@ -263,9 +263,10 @@ func _warm_ui_glyphs() -> void:
 		box.add_child(UIStyle.label(text, spec[0], Color.WHITE, spec[1]))
 
 ## Кто может заговорить в бою пузырём с портретом: Хугин (обучение), босс/мини-босс, ведущий испытания,
-## хозяин двери-награды (Один на привале, Локи, Фрейя). Один говорящий — 5 эмоций в памяти, поэтому только они.
+## хозяин двери-награды (Один на привале, Локи, Фрейя); Тор — в каждом зале. У говорящего до шести эмоций в памяти.
 func _room_speakers() -> PackedStringArray:
-	var out := PackedStringArray()
+	# Тор может заговорить о тяжёлом ранении в любом бою; прогреваем все его эмоции заранее.
+	var out := PackedStringArray(["thor"])
 	var tut := game_node.get("tutorial") as Tutorial if game_node else null
 	if tut and tut.active:
 		out.append("hugin")

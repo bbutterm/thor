@@ -1,5 +1,5 @@
 extends Node
-## Портреты из комплекта владельца: у каждого персонажа с артом находятся все 5 эмоций,
+## Портреты из комплекта владельца: у каждого персонажа с артом находятся все 5 базовых эмоций,
 ## нет эмоции — neutral, нет арта — процедурная заглушка (пустой путь).
 ## godot --headless --path . res://tests/portrait_test.tscn
 
@@ -14,8 +14,8 @@ func _ready() -> void:
 				print("  [FAIL] нет портрета ", sp, " ", emo)
 			else:
 				ok += 1
-		var emb := Portrait.texture_path(sp, "embarrassed")
-		if not emb.contains("neutral"):
+		var fallback := Portrait.texture_path(sp, "not_an_emotion")
+		if not fallback.contains("neutral"):
 			fails += 1
 			print("  [FAIL] нет запасного neutral для ", sp)
 		var tex := load(Portrait.texture_path(sp, "neutral")) as Texture2D
@@ -25,6 +25,33 @@ func _ready() -> void:
 		if Portrait.face_of(sp).is_empty():
 			fails += 1
 			print("  [FAIL] нет точки лица для крупного плана: ", sp)
+	# Частая эмоция Тора раньше падала обратно на neutral; теперь своя и прогревается для боя.
+	var thor_emb := Portrait.texture_path("thor", "embarrassed")
+	var thor_tex := load(thor_emb) as Texture2D if thor_emb != "" else null
+	var thor_img: Image = thor_tex.get_image() if thor_tex else null
+	if not thor_emb.ends_with("thor_embarrassed.webp") or thor_tex == null or thor_tex.get_height() > 768 or thor_img == null or thor_img.get_pixel(0, 0).a > 0.01:
+		fails += 1
+		print("  [FAIL] портрет смущённого Тора не загрузился, велик или не прозрачен")
+	else:
+		ok += 1
+	for emo in Portrait.EMOTIONS:
+		var path := Portrait.texture_path("thor", emo)
+		if path != "":
+			load(path)
+	Portrait.prefetch(PackedStringArray(["thor"]))
+	if not thor_emb in Portrait.prefetched():
+		fails += 1
+		print("  [FAIL] смущённый Тор не прогрет для боя")
+	else:
+		ok += 1
+	var warmup := ShaderWarmup.new()
+	if not "thor" in warmup._room_speakers():
+		fails += 1
+		print("  [FAIL] Тор не включён в прогрев портретов зала")
+	else:
+		ok += 1
+	warmup.free()
+	Portrait.prefetch(PackedStringArray())
 	# Портреты гномов сделаны для ларька; отсутствующие эмоции используют neutral.
 	for pair in [["brokk", ["neutral", "happy", "angry", "shocked", "smug"]],
 			["eitri", ["neutral", "happy", "embarrassed"]]]:
