@@ -562,8 +562,8 @@ if not ONLY or any(name.startswith(prefix) for name in hazard_names for prefix i
     brass *= np.clip(tt / 0.15, 0, 1) * np.clip((1.2 - tt) / 0.3, 0, 1)
     save("horn_call", lp(brass + rng.standard_normal(len(tt)) * 0.03, 1800), 0.7)
 
-# --- П3 (плейтест 28.10): мясо корма, мульти-килл; отдельный seed не меняет существующие звуки ---
-meat_names = ("gib_crunch_", "multikill_bass")
+# --- П3/П4 (плейтест 28.10): мясо корма, мульти-килл, броня боссов; отдельный seed не меняет существующие звуки ---
+meat_names = ("gib_crunch_", "multikill_bass", "armor_tink")
 if not ONLY or any(name.startswith(prefix) for name in meat_names for prefix in ONLY):
     rng = np.random.default_rng(281030)
     # Корм разлетается на куски: влажный хруст (треск костей поверх шлепка) — три варианта
@@ -580,5 +580,7 @@ if not ONLY or any(name.startswith(prefix) for name in meat_names for prefix in 
     tt = t(0.55)
     sub = np.sin(2 * np.pi * np.cumsum(np.linspace(75, 38, len(tt))) / SR) * env(len(tt), 0.003, 1.6)
     save("multikill_bass", mix(thump(0.3, 120, 40) * 1.2, sub, lp(rng.standard_normal(int(SR * 0.08)), 500) * 0.5), 0.95)
+    # Удар по броне босса: глухой «тынк» — короткий металл без звона и мягкий удар
+    save("armor_tink", mix(lp(metal(0.22, 340), 2200) * 0.9, thump(0.1, 230, 130) * 0.6), 0.6)
 
 print("Готово:", OUT)

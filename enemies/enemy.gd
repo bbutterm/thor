@@ -225,6 +225,13 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var gib_up: float = 4.5
 @export var gib_spin: float = 12.0
 
+@export_group("Броня босса (П4)")
+## Множитель урона обычных ударов мили (melee / melee_finisher) по боссу и мини-боссу (Kind.BOSS).
+## Число — в данных: EnemyDef.melee_resist (Ярл), MinibossDef.melee_resist. Молот, стихии, удар-приземление,
+## приёмы оружия (melee_heavy) и прочее — полный урон. Обычных врагов не касается.
+@export_range(0.05, 1.0, 0.05) var melee_resist: float = 1.0
+## Удар по броне: вспышка тусклее (доля обычной) — видно, что рукой не берётся
+@export_range(0.0, 1.0, 0.05) var armor_flash: float = 0.3
 
 @export_group("Модель")
 @export var model_body: String = "base/Superhero_Male_FullBody.gltf"
@@ -886,13 +893,19 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 			damage = (h as EliteHandler).filter_damage(damage, knockback, source)
 		if damage <= 0.0:
 			return
+	# П4: броня боссов от спама мили — обычные удары мили ×melee_resist, «тынк», искры, тусклая вспышка
+	var armored := is_armored_against(source) and damage < DEBUG_KILL_DAMAGE
+	if armored:
+		damage *= melee_resist
 	health -= damage
 	_last_hit_time = Run.combat_clock
 	hit_taken.emit(damage, source)
 	ComicFX.on_enemy_hit(self, damage, source)
-	_hurt_flash = 1.0
+	_hurt_flash = armor_flash if armored else 1.0
 	var big := source == "melee_finisher" or source == "melee_heavy" or source == "slam"
-	if source != "fire" and source != "ranged":
+	if armored:
+		_armor_feedback()
+	elif source != "fire" and source != "ranged":
 		FX.sparks(get_parent(), global_position + Vector3(0, 1.1 * model_scale, 0), Color(1, 0.85, 0.4) if source.begins_with("melee") else Color(0.6, 0.85, 1.0), 18 if big else 10, 7.0 if big else 5.0)
 	FX.enemy_hit(self, damage, source, big)  # вспышка, у нежити — ихор (VFX-комплект)
 	FX.damage_number(get_parent(), global_position + Vector3(0, 1.8 * model_scale, 0), damage,
@@ -916,6 +929,27 @@ func take_hit(damage: float, knockback: Vector3, source: String = "") -> void:
 	if health <= 0.0:
 		_die(source)
 
+## Броня босса (П4): обычный удар мили по боссу/мини-боссу ослаблен (melee_resist < 1).
+## «Старое» (FeelSwitch boss_armor, F6 в «Быстрой проверке») — без брони, ×1.0.
+func is_armored_against(source: String) -> bool:
+	return kind == Kind.BOSS and melee_resist < 1.0 and (source == "melee" or source == "melee_finisher") \
+		and not FeelSwitch.is_old(&"boss_armor")
+
+## Удар по броне: искры как по щиту, глухой «тынк»; раз за бой — подсказка Одина «молотом!».
+func _armor_feedback() -> void:
+	Perf.mark("boss_armor_hit")
+	var pos := global_position + Vector3(0, 1.1 * model_scale, 0)
+	if player and is_instance_valid(player):
+		var to_p := player.global_position - global_position
+		to_p.y = 0.0
+		if to_p.length() > 0.1:
+			pos += to_p.normalized() * 0.5 * model_scale
+	FX.sparks(get_parent(), pos, Color(0.8, 0.86, 0.95), 10, 5.0)
+	Audio.play("sounds/sfx/armor_tink.wav")
+	# Раз за бой; если Один молчит (идёт диалог) — подскажет при следующем ударе по броне
+	if not has_meta("_armor_hinted") and Odin.say("boss_armor") != "":
+		set_meta("_armor_hinted", true)
+
 ## Оглушить на time секунд (трейты, эффекты, Мьёльнир — сильное оглушение: элиту тоже). Босса — нет.
 ## HP, скорость, урон и Слава из описания GDD (вызывается залом до add_child).
 func apply_def(d: EnemyDef) -> void:
@@ -927,6 +961,7 @@ func apply_def(d: EnemyDef) -> void:
 	else:
 		attack_damage = d.damage
 	glory_value = d.glory
+	melee_resist = d.melee_resist
 
 func stun(time: float) -> void:
 	apply_stun(time, true)

@@ -100,7 +100,7 @@
 
 ## Мини-босс — `enemies/minibosses/fat_sven.tres` (`MinibossDef`)
 
-Толстый Свен: `max_health` 550 (25 У), `move_speed` 4.2, `knock_resist` 0.6, `attack_damage` 18, `windup_time` 0.75, удар по площади `slam_radius` 4.5 / `slam_damage` 20 / `slam_windup` 0.9, `far_slam_chance` 0.004 (за кадр, издалека; у финального босса `boss_far_slam_chance` 0.02), `glory` 50, вид `model_scale` 1.5 × `fatness` 1.35, свита `escort_count` 2. Реплики: `intro_pool` «sven.intro», `death_pool` «sven.death» (`data/dialogues/sven.json`).
+Толстый Свен: `max_health` 825 (37.5 У; П4 — было 550, «старое» по F6 — `legacy_max_health` 550), `move_speed` 4.2, `knock_resist` 0.6, `melee_resist` 0.5 (П4: броня от спама мили — у всех `MinibossDef` по умолчанию), `attack_damage` 18, `windup_time` 0.75, удар по площади `slam_radius` 4.5 / `slam_damage` 20 / `slam_windup` 0.9, `far_slam_chance` 0.004 (за кадр, издалека; у финального босса `boss_far_slam_chance` 0.02), `glory` 50, вид `model_scale` 1.5 × `fatness` 1.35, свита `escort_count` 2. Реплики: `intro_pool` «sven.intro», `death_pool` «sven.death» (`data/dialogues/sven.json`).
 
 Своя механика Свена (блок Н) — `enemies/sven.tscn`, скрипт `enemies/bosses/sven.gd` (`FatSven`, поверх `BossEnemy`):
 - **Таран на бочке:** телеграф `charge_aim_time` 0.9 с (красная полоса на полу; направление замирает после `charge_lock_at` 0.7), `charge_speed` 15, `charge_max_dist` 20, `charge_damage` 22, `charge_knock` 13, `charge_cooldown` 6, не ближе `charge_min_dist` 4.5 м; врезался в стену — оглушён `charge_wall_stun` 1.8 с (урон по нему ×1.5). Перепрыгнуть: ноги выше `charge_jump_clear` 1.0 м (`BossEnemy`).
@@ -110,7 +110,7 @@
 
 ### Хёвдинг с дружиной (ночь 29.10, Н5, GDD 14.1) — `enemies/minibosses/hovding.tres`, `enemies/hovding.tscn` (`enemies/bosses/hovding.gd`, `HovdingBoss`)
 
-`max_health` 484 (22 У), `move_speed` 4.0, `knock_resist` 0.65, `attack_damage` 18, удар по площади 4.0 м / 18, `model_scale` 1.35, `glory` 50; свита — отряд `escort_squad` «hovding_guard» (`enemies/squads/hovding_guard.tres`: 3 воина «окружение» + 2 «фланг»); арены нет — дерётся в обычном 4-м зале. Реплики — `data/dialogues/hovding.json` (пулы intro/horn/engage/death; портрет — драугр).
+`max_health` 726 (33 У; П4 — было 484, `legacy_max_health`), `move_speed` 4.0, `knock_resist` 0.65, `attack_damage` 18, удар по площади 4.0 м / 18, `model_scale` 1.35, `glory` 50; свита — отряд `escort_squad` «hovding_guard» (`enemies/squads/hovding_guard.tres`: 3 воина «окружение» + 2 «фланг»); арены нет — дерётся в обычном 4-м зале. Реплики — `data/dialogues/hovding.json` (пулы intro/horn/engage/death; портрет — драугр).
 - **Знамя-аура:** дружина в `aura_radius` 14 м — скорость ×`aura_speed_mult` 1.25, урон ×`aura_damage_mult` 1.3 (золотое кольцо под ногами); со смертью вожака — снимается.
 - **Рог:** раз в `horn_interval` 11 с телеграф `horn_windup` 1.2 с (рог над головой, звук `horn_call`), подкрепление `horn_reinforce_count` 2 × `horn_reinforce_kind` grunt (не больше `horn_cap` 24 врагов в зале) и круг под Тором `horn_zone_radius` 2.6 м / телеграф `horn_zone_telegraph` 1.0 с / `horn_zone_damage` 16.
 - **Фаза 1:** держится в `hold_min`–`hold_max` 7–11 м от Тора, топор раз в `axe_cooldown` 4 с (замах `axe_windup` 0.55, `axe_speed` 18, `axe_damage` 14). **Фаза 2** с `engage_hp_fraction` 0.5: сам в бою, скорость ×`engage_speed_mult` 1.3, рог реже (×1.5).
@@ -118,7 +118,7 @@
 
 ### Вёльва-ведьма (ночь 29.10, Н6) — `enemies/minibosses/volva.tres`, `enemies/volva.tscn` (`enemies/bosses/volva.gd`, `VolvaBoss`)
 
-`max_health` 396 (18 У), `move_speed` 3.6, свита 2 корма, посох; реплики — `data/dialogues/volva.json` (портрет — заглушка).
+`max_health` 990 (45 У; П4 — было 396, `legacy_max_health`), `move_speed` 3.6, свита 2 корма, посох; реплики — `data/dialogues/volva.json` (портрет — заглушка).
 - **Телепорт** между высокими точками зала (выше пола на `high_min` 1.2 м, ищет сама) раз в `teleport_interval` 7 с, телеграф `teleport_time` 0.7 с (кольцо в точке выхода), не ближе `teleport_min_dist` 6 м к Тору; Тор подошёл — уходит раньше.
 - **Огненные круги:** раз в `fire_interval` 4.5 с (замах `fire_windup` 0.7) `fire_count` 2 круга `fire_radius` 2 м под Тором и в `fire_spread` 3.2 м, телеграф `fire_telegraph` 1.0 с, `fire_damage` 14, лужа огня `fire_puddle_time` 3 с по `fire_puddle_dps` 8.
 - **Корм:** раз в `raise_interval` 9 с (замах 1 с) `raise_count` 3, не больше `raise_cap` 24 в зале.
@@ -126,14 +126,14 @@
 
 ### Берсерк-ульфхеднар (ночь 29.10, Н6) — `enemies/minibosses/berserker.tres`, `enemies/berserker.tscn` (`enemies/bosses/berserker.gd`, `BerserkerBoss`)
 
-`max_health` 528 (24 У), `move_speed` 4.6, без свиты; реплики — `data/dialogues/berserker.json` (портрет — драугр).
+`max_health` 792 (36 У; П4 — было 528, `legacy_max_health`), `move_speed` 4.6, без свиты; реплики — `data/dialogues/berserker.json` (портрет — драугр).
 - **Серия рывков:** раз в `series_interval` 5 с (Тор не ближе `series_min_dist` 3.5 м) `series_count` 3 рывка: полоса-телеграф `dash_aim` 0.6 с (направление замирает после `dash_lock_at` 0.75), `dash_speed` 17, до `dash_max_dist` 12 м, `dash_damage` 20, `dash_knock` 11, пауза `dash_pause` 0.25 с. Перепрыгнуть — `charge_jump_clear` (`BossEnemy`).
 - **Окно уязвимости** после серии `vulnerable_time` 2 с, урон ×`vulnerable_damage_mult` 1.5.
 - **Ярость** с `rage_hp_fraction` 0.33: телеграф ×`rage_aim_mult` 0.6, скорость ×`rage_speed_mult` 1.2, окно ×`rage_window_mult` 0.6, серии чаще (×0.7).
 
 ## Ярл Бьорн — `enemies/jarl.tscn` (`enemies/bosses/jarl.gd`), числа GDD — `enemies/defs/jarl.tres`
 
-60 У = 1320 HP, `move_speed` 3.6, удар 25 (`attack_range` 3.6 — широкий замах), удар по площади `boss_slam_radius` 6 / 30, `knock_resist` 0.85. Фазы: `phase2_at` 0.66, `phase3_at` 0.33, рёв `roar_time` 1.2 с.
+110 У = 2420 HP (П4; было 60 У — «старое» по F6, `legacy_hp_u` 60), `melee_resist` 0.5 (П4, `EnemyDef`), `move_speed` 3.6, удар 25 (`attack_range` 3.6 — широкий замах), удар по площади `boss_slam_radius` 6 / 30, `knock_resist` 0.85. Фазы: `phase2_at` 0.66, `phase3_at` 0.33, рёв `roar_time` 1.2 с.
 - **Рука-бумеранг:** `throw_cooldown` 6, бросает дальше `throw_min_dist` 6 м, замах `throw_windup` 0.75, `arm_damage` 20 (туда и обратно), окно `arm_window` 3 с, дальность `arm_range` 16. Урон по Ярлу: с рукой ×`armed_damage_mult` 0.7, в окнах (без руки, сбит, оглушён) ×`window_damage_mult` 1.5.
 - **Балкон:** прыжок `leap_time` 1.0 / `leap_height` 4; наверху урон ×`perch_damage_mult` 0.2, сбивают `slam`/`stomp`/`hammer`/`lightning` → оглушён `knocked_stun` 3 с; корм `summon_count` 4 раз в `summon_interval` 5 с (не больше `summon_cap` 16 врагов); снова наверх через `perch_return_time` 12 с; подошёл наверху ближе `perch_swat_range` 2.6 — отмахивается `perch_swat_damage` 15 (раз в 1.8 с).
 - **Ярость:** балконы по одному раз в `break_interval` 0.7 с (тряска `Balcony.shake_time` 0.45, `debris_count` 6 досок на `debris_lifetime` 4 с); бодание — телеграф `butt_aim_time` 0.8, `butt_speed` 14, `butt_max_dist` 22, `butt_damage` 30, о стену — оглушён `butt_wall_stun` 2 с, `butt_cooldown` 2.5; прыжок с волной `slam_leap_cooldown` 7, `slam_leap_time` 1.1, `slam_leap_radius` 5, `slam_leap_damage` 25 (только по стоящему на земле); бег ×`phase3_move_mult` 1.25.
@@ -163,6 +163,8 @@
 Трупы: `max_debris` 10 (сколько «рэгдоллов» лежит одновременно, лишние исчезают; у корма «тело» — его торс). Корм сохраняется до гибели всех врагов своей волны и выхода её очереди; поскольку волны могут идти одновременно, окончание считается отдельно для каждой. После волны тела тают 0.3 с. Вне активной волны и у других врагов `debris_lifetime` 4 с.
 
 **Мясо корма (П3, группа «Мясо корма» в `enemy.gd`, `enemies/parts/fodder_gibs.gd`):** `gib_on_death` вкл — корм при смерти режется на 5 кусков (голова, руки, ноги, торс; нарезка по треугольникам один раз на вид, материалы модели, прогрев в `ShaderWarmup`). Торс — тело корма (лимит `max_debris`, держится до конца волны). Остальные куски — общий лимит `gib_limit` 40, лежат `gib_life` 4 с (±15 %), проваливаются за `gib_sink_time` 0.6 с; скорость по удару `gib_knock_ratio` 0.9 от силы отброса (не меньше 4 м/с, не больше `gib_knock_max` 14 м/с), разлёт `gib_outward` 5.5 (и сразу врозь на `gib_burst_offset` 0.25 м), вверх `gib_up` 4.5 м/с, вращение `gib_spin` 12 рад/с. Хруст — `gib_crunch_1..3` (`tools/make_sfx.py`). Брызги и пятно крупнее — `fodder_death_*` в `VfxTuning`.
+
+**Броня боссов (П4):** `melee_resist` на враге (из `EnemyDef.melee_resist` / `MinibossDef.melee_resist`, 0.5) — урон `melee`/`melee_finisher` по `Kind.BOSS` × это число; молот, молния, стихии, удар-приземление, приёмы (`melee_heavy`) — полный. Удар по броне: вспышка `armor_flash` 0.3 от обычной, искры, звук `armor_tink`; раз за бой Один — пул `odin.boss_armor` (без лимита боевых реплик). «Старое» по F6 (`FeelSwitch` `boss_armor`): без брони и HP до П4 (`legacy_hp_u` / `legacy_max_health`). Бот по броне (`tests/bot/bot_player.gd`): шанс приёма ×`armor_heavy_mult` 2.5, бросок вблизи `armor_close_throw` 0.5, удар-приземление по одиночному боссу. Замер бота 28.10 (медиана боя, игровые с): Свен 8 → 12, Хёвдинг 7 → 16, Вёльва 13 → 33, Берсерк 7 → 13, Ярл 20 → 37.
 
 Окончание каждой волны (`Room`): `wave_end_slow_time` 0.3 с реального времени, `wave_end_slow_scale` 0.35; если действует hit-stop, замедление начинается после него. Hit-stop для мультикилла (`VfxTuning`) 0.11 с, крупного — 0.14 с. `hitstop_budget_per_second` 0.35 с суммарно в скользящей секунде; перекрывающиеся попадания не складываются. `Audio.identical_sfx_per_frame` 2 — лимит одинакового разрешённого файла при постановке в очередь за кадр.
 

@@ -258,6 +258,9 @@ func _test_horde_glory_and_corpses() -> void:
 	print("-- Слава и тела орды")
 	var keeper := _spawn("grunt", Vector3(0, 0, 30))
 	keeper.set_physics_process(false)
+	keeper.melee_resist = 0.5
+	check(not keeper.is_armored_against("melee"), "броня от мили (П4) — только у боссов, обычных врагов не касается")
+	keeper.melee_resist = 1.0
 	for n in get_tree().get_nodes_in_group("debris"):
 		n.queue_free()
 	await frames(2)

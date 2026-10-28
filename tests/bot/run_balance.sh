@@ -2,6 +2,7 @@
 # Все тела × RUNS забегов, PROFILE, не более JOBS независимых процессов.
 # tests/bot/run_balance.sh <папка> [RUNS=5] [PROFILE=skilled] [SEED=11] [JOBS=3]
 # Необязательный THOR_BOT_TRACE=1 добавляет ограниченную событийную телеметрию в JSONL.
+# Необязательный THOR_BOT_MINIBOSS=<id> (fat_sven, hovding, volva, berserker) — мини-босс забега.
 set -euo pipefail
 OUT=$(realpath -m "${1:?папка для результатов}")
 RUNS=${2:-5}
@@ -36,7 +37,7 @@ for ((g=0; g<JOBS; g++)); do
     (
         set -o pipefail
         XDG_DATA_HOME="$OUT/user_$g" timeout "${THOR_BOT_TIMEOUT:-3600}" godot --headless --path . --fixed-fps 60 res://tests/balance_run.tscn -- \
-            bodies="${groups[$g]}" runs="$RUNS" seed="$SEED" profile="$PROFILE" trace="$TRACE" out="${files[$g]}" \
+            bodies="${groups[$g]}" runs="$RUNS" seed="$SEED" profile="$PROFILE" trace="$TRACE" miniboss="${THOR_BOT_MINIBOSS:-}" out="${files[$g]}" \
             2>&1 | head -c 50000000 > "$OUT/${PROFILE}_$g.log"
     ) &
     pids+=("$!")

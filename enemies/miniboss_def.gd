@@ -16,6 +16,10 @@ class_name MinibossDef
 @export var max_health: float = 550.0
 @export var move_speed: float = 4.2
 @export_range(0.0, 1.0) var knock_resist: float = 0.6
+## П4: броня от спама мили — урон обычных ударов мили (melee / melee_finisher) × это число
+@export_range(0.05, 1.0, 0.05) var melee_resist: float = 0.5
+## П4, «старое» по F6 (FeelSwitch boss_armor): HP до брони; 0 — как max_health
+@export var legacy_max_health: float = 0.0
 @export var attack_range: float = 2.6
 @export var attack_damage: float = 18.0
 @export var windup_time: float = 0.75
@@ -110,15 +114,20 @@ func _spawn_spots(room: Room) -> Array[Vector3]:
 		pts.insert(0, spot.global_position)
 	return pts
 
+## HP мини-босса: max_health; «старое» по F6 (FeelSwitch boss_armor) — legacy_max_health, если задан
+func health() -> float:
+	return legacy_max_health if legacy_max_health > 0.0 and FeelSwitch.is_old(&"boss_armor") else max_health
+
 ## Переопределить характеристики врага (до его _ready).
 func apply(e: Enemy, hud: Node = null) -> void:
 	Perf.mark("miniboss_spawn")
 	e.kind = Enemy.Kind.BOSS
 	e.set_meta("miniboss", true)
 	e.set_meta("boss_title", title)
-	e.max_health = max_health
+	e.max_health = health()
 	e.move_speed = move_speed
 	e.knock_resist = knock_resist
+	e.melee_resist = melee_resist
 	e.attack_range = attack_range
 	e.attack_damage = attack_damage
 	e.windup_time = windup_time
