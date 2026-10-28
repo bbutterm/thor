@@ -153,6 +153,13 @@ def _producer_issues(scripts, guard):
                 arg = args[0] if len(args) == 1 else "<неизвестные аргументы>"
                 if re.fullmatch(r'"[^"\n]*"', arg):
                     continue
+                # A literal prefix + one variable cannot produce an event outside
+                # that prefix (e.g. tutorial_step_* cannot unlock odin_finale_*).
+                # Only this exact expression is recognised; function calls,
+                # conditionals and a prefix overlapping the guard still fail closed.
+                prefixed = re.fullmatch(r'"([A-Za-z0-9_]+)"\s*\+\s*[A-Za-z_][A-Za-z0-9_]*', arg)
+                if prefixed and not name.startswith(prefixed.group(1)):
+                    continue
                 func = _function_at(text, call.start())
                 known = source == "scripts/dialogue_manager.gd" and arg == "trigger" and func in {"run_trigger", "after_run"}
                 if not known:

@@ -330,6 +330,26 @@ class ExportAuditTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("динамический Save.bump_event", output)
 
+    def test_disjoint_literal_event_prefix_cannot_unlock_deferred_scene(self):
+        self.deferred_finale()
+        (self.root / "scripts/new.gd").write_text('Save.bump_event("tutorial_step_" + id)\n', encoding="utf-8")
+        code, output = self.check_with_output()
+        self.assertEqual(code, 0, output)
+
+    def test_matching_literal_event_prefix_still_requires_review(self):
+        self.deferred_finale()
+        (self.root / "scripts/new.gd").write_text('Save.bump_event("odin_" + id)\n', encoding="utf-8")
+        code, output = self.check_with_output()
+        self.assertEqual(code, 1)
+        self.assertIn("динамический Save.bump_event", output)
+
+    def test_conditional_prefixed_event_still_requires_review(self):
+        self.deferred_finale()
+        (self.root / "scripts/new.gd").write_text('Save.bump_event("tutorial_step_" + id if ok else other)\n', encoding="utf-8")
+        code, output = self.check_with_output()
+        self.assertEqual(code, 1)
+        self.assertIn("динамический Save.bump_event", output)
+
     def test_direct_write_to_event_dictionary_requires_review(self):
         self.deferred_finale()
         (self.root / "scripts/new.gd").write_text('Save.data.events[computed_event] = 1\n', encoding="utf-8")
