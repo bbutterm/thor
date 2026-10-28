@@ -535,6 +535,34 @@ func _test_anvil_flow() -> void:
 	check(not game.rune_pick.visible and not tp.visible, "после наковальни — без руны (награда выдана)")
 	check(not game.rewards._anvil_pick, "признак наковальни сброшен")
 
+	# При разрешённой смене стихии первая попытка только просит подтверждение.
+	var old_swap := Run.rules().element_swap
+	Run.rules().element_swap = true
+	_set_traits([_find(&"fire")])
+	game.rewards._granted = false
+	before = _eitri_barks()
+	game.rewards.grant()
+	var swap_index := -1
+	for i in tp._choices.size():
+		if tp._choices[i].id != &"fire":
+			swap_index = i
+			break
+	check(tp.visible and swap_index >= 0, "наковальня предлагает замену стихии")
+	if tp.visible and swap_index >= 0:
+		tp._open_time = -10.0
+		tp.choose(swap_index)
+		check(tp.visible and tp._confirm_index == swap_index and _eitri_barks() == before,
+			"первое нажатие просит подтверждение без реплики Эйтри")
+		tp.choose(swap_index)
+		check(not tp.visible and _eitri_barks() == before + 1 and Run.owned_element().id != &"fire",
+			"подтверждённая замена закрывает окно и вызывает одну реплику Эйтри")
+		await wait(0.8)
+	else:
+		tp.visible = false
+		get_tree().paused = false
+		game.rewards.take_anvil_pick()
+	Run.rules().element_swap = old_swap
+
 	# Когда стихия исчерпана, наковальня сохраняет обычный запасной выбор руны и не вызывает реплику.
 	_set_traits(_lv(&"fire", 4))
 	game.rewards._granted = false
