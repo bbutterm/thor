@@ -182,5 +182,5 @@ func _run() -> void:
 	_show_hands(false)
 	await wait(0.3)
 	await pair("03_crowd")
-	print("обведено узлов: %d, instance uniform: %d" % [Outline.active_count(), FX.instance_uniform_users(get_tree().root)])
+	print("обведено узлов: %d, текущие instance-материалы (узлы, не слоты): %d" % [Outline.active_count(), FX.instance_uniform_users(get_tree().root)])
 	get_tree().quit(0)

@@ -6,7 +6,8 @@ class_name Outline
 ## Как: один общий ShaderMaterial (shaders/outline.gdshader — «вывернутая оболочка») в material_overlay узла.
 ## Слот оверлея у врагов делит со вспышкой урона (shaders/hit_flash.tres): пока вспышка горит, оверлей —
 ## FLASH_MATERIAL, а обводка — его next_pass (Enemy._set_overlay берёт Outline.overlay() вместо null).
-## Шейдер без instance uniform — буфер GL Compatibility не тратит; толщина и цвет — uniform общего материала,
+## Шейдер без instance uniform сам не требует новых параметров; прежний блок узла может сохраняться до удаления RID.
+## Толщина и цвет — uniform общего материала,
 ## смена настройки — без компиляции. Прогрев — ShaderWarmup (warming = true: образцы с обводкой при любой настройке).
 ##
 ## API: add(root) — обвести все меши под root (кроме глаз/бровей), add_meshes(list), overlay() — что класть в

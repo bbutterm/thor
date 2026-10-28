@@ -105,7 +105,7 @@ func _measure(label: String) -> void:
 	var sum := 0.0
 	for t in times:
 		sum += t
-	print("%s: кадр среднее %.2f мс, медиана %.2f, p95 %.2f, макс %.1f | узлов %d, врагов %d, draw calls %d, instance uniform %d (пик %d)" % [
+	print("%s: кадр среднее %.2f мс, медиана %.2f, p95 %.2f, макс %.1f | узлов %d, врагов %d, draw calls %d, узлов с текущим instance-материалом %d (пик %d; не слоты)" % [
 		label, sum / times.size(), sorted[sorted.size() / 2], sorted[int(sorted.size() * 0.95)], sorted[sorted.size() - 1],
 		int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)),
 		get_tree().get_nodes_in_group("enemies").size(), int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
@@ -276,7 +276,7 @@ func _bench_jarl() -> void:
 	print("  обломков: %d, балконов: %d, фаза %d" % [get_tree().get_nodes_in_group("debris").size(), get_tree().get_nodes_in_group("balconies").size(), jarl.phase])
 	await _measure("Ярл, фаза 3 (обломки, корм)")
 
-## Кто занимает буфер instance-переменных: по шейдеру и видимости
+## Узлы с текущими instance-материалами: по шейдеру и видимости; это не занятые слоты.
 func _iu_breakdown() -> void:
 	var by := {}
 	for g in get_tree().root.find_children("*", "GeometryInstance3D", true, false):

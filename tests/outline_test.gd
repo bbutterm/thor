@@ -1,7 +1,7 @@
 extends Node
 ## Комиксовая обводка (GDD 20, scripts/outline.gd): обведены враги всех видов (и боссы), бочки/ящики, оружие на полу,
 ## патроны, сундук, Мьёльнир в полёте; стены, пол, декор, кольца-метки и руки от первого лица — нет; материал один
-## на всех и без instance-переменных (буфер GL Compatibility не растёт); вспышка урона — обводка в её next_pass;
+## на всех и без instance-переменных; вспышка урона — обводка в её next_pass;
 ## настройка «Обводка» выключает/включает вживую, толщина меняется вживую; прогрев обводит при выключенной настройке.
 ## godot --headless --path . --fixed-fps 60 res://tests/outline_test.tscn
 
@@ -100,7 +100,7 @@ func _test_material() -> void:
 	check(m != null and m.shader == Outline.SHADER, "общий ShaderMaterial обводки")
 	check(Outline.material() == m, "material() отдаёт один и тот же экземпляр")
 	check(not Outline.SHADER.code.contains("instance uniform"), "шейдер без instance-переменных")
-	check(not FX._has_iu(m), "FX не считает обводку пользователем буфера instance-переменных")
+	check(not FX._has_iu(m), "FX не считает материал обводки текущим instance-материалом")
 	check(Outline.SHADER.code.contains("cull_front") and Outline.SHADER.code.contains("depth_draw_never"),
 		"вывернутая оболочка: cull_front, без записи глубины (проход прозрачных — без теней и prepass)")
 	check(absf(float(m.get_shader_parameter("width_px")) - Outline.cfg().width_px) < 0.001, "толщина из data/outline_tuning.tres")
@@ -249,7 +249,7 @@ func _test_flash(enemies: Array) -> void:
 	enemies.append(el)
 
 func _test_budget() -> void:
-	print("-- Буфер instance-переменных (толпа 40)")
+	print("-- Текущие instance-материалы (толпа 40; не занятые слоты)")
 	var base := game.room.global_position
 	for i in 40:
 		var e := game.room.spawn_extra("fodder" if i % 4 else "grunt", base + Vector3(randf_range(-7, 7), 0.05, randf_range(-8, 0)))
@@ -263,9 +263,9 @@ func _test_budget() -> void:
 	var off_iu := FX.instance_uniform_users(get_tree().root)
 	GameSettings.set_value("video", "outline", true, false)
 	await wait(0.05)
-	print("    обведено узлов %d; instance uniform: с обводкой %d, без %d" % [on_count, on_iu, off_iu])
+	print("    обведено узлов %d; текущие instance-материалы: с обводкой %d, без %d" % [on_count, on_iu, off_iu])
 	check(on_count > 200, "толпа обведена (%d узлов)" % on_count)
-	check(on_iu == off_iu, "обводка не занимает буфер instance-переменных (%d = %d)" % [on_iu, off_iu])
+	check(on_iu == off_iu, "обводка не меняет число текущих instance-материалов (%d = %d)" % [on_iu, off_iu])
 	var mats := {}
 	for n in get_tree().get_nodes_in_group(Outline.GROUP):
 		var m := (n as GeometryInstance3D).material_overlay

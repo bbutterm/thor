@@ -40,9 +40,9 @@ func _build() -> void:
 	var right := global_transform.basis.x
 	var center := global_position
 	# Враги: по одному каждого вида, со вспышкой урона и свечением замаха (общий оверлей на скин-мешах)
-	# В GL Compatibility вариант шейдера не зависит от формата вершин, а буфер instance-переменных —
-	# всего 256 узлов на сцену (FX.INSTANCE_SLOTS_GL; прогрев целиком занимал 263–270): оверлей вспышки —
-	# только на паре образцов. В Forward+ (буфер на 4096 узлов) — на всех: там пайплайн на каждый формат вершин.
+	# В GL Compatibility вариант шейдера не зависит от формата вершин, а запас instance-переменных ограничен:
+	# оверлей вспышки только на паре образцов. Старый счётчик видел 263–270 узлов с текущими материалами при
+	# полном прогреве, но он не показывает занятые слоты. В Forward+ оверлей на всех: пайплайн на каждый формат вершин.
 	var gl := RenderingServer.get_current_rendering_method() == "gl_compatibility"
 	var i := 0
 	for path in ["res://enemies/grunt.tscn", "res://enemies/thrower.tscn", "res://enemies/boss.tscn",
