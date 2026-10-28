@@ -88,14 +88,21 @@ func open(choices: Array[MjolnirTrait], title: String = "") -> void:
 	_reroll_btn.visible = Run.trait_rerolls > 0
 	_reroll_btn.text = tr("ПЕРЕБРОС ОТ ЭЙТРИ (%d)  [R]") % Run.trait_rerolls
 	visible = true
-	if _cards.get_child_count() > 0:
-		(_cards.get_child(0) as Button).grab_focus.call_deferred()
+	_focus_first_card.call_deferred()
 	_open_time = Time.get_ticks_msec() / 1000.0
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_root.modulate.a = 0.0
 	var tw := _root.create_tween()
 	tw.tween_property(_root, "modulate:a", 1.0, 0.25)
+
+## Переброс может пересоздать карточки до выполнения отложенного вызова.
+func _focus_first_card() -> void:
+	if not is_inside_tree() or not visible or _cards.get_child_count() == 0:
+		return
+	var first := _cards.get_child(0) as Button
+	if is_instance_valid(first) and first.is_inside_tree():
+		first.grab_focus()
 
 func _status(t: MjolnirTrait) -> Array:
 	var lv := Run.mjolnir_trait_level(t.id)

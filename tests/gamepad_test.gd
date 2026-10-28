@@ -51,6 +51,7 @@ func _run() -> void:
 	_test_bindings()
 	await _test_settings_capture()
 	await _test_card_choices()
+	await _test_trait_reroll_focus()
 	await _test_dialogue()
 	await _test_dialogue_deferred_focus()
 	await _test_body_and_training()
@@ -199,6 +200,42 @@ func _test_card_choices() -> void:
 	await pad_press(JOY_BUTTON_A)
 	check(picked_choice[0] == "enabled" and not cp.visible, "награда выбирается кнопкой A")
 	cp.queue_free()
+	await frames()
+
+## Переброс по R в кадре появления карточек заменяет старые, не ломая фокус.
+func _test_trait_reroll_focus() -> void:
+	print("-- Фокус после переброса трейтов")
+	var picker := TraitPick.new()
+	get_tree().root.add_child(picker)
+	await frames()
+	var game := Game.new()
+	game.trait_pick = picker
+	var flow := RewardFlow.new()
+	flow.game = game
+	picker.reroll_requested.connect(flow._on_trait_reroll)
+	var initial: Array[MjolnirTrait] = [load("res://weapons/mjolnir_traits/fire.tres") as MjolnirTrait]
+	var old_rerolls := Run.trait_rerolls
+	Run.trait_rerolls = 1
+	picker.open(initial)
+	var old_card := picker._cards.get_child(0)
+	var event := InputEventAction.new()
+	event.action = "reload"
+	event.pressed = true
+	picker._unhandled_input(event)
+	check(Run.trait_rerolls == 0 and not old_card.is_inside_tree(), "переброс сразу заменил старую карточку")
+	await frames()
+	check(picker._cards.get_child_count() > 0 and (picker._cards.get_child(0) as Button).has_focus(),
+		"после отложенного фокуса выбрана новая карточка")
+	var selected: Array[MjolnirTrait] = []
+	picker.picked.connect(func(t: MjolnirTrait) -> void: selected.append(t))
+	picker._open_time = -10.0
+	await pad_press(JOY_BUTTON_A)
+	check(selected.size() == 1 and not picker.visible, "геймпад подтверждает новую карточку после переброса")
+	Run.trait_rerolls = old_rerolls
+	picker.queue_free()
+	flow.free()
+	game.free()
+	get_tree().paused = false
 	await frames()
 
 func _test_dialogue() -> void:
