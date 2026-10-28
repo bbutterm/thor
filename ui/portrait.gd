@@ -1,8 +1,8 @@
 extends Control
 class_name Portrait
-## Портрет персонажа для диалогов. Картинка: sprites/portraits/<speaker>_<emotion>.png;
-## нет эмоции — <speaker>_neutral.png; нет файла — процедурная заглушка (силуэт в цвете персонажа,
-## инициал и простое лицо по эмоции). Владелец подкладывает PNG — код не меняется.
+## Портрет персонажа для диалогов: sprites/portraits/<speaker>_<emotion>.png или .webp;
+## нет эмоции — <speaker>_neutral, нет файла — процедурная заглушка (силуэт в цвете персонажа,
+## инициал и простое лицо по эмоции).
 
 const DIR := "res://sprites/portraits/"
 
@@ -41,7 +41,7 @@ const FACES_PATH := "res://data/portrait_faces.json"
 
 static var _faces: Dictionary = {}
 
-const EMOTIONS := ["neutral", "happy", "angry", "shocked", "smug"]
+const EMOTIONS := ["neutral", "happy", "angry", "shocked", "smug", "embarrassed"]
 ## Портреты, которые держим в памяти (prefetch): путь → текстура; и ещё грузящиеся в фоне
 static var _held: Dictionary = {}
 static var _pending: PackedStringArray = []
