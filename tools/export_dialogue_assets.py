@@ -268,8 +268,10 @@ class DialogueAssets:
             ("ui/dialogue_box.gd", "backdrop_path", "backdrop"),
             ("scripts/dialogue_manager.gd", "story_path", "image"),
             ("scripts/dialogue_manager.gd", "story_path", "str(l.image)"),
-            ("scripts/dialogue_manager.gd", "story_path", "str(sc.image)"),
-            ("scripts/dialogue_manager.gd", "backdrop_path", "str(sc.backdrop)"),
+            # Проверка данных диалогов (этап 5 рефакторинга: вынесена из dialogue_manager.gd)
+            ("scripts/dialogue/dialogue_validator.gd", "story_path", "str(l.image)"),
+            ("scripts/dialogue/dialogue_validator.gd", "story_path", "str(sc.image)"),
+            ("scripts/dialogue/dialogue_validator.gd", "backdrop_path", "str(sc.backdrop)"),
         }
         for source, text in self.scripts:
             for call in re.finditer(r'\bScreenArt\.(backdrop|backdrop_path|story|story_path)\s*\(', text):
