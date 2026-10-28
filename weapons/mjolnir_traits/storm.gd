@@ -2,8 +2,9 @@ extends MjolnirTraitHandler
 ## Приём «Буря» (группа «удержание ПКМ» — с Пращой и Зарядом не берётся): зажми ПКМ при броске — молот зависает и крутится на месте, нанося урон по кругу.
 ## Отпустил ПКМ или вышло время — летит обратно. Ур. 2 — дольше и тянет к себе корм (не боссов).
 
-## Через сколько секунд после броска (ПКМ всё ещё зажата) молот зависает
-@export var hold_delay: float = 0.18
+## Пролетев столько метров (ПКМ всё ещё зажата), молот зависает. Было время 0.18 с — с броском 45 м/с
+## (П2) молот улетал дальше; по расстоянию место зависания не зависит от скорости броска
+@export var hover_distance: float = 6.0
 @export var duration: float = 3.0
 @export var duration_lvl2: float = 5.0
 @export var radius: float = 3.0
@@ -18,7 +19,7 @@ extends MjolnirTraitHandler
 
 func on_flight_tick(proj: MjolnirProjectile, delta: float) -> void:
 	if proj.state == MjolnirProjectile.State.OUT:
-		if not proj.data.get("storm_done", false) and proj.flight_time >= hold_delay and hand.is_throw_held():
+		if not proj.data.get("storm_done", false) and proj.travelled >= hover_distance and hand.is_throw_held():
 			proj.hover(true)
 			proj.data["storm_t"] = 0.0
 			proj.data["storm_tick"] = 0.0

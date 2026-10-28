@@ -60,7 +60,7 @@ Forward+ на программном Vulkan (`apt-get install mesa-vulkan-driver
 
 ## Кадры (нужен xvfb)
 - Общие: `xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/screenshots.tscn -- <папка>`.
-- По системам: `ui_shots` (`-- <папка> en` — английский), `deck_shots` (1280×800), `room_shots -- <папка> room_07 …`, `weapon_shots` (640x360), `mjolnir_shots`, `hands_shots -- <папка> [quick]`, `vfx_shots`, `world_art_shots`, `outline_shots`, `portrait_shots`, `enemy_shots`, `boss_shots`, `hazard_shots`, `destruct_shots`.
+- По системам: `ui_shots` (`-- <папка> en` — английский), `deck_shots` (1280×800), `room_shots -- <папка> room_07 …`, `weapon_shots` (640x360), `mjolnir_shots`, `hammer_shots -- <папка> [old]` (бросок сквозь толпу, втыкание, возврат, хват, промах; `old` — старое под F6), `hands_shots -- <папка> [quick]`, `vfx_shots`, `world_art_shots`, `outline_shots`, `portrait_shots`, `enemy_shots`, `boss_shots`, `hazard_shots`, `destruct_shots`.
 - Витрина ассетов: `xvfb-run -a godot --path . --rendering-method gl_compatibility --resolution 1280x720 res://tools/preview_assets.tscn -- out.png lineup|characters|village|props`.
 
 ## Бот-плейтест и баланс (Н5)

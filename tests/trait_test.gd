@@ -846,6 +846,69 @@ func _test_manual_return() -> void:
 	check(hand.in_hand and not hand.forgot_nagged and hand.cooldown_left == 0.0, "новый зал — молот в руке сам, без перезарядки")
 	check(ind == null or ind.hammer_shown.is_empty(), "молот в руке — иконки нет")
 	hand.forgot_nag_after = saved_nag
+	await _test_power()
+
+## П2 (GDD 26.4): быстрее бросок и возврат, сильный отброс, hit-stop по убыванию, волна при втыкании; F6 — старое.
+func _test_power() -> void:
+	print("-- Сила молота (П2)")
+	check(is_equal_approx(hand.current_throw_speed(), 45.0) and is_equal_approx(hand.return_speed_at(0.0), 25.0)
+		and is_equal_approx(hand.return_speed_at(2.0), 50.0), "бросок 45 м/с, возврат разгоняется 25 → 50 м/с")
+	check(is_equal_approx(hand.hitstop_for(0), 0.07) and hand.hitstop_for(1) < 0.07 and is_equal_approx(hand.hitstop_for(10), 0.02),
+		"hit-stop: 0.07 на первом, дальше меньше, до 0.02 (%.3f, %.3f)" % [hand.hitstop_for(1), hand.hitstop_for(10)])
+	# Толпа: корм отлетает сильно по линии полёта и вверх
+	_reset_player()
+	await frames(5)
+	var f := _dummy(0.0, 4.0, true, "fodder")
+	f.max_health = 500
+	f.health = 500
+	await frames(2)
+	var f0 := f.global_position
+	hand.throw_hammer()
+	check(hand.projectile != null and absf(hand.projectile.vel.length() - 45.0) < 0.5, "бросок летит 45 м/с (%.1f)" % (hand.projectile.vel.length() if hand.projectile else 0.0))
+	var peak := 0.0
+	var moved := 0.0
+	for i in 40:
+		await get_tree().physics_frame
+		if is_instance_valid(f):
+			peak = maxf(peak, f.global_position.y - f0.y)
+			moved = maxf(moved, (f0.z - f.global_position.z))
+	check(_hurt(f) and peak > 0.5 and moved > 2.0, "корм отлетел «кеглей»: вверх %.1f м, вперёд %.1f м" % [peak, moved])
+	await _wait_in_hand(4.0, 0.0)
+	_clear_dummies()
+	await frames(3)
+	# Втыкание в стену: ударная волна задевает врага рядом
+	_reset_player()
+	await frames(5)
+	hand.throw_hammer()
+	var st := await _wait_state(MjolnirProjectile.State.STUCK, 2.0)
+	var stick_pos := hand.projectile.global_position if st else Vector3.ZERO
+	hand.request_throw_or_recall()
+	await _wait_in_hand(3.0, 0.0)
+	if st:
+		var near := _dummy(0.0, 0.0, true)
+		near.global_position = Vector3(stick_pos.x, 0.0, stick_pos.z) + Vector3(0, 0, 1.2)
+		await frames(2)
+		var hp0 := near.health
+		hand.throw_hammer()
+		await _wait_state(MjolnirProjectile.State.STUCK, 2.0)
+		await frames(2)
+		check(near.health < hp0 and near.knockback_velocity.length() > 2.0, "втыкание: волна задела врага рядом (урон %.0f, отброс %.1f)" % [hp0 - near.health, near.knockback_velocity.length()])
+		await _wait_in_hand(3.0, 0.0)
+	else:
+		check(false, "втыкание: молот воткнулся в стену")
+	_clear_dummies()
+	await frames(3)
+	# Старое под F6 (FeelSwitch hammer_power): прежние числа, на лету
+	FeelSwitch.set_old(&"hammer_power", true)
+	check(is_equal_approx(hand.current_throw_speed(), 32.0) and is_equal_approx(hand.return_speed_at(1.0), 36.0)
+		and is_equal_approx(hand.hitstop_for(5), 0.04), "старое (F6): 32 м/с, возврат 36, hit-stop 0.04")
+	_reset_player()
+	await frames(3)
+	hand.throw_hammer()
+	check(hand.projectile != null and absf(hand.projectile.vel.length() - 32.0) < 0.5, "старое (F6): бросок летит 32 м/с")
+	await _wait_in_hand(3.0, 0.0)
+	FeelSwitch.set_old(&"hammer_power", false)
+	check(is_equal_approx(hand.current_throw_speed(), 45.0), "F6 обратно — новое")
 
 # --- Окружение ---
 
@@ -1304,7 +1367,7 @@ func _scenario_charge(lv: int) -> void:
 	var want: float = float(h.get("max_damage_mult_lvl2") if lv >= 2 else h.get("max_damage_mult"))
 	check(hand.projectile != null and hand.projectile.pierce and is_equal_approx(hand.projectile.damage_mult, want), "полный заряд: ×%.1f урона и пробитие" % want)
 	await _wait_state(MjolnirProjectile.State.STUCK, 1.5)
-	check(sh.health < hp0, "полный заряд пробил щит")
+	check(not is_instance_valid(sh) or sh.health < hp0, "полный заряд пробил щит")
 	if lv >= 2:
 		check(not is_instance_valid(sh) or sh.state == Enemy.State.STUNNED or sh.is_dead, "ур. 2: полный заряд оглушает")
 	check(await _recall_and_wait(), "молот вернулся")

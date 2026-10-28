@@ -36,11 +36,11 @@ func on_hit_world(proj: MjolnirProjectile, _pos: Vector3, _normal: Vector3, stuc
 		_aim_at(proj, next)
 	else:
 		# Отскок без цели — летим дальше по отражению с полной скоростью
-		proj.redirect(proj.vel.normalized() * hand.throw_speed)
+		proj.redirect(proj.vel.normalized() * hand.current_throw_speed())
 
 func _aim_at(proj: MjolnirProjectile, e: Enemy) -> void:
 	var to := (e.global_position + Vector3(0, 1.0, 0) - proj.global_position).normalized()
-	proj.redirect(to * hand.throw_speed)
+	proj.redirect(to * hand.current_throw_speed())
 
 func _find_target(proj: MjolnirProjectile, exclude: Node3D) -> Enemy:
 	var hit: Dictionary = proj.data.get("ric_hit", {})

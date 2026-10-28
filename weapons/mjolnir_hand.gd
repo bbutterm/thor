@@ -18,7 +18,8 @@ signal catch_timing(result: StringName, offset: float)
 signal traits_changed
 
 @export_group("Бросок")
-@export var throw_speed: float = 32.0
+## Скорость броска (П2: 32 → 45 — «как выстрел из пушки»; старое — F6 hammer_power)
+@export var throw_speed: float = 45.0
 ## Перезарядка броска (с) — начинается при поимке (П1, GDD 26.4): после обычной поимки столько секунд
 ## нельзя бросить. Умеешь ловить — кидаешь без остановки. Качается: трейт modify(&"catch_cooldown"),
 ## тело/перк — player.modify_stat("hammer_cooldown_mult")
@@ -34,7 +35,10 @@ signal traits_changed
 @export var max_range: float = 25.0
 ## Втыкается в стену или пол (GDD 10). Выключи — будет отскакивать max_wall_bounces раз и возвращаться
 @export var sticks_to_world: bool = true
-@export var return_speed: float = 36.0
+## Возврат разгоняется (П2): с return_speed до return_speed_max с ускорением return_accel (старое — 36 постоянно)
+@export var return_speed: float = 25.0
+@export var return_speed_max: float = 50.0
+@export var return_accel: float = 70.0
 ## Насколько резко молот поворачивает к руке на возврате (дуга)
 @export var return_turn_accel: float = 140.0
 ## Отскоки от стен до того, как воткнуться/вернуться (база 0; Рикошет добавляет)
@@ -83,8 +87,57 @@ signal traits_changed
 @export var chain_radius: float = 7.0
 
 @export_group("Отдача")
-@export var hit_hitstop: float = 0.04
-@export var catch_shake: float = 0.15
+## Hit-stop первого попадания за бросок; каждое следующее ×hit_hitstop_falloff, не меньше hit_hitstop_min
+## (предел за секунду — FX.hitstop, VfxTuning.hitstop_budget_per_second)
+@export var hit_hitstop: float = 0.07
+@export var hit_hitstop_falloff: float = 0.7
+@export var hit_hitstop_min: float = 0.02
+@export var catch_shake: float = 0.25
+## Толчок руки назад при поимке (множитель ViewmodelMotionTuning.catch_kick)
+@export var catch_kick_mult: float = 1.6
+
+@export_group("Сила (П2)")
+## Вращение в полёте (рад/с)
+@export var spin_speed: float = 34.0
+## Бросок: толчок FOV (°), отдача камеры вверх (°), тряска, выпад руки вперёд (ViewmodelMotion.Hand.kick)
+@export var throw_fov_kick: float = 3.5
+@export var throw_recoil_deg: float = 1.6
+@export var throw_trauma: float = 0.18
+@export var throw_arm_kick: float = 1.0
+@export var throw_arm_tilt: float = 220.0
+## Отброс каждого задетого: по линии полёта и вверх (корм — в полёт, «кегли»); на возврате — к Тору
+@export var hit_knock_forward: float = 18.0
+@export var hit_knock_up: float = 6.0
+@export var hit_shake: float = 0.2
+## Малая ударная волна у задетого: радиус (м) и отброс соседей без урона
+@export var hit_wave_radius: float = 1.5
+@export var hit_wave_knock: float = 6.0
+@export var hit_wave_up: float = 2.0
+## Втыкание в стену/пол: ударная волна (слабый урон, сильный отброс), тряска, трещина на полу
+@export var stick_wave_radius: float = 3.0
+@export var stick_wave_damage: float = 6.0
+@export var stick_wave_knock: float = 14.0
+@export var stick_wave_up: float = 5.0
+@export var stick_shake: float = 0.3
+## «Высота» для размера трещины FX.crack (как у удара-приземления)
+@export var stick_crack_height: float = 8.0
+## Потрескивание молнии у воткнутого молота (с между разрядами)
+@export var stuck_crackle_interval: float = 0.45
+## След в полёте: звёзды-искры и короткие ленты молнии (с между ними)
+@export var trail_interval: float = 0.035
+@export var trail_bolt_interval: float = 0.11
+@export var trail_star_size: float = 0.35
+## Идеальный хват: короткое замедление (с, масштаб времени), толчок FOV
+@export var perfect_slowmo: float = 0.1
+@export var perfect_slowmo_scale: float = 0.3
+@export var perfect_fov_kick: float = 6.0
+
+## Старые числа силы молота (до плейтеста 28.10) — для сравнения F6 (FeelSwitch hammer_power)
+const OLD_POWER := {
+	"throw_speed": 32.0, "return_speed": 36.0, "spin": 22.0, "hitstop": 0.04, "catch_shake": 0.15,
+	"knock_forward": 9.0, "knock_up": 3.0, "hit_shake": 0.12, "throw_trauma": 0.12, "stick_shake": 0.08,
+	"perfect_fov_kick": 4.0, "catch_kick_mult": 1.0,
+}
 
 var damage_mult: float = 1.0
 var return_speed_mult: float = 1.0
@@ -291,7 +344,7 @@ func throw_hammer() -> void:
 	var origin := player.get_aim_origin() + player.get_aim_forward() * 0.8 + player.global_transform.basis.x * -0.35
 	var mods := next_throw
 	next_throw = {}
-	var speed := float(trait_modify(&"throw_speed", throw_speed)) * float(mods.get("speed_mult", 1.0))
+	var speed := float(trait_modify(&"throw_speed", current_throw_speed())) * float(mods.get("speed_mult", 1.0))
 	projectile = proj
 	proj.launch(self, origin, player.get_aim_forward() * speed)
 	proj.apply_throw_mods(mods)
@@ -299,8 +352,13 @@ func throw_hammer() -> void:
 		perfect_ready = false
 		proj.set_empowered(perfect_damage_mult)
 	_anim_throw()
-	player.camera_fx.add_trauma(0.12)
+	player.camera_fx.add_trauma(pw(throw_trauma, &"throw_trauma"))
 	Audio.play("sounds/sfx/hammer_throw.wav")
+	if powered():
+		# П2: толчок FOV, отдача камеры, низы под «вжух»
+		player.camera_fx.kick_fov(throw_fov_kick)
+		player.camera_fx.kick_recoil(throw_recoil_deg, randf_range(-0.3, 0.3))
+		Audio.play("sounds/sfx/hammer_throw_low.wav")
 	state_changed.emit(false)
 
 ## Вызывается снарядом, когда молот вернулся в руку.
@@ -328,8 +386,10 @@ func on_caught() -> void:
 		catch_timing.emit(&"perfect", _recall_press_time - now)
 	_recall_press_time = -10.0
 	_anim_catch(perfect)
-	player.camera_fx.add_trauma(catch_shake)
+	player.camera_fx.add_trauma(pw(catch_shake, &"catch_shake"))
 	Audio.play("sounds/sfx/hammer_catch.wav")
+	if powered() and player and not player.is_dead:
+		FX.sparks(player.get_parent(), hand_point() + player.get_aim_forward() * 0.6, Color(0.6, 0.88, 1.0), 12, 4.0, 6.0, 0.05, 0.3)
 	state_changed.emit(true)
 	trait_call(&"on_caught", [self])
 
@@ -355,6 +415,9 @@ func _anim_throw() -> void:
 	h.set_state(&"throw", t.throw_time + 0.05)
 	h.snap(REST_POS + t.throw_cock_pos, REST_ROT + t.throw_cock_rot)
 	h.wrist_target = Vector3(-25, 0, 0)
+	if powered():
+		# П2: короткий резкий выпуск — рука «выстреливает» вперёд
+		h.kick(Vector3(0.15, 0.05, -1.0) * throw_arm_kick, Vector3(-throw_arm_tilt, 0, 0))
 	var arm := h.arm
 	var tw := h.new_tween()
 	tw.set_parallel(true)
@@ -423,13 +486,14 @@ func _anim_catch(perfect: bool) -> void:
 		arm.grip = 1.0
 		arm.open_style = 0.0
 	h.tween_to(REST_POS, REST_ROT, 0.24, Tween.TRANS_BACK, Tween.EASE_OUT)
+	var km := pw(catch_kick_mult, &"catch_kick_mult")
 	if perfect:
 		h.set_state(&"perfect_catch", t.perfect_twirl_time)
-		h.kick(Vector3(0, 0.3, 1.0) * t.perfect_kick, Vector3(t.perfect_tilt, 0, -t.perfect_tilt * 0.3))
+		h.kick(Vector3(0, 0.3, 1.0) * t.perfect_kick * km, Vector3(t.perfect_tilt, 0, -t.perfect_tilt * 0.3))
 		_twirl(arm, t)
 	else:
 		h.set_state(&"catch", 0.1)
-		h.kick(Vector3(0, 0.2, 1.0) * t.catch_kick, Vector3(t.catch_tilt, 0, 0))
+		h.kick(Vector3(0, 0.2, 1.0) * t.catch_kick * km, Vector3(t.catch_tilt, 0, 0))
 
 ## Прокрут молота вокруг рукояти (только модель в кулаке; рука держит хват).
 var _twirl_tween: Tween
@@ -461,10 +525,38 @@ func _grant_perfect() -> void:
 	var p := hand_point() + player.get_aim_forward() * 0.7
 	FX.burst(player.get_parent(), p, 0.3, Color(1.0, 0.85, 0.4, 0.8), 0.16)
 	FX.perfect_catch(p)
-	player.camera_fx.kick_fov(4.0)
+	player.camera_fx.kick_fov(pw(perfect_fov_kick, &"perfect_fov_kick"))
+	if powered():
+		# П2: ярче — короткое замедление и золотая вспышка
+		FX.slowmo(perfect_slowmo, perfect_slowmo_scale)
+		FX.hit_flash(player.get_parent(), p, 0.9, Color(1.0, 0.82, 0.35))
+		FX.sparks(player.get_parent(), p, Color(1.0, 0.85, 0.4), 16, 5.0, 4.0, 0.05, 0.35)
+		ComicFX.on_perfect_catch()
 	perfect_catch.emit()
 	Dialogue.thor_bark("catch", 0.5)
 	trait_call(&"on_perfect_catch", [self])
+
+## Новая сила молота (П2) включена — не старое под F6 (FeelSwitch hammer_power)
+func powered() -> bool:
+	return not FeelSwitch.is_old(&"hammer_power")
+
+## Число силы: новое значение или старое из OLD_POWER (F6)
+func pw(new_value: float, old_key: StringName) -> float:
+	return new_value if powered() else float(OLD_POWER[String(old_key)])
+
+func current_throw_speed() -> float:
+	return pw(throw_speed, &"throw_speed")
+
+## Скорость возврата через t с после начала: разгон return_speed → return_speed_max (старое — постоянная 36)
+func return_speed_at(t: float) -> float:
+	var v := float(OLD_POWER["return_speed"]) if not powered() else minf(return_speed + return_accel * maxf(t, 0.0), return_speed_max)
+	return v * return_speed_mult
+
+## Hit-stop n-го попадания за бросок (n с 0)
+func hitstop_for(n: int) -> float:
+	if not powered():
+		return float(OLD_POWER["hitstop"])
+	return maxf(hit_hitstop * pow(hit_hitstop_falloff, n), hit_hitstop_min)
 
 func current_damage() -> float:
 	return base_damage * damage_mult

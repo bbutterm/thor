@@ -58,6 +58,10 @@ func on_hammer_hit(_target: Object, pos: Vector3, returning: bool, bounces: int)
 	if returning or bounces > 0:
 		cf._request("hammer", pos + Vector3(0, 0.6, 0), false)
 
+## Идеальный хват Мьёльнира (mjolnir_hand.gd → _grant_perfect, П2): золотое «ДЗЫНЬ» на экране.
+func on_perfect_catch() -> void:
+	cf._request("perfect_catch", Vector3.ZERO, false, 1.0, 0, true)
+
 ## Цепная молния Мьёльнира ударила врага (mjolnir_projectile.gd → _chain_lightning, после удара).
 func on_lightning(target: Node3D) -> void:
 	if cf.lightning_kill_only and not target.get("is_dead"):
