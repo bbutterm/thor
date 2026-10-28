@@ -25,6 +25,13 @@ func _ready() -> void:
 		if Portrait.face_of(sp).is_empty():
 			fails += 1
 			print("  [FAIL] нет точки лица для крупного плана: ", sp)
+	# Два ворона на одном спрайте: для каждого нужен собственный центр лица.
+	for bird in [["hugin", [380.0, 410.0]], ["munin", [730.0, 420.0]]]:
+		if Portrait.face_of(bird[0]).get("eye_center", []) != bird[1]:
+			fails += 1
+			print("  [FAIL] неправильный центр лица ворона: ", bird[0])
+		else:
+			ok += 1
 	# Частая эмоция Тора раньше падала обратно на neutral; теперь своя и прогревается для боя.
 	var thor_emb := Portrait.texture_path("thor", "embarrassed")
 	var thor_tex := load(thor_emb) as Texture2D if thor_emb != "" else null
@@ -93,8 +100,8 @@ func _ready() -> void:
 		ok += 1
 	Portrait.prefetch(PackedStringArray())
 	# Портреты гномов сделаны для ларька; отсутствующие эмоции используют neutral.
-	for pair in [["brokk", ["neutral", "happy", "angry", "shocked", "smug"]],
-			["eitri", ["neutral", "happy", "embarrassed"]]]:
+	for pair in [["brokk", ["neutral", "happy", "angry", "shocked", "smug", "embarrassed"]],
+			["eitri", ["neutral", "happy", "embarrassed", "smug"]]]:
 		var sp: String = pair[0]
 		for emo in pair[1]:
 			var path := Portrait.texture_path(sp, emo)
