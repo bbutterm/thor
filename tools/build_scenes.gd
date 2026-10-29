@@ -177,15 +177,26 @@ func _wall_row(parent: Node, prefix: String, start: Vector3, length: float, yaw:
 			c.y = start.y + row * 3.12
 			_model(parent, "%s_%d_%d" % [prefix, row, i], QV + piece + ".gltf", c, Vector3(0, yaw, 0), Vector3(sx, 1, 1))
 
-## Дом из модулей Medieval Village MegaKit вокруг блока-дома (коллизию и плоскую крышу даёт сам блок):
-## стены с окнами (высота — по блоку), дверь посередине стороны door ("s"/"n"/"e"/"w"), угловые столбы, труба.
+## Дом из модулей Medieval Village MegaKit вокруг блока-дома (П11). Коллизия — только сам блок (плоская крыша,
+## по ней ходят); декор без коллизии. Стены с окнами и ставнями, дверь с полотном и навесом посередине стороны door
+## ("s"/"n"/"e"/"w"), угловые столбы, труба; сверху — «рецепт» (HOUSE_RECIPES): двускатная крыша на столбах над
+## плоской крышей-террасой (черепица / солома / доски) или открытая терраса с перилами. Рецепт — opts.recipe или
+## случайный по имени дома (детерминированно). Рядом — забор или телега (opts.yard = false — без них).
 ## style: "Plaster" | "UnevenBrick".
-func _house(parent: Node, name: String, center: Vector3, size: Vector3, door: String, style: String = "Plaster") -> void:
+const HOUSE_RECIPES := ["tile", "thatch", "planks", "terrace"]
+## Высота столбов чердака над плоской крышей (м): под ней проходит Тор
+const LOFT_HEIGHT := 2.6
+
+func _house(parent: Node, name: String, center: Vector3, size: Vector3, door: String, style: String = "Plaster", opts: Dictionary = {}) -> void:
 	const OUT := 0.1
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(name + str(center))
+	var recipe: String = opts.get("recipe", HOUSE_RECIPES[rng.randi() % HOUSE_RECIPES.size()])
 	var root := Node3D.new()
 	root.name = name
 	parent.add_child(root)
 	var base := center.y - size.y / 2.0
+	var top := center.y + size.y / 2.0
 	var sy := size.y / 3.12
 	var hx := size.x / 2.0
 	var hz := size.z / 2.0
@@ -196,25 +207,131 @@ func _house(parent: Node, name: String, center: Vector3, size: Vector3, door: St
 		["e", Vector3(center.x + hx + OUT, base, center.z + hz), size.z, 90.0],
 		["w", Vector3(center.x - hx - OUT, base, center.z - hz), size.z, -90.0],
 	]
+	# Стороны с окнами: дверная и ещё 1–2 случайные (не одинаковые дома)
+	var window_sides: Array = [door]
+	for sd in sides:
+		if sd[0] != door and rng.randf() < 0.6:
+			window_sides.append(sd[0])
+	var shutters := "WindowShutters_Wide_Flat_Open" if rng.randf() < 0.6 else "WindowShutters_Wide_Flat_Closed"
 	for sd in sides:
 		var length: float = sd[2]
 		var yaw: float = sd[3]
 		var n := maxi(1, int(round(length / 2.0)))
 		var sx := length / (2.0 * n)
 		var dir := Vector3(cos(deg_to_rad(yaw)), 0, -sin(deg_to_rad(yaw)))
-		for i in n:
+		for k in n:
 			var piece := "Wall_%s_Straight" % style
-			if sd[0] == door and i == n / 2:
+			var kind := ""
+			if sd[0] == door and k == n / 2:
 				piece = "Wall_%s_Door_Flat" % style
-			elif i % 2 == 1 or n == 1:
+				kind = "door"
+			elif sd[0] in window_sides and (k % 2 == 1 or n == 1):
 				piece = "Wall_%s_Window_Wide_Flat" % style
-			var c: Vector3 = sd[1] + dir * (2.0 * sx * (i + 0.5))
-			_model(root, "%s_%s_%d" % [name, sd[0], i], QV + piece + ".gltf", c, Vector3(0, yaw, 0), Vector3(sx, sy, 1))
+				kind = "window"
+			var c: Vector3 = sd[1] + dir * (2.0 * sx * (k + 0.5))
+			var wall := _model(root, "%s_%s_%d" % [name, sd[0], k], QV + piece + ".gltf", c, Vector3(0, yaw, 0), Vector3(sx, sy, 1))
+			if kind == "window":
+				_model(wall, "Shutters", QV + shutters + ".gltf", Vector3.ZERO)
+			elif kind == "door":
+				_model(wall, "Door", QV + "Door_1_Flat.gltf", Vector3(-0.56, 0.0, -0.12))
+				# Навес над дверью на двух кронштейнах
+				_model(wall, "Awning", QV + "Overhang_Roof_Plaster.gltf", Vector3(0, 2.55, 1.05), Vector3(0, 0, 0), Vector3(0.9, 1, 0.55))
+				for bx in [-0.8, 0.8]:
+					_model(wall, "Bracket%d" % int(bx * 10), QV + "Prop_Support.gltf", Vector3(bx, 0.85, 0.12), Vector3(0, 0, 0), Vector3(1, 0.9, 0.5))
 	for cx in [-1.0, 1.0]:
 		for cz in [-1.0, 1.0]:
 			_model(root, "%s_corner_%d_%d" % [name, int(cx), int(cz)], QV + "Corner_Exterior_Wood.gltf",
 				Vector3(center.x + cx * (hx + OUT), base, center.z + cz * (hz + OUT)), Vector3.ZERO, Vector3(1.4, size.y / 3.0, 1.4))
-	_model(root, name + "_chimney", QV + "Prop_Chimney.gltf", Vector3(center.x + hx - 0.8, base + size.y, center.z - hz + 0.8), Vector3.ZERO, Vector3.ONE * 0.55)
+	if recipe == "terrace":
+		_house_terrace(root, name, center, size, top, rng)
+	else:
+		_house_loft_roof(root, name, center, size, top, recipe)
+	var chimney := "Prop_Chimney" if rng.randf() < 0.5 else "Prop_Chimney2"
+	_model(root, name + "_chimney", QV + chimney + ".gltf", Vector3(center.x + hx - 0.8, top, center.z - hz + 0.8), Vector3.ZERO, Vector3.ONE * 0.55)
+	if bool(opts.get("yard", true)):
+		_house_yard(root, name, center, size, base, door, rng)
+
+## Двускатная крыша на столбах над плоской крышей: конёк — вдоль длинной стороны; tile — черепица пакета,
+## thatch — солома (assets/textures/midgard/thatch), planks — доски (wood_planks_painted); материал — общий на зал.
+func _house_loft_roof(root: Node3D, name: String, center: Vector3, size: Vector3, top: float, recipe: String) -> void:
+	var hx := size.x / 2.0
+	var hz := size.z / 2.0
+	for cx in [-1.0, 1.0]:
+		for cz in [-1.0, 0.0, 1.0]:
+			if cz == 0.0 and maxf(size.x, size.z) < 5.5:
+				continue
+			_model(root, "%s_loft_%d_%d" % [name, int(cx), int(cz)], QV + "Corner_Exterior_Wood.gltf",
+				Vector3(center.x + cx * (hx - 0.12), top, center.z + cz * (hz - 0.12)), Vector3.ZERO, Vector3(1.6, LOFT_HEIGHT / 3.0, 1.6))
+	# Модель 6x6: под ней площадь 6 × 6 м, свесы ~1 м, высота ~5.7 м; ниже уклон (×0.7), чтобы не торчала
+	var along_z := size.z >= size.x
+	var w := size.x if along_z else size.z
+	var l := size.z if along_z else size.x
+	var scl := Vector3(w / 6.0, w / 6.0 * 0.7, l / 6.0)
+	var roof := _model(root, name + "_roof", QV + "Roof_RoundTiles_6x6.gltf", Vector3(center.x, top + LOFT_HEIGHT, center.z),
+		Vector3(0, 0 if along_z else 90, 0), scl)
+	if recipe != "tile":
+		var mat := _world_tex_mat("roof_thatch", "thatch", Color(1, 0.96, 0.9), 0.35) if recipe == "thatch" \
+			else _world_tex_mat("roof_planks", "wood_planks_painted", Color(0.92, 0.88, 0.84), 0.3)
+		for mi in roof.find_children("*", "MeshInstance3D", true, false):
+			(mi as MeshInstance3D).set_surface_override_material(1, mat)
+
+## Открытая терраса: перила по краям плоской крыши (кроме одной стороны — туда залезают), бочонок-кадка.
+func _house_terrace(root: Node3D, name: String, center: Vector3, size: Vector3, top: float, rng: RandomNumberGenerator) -> void:
+	var hx := size.x / 2.0
+	var hz := size.z / 2.0
+	var skip := rng.randi() % 4
+	var edges := [
+		[Vector3(center.x - hx, top, center.z + hz - 0.25), size.x, 0.0],
+		[Vector3(center.x + hx, top, center.z - hz + 0.25), size.x, 180.0],
+		[Vector3(center.x + hx - 0.25, top, center.z + hz), size.z, 90.0],
+		[Vector3(center.x - hx + 0.25, top, center.z - hz), size.z, -90.0],
+	]
+	for e in edges.size():
+		if e == skip:
+			continue
+		var length: float = edges[e][1]
+		var yaw: float = edges[e][2]
+		var n := maxi(1, int(round(length / 2.0)))
+		var sx := length / (2.0 * n)
+		var dir := Vector3(cos(deg_to_rad(yaw)), 0, -sin(deg_to_rad(yaw)))
+		for k in n:
+			var c: Vector3 = edges[e][0] + dir * (2.0 * sx * (k + 0.5))
+			# Перила пакета стоят на +0.9 по z от начала — сдвигаем внутрь
+			_model(root, "%s_rail_%d_%d" % [name, e, k], QV + "Balcony_Cross_Straight.gltf", c - Vector3(0, 0, 0.9).rotated(Vector3.UP, deg_to_rad(yaw)),
+				Vector3(0, yaw, 0), Vector3(sx, 0.8, 1))
+
+## Двор у дома: забор вдоль одной глухой стороны или телега у торца (не у двери).
+func _house_yard(root: Node3D, name: String, center: Vector3, size: Vector3, base: float, door: String, rng: RandomNumberGenerator) -> void:
+	var hx := size.x / 2.0
+	var hz := size.z / 2.0
+	var free_sides: Array = []
+	for sd in ["s", "n", "e", "w"]:
+		if sd != door:
+			free_sides.append(sd)
+	var side: String = free_sides[rng.randi() % free_sides.size()]
+	var out := 1.3
+	var pos: Vector3
+	var yaw := 0.0
+	match side:
+		"s":
+			pos = Vector3(center.x, base, center.z + hz + out)
+		"n":
+			pos = Vector3(center.x, base, center.z - hz - out)
+		"e":
+			pos = Vector3(center.x + hx + out, base, center.z)
+			yaw = 90.0
+		_:
+			pos = Vector3(center.x - hx - out, base, center.z)
+			yaw = 90.0
+	if rng.randf() < 0.5:
+		_model(root, name + "_wagon", QV + "Prop_Wagon.gltf", pos + Vector3(0, 0, 0), Vector3(0, yaw + 90.0 + rng.randf_range(-12, 12), 0), Vector3.ONE * 0.8)
+	else:
+		var dir := Vector3(1, 0, 0) if yaw == 0.0 else Vector3(0, 0, 1)
+		var span := (size.x if yaw == 0.0 else size.z) * 0.8
+		var n := maxi(1, int(round(span / 2.0)))
+		for k in n:
+			var c := pos + dir * ((k - (n - 1) * 0.5) * 2.0)
+			_model(root, "%s_fence_%d" % [name, k], QV + ("Prop_WoodenFence_Single.gltf" if k == 0 else "Prop_WoodenFence_Extension1.gltf"), c, Vector3(0, yaw, 0))
 
 func _box(parent: Node, name: String, center: Vector3, size: Vector3, mat: Material, collide: bool = true) -> Node3D:
 	var root: Node3D

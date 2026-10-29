@@ -328,7 +328,7 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 				mk2.position = (v as Array)[k] + Vector3(0, 0.05, 0)
 				grp.add_child(mk2)
 
-	# Дома из модулей MegaKit вокруг блоков: [индекс блока в "blocks", сторона двери, стиль]
+	# Дома из модулей MegaKit вокруг блоков: [индекс блока в "blocks", сторона двери, стиль, {recipe, yard}] (П11)
 	var houses: Array = d.get("houses", [])
 	if not houses.is_empty():
 		var hnode := Node3D.new()
@@ -336,7 +336,8 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		root.add_child(hnode)
 		for i in houses.size():
 			var hb: Array = d.blocks[houses[i][0]]
-			gen._house(hnode, "House%d" % i, hb[0], hb[1], houses[i][1], houses[i][2] if (houses[i] as Array).size() > 2 else "Plaster")
+			var h: Array = houses[i]
+			gen._house(hnode, "House%d" % i, hb[0], hb[1], h[1], h[2] if h.size() > 2 else "Plaster", h[3] if h.size() > 3 else {})
 
 	# Декоративные модели (без коллизии): [путь к сцене, позиция, поворот по Y (град), масштаб]
 	var models: Array = d.get("models", [])
