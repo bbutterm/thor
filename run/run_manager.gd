@@ -8,6 +8,8 @@ signal kill_streak(count: int)
 signal mjolnir_traits_changed(traits: Array)
 ## Взятая стихия или приём сложились в связку (блок Б4) — Game показывает карточку, слово и реплику Одина
 signal mjolnir_combo_unlocked(combo: MjolnirTrait)
+## Связка сработала в бою (MjolnirTraitHandler.mark у связки) — HUD коротко вспыхивает её иконкой (П6)
+signal mjolnir_combo_fired(combo: MjolnirTrait)
 ## Убийство засчитано (после Славы). Слушают пассивки тела (Player) и шкала стиля (StyleMeter).
 signal kill_registered(source: String)
 ## Серебро — валюта забега (блок К, GDD 15.2), сгорает после смерти

@@ -376,7 +376,7 @@ func _build_interface(page: Control) -> void:
 		[["white", tr("белый")], ["yellow", tr("жёлтый")], ["green", tr("зелёный")], ["cyan", tr("голубой")], ["red", tr("красный")], ["magenta", tr("пурпурный")]])
 	_header(page, "HUD")
 	_check(page, tr("Индикаторы врагов за экраном"), "hud", "offscreen")
-	_check(page, tr("Шкала высоты удара-приземления"), "hud", "slam_meter")
+	_check(page, tr("Цифры урона"), "hud", "damage_numbers")
 	_slider(page, tr("Масштаб интерфейса"), "video", "ui_scale", 0.75, 1.5, 0.05, _pct)
 	_header(page, tr("КОМИКСОВЫЕ СЛОВА"))
 	_comic_rows(page)

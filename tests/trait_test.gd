@@ -348,24 +348,22 @@ func _test_pick_ui() -> void:
 		var bubble := Dialogue.bubble()
 		var text_scale := GameSettings.text_scale()
 		GameSettings.set_value("text", "text_scale", 1.6, false)
+		game.hud.show_odin_line("Связка! Молот и стихия договорились.")
 		bubble.show_line("hugin", "neutral", "Кар! Прыгни дважды и жми удар-приземление. С высокой площадки можно и без второго прыжка.")
 		await frames(4)
-		game.hud._position_odin_notice()
-		var odin := _visual_rect(game.hud._odin_panel)
 		var raven := bubble.visual_rect()
 		var banner := ann.visual_rect()
-		check(not banner.intersects(odin) and not banner.intersects(raven) and not raven.intersects(odin), "плашка, подсказка ворона и реплика Одина не перекрывают друг друга")
+		check(not banner.intersects(raven) and game.hud._odin_panel.modulate.a == 0.0, "один пузырь (П6): ворон убрал реплику Одина, плашка связки отдельно")
 		await _test_combo_word_layout(ann, bubble)
 		GameSettings.set_value("text", "text_scale", text_scale, false)
 		ann.visible = false
 		await frames(3)
-		game.hud._position_odin_notice()
-		check(is_zero_approx(bubble._combo_shift) and is_equal_approx(game.hud._odin_panel.offset_left, -340.0), "после плашки подсказки возвращаются на обычные места")
 	var hud_icons: int = game.hud._mjolnir_traits._icons.get_child_count()
 	check(hud_icons == 3, "HUD: стихия, приём и связка (%d иконки)" % hud_icons)
 	if game.rune_pick.visible:
 		game.rune_pick._open_time = -10.0
 		game.rune_pick.choose(0)
+		_clear_runes()
 	await wait(0.3)
 	get_tree().paused = false
 	# Замена несовместимого — с подтверждением
@@ -440,7 +438,7 @@ func _test_card_layout() -> void:
 	tp.visible = false
 	tp._status_labels.clear()
 
-func _test_combo_word_layout(ann: ComboAnnounce, bubble: BarkBubble) -> void:
+func _test_combo_word_layout(ann: ComboAnnounce, _bubble: BarkBubble) -> void:
 	var old_size: Vector2i = get_viewport().size
 	var old_language: String = GameSettings.get_value("text", "language")
 	var old_scale := GameSettings.text_scale()
@@ -458,12 +456,9 @@ func _test_combo_word_layout(ann: ComboAnnounce, bubble: BarkBubble) -> void:
 					GameSettings.comic_scale = comic_scale
 					var line := "Связка! Молот и стихия договорились. Тебе бы так с диваном." if language == "ru" else "A fusion! Hammer and element agreed. If only you and the couch could do that."
 					game.hud.show_odin_line(line)
-					bubble.show_line("hugin", "neutral", line)
 					ComicFX.reset_state()
 					ComicFX.pop("combo", Vector3.ZERO, true)
-					await frames(5)
-					game.hud._position_odin_notice()
-					await frames(2)
+					await frames(7)
 					var word: Variant = null
 					for w in ComicFX._pool:
 						if w.active and w.event == "combo" and not w.preview:
@@ -473,23 +468,15 @@ func _test_combo_word_layout(ann: ComboAnnounce, bubble: BarkBubble) -> void:
 					check(word != null, "%s: слово связки активно" % tag)
 					if word:
 						var letters: Rect2 = word.label.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, word.label.size)
-						check(not odin.intersects(letters), "%s: реплика не перекрывает слово связки" % tag)
+						check(not odin.intersects(letters), "%s: реплика не перекрывает слово связки (%s / %s)" % [tag, odin, letters])
 					var label := game.hud._odin_label
 					var text_rect: Rect2 = label.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, label.size)
-					var contained := odin.encloses(text_rect)
 					var extent := label.label_settings.font.get_multiline_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, label.size.x, label.label_settings.font_size)
-					check(contained and label.size.y >= extent.y + label.label_settings.outline_size * 2.0,
-						"%s: текст реплики помещается в рамке целиком" % tag)
-					check(not odin.intersects(ann.visual_rect()) and not odin.intersects(bubble.visual_rect()),
-						"%s: реплика отдельно от плашки и ворона" % tag)
-					check(not odin.intersects(game.hud._hammer_icon.get_global_rect()) and not odin.intersects(game.hud._mjolnir_traits.get_global_rect()),
-						"%s: реплика не закрывает молот и трейты (трейты %s)" % [tag, game.hud._mjolnir_traits.get_global_rect()])
-					var narrow := game.hud._odin_panel.offset_right - game.hud._odin_panel.offset_left
-					ComicFX.reset_state()
-					await frames(2)
-					game.hud._position_odin_notice()
-					check(game.hud._odin_panel.offset_right - game.hud._odin_panel.offset_left > narrow + 100.0,
-						"%s: после слова возвращается обычная ширина реплики" % tag)
+					check(odin.encloses(text_rect) and label.size.y >= extent.y + label.label_settings.outline_size * 2.0,
+						"%s: текст реплики помещается в рамке целиком (рамка %s, текст %s, нужно %.0f, шрифт %d)" % [tag, odin, text_rect, extent.y, label.label_settings.font_size])
+					check(not odin.intersects(ann.visual_rect()), "%s: реплика отдельно от плашки связки" % tag)
+					check(not odin.intersects(game.hud._hammer_icon.get_global_rect()) and not odin.intersects(game.hud._hp_bar.get_global_rect()),
+						"%s: реплика над линией HUD — не закрывает молот и здоровье" % tag)
 	GameSettings.comic_enabled = old_enabled
 	GameSettings.comic_scale = old_comic_scale
 	GameSettings.set_value("text", "language", old_language, false)
@@ -591,6 +578,7 @@ func _test_anvil_flow() -> void:
 	if game.rune_pick.visible:
 		game.rune_pick._open_time = -10.0
 		game.rune_pick.choose(0)
+		_clear_runes()
 	await wait(0.3)
 
 	# Обычный выбор после мини-босса не связан с наковальней.
@@ -607,6 +595,7 @@ func _test_anvil_flow() -> void:
 	if game.rune_pick.visible:
 		game.rune_pick._open_time = -10.0
 		game.rune_pick.choose(0)
+		_clear_runes()
 	await wait(0.2)
 	Run.trait_rerolls = old_rerolls
 	Run.room_rewards[Run.room_index] = was
@@ -615,6 +604,12 @@ func _test_anvil_flow() -> void:
 	await frames(5)
 
 # --- База молота ---
+
+## Руна из выбора выше случайна (например, «Гнев Мьёльнира» ускоряет возврат) — числа молота проверяем без рун
+func _clear_runes() -> void:
+	Run.runes.clear()
+	Run.runes_changed.emit(Run.runes)
+	game.player.recalc_from_runes(Run)
 
 func _reset_player(pitch: float = 0.0) -> void:
 	hand.hold_override = false
@@ -851,8 +846,10 @@ func _test_manual_return() -> void:
 ## П2 (GDD 26.4): быстрее бросок и возврат, сильный отброс, hit-stop по убыванию, волна при втыкании; F6 — старое.
 func _test_power() -> void:
 	print("-- Сила молота (П2)")
-	check(is_equal_approx(hand.current_throw_speed(), 45.0) and is_equal_approx(hand.return_speed_at(0.0), 25.0)
-		and is_equal_approx(hand.return_speed_at(2.0), 50.0), "бросок 45 м/с, возврат разгоняется 25 → 50 м/с")
+	# Руна «Гнев Мьёльнира» (hammer_power) могла выпасть в выборе рун выше — множитель возврата учитываем
+	var rm := hand.return_speed_mult
+	check(is_equal_approx(hand.current_throw_speed(), 45.0) and is_equal_approx(hand.return_speed_at(0.0), 25.0 * rm)
+		and is_equal_approx(hand.return_speed_at(2.0), 50.0 * rm), "бросок 45 м/с, возврат разгоняется 25 → 50 м/с ×%.2f (%.1f, %.1f, %.1f)" % [rm, hand.current_throw_speed(), hand.return_speed_at(0.0), hand.return_speed_at(2.0)])
 	check(is_equal_approx(hand.hitstop_for(0), 0.07) and hand.hitstop_for(1) < 0.07 and is_equal_approx(hand.hitstop_for(10), 0.02),
 		"hit-stop: 0.07 на первом, дальше меньше, до 0.02 (%.3f, %.3f)" % [hand.hitstop_for(1), hand.hitstop_for(10)])
 	# Толпа: корм отлетает сильно по линии полёта и вверх
@@ -900,7 +897,7 @@ func _test_power() -> void:
 	await frames(3)
 	# Старое под F6 (FeelSwitch hammer_power): прежние числа, на лету
 	FeelSwitch.set_old(&"hammer_power", true)
-	check(is_equal_approx(hand.current_throw_speed(), 32.0) and is_equal_approx(hand.return_speed_at(1.0), 36.0)
+	check(is_equal_approx(hand.current_throw_speed(), 32.0) and is_equal_approx(hand.return_speed_at(1.0), 36.0 * hand.return_speed_mult)
 		and is_equal_approx(hand.hitstop_for(5), 0.04), "старое (F6): 32 м/с, возврат 36, hit-stop 0.04")
 	_reset_player()
 	await frames(3)

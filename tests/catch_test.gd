@@ -318,12 +318,12 @@ func _run() -> void:
 	await get_tree().physics_frame
 	check(hand.in_hand and blocked[0] == 1, "бросок на перезарядке не проходит (осечка)")
 	await get_tree().process_frame
-	check(game.hud._hammer_state == "cooldown" and game.hud._rune_hammer.cooldown > 0.0,
-		"HUD: полоска перезарядки у молота (%.2f), «%s»" % [game.hud._rune_hammer.cooldown, game.hud._hammer_label.text])
+	check(game.hud._hammer_state == "cooldown" and game.hud._hammer_icon.shade > 0.0 and Time.get_ticks_msec() < game.hud._hammer_flash_until,
+		"HUD: иконка молота затемнена (%.2f) и краснеет после осечки" % game.hud._hammer_icon.shade)
 	await grab("06_cooldown")
 	await wait(saved_cd)
-	check(hand.cooldown_left == 0.0 and game.hud._hammer_state == "hand" and game.hud._rune_hammer.cooldown == 0.0,
-		"через %.1f с после поимки — снова можно бросать, полоски нет" % saved_cd)
+	check(hand.cooldown_left == 0.0 and game.hud._hammer_state == "hand" and game.hud._hammer_icon.shade == 0.0,
+		"через %.1f с после поимки — снова можно бросать, затемнения нет (%.2f, %s, %.2f)" % [saved_cd, hand.cooldown_left, game.hud._hammer_state, game.hud._hammer_icon.shade])
 	_results.clear()
 	proj = await _throw_and_recall(hand, 1.0)
 	await _wait_eta(proj, hand.perfect_window * 0.5)

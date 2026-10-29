@@ -143,3 +143,5 @@ static func floor_below(world_node: Node3D, pos: Vector3, max_drop: float = 4.0)
 ## Отметить срабатывание трейта (для лога фризов F3)
 func mark(what: String = "") -> void:
 	Perf.mark("trait_" + str(trait_def.id if trait_def else &"?") + ("_" + what if what != "" else ""))
+	if trait_def and trait_def.is_combo():
+		Run.mjolnir_combo_fired.emit(trait_def)

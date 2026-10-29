@@ -1,7 +1,12 @@
 extends CanvasLayer
 class_name BarkBubble
-## Мини-реплика в бою без паузы: маленький пузырь в правом нижнем углу с портретом.
-## Для Одина используется пузырь HUD (Odin.line_spoken); этот — для остальных (босс, Локи, Брокк…).
+## Мини-реплика в бою без паузы — тот же единственный пузырь внизу по центру, что и у Одина (П6), но с портретом.
+## Для Одина используется пузырь HUD (Odin.line_spoken); этот — для остальных (босс, Локи, Брокк, вороны…).
+## Показ одного прячет другой (HUD.hide_odin_line / hide_now).
+
+## Ширина пузыря и отступ его низа от низа экрана (общие с пузырём Одина в HUD), px
+const WIDTH := 470.0
+const BOTTOM := 158.0
 
 ## Сколько секунд держится пузырь (плюс по 0.035 с на букву)
 @export var hold_time: float = 2.2
@@ -12,7 +17,6 @@ var _portrait: Portrait
 var _name: Label
 var _text: Label
 var _tween: Tween
-var _combo_shift: float = 0.0
 
 func _ready() -> void:
 	layer = 6
@@ -22,12 +26,12 @@ func _ready() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 	_panel = UIStyle.panel(Color(0.05, 0.05, 0.07, 0.86), Color(UIStyle.GOLD, 0.5))
-	_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_panel.offset_left = -520
-	_panel.offset_right = -28
-	_panel.offset_top = -250
-	_panel.offset_bottom = -150
-	_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_panel.offset_left = -WIDTH * 0.5
+	_panel.offset_right = WIDTH * 0.5
+	_panel.offset_top = -BOTTOM - 80
+	_panel.offset_bottom = -BOTTOM
+	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.modulate.a = 0.0
@@ -38,37 +42,18 @@ func _ready() -> void:
 	_panel.add_child(hb)
 	_portrait = Portrait.new()
 	_portrait.compact = true
-	_portrait.custom_minimum_size = Vector2(72, 84)
+	_portrait.custom_minimum_size = Vector2(60, 70)
 	hb.add_child(_portrait)
 	var vb := VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hb.add_child(vb)
-	_name = UIStyle.label("", 16, UIStyle.GOLD, 4)
+	_name = UIStyle.label("", 15, UIStyle.GOLD, 4)
 	vb.add_child(_name)
 	_text = UIStyle.label("", 19, UIStyle.TEXT, 5)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.custom_minimum_size = Vector2(320, 0)
+	_text.custom_minimum_size = Vector2(WIDTH - 130.0, 0)
 	vb.add_child(_text)
-
-func _process(_delta: float) -> void:
-	# При крупном тексте пузырь может вырасти вверх до объявления связки.
-	# Временно сдвигаем его вниз, затем возвращаем прежнее положение.
-	var next_shift := 0.0
-	var scene := get_tree().current_scene
-	var announce := scene.get_node_or_null("ComboAnnounce") as ComboAnnounce if scene else null
-	if announce and announce.is_showing():
-		var original := visual_rect()
-		original.position.y -= _combo_shift
-		var banner := announce.visual_rect()
-		if original.position.x < banner.end.x and original.end.x > banner.position.x:
-			if original.position.y < banner.end.y + 12.0 and original.end.y > banner.position.y:
-				next_shift = banner.end.y + 12.0 - original.position.y
-	var change := next_shift - _combo_shift
-	if not is_zero_approx(change):
-		_panel.offset_top += change
-		_panel.offset_bottom += change
-		_combo_shift = next_shift
 
 ## Полные границы, включая выступающую рамку картинки.
 func visual_rect() -> Rect2:
@@ -80,6 +65,13 @@ func visual_rect() -> Rect2:
 		rect = style._draw_rect_of(rect)
 	return _panel.get_global_transform_with_canvas() * rect
 
+## Убрать сразу (заговорил Один)
+func hide_now() -> void:
+	if _tween and _tween.is_valid():
+		_tween.kill()
+	if _panel:
+		_panel.modulate.a = 0.0
+
 func show_line(speaker: String, emotion: String, text: String) -> void:
 	var def: Dictionary = Dialogue.speakers.get(speaker, {})
 	var col := Color.from_string(str(def.get("color", "#888888")), Color.GRAY)
@@ -90,6 +82,10 @@ func show_line(speaker: String, emotion: String, text: String) -> void:
 		_panel.add_theme_stylebox_override("panel", UIStyle.panel_style(Color(0.05, 0.05, 0.07, 0.86), Color(col, 0.7)))
 	_text.label_settings.font_size = int(19 * GameSettings.text_scale())
 	_text.text = text
+	# Один пузырь: реплика прячет пузырь Одина
+	var game := get_tree().current_scene as Game
+	if game and game.hud:
+		game.hud.hide_odin_line()
 	if _tween and _tween.is_valid():
 		_tween.kill()
 	_tween = _panel.create_tween()

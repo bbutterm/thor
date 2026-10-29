@@ -74,8 +74,7 @@ func _coins() -> int:
 
 func _test_silver_sources() -> void:
 	print("-- Источники серебра")
-	var hud_silver := game.hud.find_child("SilverHUD", true, false)
-	check(hud_silver != null, "счётчик серебра в HUD")
+	check(game.hud._silver_gain != null and game.hud._silver_gain.modulate.a == 0.0, "серебро в HUD — только всплывающее «+N» (П6)")
 	await wait(1.4)
 	var room := game.room
 	# Враги
@@ -94,9 +93,9 @@ func _test_silver_sources() -> void:
 		await wait(0.1)
 	check(Run.silver >= s0 + expected and Run.silver > s0, "монеты долетели до Тора: %d → %d (не меньше %d)" % [s0, Run.silver, s0 + expected])
 	check(_coins() == 0, "все монеты собраны")
-	if hud_silver:
-		var lbl := hud_silver.find_children("*", "Label", true, false)
-		check(not lbl.is_empty() and (lbl[0] as Label).text.contains(str(Run.silver)), "HUD показывает %d" % Run.silver)
+	var acc: int = game.hud._silver_acc
+	Run.add_silver(7)
+	check(game.hud._silver_gain_label.text == "+%d" % (acc + 7) and game.hud._silver_gain.modulate.a > 0.9, "HUD: всплыло «%s» серебра" % game.hud._silver_gain_label.text)
 	# Бочка
 	var barrel: RigidBody3D = null
 	for n in get_tree().get_nodes_in_group("props"):

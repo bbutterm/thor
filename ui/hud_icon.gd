@@ -3,6 +3,7 @@ class_name HudIcon
 ## Иконка HUD из комплекта: картинка вписана в контрол с сохранением пропорций.
 ## Для зарядов (рывок): base — пустой камень, over — полный, fill 0..1 — сколько полного видно снизу вверх.
 ## pop() — короткий «подскок» (зарядился, сменилось состояние). Рисует только _draw.
+## shade 0..1 — затемнение сверху вниз (перезарядка Мьёльнира, П6): тёмная часть убывает к нулю.
 
 var base: Texture2D:
 	set(v):
@@ -28,6 +29,13 @@ var badge: String = "":
 		badge = v
 		queue_redraw()
 var badge_color: Color = UIStyle.TEXT
+var shade: float = 0.0:
+	set(v):
+		v = clampf(v, 0.0, 1.0)
+		if v != shade and (v == 0.0 or not is_equal_approx(v, shade)):
+			shade = v
+			queue_redraw()
+var shade_color: Color = Color(0.08, 0.09, 0.13, 0.82)
 var badge_size: int = 13
 
 var _pop: float = 0.0
@@ -71,6 +79,12 @@ func _draw() -> void:
 			var h := r.size.y * fill
 			draw_texture_rect_region(over, Rect2(r.position.x, r.end.y - h, r.size.x, h),
 				Rect2(0, ts.y * (1.0 - fill), ts.x, ts.y * fill), tint)
+	if shade > 0.0 and base:
+		# Та же картинка тёмным поверх верхней части — силуэт, а не прямоугольник
+		var r := _rect_for(base)
+		var ts := base.get_size()
+		var h := r.size.y * shade
+		draw_texture_rect_region(base, Rect2(r.position.x, r.position.y, r.size.x, h), Rect2(0, 0, ts.x, ts.y * shade), shade_color)
 	if badge != "":
 		var font := UIStyle.font()
 		var w := font.get_string_size(badge, HORIZONTAL_ALIGNMENT_LEFT, -1, badge_size).x

@@ -378,7 +378,8 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 | Dialogue | `thor_reply_chance` | 0.4 | Шанс ответа Тора (с выбором) после реакции Одина на смерть |
 | Dialogue | `visitor_chance` | 0.3 | Шанс, что к дивану заглянет знакомый персонаж (пулы `*.visit`) |
 | Dialogue | `heimdall_chance` | 0.35 | Шанс реплики Хеймдалля на старте забега (после знакомства) |
-| Odin | `combat_cooldown` | 12 | Реплика Одина в бою не чаще (GDD 17) |
+| Dialogue | `combat_bark_gap` | 15 | Боевые реплики (Один, хвастовство Тора) — один пузырь не чаще (П6; было 12 у Одина) |
+| Dialogue | `raven_calm_radius` / `raven_wait_max` | 15 м / 30 с | Вороны говорят в затишье: враг ближе — реплика ждёт (последняя, не дольше) |
 
 ## Звук и голос владельца — `scripts/audio.gd` (`Audio`), `data/owner_audio.json`, `tools/import_owner_audio.py`
 
@@ -538,13 +539,13 @@ F3 — оверлей кадров. `hitch_ms` 33: кадр дольше это�
 | `hitstop_on_start` | 0.12 с | Хит-стоп при включении |
 | `after_berserk_rank` | 2 | После берсерка — середина ранга «Неплохо» (47.5) |
 | `music_full_rank` | 3 | С «Достойно» в бою — полный трек (`Music`, слой full), ниже — барабаны |
-| `voice_rank` / `voice_cooldown` / `voice_retry_time` | 3 / 30 с / 2.5 с | «Достойно!» Одина (`odin.rank_worthy`, с лимитом 12 с; занят — пробует ещё 2.5 с), та же реплика ранга — не чаще 30 с; «ДОСТОЙНЕЙШИЙ!» (`odin.rank_top`) — без лимита, чаще 30 с — пул `berserk` |
+| `voice_rank` / `voice_cooldown` / `voice_retry_time` | 3 / 30 с / 2.5 с | «Достойно!» Одина (`odin.rank_worthy`, с лимитом 15 с; занят — пробует ещё 2.5 с), та же реплика ранга — не чаще 30 с; «ДОСТОЙНЕЙШИЙ!» (`odin.rank_top`) — без лимита, чаще 30 с — пул `berserk` |
 | `rank_pop_cooldown` / `rank_pop_delay` | 4 с / 0.45 с | Слово комикса ранга (`rank_1..rank_4`): не чаще раза в 4 с на ранг, через 0.45 с после приёма (высший — сразу крупно) |
 
 Руна «Песнь берсерка» — набор ×1.3 / ×1.55 / ×1.8. Тело может менять набор: `modify_stat("style_gain_mult")`. Только мили-убийства раз в 0.5 с держат шкалу около «Неплохо» — выше нужно разнообразие.
 HUD (`ui/style_hud.gd`): `bar_width` 340, `caption_height` 58, `burst_size` 210×92, `punch_scale` 0.5 / `punch_decay` 3 (удар подписи при повышении), `vignette_alpha` 0.75; картинки комплекта `hud_rage_frame` + `hud_rage_fill`, `comic_burst_01..06`, `vfx_rage_vignette` (через `UISkin`).
 
-Бой-реплики Одина (GDD 17), лимит — `combat_cooldown` 12 с (`run/odin.gd`, «berserk» и «rank_top» — без лимита): «ДВИГАЙСЯ!» `idle_time` 4 с, мульти-килл `multikill_count` 3 за `multikill_window` 0.8 с, «Скуф…» `big_damage_fraction` 0.35 HP за `big_damage_window` 3 с, «Позорище» — добил ренжем (`run/run_tracker.gd`; мульти-килл важнее), «Вот! ВОТ!» — удар-приземление с `big_slam_height` 9 м (узел Player). Тексты — пулы `idle`, `multikill`, `big_damage`, `ranged_kill`, `big_slam`, `rank_worthy`, `rank_top`, `berserk`, `rage_over` в `data/dialogues/odin.json`.
+Бой-реплики Одина (GDD 17), лимит — `Dialogue.combat_bark_gap` 15 с, общий с хвастовством Тора (`run/odin.gd`, «berserk», «rank_top» и «big_slam» — без лимита): «ДВИГАЙСЯ!» `idle_time` 4 с, мульти-килл `multikill_count` 3 за `multikill_window` 0.8 с, «Скуф…» `big_damage_fraction` 0.35 HP за `big_damage_window` 3 с, «Позорище» — добил ренжем (`run/run_tracker.gd`; мульти-килл важнее), «Вот! ВОТ!» — удар-приземление с `big_slam_height` 9 м (узел Player). Тексты — пулы `idle`, `multikill`, `big_damage`, `ranged_kill`, `big_slam`, `rank_worthy`, `rank_top`, `berserk`, `rage_over` в `data/dialogues/odin.json`.
 
 ## Руны по уровням (блок Т) — `run/runes/*.tres`
 
@@ -712,3 +713,15 @@ HUD (`ui/style_hud.gd`): `bar_width` 340, `caption_height` 58, `burst_size` 210�
 ## Комиксовая обводка — `data/outline_tuning.tres` (`OutlineTuning`)
 
 Один общий `ShaderMaterial` (`shaders/outline.gdshader`) для врагов, боссов, оружия на полу, сундуков, ящиков, бочек и Мьёльнира в полёте; стены и руки от первого лица без обводки. Числа меняются в ресурсе: `color` (0.03, 0.02, 0.02), `width_px` 5 px при высоте кадра 1080, `near_dist` 6 м, `min_scale` 0.4, `depth_push` 0.04 м. В «Экран» — выключатель и множитель `outline_width` от 0.5 до 2.0 (по умолчанию 1.0); при выключении существующие вспышки и подсветка стихий сохраняются. Обводка не использует instance uniform, её материал прогревается при входе в зал.
+
+## Интерфейс боя (П6, макеты B и T3) — `ui/hud.gd`, `ui/weapon_hud.gd`, `ui/build_screen.gd`
+| Где | Число | Значение | Что |
+|---|---|---|---|
+| HUD | `row_half_width` / `row_inner_gap` | 505 / 195 px | Нижняя линия: от центра до края HP/шкалы стиля и до их внутреннего края |
+| HUD | `hp_bar_height` / `hammer_icon_size` / `dash_icon_size` | 78 / 72 / 40 px | Рамка HP, иконка Мьёльнира, камни-руны |
+| HUD | `gain_show_time` | 2 с | Сколько висит «+N СЛАВЫ» / «+N» серебра после последнего получения |
+| HUD | `combo_flash_time` / `combo_flash_gap` | 1 / 4 с | Вспышка иконки сработавшей связки; не чаще на связку |
+| WeaponHUD | `show_time` | 2 с | Слоты оружия после смены/подбора |
+| ComicFX | `bottom_reserved_px` | 300 px × размер текста | Крупные слова не ниже этой полосы (там пузырь и линия HUD) |
+| Player | `fall_feel_min_height` | 2.5 м | С какой высоты падения растут линии скорости и свист (`fall_wind`); выше `big_slam_height` 9 м — молния на молоте (`VfxScreen.bolt_*`) |
+| Настройки | `[hud] damage_numbers` | выкл. | Цифры урона (вкладка «Интерфейс») |

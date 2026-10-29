@@ -864,17 +864,17 @@ msgstr "A challenge from Odin, Hild or Loki → lots of Glory or a special rune"
 msgid "Испытание"
 msgstr "Trial"
 
-#: run/run_manager.gd:355
-#: run/run_manager.gd:358
+#: run/run_manager.gd:357
+#: run/run_manager.gd:360
 msgid "Вальхалла ждёт"
 msgstr "Valhalla awaits"
 
-#: run/run_manager.gd:360
+#: run/run_manager.gd:362
 #: player/style_meter.gd:27
 msgid "Сойдёт"
 msgstr "It'll do"
 
-#: run/run_manager.gd:361
+#: run/run_manager.gd:363
 msgid "Недостоин"
 msgstr "Unworthy"
 
@@ -1912,22 +1912,22 @@ msgstr "The first rune of each run starts at level 2."
 msgid "Утренняя зарядка"
 msgstr "Morning Exercises"
 
-#: scenes/game.gd:275
+#: scenes/game.gd:284
 msgid "приём"
 msgstr "technique"
 
-#: scenes/game.gd:275
+#: scenes/game.gd:284
 #: weapons/mjolnir_traits/earth.tres (group)
 #: weapons/mjolnir_traits/fire.tres (group)
 #: weapons/mjolnir_traits/ice.tres (group)
 msgid "стихия"
 msgstr "element"
 
-#: scenes/game.gd:275
+#: scenes/game.gd:284
 msgid "уровень %d"
 msgstr "level %d"
 
-#: scenes/game.gd:316
+#: scenes/game.gd:325
 msgid "Дверь открыта — вперёд!"
 msgstr "Door open — go!"
 
@@ -1994,6 +1994,10 @@ msgstr "Reload"
 #: scripts/settings.gd:55
 msgid "Подобрать / действие"
 msgstr "Pick up / interact"
+
+#: scripts/settings.gd:55
+msgid "Сборка (пауза)"
+msgstr "Build (pause)"
 
 #: scripts/settings.gd:571
 msgid "Кнопка %d"
@@ -2073,8 +2077,8 @@ msgid "ИЗЪЯН"
 msgstr "FLAW"
 
 #: ui/body_select.gd:209
-#: ui/hud.gd:260
-#: ui/hud.gd:319
+#: ui/hud.gd:240
+#: ui/hud.gd:297
 #: ui/training_plan.gd:111
 msgid "ОДИН"
 msgstr "ODIN"
@@ -2101,8 +2105,7 @@ msgid "В бой ▸"
 msgstr "To battle ▸"
 
 #: ui/body_select.gd:306
-#: ui/hud.gd:323
-#: ui/hud.gd:355
+#: ui/build_screen.gd:165
 #: ui/training_plan.gd:217
 msgid "СЛАВА %d"
 msgstr "GLORY %d"
@@ -2147,6 +2150,57 @@ msgstr "BOSS"
 #: ui/boss_card.gd:111
 msgid "МИНИ-БОСС"
 msgstr "MINIBOSS"
+
+#: ui/build_screen.gd:164
+msgid "Тело: %s · %s"
+msgstr "Body: %s · %s"
+
+#: ui/build_screen.gd:170
+#: ui/pause_menu.gd:131
+#: ui/training_plan.gd:21
+msgid "МЬЁЛЬНИР"
+msgstr "MJOLNIR"
+
+#: ui/build_screen.gd:179
+msgid "Трейтов пока нет — их дают мини-босс и Наковальня Эйтри."
+msgstr "No traits yet — the mini-boss and Eitri's Anvil grant them."
+
+#: ui/build_screen.gd:183
+msgid "ПРИЁМ · УР. %d"
+msgstr "TECHNIQUE · LV. %d"
+
+#: ui/build_screen.gd:183
+msgid "СТИХИЯ · УР. %d"
+msgstr "ELEMENT · LV. %d"
+
+#: ui/build_screen.gd:186
+#: ui/pause_menu.gd:138
+#: ui/trait_pick.gd:197
+msgid "СВЯЗКА"
+msgstr "COMBO"
+
+#: ui/build_screen.gd:187
+#: ui/pause_menu.gd:146
+msgid "РУНЫ"
+msgstr "RUNES"
+
+#: ui/build_screen.gd:196
+#: ui/pause_menu.gd:146
+msgid "Рун пока нет — Норны ждут зачистки зала."
+msgstr "No runes yet — the Norns are waiting for a cleared room."
+
+#: ui/build_screen.gd:202
+msgid "УР. %d"
+msgstr "LV. %d"
+
+#: ui/build_screen.gd:225
+msgid "Ты здесь"
+msgstr "You are here"
+
+#: ui/build_screen.gd:81
+#: ui/pause_menu.gd:62
+msgid "ПАУЗА"
+msgstr "PAUSE"
 
 #: ui/catch_assist.gd:89
 msgid "ИДЕАЛЬНО!"
@@ -2218,8 +2272,8 @@ msgstr "To Odin ▸"
 
 #: ui/end_screen.gd:55
 #: ui/training_plan.gd:138
-#: scenes/game.gd:386
 #: scenes/game.gd:395
+#: scenes/game.gd:404
 msgid "В меню"
 msgstr "To menu"
 
@@ -2239,56 +2293,18 @@ msgstr "Odin's verdict: %s"
 msgid "Тело: %s\nСлава: %d\nУбито врагов: %d\nЛучшая серия: %d\nПройдено залов: %d из %d\nРун собрано: %d"
 msgstr "Body: %s\nGlory: %d\nEnemies killed: %d\nBest streak: %d\nRooms cleared: %d of %d\nRunes collected: %d"
 
-#: ui/hud.gd:211
-msgid "СЛАВА 0"
-msgstr "GLORY 0"
+#: ui/hud.gd:299
+#: ui/hud.gd:427
+msgid "+%d СЛАВЫ"
+msgstr "+%d GLORY"
 
-#: ui/hud.gd:24
+#: ui/hud.gd:32
 msgid "ХРИМТУРС ПОЖИРАТЕЛЬ ГЕРОЕВ"
 msgstr "HRIMTHURS THE HERO-EATER"
 
-#: ui/hud.gd:328
-#: ui/hud.gd:573
-msgid "ЗАЛ %d / %d · %s"
-msgstr "ROOM %d / %d · %s"
-
-#: ui/hud.gd:328
-#: ui/hud.gd:573
-msgid "ФИНАЛ: %s"
-msgstr "FINALE: %s"
-
-#: ui/hud.gd:468
-msgid "ПЕРЕЗАРЯДКА"
-msgstr "RECHARGE"
-
-#: ui/hud.gd:473
-msgid "МЬЁЛЬНИР В РУКЕ · ПКМ"
-msgstr "MJOLNIR IN HAND · RMB"
-
-#: ui/hud.gd:479
-msgid "ЛЕТИТ · ПКМ — ВЕРНУТЬ"
-msgstr "FLYING · RMB — RECALL"
-
-#: ui/hud.gd:484
-msgid "ВОТКНУТ · ПКМ — ВЕРНУТЬ"
-msgstr "STUCK · RMB — RECALL"
-
-#: ui/hud.gd:489
-msgid "ВОЗВРАЩАЕТСЯ · ЛОВИ!"
-msgstr "RETURNING · CATCH!"
-
-#: ui/hud.gd:580
-msgid "Врагов: %d"
-msgstr "Enemies: %d"
-
-#: ui/hud.gd:85
+#: ui/hud.gd:95
 msgid "НУЖЕН ВТОРОЙ ПРЫЖОК"
 msgstr "SECOND JUMP REQUIRED"
-
-#: ui/hud.gd:99
-#: ui/hud.gd:325
-msgid "Тело: %s"
-msgstr "Body: %s"
 
 #: ui/loading_screen.gd:105
 msgid "СОВЕТ ОДИНА"
@@ -2344,31 +2360,9 @@ msgstr "Thor has let himself go. Odin puts his spirit into mortal warriors to ge
 msgid "ИДЕАЛЬНЫЙ ХВАТ ×2"
 msgstr "PERFECT CATCH ×2"
 
-#: ui/pause_menu.gd:131
-#: ui/training_plan.gd:21
-msgid "МЬЁЛЬНИР"
-msgstr "MJOLNIR"
-
-#: ui/pause_menu.gd:138
-#: ui/trait_pick.gd:197
-msgid "СВЯЗКА"
-msgstr "COMBO"
-
-#: ui/pause_menu.gd:146
-msgid "РУНЫ"
-msgstr "RUNES"
-
-#: ui/pause_menu.gd:146
-msgid "Рун пока нет — Норны ждут зачистки зала."
-msgstr "No runes yet — the Norns are waiting for a cleared room."
-
 #: ui/pause_menu.gd:152
 msgid "%s  ур. %d"
 msgstr "%s  lv. %d"
-
-#: ui/pause_menu.gd:62
-msgid "ПАУЗА"
-msgstr "PAUSE"
 
 #: ui/pause_menu.gd:65
 msgid "Один ждёт. Нетерпеливо."
@@ -2710,8 +2704,8 @@ msgid "Индикаторы врагов за экраном"
 msgstr "Off-screen enemy indicators"
 
 #: ui/settings_panel.gd:379
-msgid "Шкала высоты удара-приземления"
-msgstr "Ground slam height meter"
+msgid "Цифры урона"
+msgstr "Damage numbers"
 
 #: ui/settings_panel.gd:380
 msgid "Масштаб интерфейса"
@@ -2875,15 +2869,11 @@ msgstr "RUNES • SHAWARMA • SHARPENING"
 msgid "Уйти  [E / Esc / B]"
 msgstr "Leave  [E / Esc / B]"
 
-#: ui/silver_hud.gd:37
-msgid "СЕРЕБРО %d"
-msgstr "SILVER %d"
-
-#: ui/style_hud.gd:213
+#: ui/style_hud.gd:224
 msgid "БЕРСЕРК  %.1f"
 msgstr "BERSERK  %.1f"
 
-#: ui/style_hud.gd:216
+#: ui/style_hud.gd:227
 msgid "СЛАВА ×%s"
 msgstr "GLORY ×%s"
 
@@ -3035,23 +3025,23 @@ msgstr "PASSED! Reward after the room is cleared: %s"
 msgid "ПРОВАЛ: %s"
 msgstr "FAILED: %s"
 
-#: ui/weapon_hud.gd:158
+#: ui/weapon_hud.gd:179
 msgid "пусто"
 msgstr "empty"
 
-#: ui/weapon_hud.gd:164
+#: ui/weapon_hud.gd:185
 msgid "ПУСТО"
 msgstr "EMPTY"
 
-#: ui/weapon_hud.gd:167
+#: ui/weapon_hud.gd:188
 msgid "ур. %d"
 msgstr "lv. %d"
 
-#: ui/weapon_hud.gd:170
+#: ui/weapon_hud.gd:191
 msgid "Приём: %s"
 msgstr "Move: %s"
 
-#: ui/weapon_hud.gd:178
+#: ui/weapon_hud.gd:200
 msgid "%s — сменить · %s — перезарядка"
 msgstr "%s — switch · %s — reload"
 
@@ -3196,7 +3186,7 @@ msgid "Выпад и парирование"
 msgstr "Lunge and Parry"
 
 #: weapons/loot.gd:215
-#: scripts/shader_warmup.gd:241
+#: scripts/shader_warmup.gd:244
 msgid "Элита"
 msgstr "Elite"
 
@@ -3545,6 +3535,42 @@ msgid "Топор"
 msgstr "Axe"
 
 # --- Ключи, которых не нашёл сборщик (динамические строки или устаревшие; --prune удалит) ---
+
+msgid "СЛАВА 0"
+msgstr "GLORY 0"
+
+msgid "ЗАЛ %d / %d · %s"
+msgstr "ROOM %d / %d · %s"
+
+msgid "ФИНАЛ: %s"
+msgstr "FINALE: %s"
+
+msgid "ПЕРЕЗАРЯДКА"
+msgstr "RECHARGE"
+
+msgid "МЬЁЛЬНИР В РУКЕ · ПКМ"
+msgstr "MJOLNIR IN HAND · RMB"
+
+msgid "ЛЕТИТ · ПКМ — ВЕРНУТЬ"
+msgstr "FLYING · RMB — RECALL"
+
+msgid "ВОТКНУТ · ПКМ — ВЕРНУТЬ"
+msgstr "STUCK · RMB — RECALL"
+
+msgid "ВОЗВРАЩАЕТСЯ · ЛОВИ!"
+msgstr "RETURNING · CATCH!"
+
+msgid "Врагов: %d"
+msgstr "Enemies: %d"
+
+msgid "Тело: %s"
+msgstr "Body: %s"
+
+msgid "Шкала высоты удара-приземления"
+msgstr "Ground slam height meter"
+
+msgid "СЕРЕБРО %d"
+msgstr "SILVER %d"
 
 msgid "Парирования мечом ещё нет"
 msgstr "Sword parrying isn't in yet"

@@ -1,9 +1,8 @@
 extends HBoxContainer
 class_name MjolnirTraitsHud
-## Иконки активных трейтов Мьёльнира (отдельно от рун) — слева внизу, над здоровьем и строкой молота.
-## Порядок: стихия, приёмы, связки (золотая рамка). Иконка трейта из UI-комплекта (нет — руна в круге цвета
-## трейта), уровень в углу римской цифрой. Справа — «ИДЕАЛЬНЫЙ ХВАТ ×2», пока следующий бросок усилен,
-## и полоска удержания ПКМ (Заряд, Праща — MjolnirHand.hold_progress).
+## Над молотом внизу по центру: «ИДЕАЛЬНЫЙ ХВАТ ×2», пока следующий бросок усилен, и полоска удержания ПКМ
+## (Заряд, Праща — MjolnirHand.hold_progress). Иконки активных трейтов (стихия, приёмы, связки; иконка из
+## UI-комплекта или руна в круге, уровень римской цифрой) собираются, но в бою скрыты (П6: трейты — по Tab).
 
 var player: Player
 var _icons: HBoxContainer
@@ -12,16 +11,17 @@ var _hold: Label
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	offset_left = 28
-	offset_right = 600
-	offset_top = -214
-	offset_bottom = -156
-	alignment = BoxContainer.ALIGNMENT_BEGIN
+	set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	offset_left = -300
+	offset_right = 300
+	offset_top = -130
+	offset_bottom = -96
+	alignment = BoxContainer.ALIGNMENT_CENTER
 	add_theme_constant_override("separation", 14)
 	_icons = HBoxContainer.new()
 	_icons.add_theme_constant_override("separation", 8)
 	_icons.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_icons.visible = false
 	add_child(_icons)
 	_perfect = UIStyle.label(tr("ИДЕАЛЬНЫЙ ХВАТ ×2"), 18, UIStyle.GOLD, 6)
 	_perfect.size_flags_vertical = Control.SIZE_SHRINK_CENTER

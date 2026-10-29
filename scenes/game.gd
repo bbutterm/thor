@@ -12,6 +12,7 @@ class_name Game
 var room: Room
 var _active_visual_map: RunMap
 var _ending: bool = false
+var build_screen: BuildScreen
 ## Выбор трейта Мьёльнира после мини-босса (строится кодом, не из game.tscn)
 var trait_pick: TraitPick
 ## Время забега, причина смерти, бой-реплики Одина (run/run_tracker.gd)
@@ -93,6 +94,10 @@ func _ready() -> void:
 	end_screen.menu_requested.connect(go_to_menu)
 	pause_menu.restart_requested.connect(restart_run)
 	pause_menu.menu_requested.connect(go_to_menu)
+	# Tab — пауза-экран сборки (П6, ui/build_screen.gd)
+	build_screen = BuildScreen.new()
+	build_screen.name = "BuildScreen"
+	add_child(build_screen)
 	hud.bind_player(player)
 	tracker = RunTracker.attach(self, player)
 	# Обучение в первом зале — подсказки Хугина и Мунина (run/tutorial.gd)
@@ -115,7 +120,10 @@ func _ready() -> void:
 	Dialogue.on_run_start(Run.body.id if Run.body else "")
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("pause") and not _ending and not rune_pick.visible and not trait_pick.visible and not rewards.is_screen_open():
+	if event.is_action_pressed("build_screen") and not get_tree().paused and not _ending:
+		build_screen.open()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("pause") and not _ending and not rune_pick.visible and not trait_pick.visible and not rewards.is_screen_open():
 		pause_menu.toggle()
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.pressed and not get_tree().paused and not _ending:

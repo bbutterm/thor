@@ -241,7 +241,7 @@ func _test_hud() -> void:
 	check(hud._hammer_state == "hand", "Мьёльнир в руке")
 	p.mjolnir.throw_hammer()
 	await wait(0.05)
-	check(hud._hammer_state == "out" and hud._hammer_label.text.begins_with("ЛЕТИТ"), "Мьёльнир летит: «%s»" % hud._hammer_label.text)
+	check(hud._hammer_state == "out" and hud._hammer_icon.base == UISkin.texture("hud_mjolnir_thrown"), "Мьёльнир летит — иконка «брошен»")
 	var t := 0
 	while hud._hammer_state != "stuck" and hud._hammer_state != "return" and t < 180:
 		await get_tree().physics_frame
@@ -251,13 +251,28 @@ func _test_hud() -> void:
 	if p.mjolnir.projectile:
 		p.mjolnir.projectile.catch()
 	await wait(0.05)
-	check(hud._hammer_state == "cooldown" and hud._hammer_label.text.begins_with("ПЕРЕЗАРЯДКА") and hud._rune_hammer.cooldown > 0.0,
-		"снова в руке, перезарядка броска — полоска у молота: «%s»" % hud._hammer_label.text)
+	check(hud._hammer_state == "cooldown" and hud._hammer_icon.shade > 0.0,
+		"снова в руке, перезарядка броска — иконка молота затемнена (%.2f)" % hud._hammer_icon.shade)
 	p.mjolnir.reset_cooldown()
 	await wait(0.05)
-	check(hud._hammer_state == "hand", "перезарядка кончилась — «В РУКЕ»")
+	check(hud._hammer_state == "hand" and hud._hammer_icon.shade == 0.0, "перезарядка кончилась — иконка без затемнения")
 	var wh := hud.get_node_or_null("WeaponHUD") as WeaponHUD
 	check(wh != null and wh._slots[0].icon != null and wh._slots[0].active, "слот мили: иконка оружия, активный")
+	# П6: слоты видны show_time с после смены и гаснут; патроны — только со стволом в руках
+	wh.reveal()
+	check(wh._slots_box.modulate.a > 0.9, "после смены оружия слоты видны")
+	await wait(wh.show_time + 0.2)
+	check(wh._slots_box.modulate.a == 0.0, "через %.0f с слоты погасли" % wh.show_time)
+	check(not wh._ammo_row.visible or (p.weapons.current() != null and p.weapons.current().is_ranged()), "патроны — только когда в руках ствол")
+	# П6: в бою нет Славы, серебра, рун и трейтов — только «+N» на 2 с
+	check(hud._glory_gain.modulate.a == 0.0 and hud._silver_gain.modulate.a == 0.0 and not hud._mjolnir_traits._icons.visible,
+		"Слава, серебро и трейты в бою не висят")
+	Run.add_glory(25)
+	check(hud._glory_gain.modulate.a > 0.9 and hud._glory_gain.text.begins_with("+"), "Слава: всплыло «%s»" % hud._glory_gain.text)
+	await wait(hud.gain_show_time + 0.2)
+	check(hud._glory_gain.modulate.a == 0.0, "«+N СЛАВЫ» погасло через %.0f с" % hud.gain_show_time)
+	# Цифры урона — выключены по умолчанию
+	check(not bool(GameSettings.get_value("hud", "damage_numbers")), "цифры урона по умолчанию выключены")
 	# Индикатор врага за спиной
 	var e := (load("res://enemies/grunt.tscn") as PackedScene).instantiate() as Enemy
 	game.add_child(e)
@@ -272,17 +287,59 @@ func _test_hud() -> void:
 	check(hud._offscreen.shown.is_empty(), "индикаторы выключаются в настройках")
 	GameSettings.set_value("hud", "offscreen", true)
 	e.queue_free()
-	# Шкала высоты удара-приземления
-	p.global_position += Vector3.UP * 8.0
+	# Высота без шкалы (П6): падение с 12 м — линии скорости и свист растут, выше big_slam_height — заряд молота
+	p.global_position += Vector3.UP * 12.0
 	p.velocity = Vector3.ZERO
-	await wait(0.05)
-	check(hud._slam_meter.visible and hud._slam_meter.value > 0.4, "в воздухе на 8 м — шкала высоты в рукояти (%.2f)" % hud._slam_meter.value)
+	p._air_peak_y = p.global_position.y
+	await get_tree().physics_frame
 	var t2 := 0
-	while not p.is_on_floor() and t2 < 240:
+	var peak_feel := 0.0
+	var charged := false
+	while (t2 < 5 or not p.is_on_floor()) and t2 < 300:
 		await get_tree().physics_frame
+		peak_feel = maxf(peak_feel, p.fall_feel)
+		charged = charged or p.fall_charged
 		t2 += 1
+	check(peak_feel > 0.5 and p.camera_fx.speed_lines >= 0.0, "падение с высоты — растёт ощущение высоты (%.2f)" % peak_feel)
+	check(charged, "выше %.0f м молот заряжается молнией" % p.big_slam_height)
+	await wait(0.3)
+	check(p.fall_feel < 0.05 and not p.fall_charged, "на земле ощущение высоты гаснет")
+	# П6: Tab — экран сборки на паузе: тело, трейты и руны с описаниями, путь по миру
+	game.build_screen.open()
+	await wait(0.1)
+	check(get_tree().paused and game.build_screen.visible and not hud.visible, "Tab: экран сборки открыт, игра на паузе, HUD спрятан")
+	check(game.build_screen._portrait.texture != null, "портрет тела во весь рост")
+	var nodes := BuildScreen.path_nodes()
+	check(nodes.size() == Run.room_order.size() and str(nodes[Run.room_index].state) == "here" and str(nodes[nodes.size() - 1].label) == tr("Босс мира"),
+		"путь по миру: %d залов, текущий отмечен, в конце босс" % nodes.size())
+	game.build_screen.close()
 	await wait(0.05)
-	check(not hud._slam_meter.visible, "на земле шкалы нет")
+	check(not get_tree().paused and hud.visible, "Tab ещё раз — экран закрыт, HUD вернулся")
+	# П6: связка сработала — короткая вспышка иконки
+	var fusion: MjolnirTrait = null
+	for c in Run.all_mjolnir_traits:
+		if (c as MjolnirTrait).is_combo():
+			fusion = c
+	if fusion:
+		Run.mjolnir_combo_fired.emit(fusion)
+		check(hud._combo_flash.modulate.a > 0.9, "связка сработала — иконка вспыхнула")
+		await wait(hud.combo_flash_time + 0.1)
+		check(hud._combo_flash.modulate.a == 0.0, "вспышка связки погасла")
+	# П6: реплики — один пузырь, боевые не чаще раза в 15 с; вороны ждут затишья
+	Dialogue.reset_combat_bark()
+	check(Dialogue.take_combat_bark() and not Dialogue.take_combat_bark(), "боевые реплики: вторая сразу — нельзя (%.0f с)" % Dialogue.combat_bark_gap)
+	var grunt := (load("res://enemies/grunt.tscn") as PackedScene).instantiate() as Enemy
+	game.room.add_child(grunt)
+	grunt.global_position = p.global_position + Vector3(3, 0, 0)
+	grunt.set_physics_process(false)
+	game.room._alive.append(grunt)
+	Dialogue.bark({"speaker": "hugin", "text": "Кар!"})
+	check(Dialogue.in_combat() and not Dialogue._pending_raven.is_empty(), "враг рядом — ворон ждёт затишья")
+	game.room._alive.erase(grunt)
+	grunt.queue_free()
+	await wait(0.4)
+	check(Dialogue._pending_raven.is_empty(), "затишье — ворон сказал")
+	Dialogue.reset_combat_bark()
 	GameSettings.set_value("hud", "crosshair", "cross")
 	check(hud._crosshair.texture == UISkin.texture("crosshair_cross"), "прицел меняется из настроек")
 	# Помощь в прицеливании: луч доводится до врага в конусе

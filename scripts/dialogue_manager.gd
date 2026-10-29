@@ -334,9 +334,61 @@ func run_trigger(trigger: String, fallback_pool: String = "", bubble_fallback: b
 			await play_lines(pool_lines(fallback_pool), "", backdrop)
 	return false
 
-## Реплика-пузырь без паузы. Один — через HUD (Odin.line_spoken), остальные — в углу экрана.
+## Боевые реплики (Один, хвастовство Тора) — один пузырь не чаще раза в combat_bark_gap секунд (П6, NOW.md)
+@export var combat_bark_gap: float = 15.0
+## Вороны говорят только между волнами: пока враг ближе raven_calm_radius м — реплика ждёт (последняя, не дольше raven_wait_max с)
+@export var raven_calm_radius: float = 15.0
+@export var raven_wait_max: float = 30.0
+const RAVENS := ["hugin", "munin"]
+var _last_combat_bark: float = -1000.0
+var _pending_raven: Dictionary = {}
+var _pending_raven_time: float = 0.0
+
+## Общий лимит боевых реплик: true — можно говорить (и время отмечено), false — пузырь занят недавно.
+func take_combat_bark() -> bool:
+	var now := Time.get_ticks_msec() / 1000.0
+	if now - _last_combat_bark < combat_bark_gap:
+		return false
+	_last_combat_bark = now
+	return true
+
+## Сбросить лимит (новый забег, тесты).
+func reset_combat_bark() -> void:
+	_last_combat_bark = -1000.0
+	_pending_raven = {}
+
+## Рядом враги — идёт бой (для воронов). Вне сцены игры боя нет.
+func in_combat() -> bool:
+	var game := get_tree().current_scene as Game if get_tree() else null
+	if game == null or game.room == null or not is_instance_valid(game.room) or game.player == null:
+		return false
+	var pos := game.player.global_position
+	for e in game.room.alive_enemies():
+		if is_instance_valid(e) and e.global_position.distance_squared_to(pos) < raven_calm_radius * raven_calm_radius:
+			return true
+	return false
+
+func _process(_delta: float) -> void:
+	if _pending_raven.is_empty() or Engine.get_process_frames() % 10 != 0:
+		return
+	if Time.get_ticks_msec() / 1000.0 - _pending_raven_time > raven_wait_max:
+		_pending_raven = {}
+	elif not _playing and not in_combat():
+		var line := _pending_raven
+		_pending_raven = {}
+		_show_bark(line)
+
+## Реплика-пузырь без паузы — один пузырь внизу по центру (П6): Один — через HUD (Odin.line_spoken),
+## остальные — BarkBubble на том же месте. Вороны в бою ждут затишья (in_combat).
 ## Реплику из pool_lines уже перевели — повторно не трогаем (обучение подставило в неё клавиши).
 func bark(line: Dictionary) -> void:
+	if str(line.get("speaker", "")) in RAVENS and in_combat():
+		_pending_raven = line
+		_pending_raven_time = Time.get_ticks_msec() / 1000.0
+		return
+	_show_bark(line)
+
+func _show_bark(line: Dictionary) -> void:
 	var text := format_text(str(line.get("text", "")))
 	if text == "":
 		return
@@ -356,7 +408,7 @@ func thor_bark(event: String, chance: float = 0.45) -> void:
 	if not has_pool(pool):
 		return
 	var now := Time.get_ticks_msec() / 1000.0
-	if now < _thor_next_bark or randf() > chance:
+	if now < _thor_next_bark or randf() > chance or not take_combat_bark():
 		return
 	_thor_next_bark = now + thor_bark_cooldown
 	bark_pool(pool)

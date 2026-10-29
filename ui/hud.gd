@@ -1,27 +1,36 @@
 extends CanvasLayer
 class_name HUD
-## Интерфейс боя (GDD 18) на графике комплекта (UISkin): HP и щит Сиф, заряды рывка, Мьёльнир (в руке /
-## летит / воткнут / возвращается) и его трейты, Слава, серебро (ui/silver_hud.gd), руны иконками по категориям,
-## прицел и шкала высоты удара-приземления, индикаторы врагов за экраном, реплики Одина,
-## полоса босса, линии скорости. Оружие — ui/weapon_hud.gd, шкала стиля «ДОСТОЙНО!» — ui/style_hud.gd.
-## Раскладка якорями от углов: 1280×720 и 1920×1080 (stretch canvas_items) выглядят одинаково.
+## Интерфейс боя (GDD 18, П6 — «в бою только главное», макет B `docs/mockups/hud_B_chosen.png`) на скине UISkin.
+## Всё внизу по центру в одну линию: слева здоровье в рамке со шлемом (hud_hp_*), по центру Мьёльнир
+## (hud_mjolnir_*: в руке / летит / воткнут / возвращается; перезарядка — затемнение иконки) и руны-камни
+## (hud_dash_*), справа шкала стиля «ДОСТОЙНО!» (ui/style_hud.gd). Над линией — один пузырь реплик.
+## Слава и серебро — только всплывают «+N» справа на 2 с; суммы, трейты и руны — по Tab (ui/build_screen.gd).
+## Связка сработала — короткая вспышка её иконки над молотом. Центр экрана — только прицел (и кольцо хвата).
+## Ещё: полоса босса, индикаторы за экраном, линии скорости, оружие (ui/weapon_hud.gd — на 2 с при смене).
+## Раскладка якорями от низа по центру: 1280×720 и 1920×1080 (stretch canvas_items) выглядят одинаково.
 
 ## Высота полосы HP (ширина — по пропорциям рамки 768×192)
-@export var hp_bar_height: float = 84.0
+@export var hp_bar_height: float = 78.0
 ## Размер иконки Мьёльнира и камня рывка
-@export var hammer_icon_size: float = 58.0
-@export var dash_icon_size: float = 38.0
-## Шкала высоты удара-приземления: с какой высоты над полом показывать (м)
-@export var slam_meter_min_height: float = 2.5
+@export var hammer_icon_size: float = 72.0
+@export var dash_icon_size: float = 40.0
 ## Базовый размер прицела (px; множитель — настройки)
 @export var crosshair_base_size: float = 30.0
-## Размер иконки руны в ряду
-@export var rune_icon_size: float = 36.0
+## Сколько секунд висит «+N СЛАВЫ» / «+N» серебра после последнего получения
+@export var gain_show_time: float = 2.0
+## Вспышка иконки сработавшей связки: сколько держится и не чаще раза в combo_flash_gap с на связку
+@export var combo_flash_time: float = 1.0
+@export var combo_flash_gap: float = 4.0
+## Нижняя линия: половина ширины (от центра до края HP/шкалы стиля), px
+@export var row_half_width: float = 505.0
+## Промежуток от центра до внутреннего края HP/шкалы стиля, px
+@export var row_inner_gap: float = 195.0
 
 const CROSSHAIR_IDS := {"dot": "crosshair_dot", "cross": "crosshair_cross", "circle": "crosshair_circle"}
 const CLASSIC_CROSSHAIR := "res://sprites/crosshair.png"
 ## Имя на полосе босса, если враг не задал своё (ключ перевода)
 const DEFAULT_BOSS_TITLE := "ХРИМТУРС ПОЖИРАТЕЛЬ ГЕРОЕВ"
+const SILVER_COLOR := Color(0.86, 0.9, 1.0)
 
 var player: Player
 
@@ -30,24 +39,12 @@ var _hp_label: Label
 var _dash_box: HBoxContainer
 var _dash_pips: Array[HudIcon] = []
 var _hammer_icon: HudIcon
-var _hammer_label: Label
 var _hammer_state: String = ""
-## Молот с рунами; по низу бойка — полоска перезарядки броска
-var _rune_hammer: RuneHammer
-var _glory_label: Label
-var _room_label: Label
-var _body_label: Label
-var _enemies_label: Label
-var _runes_box: HFlowContainer
+## Бросок на перезарядке (осечка): до этого момента (мс) иконка молота красная
+var _hammer_flash_until: int = 0
 var _odin_panel: PanelContainer
 var _odin_label: Label
 var _odin_tween: Tween
-var _odin_compact_text := ""
-var _odin_compact_width := -1.0
-var _odin_compact_font: Font
-var _odin_compact_font_size := -1
-var _odin_compact_outline := -1
-var _odin_compact_height := 0.0
 var _toast_label: Label
 var _speed_rect: ColorRect
 var _speed_mat: ShaderMaterial
@@ -59,23 +56,36 @@ var _boss: Enemy
 var _boss_title: Label
 var _mjolnir_traits: MjolnirTraitsHud
 var _crosshair: TextureRect
-var _slam_meter: SkinBar
 var _offscreen: OffscreenIndicators
-var _glory_shown: float = 0.0
+var _odin_name: Label
+## Всплывающие «+N СЛАВЫ» и «+N» серебра (П6): сумма за последние gain_show_time с
+var _glory_gain: Label
+var _silver_gain: HBoxContainer
+var _silver_gain_label: Label
+var _glory_seen: int = 0
+var _silver_seen: int = 0
+var _glory_acc: int = 0
+var _silver_acc: int = 0
+var _glory_left: float = 0.0
+var _silver_left: float = 0.0
+## Вспышка иконки связки
+var _combo_flash: HudIcon
+var _combo_left: float = 0.0
+var _combo_last: Dictionary = {}
 ## Для перевода на лету (смена языка из паузы): последние аргументы set_room и число врагов
 var _room_args: Array = []
 var _enemies_alive: int = 0
-var _odin_name: Label
 
 func _ready() -> void:
 	layer = 5
 	_build()
 	Run.glory_changed.connect(_on_glory_changed)
-	Run.runes_changed.connect(_on_runes_changed)
+	Run.silver_changed.connect(_on_silver_changed)
+	Run.mjolnir_combo_fired.connect(_on_combo_fired)
 	Odin.line_spoken.connect(show_odin_line)
 	GameSettings.events.changed.connect(_on_setting_changed)
-	_on_runes_changed(Run.runes)
-	_on_glory_changed(Run.glory)
+	_glory_seen = Run.glory
+	_silver_seen = Run.silver
 
 func bind_player(p: Player) -> void:
 	player = p
@@ -84,10 +94,10 @@ func bind_player(p: Player) -> void:
 	player.hurt.connect(_on_hurt)
 	player.slam_unavailable.connect(func() -> void: toast(tr("НУЖЕН ВТОРОЙ ПРЫЖОК")))
 	player.mjolnir.state_changed.connect(_on_hammer_state)
-	# Бросок на перезарядке: полоска у молота вспыхивает красным, иконка дёргается
+	# Бросок на перезарядке: иконка молота вспыхивает красным и дёргается
 	player.mjolnir.throw_blocked.connect(func(_left: float) -> void:
 		_hammer_icon.pop()
-		_rune_hammer.flash_until = Time.get_ticks_msec() + 400)
+		_hammer_flash_until = Time.get_ticks_msec() + 400)
 	_on_health_changed(player.health, player.max_health)
 	_on_dash_changed(player.dash_charges, player.dash_charges_max, 0.0)
 	_on_hammer_state(true)
@@ -95,14 +105,12 @@ func bind_player(p: Player) -> void:
 		_mjolnir_traits.player = p
 	if _offscreen:
 		_offscreen.player = p
-	if Run.body:
-		_body_label.text = tr("Тело: %s") % tr(Run.body.display_name)
-	# Слоты оружия, патроны, подсказка подбора — ui/weapon_hud.gd
+	# Слоты оружия (на 2 с при смене/подборе), патроны — пока в руках ствол, подсказка подбора — ui/weapon_hud.gd
 	WeaponHUD.attach(self, p)
-	# Шкала стиля «ДОСТОЙНО!» (ранг, комикс-подпись) и виньетка берсерка — ui/style_hud.gd (блок Б3)
-	StyleHUD.attach(self, p)
-	# Серебро под Славой — ui/silver_hud.gd (блок К)
-	SilverHUD.attach(self)
+	# Шкала стиля «ДОСТОЙНО!» (ранг, комикс-подпись) справа в нижней линии — ui/style_hud.gd (блок Б3)
+	var sh := StyleHUD.attach(self, p)
+	if sh:
+		sh.place(row_inner_gap, row_half_width)
 
 func _build() -> void:
 	UISkin.preload_game()
@@ -142,95 +150,68 @@ func _build() -> void:
 	root.add_child(_crosshair)
 	_apply_crosshair()
 
-	# Левый низ: трейты Мьёльнира, молот + рывок, здоровье
-	var bl := VBoxContainer.new()
-	_anchor(bl, Control.PRESET_BOTTOM_LEFT, 14, -300, 560, -10)
-	bl.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	bl.alignment = BoxContainer.ALIGNMENT_END
-	bl.add_theme_constant_override("separation", 0)
-	bl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(bl)
-	# Трейты Мьёльнира — над молотом (отдельно от рун)
-	_mjolnir_traits = MjolnirTraitsHud.new()
-	bl.add_child(_mjolnir_traits)
-	var hammer_row := HBoxContainer.new()
-	hammer_row.add_theme_constant_override("separation", 8)
-	hammer_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bl.add_child(hammer_row)
-	var pad := Control.new()
-	pad.custom_minimum_size = Vector2(22, 0)
-	hammer_row.add_child(pad)
-	_hammer_icon = HudIcon.make(UISkin.texture("hud_mjolnir_ready"), hammer_icon_size)
-	hammer_row.add_child(_hammer_icon)
-	var hv := VBoxContainer.new()
-	hv.add_theme_constant_override("separation", 0)
-	hv.alignment = BoxContainer.ALIGNMENT_CENTER
-	hv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Ресурс и высота образуют один молот: руны на бойке, шкала в рукояти.
-	var rune_hammer := RuneHammer.new()
-	_rune_hammer = rune_hammer
-	hammer_row.add_child(rune_hammer)
-	_dash_box = HBoxContainer.new()
-	_dash_box.position = Vector2(11, 5)
-	_dash_box.size = Vector2(122, 34)
-	_dash_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	_dash_box.add_theme_constant_override("separation", 2)
-	_dash_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	rune_hammer.add_child(_dash_box)
-	_slam_meter = SkinBar.new()
-	_slam_meter.frame_id = "hud_slam_meter_frame"
-	_slam_meter.fill_id = "hud_slam_meter_fill"
-	_slam_meter.flat_color = UIStyle.ICE
-	_slam_meter.trail_delay = 0.0
-	_slam_meter.position = Vector2(60, 42)
-	_slam_meter.size = Vector2(24, 58)
-	_slam_meter.visible = false
-	rune_hammer.add_child(_slam_meter)
-	hammer_row.add_child(hv)
-	_hammer_label = UIStyle.label("", 15, UIStyle.ICE, 4)
-	hv.add_child(_hammer_label)
+	# Нижняя линия, слева: здоровье в рамке со шлемом
 	_hp_bar = SkinBar.new()
 	_hp_bar.frame_id = "hud_hp_frame"
 	_hp_bar.fill_id = "hud_hp_fill"
-	_hp_bar.custom_minimum_size = Vector2(hp_bar_height * 4.0, hp_bar_height)
-	bl.add_child(_hp_bar)
-	_hp_label = UIStyle.label("100", 20, UIStyle.TEXT, 6)
+	_anchor(_hp_bar, Control.PRESET_CENTER_BOTTOM, -row_half_width, -hp_bar_height - 8, -row_inner_gap, -8)
+	_hp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_hp_bar)
+	_hp_label = UIStyle.label("100", 18, UIStyle.TEXT, 6)
 	_hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_hp_bar.add_child(_hp_label)
 	_hp_bar.resized.connect(_place_hp_label)
+	_place_hp_label.call_deferred()
 
-	# Правый верх: Слава, серебро, тело, руны (сжатый ряд)
-	var top_right := VBoxContainer.new()
-	_anchor(top_right, Control.PRESET_TOP_RIGHT, -380, 18, -24, 300)
-	top_right.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	top_right.alignment = BoxContainer.ALIGNMENT_BEGIN
-	top_right.add_theme_constant_override("separation", 2)
-	top_right.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(top_right)
-	_glory_label = UIStyle.label(tr("СЛАВА 0"), 30, UIStyle.GOLD, 8)
-	_glory_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	top_right.add_child(_glory_label)
-	# Серебро — ui/silver_hud.gd (SilverHUD.attach в bind_player встаёт сразу под Славу)
-	_body_label = UIStyle.label("", 16, UIStyle.TEXT_DIM, 4)
-	_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	top_right.add_child(_body_label)
-	_runes_box = HFlowContainer.new()
-	_runes_box.alignment = FlowContainer.ALIGNMENT_END
-	_runes_box.add_theme_constant_override("h_separation", 2)
-	_runes_box.add_theme_constant_override("v_separation", 2)
-	_runes_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	top_right.add_child(_runes_box)
+	# По центру: Мьёльнир и руны-камни справа от него
+	var mid := HBoxContainer.new()
+	_anchor(mid, Control.PRESET_CENTER_BOTTOM, -row_inner_gap + 70, -hammer_icon_size - 14, row_inner_gap - 30, -14)
+	mid.alignment = BoxContainer.ALIGNMENT_BEGIN
+	mid.add_theme_constant_override("separation", 6)
+	mid.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(mid)
+	_hammer_icon = HudIcon.make(UISkin.texture("hud_mjolnir_ready"), hammer_icon_size)
+	mid.add_child(_hammer_icon)
+	_dash_box = HBoxContainer.new()
+	_dash_box.alignment = BoxContainer.ALIGNMENT_BEGIN
+	_dash_box.add_theme_constant_override("separation", 2)
+	_dash_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_dash_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mid.add_child(_dash_box)
 
-	# Левый верх: зал и враги
-	var tl := VBoxContainer.new()
-	_anchor(tl, Control.PRESET_TOP_LEFT, 24, 18, 600, 120)
-	tl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(tl)
-	_room_label = UIStyle.label("", 22, UIStyle.TEXT)
-	tl.add_child(_room_label)
-	_enemies_label = UIStyle.label("", 18, UIStyle.TEXT_DIM, 4)
-	tl.add_child(_enemies_label)
+	# Над молотом: «ИДЕАЛЬНЫЙ ХВАТ ×2» и полоска удержания ПКМ (иконки трейтов — только по Tab)
+	_mjolnir_traits = MjolnirTraitsHud.new()
+	root.add_child(_mjolnir_traits)
+	# Вспышка иконки сработавшей связки — над молотом
+	_combo_flash = HudIcon.make(null, 56)
+	_anchor(_combo_flash, Control.PRESET_CENTER_BOTTOM, -row_inner_gap + 78, -hammer_icon_size - 76, -row_inner_gap + 134, -hammer_icon_size - 20)
+	_combo_flash.modulate.a = 0.0
+	root.add_child(_combo_flash)
+
+	# Справа по центру: «+25 СЛАВЫ» и «+6» серебра — всплывают на gain_show_time
+	var gains := VBoxContainer.new()
+	_anchor(gains, Control.PRESET_CENTER_RIGHT, -420, -70, -24, 30)
+	gains.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	gains.alignment = BoxContainer.ALIGNMENT_CENTER
+	gains.add_theme_constant_override("separation", 0)
+	gains.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(gains)
+	_glory_gain = UIStyle.label("", 28, UIStyle.GOLD, 8)
+	_glory_gain.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_glory_gain.modulate.a = 0.0
+	gains.add_child(_glory_gain)
+	_silver_gain = HBoxContainer.new()
+	_silver_gain.alignment = BoxContainer.ALIGNMENT_END
+	_silver_gain.add_theme_constant_override("separation", 6)
+	_silver_gain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_silver_gain.modulate.a = 0.0
+	gains.add_child(_silver_gain)
+	var silver_icon := UISkin.texture("hud_silver")
+	if silver_icon:
+		_silver_gain.add_child(HudIcon.make(silver_icon, 30))
+	_silver_gain_label = UIStyle.label("", 22, SILVER_COLOR, 6)
+	_silver_gain.add_child(_silver_gain_label)
 
 	# Полоса босса
 	_boss_box = VBoxContainer.new()
@@ -246,11 +227,11 @@ func _build() -> void:
 	_boss_bar.custom_minimum_size = Vector2(640, 30)
 	_boss_box.add_child(_boss_bar)
 
-	# Реплика Одина — сверху по центру, чтобы не закрывать бой
+	# Пузырь реплик — один, внизу по центру над линией HUD (Один здесь, остальные — BarkBubble на том же месте)
 	_odin_panel = UIStyle.panel(Color(0.05, 0.05, 0.07, 0.82), Color(UIStyle.GOLD, 0.5))
-	_anchor(_odin_panel, Control.PRESET_CENTER_TOP, -340, 104, 340, 164)
+	_anchor(_odin_panel, Control.PRESET_CENTER_BOTTOM, -BarkBubble.WIDTH * 0.5, -BarkBubble.BOTTOM - 64, BarkBubble.WIDTH * 0.5, -BarkBubble.BOTTOM)
 	_odin_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_odin_panel.grow_vertical = Control.GROW_DIRECTION_END
+	_odin_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_odin_panel.modulate.a = 0.0
 	_odin_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_odin_panel)
@@ -261,12 +242,12 @@ func _build() -> void:
 	ob.add_child(_odin_name)
 	_odin_label = UIStyle.label("", int(19 * GameSettings.text_scale()), UIStyle.TEXT, 5)
 	_odin_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_odin_label.custom_minimum_size = Vector2(560, 0)
+	_odin_label.custom_minimum_size = Vector2(BarkBubble.WIDTH - 60.0, 0)
 	ob.add_child(_odin_label)
 
-	# Короткая подсказка по центру
+	# Короткая подсказка — сверху, под полосой босса (центр экрана — только прицел)
 	_toast_label = UIStyle.label("", 28, UIStyle.GOLD, 8)
-	_anchor(_toast_label, Control.PRESET_CENTER, -400, 60, 400, 110)
+	_anchor(_toast_label, Control.PRESET_CENTER_TOP, -400, 104, 400, 150)
 	_toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_toast_label.modulate.a = 0.0
 	root.add_child(_toast_label)
@@ -309,30 +290,20 @@ func _on_setting_changed(section: String, key: String) -> void:
 		_offscreen.enabled = bool(GameSettings.get_value("hud", "offscreen"))
 	elif section == "text":
 		_odin_label.label_settings.font_size = int(19 * GameSettings.text_scale())
+		_fit_odin_text()
 		if key == "language":
 			_retranslate()
-	elif section in ["input", "pad_input", "input_device"]:
-		_hammer_state = ""
 
 ## Смена языка посреди забега: подписи, которые сами не обновляются каждый кадр
 func _retranslate() -> void:
 	_odin_name.text = tr("ОДИН")
-	_hammer_state = ""
-	if player and is_instance_valid(player):
-		_update_hammer()
-	_glory_label.text = tr("СЛАВА %d") % int(round(_glory_shown))
-	if Run.body:
-		_body_label.text = tr("Тело: %s") % tr(Run.body.display_name)
-	if _room_args.size() == 4:
-		var t := tr(str(_room_args[2]))
-		_room_label.text = (tr("ФИНАЛ: %s") % t) if _room_args[3] else (tr("ЗАЛ %d / %d · %s") % [_room_args[0], _room_args[1], t])
-	set_enemy_count(_enemies_alive)
+	if _glory_acc > 0:
+		_glory_gain.text = tr("+%d СЛАВЫ") % _glory_acc
 	if _boss and is_instance_valid(_boss):
 		_boss_title.text = tr(str(_boss.get_meta("boss_title", DEFAULT_BOSS_TITLE)))
-	_on_runes_changed(Run.runes)
 
-## На паузе (выбор руны/трейта/награды, ларёк, меню паузы) HUD стоит, и его твин тоже: пузырь Одина
-## застывал видимым под затемнением и наезжал на заголовок экрана выбора. Прячем до снятия паузы.
+## На паузе (выбор руны/трейта/награды, ларёк, меню паузы, экран сборки) HUD стоит, и его твин тоже: пузырь
+## застывал видимым под затемнением. Прячем до снятия паузы.
 func _notification(what: int) -> void:
 	if _odin_panel == null:
 		return
@@ -342,73 +313,33 @@ func _notification(what: int) -> void:
 		_odin_panel.visible = true
 
 func _process(delta: float) -> void:
-	_position_odin_notice()
 	if player and is_instance_valid(player):
 		_speed_mat.set_shader_parameter("intensity", player.camera_fx.speed_lines)
 		_update_hammer()
-		_update_slam_meter()
 	_hurt_rect.color.a = maxf(0.0, _hurt_rect.color.a - delta * 1.6)
 	if _boss and is_instance_valid(_boss):
 		_boss_bar.value = maxf(0.0, _boss.health) / _boss.max_health
-	if absf(_glory_shown - Run.glory) > 0.5:
-		_glory_shown = lerpf(_glory_shown, Run.glory, minf(1.0, delta * 8.0))
-		_glory_label.text = tr("СЛАВА %d") % int(round(_glory_shown))
+	_glory_left = _fade_gain(_glory_gain, _glory_left, delta)
+	if _glory_left <= 0.0:
+		_glory_acc = 0
+	_silver_left = _fade_gain(_silver_gain, _silver_left, delta)
+	if _silver_left <= 0.0:
+		_silver_acc = 0
+	if _combo_left > 0.0:
+		_combo_left -= delta
+		_combo_flash.modulate.a = clampf(_combo_left / 0.3, 0.0, 1.0)
 
-## Объявление связки и реплика Одина часто появляются одновременно. Пузырь
-## временно уходит ниже плашки, затем возвращается на обычное место.
-func _position_odin_notice() -> void:
-	if _odin_panel == null:
-		return
-	var top := 104.0
-	var left := -340.0
-	var notice_width := 680.0
-	var text_min_width := 560.0
-	var compact_notice := false
-	var announce := get_parent().get_node_or_null("ComboAnnounce") as ComboAnnounce
-	if announce and announce.is_showing():
-		var bounds := announce.visual_rect()
-		var style := _odin_panel.get_theme_stylebox("panel") as SkinStyleBox
-		var frame_top := style.grow.y if style else 0.0
-		top = maxf(top, bounds.end.y + frame_top + 12.0)
-		var vp_width := get_viewport().get_visible_rect().size.x
-		# Во время крупного слова — узкая реплика слева, слово в правой части.
-		# Сохраняем озвучку и текст синхронными, не закрывая молот и руны внизу.
-		if ComicFX.combo_word_active():
-			compact_notice = true
-			var text_factor := clampf((GameSettings.text_scale() - 1.0) / 0.6, 0.0, 1.0)
-			notice_width = minf(lerpf(455.0, 560.0, text_factor), vp_width * lerpf(0.36, 0.45, text_factor))
-			text_min_width = maxf(notice_width - 120.0, 120.0)
-			left = -vp_width * 0.5 + (style.grow.x if style else 0.0) + 6.0
-		# Если ворон тоже говорит, размещаем подписи рядом, чтобы их можно было читать.
-		var bubble := Dialogue.get("_bubble") as BarkBubble
-		if is_instance_valid(bubble) and is_instance_valid(bubble._panel) and bubble._panel.modulate.a > 0.01:
-			var frame_right := style.grow.z if style else 0.0
-			var right_limit := bubble.visual_rect().position.x - frame_right - 12.0
-			left = minf(left, right_limit - notice_width - vp_width * 0.5)
-			left = maxf(left, -vp_width * 0.5 + (style.grow.x if style else 0.0) + 6.0)
-	var text_min_height := 0.0
-	if compact_notice:
-		# При переносе длинной реплики Label иначе может обрезать последнюю
-		# строку: рассчитываем высоту по шрифту на минимальной ширине и оставляем
-		# место для обводки. При фактической ширине больше эта оценка безопасна.
-		var ls := _odin_label.label_settings
-		if _odin_compact_text != _odin_label.text or not is_equal_approx(_odin_compact_width, text_min_width) or _odin_compact_font != ls.font or _odin_compact_font_size != ls.font_size or _odin_compact_outline != ls.outline_size:
-			_odin_compact_text = _odin_label.text
-			_odin_compact_width = text_min_width
-			_odin_compact_font = ls.font
-			_odin_compact_font_size = ls.font_size
-			_odin_compact_outline = ls.outline_size
-			var extent := ls.font.get_multiline_string_size(_odin_label.text, HORIZONTAL_ALIGNMENT_LEFT, text_min_width, ls.font_size)
-			_odin_compact_height = extent.y + ls.outline_size * 2.0 + 6.0
-		text_min_height = _odin_compact_height
-	_odin_label.custom_minimum_size = Vector2(text_min_width, text_min_height)
-	_odin_panel.offset_left = left
-	_odin_panel.offset_right = left + notice_width
-	_odin_panel.offset_top = top
-	_odin_panel.offset_bottom = top + 60.0
+## Всплывашка: видна, пока left > 0, последние 0.4 с гаснет
+func _fade_gain(c: Control, left: float, delta: float) -> float:
+	if left <= 0.0:
+		return 0.0
+	left = maxf(0.0, left - delta)
+	c.modulate.a = clampf(left / 0.4, 0.0, 1.0)
+	return left
 
 func _on_health_changed(current: float, maximum: float) -> void:
 	_hp_bar.value = current / maxf(maximum, 1.0)
+	_place_hp_label()
 	_hp_label.text = "%d / %d" % [int(ceil(current)), int(maximum)]
 	# Щит (руна «Щит Сиф», GDD 18: HP и щит) — светлая полоса поверх HP и «+N»
 	var sh := player.shield if player else 0.0
@@ -422,7 +353,7 @@ func _on_dash_changed(current: int, maximum: int, progress: float) -> void:
 			c.queue_free()
 		_dash_pips.clear()
 		for i in maximum:
-			var icon_size := minf(dash_icon_size, (122.0 - maxf(0, maximum - 1) * 2.0) / maxf(1, maximum))
+			var icon_size := minf(dash_icon_size, (150.0 - maxf(0, maximum - 1) * 2.0) / maxf(1, maximum))
 			var pip := HudIcon.make(UISkin.texture("hud_dash_empty"), icon_size)
 			pip.over = UISkin.texture("hud_dash_full")
 			_dash_box.add_child(pip)
@@ -439,7 +370,7 @@ func _on_dash_changed(current: int, maximum: int, progress: float) -> void:
 		else:
 			pip.fill = 0.0
 
-## Мьёльнир: в руке / летит / воткнут / возвращается (иконки комплекта)
+## Мьёльнир: в руке / летит / воткнут / возвращается (иконки комплекта); перезарядка — затемнение иконки
 func _update_hammer() -> void:
 	var m := player.mjolnir
 	var st := "hand"
@@ -447,7 +378,9 @@ func _update_hammer() -> void:
 	if m.in_hand and m.cooldown_left > 0.0:
 		st = "cooldown"
 		cd = m.cooldown_left / maxf(m.cooldown_total, 0.01)
-	_rune_hammer.set_cooldown(cd)
+	_hammer_icon.shade = cd
+	var red := Time.get_ticks_msec() < _hammer_flash_until
+	_hammer_icon.shade_color = Color(0.55, 0.06, 0.04, 0.85) if red else Color(0.08, 0.09, 0.13, 0.82)
 	if not m.in_hand and m.projectile and is_instance_valid(m.projectile):
 		match m.projectile.state:
 			MjolnirProjectile.State.STUCK:
@@ -464,47 +397,20 @@ func _update_hammer() -> void:
 	match st:
 		"cooldown":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_ready")
-			_hammer_icon.tint = Color(0.45, 0.45, 0.5)
-			_hammer_label.text = tr("ПЕРЕЗАРЯДКА")
-			_hammer_label.label_settings.font_color = Color(0.75, 0.75, 0.8)
+			_hammer_icon.tint = Color.WHITE
 		"hand":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_ready")
 			_hammer_icon.tint = Color.WHITE
-			_hammer_label.text = GameSettings.throw_hint(tr("МЬЁЛЬНИР В РУКЕ · ПКМ"))
-			_hammer_label.label_settings.font_color = UIStyle.ICE
 			_hammer_icon.pop()
 		"out":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_thrown")
 			_hammer_icon.tint = Color.WHITE
-			_hammer_label.text = GameSettings.throw_hint(tr("ЛЕТИТ · ПКМ — ВЕРНУТЬ"))
-			_hammer_label.label_settings.font_color = Color(1, 0.85, 0.4)
 		"stuck":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_thrown")
 			_hammer_icon.tint = Color(1.0, 0.8, 0.55)
-			_hammer_label.text = GameSettings.throw_hint(tr("ВОТКНУТ · ПКМ — ВЕРНУТЬ"))
-			_hammer_label.label_settings.font_color = Color(1, 0.7, 0.35)
 		"return":
 			_hammer_icon.base = UISkin.texture("hud_mjolnir_returning")
 			_hammer_icon.tint = Color.WHITE
-			_hammer_label.text = tr("ВОЗВРАЩАЕТСЯ · ЛОВИ!")
-			_hammer_label.label_settings.font_color = UIStyle.ICE.lightened(0.3)
-
-## Шкала высоты в рукояти молота: сколько метров будет падение ударом-приземлением
-func _update_slam_meter() -> void:
-	if not bool(GameSettings.get_value("hud", "slam_meter")) or player.is_on_floor() or player.is_dead:
-		_slam_meter.visible = false
-		return
-	var peak: float = player.get("_air_peak_y") if player.get("_air_peak_y") != null else player.global_position.y
-	var ground := player.global_position.y - 40.0
-	var hit := player.slam_surface_hit(40.0)
-	if not hit.is_empty():
-		ground = (hit.position as Vector3).y
-	var fall := maxf(peak, player.global_position.y) - ground
-	_slam_meter.visible = fall >= slam_meter_min_height or player.is_slamming
-	if _slam_meter.visible:
-		var big := player.big_slam_height
-		_slam_meter.value = clampf(fall / maxf(big, 0.1), 0.0, 1.0)
-		_slam_meter.fill_modulate = Color(1.0, 0.9, 0.5) if fall >= big else Color.WHITE
 
 func _on_hammer_state(_in_hand: bool) -> void:
 	_hammer_state = ""
@@ -514,51 +420,82 @@ func _on_hammer_state(_in_hand: bool) -> void:
 func _on_hurt(_amount: float) -> void:
 	_hurt_rect.color.a = 0.35
 
+## Слава выросла — «+N СЛАВЫ» на gain_show_time (повторные получения складываются); сумма — по Tab
 func _on_glory_changed(total: int) -> void:
-	if _glory_label and total > _glory_shown + 5:
-		var tw := _glory_label.create_tween()
-		_glory_label.pivot_offset = _glory_label.size * Vector2(1, 0.5)
-		tw.tween_property(_glory_label, "scale", Vector2(1.15, 1.15), 0.06)
-		tw.tween_property(_glory_label, "scale", Vector2.ONE, 0.15)
-
-## Руны — сжатый ряд иконок категорий (GDD 18); руна значком в углу, уровень цифрой.
-## Полный список с названиями — журнал в паузе.
-func _on_runes_changed(runes: Array) -> void:
-	if _runes_box == null:
+	var gain := total - _glory_seen
+	_glory_seen = total
+	if gain <= 0 or _glory_gain == null:
 		return
-	for c in _runes_box.get_children():
-		c.queue_free()
-	var counts := {}
-	var order: Array = []
-	for r in runes:
-		var rr := r as RuneDef
-		if not counts.has(rr.id):
-			counts[rr.id] = 0
-			order.append(rr)
-		counts[rr.id] += 1
-	for r in order:
-		var rr := r as RuneDef
-		var lvl := mini(counts[rr.id], Run.RUNE_MAX_LEVEL)
-		var icon := HudIcon.make(UISkin.rune_category_icon(rr.category), rune_icon_size)
-		icon.badge = rr.glyph + (str(lvl) if lvl > 1 else "")
-		icon.badge_color = rr.color.lightened(0.2)
-		if rr.cursed:
-			icon.tint = Color(0.8, 0.55, 1.0)
-			icon.badge_color = Color(0.85, 0.5, 1.0)
-		icon.tooltip_text = tr(rr.title)
-		_runes_box.add_child(icon)
+	_glory_acc += gain
+	_glory_gain.text = tr("+%d СЛАВЫ") % _glory_acc
+	_glory_left = gain_show_time
+	_glory_gain.modulate.a = 1.0
+	_punch(_glory_gain)
+
+func _on_silver_changed(total: int) -> void:
+	var gain := total - _silver_seen
+	_silver_seen = total
+	if gain <= 0 or _silver_gain == null:
+		return
+	_silver_acc += gain
+	_silver_gain_label.text = "+%d" % _silver_acc
+	_silver_left = gain_show_time
+	_silver_gain.modulate.a = 1.0
+	_punch(_silver_gain)
+
+func _punch(c: Control) -> void:
+	c.pivot_offset = c.size * Vector2(1, 0.5)
+	var tw := c.create_tween()
+	tw.tween_property(c, "scale", Vector2(1.15, 1.15), 0.06)
+	tw.tween_property(c, "scale", Vector2.ONE, 0.15)
+
+## Связка сработала — её иконка коротко вспыхивает над молотом (не чаще раза в combo_flash_gap на связку)
+func _on_combo_fired(combo: MjolnirTrait) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	if now - float(_combo_last.get(combo.id, -100.0)) < combo_flash_gap:
+		return
+	_combo_last[combo.id] = now
+	var tex := UISkin.trait_icon(str(combo.id))
+	if tex == null:
+		return
+	_combo_flash.base = tex
+	_combo_flash.modulate.a = 1.0
+	_combo_left = combo_flash_time
+	_combo_flash.pop()
 
 func show_odin_line(text: String) -> void:
 	Perf.mark("odin_line")
 	if text == "" or _odin_label == null:
 		return
+	# Один пузырь: реплика Одина убирает пузырь другого говорящего
+	var other := Dialogue.get("_bubble") as BarkBubble
+	if is_instance_valid(other):
+		other.hide_now()
 	_odin_label.text = text
+	_fit_odin_text()
 	if _odin_tween and _odin_tween.is_valid():
 		_odin_tween.kill()
 	_odin_tween = _odin_panel.create_tween()
 	_odin_tween.tween_property(_odin_panel, "modulate:a", 1.0, 0.2)
 	_odin_tween.tween_interval(clampf(1.6 + text.length() * 0.035, 2.0, 3.5))
 	_odin_tween.tween_property(_odin_panel, "modulate:a", 0.0, 0.4)
+
+## Перенос строк Label в контейнере может обрезать последнюю строку: высоту считаем по шрифту на ширине текста
+## (плюс обводка), а рамка растёт вверх (grow_vertical BEGIN)
+func _fit_odin_text() -> void:
+	var ls := _odin_label.label_settings
+	var w := _odin_label.custom_minimum_size.x
+	var extent := ls.font.get_multiline_string_size(_odin_label.text, HORIZONTAL_ALIGNMENT_LEFT, w, ls.font_size)
+	_odin_label.custom_minimum_size = Vector2(w, extent.y + ls.outline_size * 2.0 + 6.0)
+	# Рамка сама не сжимается: ставим верх по нужной высоте, низ — на месте
+	_odin_panel.offset_top = _odin_panel.offset_bottom - _odin_panel.get_combined_minimum_size().y
+
+## Убрать пузырь Одина сразу (заговорил другой)
+func hide_odin_line() -> void:
+	if _odin_tween and _odin_tween.is_valid():
+		_odin_tween.kill()
+	if _odin_panel:
+		_odin_panel.modulate.a = 0.0
 
 func toast(text: String) -> void:
 	_toast_label.text = text
@@ -567,17 +504,15 @@ func toast(text: String) -> void:
 	tw.tween_interval(1.4)
 	tw.tween_property(_toast_label, "modulate:a", 0.0, 0.4)
 
+## Новый зал: название — подсказкой сверху (номер зала и путь — по Tab)
 func set_room(index: int, total: int, title: String, boss: bool) -> void:
 	_room_args = [index, total, title, boss]
-	title = tr(title)
-	_room_label.text = (tr("ФИНАЛ: %s") % title) if boss else (tr("ЗАЛ %d / %d · %s") % [index, total, title])
 	_boss_box.visible = false
 	_boss = null
-	toast(title.to_upper())
+	toast(tr(title).to_upper())
 
 func set_enemy_count(alive: int) -> void:
 	_enemies_alive = alive
-	_enemies_label.text = tr("Врагов: %d") % alive if alive > 0 else ""
 
 func show_boss(boss: Enemy) -> void:
 	_boss = boss

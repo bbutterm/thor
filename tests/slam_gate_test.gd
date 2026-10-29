@@ -106,8 +106,7 @@ func _run() -> void:
 	await frames(10)
 	check(not p.is_on_floor() and p.global_position.y > p.slam_min_height and not p.can_start_slam(),
 		"одинарный прыжок с ящика не обходит ограничение высоты")
-	game.hud._update_slam_meter()
-	check(not game.hud._slam_meter.visible, "шкала учитывает близкую поверхность предмета")
+	check(p.slam.fall_height() < p.fall_feel_min_height, "высота падения учитывает близкую поверхность предмета (%.2f м)" % p.slam.fall_height())
 	var old_gravity := p.gravity
 	p.gravity = 0.0
 	p.global_position.y = 5.2
@@ -115,10 +114,9 @@ func _run() -> void:
 	await frames(3)
 	p._air_peak_y = p.global_position.y
 	check(p.can_start_slam(), "удар разрешён выше 3 м над предметом")
-	game.hud._update_slam_meter()
-	var expected := (p._air_peak_y - 2.0) / p.big_slam_height
-	check(game.hud._slam_meter.visible and absf(game.hud._slam_meter.value - expected) < 0.02,
-		"шкала измеряет высоту до предмета, а не до пола")
+	var expected := p._air_peak_y - 2.0
+	check(absf(p.slam.fall_height() - expected) < 0.2,
+		"высота падения — до предмета, а не до пола (%.2f м, ждали %.2f)" % [p.slam.fall_height(), expected])
 	p.gravity = old_gravity
 	prop.queue_free()
 	print("ИТОГ: %d PASS, %d FAIL" % [passes, fails.size()])

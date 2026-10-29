@@ -2,7 +2,7 @@
 
 ## Что здесь
 - `run_manager.gd` (автозагрузка `Run`, класс `RunManager`) — забег, Слава, руны, мини-боссы, серебро; всё состояние забега. Компоненты (этап 5 рефакторинга): `parts/run_mjolnir.gd` (`RunMjolnir`, `Run.mjolnir`: трейты Мьёльнира — правила, уровни, несовместимость, связки, выбор, наковальня) и `parts/run_doors.gd` (`RunDoors`, `Run.doors`: порядок залов, награды, двери). Их функции доступны и как `Run.xxx` (обёртки).
-- `odin.gd` (`Odin`) — короткие реплики Одина, тонкая обёртка над `Dialogue` (пулы `data/dialogues/odin.json`): `Odin.say(событие)` = пузырь HUD из пула `odin.<событие>`, лимит 12 с в бою.
+- `odin.gd` (`Odin`) — короткие реплики Одина, тонкая обёртка над `Dialogue` (пулы `data/dialogues/odin.json`): `Odin.say(событие)` = пузырь HUD из пула `odin.<событие>`; боевой лимит общий с Тором — `Dialogue.combat_bark_gap` 15 с (`take_combat_bark`), события `EXEMPT` — без лимита.
 - `tutorial.gd` (`Tutorial`, узел в сцене игры) — обучение в первом зале первых забегов: шаги `Tutorial.STEPS`, реплики `ravens.tutorial_<шаг>` (`{key_<действие>}` → клавиша из InputMap; `Tutorial.key_name(действие)`), пройдено — событие `tutorial_done` в сохранении.
 - `run_tracker.gd` (`RunTracker`, узел в сцене игры) — время забега, причина смерти, бой-реплики «ДВИГАЙСЯ!»/мульти-килл/«Скуф…»/«Позорище» (добил ренжем).
 - Тела: `body_def.gd` (`BodyDef`: стиль движения, пассивка, изъян, цена, `dash_charges`), `bodies/`, `movement/<стиль>.tres` (`MovementProfile`, см. `player/CLAUDE.md`), `passive_def.gd` + `passives/*.tres|.gd`, `body_trait_handler.gd`.

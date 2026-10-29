@@ -39,7 +39,7 @@ const DEFAULTS := {
 	"controls": {"mouse_sensitivity": 1.0, "gamepad_sensitivity": 1.0, "invert_y": false},
 	"video": {"fullscreen": false, "vsync": true, "max_fps": 0, "fov": 85.0, "shake": 1.0, "head_bob": true, "ui_scale": 1.0,
 		"outline": true, "outline_width": 1.0},
-	"hud": {"crosshair": "dot", "crosshair_size": 1.0, "crosshair_alpha": 0.85, "crosshair_color": "white", "offscreen": true, "slam_meter": true},
+	"hud": {"crosshair": "dot", "crosshair_size": 1.0, "crosshair_alpha": 0.85, "crosshair_color": "white", "offscreen": true, "damage_numbers": false},
 	"text": {"text_scale": 1.0, "typing_speed": 1.0, "language": "ru"},
 	"access": {"colorblind": "off", "aim_assist": false, "slam_slowmo": false, "catch_assist": true},
 	"comic": {"enabled": true, "scale": 1.0, "page": true, "boss_card": true},
@@ -52,7 +52,7 @@ const REMAP_ACTIONS := [
 	["jump", "Прыжок"], ["dash", "Рывок"], ["slam", "Удар-приземление (в воздухе)"],
 	["attack", "Удар / выстрел"], ["throw", "Метнуть / вернуть Мьёльнир"],
 	["weapon_switch", "Сменить оружие"], ["weapon_melee", "Мили-оружие"], ["weapon_ranged", "Ренж-оружие"],
-	["reload", "Перезарядка"], ["interact", "Подобрать / действие"],
+	["reload", "Перезарядка"], ["interact", "Подобрать / действие"], ["build_screen", "Сборка (пауза)"],
 ]
 ## Камера переназначается только на геймпаде: мышь управляет ею напрямую.
 const PAD_CAMERA_ACTIONS := [

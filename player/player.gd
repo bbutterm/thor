@@ -65,6 +65,8 @@ signal weapon_skill_lunge_step(from: Vector3, to: Vector3)
 @export var super_jump_height_mult: float = 2.5
 ## С какой высоты (м) удар-приземление — «Вот! ВОТ!» Одина (GDD 17)
 @export var big_slam_height: float = 9.0
+## С какой высоты падения (м) начинают расти линии скорости и свист (П6: вместо шкалы высоты)
+@export var fall_feel_min_height: float = 2.5
 
 @export_group("Прыжки по GDD 7.2")
 ## Отскок от удара-приземления, если задет хотя бы один враг (доля высоты падения)
@@ -236,6 +238,9 @@ var invert_y: bool = false
 ## Помощь «замедление при ударе-приземлении» (GDD 22): масштаб времени на падение и окно супер-прыжка
 @export var slam_assist_time_scale: float = 0.5
 var _slam_assist_on: bool = false
+## Ощущение высоты падения 0..1 (линии скорости, свист) и «заряд» молота выше big_slam_height (PlayerSlam._height_feel_tick)
+var fall_feel: float = 0.0
+var fall_charged: bool = false
 
 var axe_damage_mult: float = 1.0
 var hammer_damage_mult: float = 1.0
@@ -360,6 +365,7 @@ func _physics_process(delta: float) -> void:
 	_update_timers(delta)
 	runes._rune_tick(delta)
 	slam._slam_assist_tick()
+	slam._height_feel_tick(delta)
 	if is_climbing:
 		jumps._process_climb(delta)
 		camera_fx.update_motion(self, input_dir, false, delta)

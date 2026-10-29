@@ -85,6 +85,12 @@ func _run() -> void:
 	p.style.set_points(40.0)
 	await wait(0.3)
 	await shot("05_hud")
+	# П6: всплывающие «+Слава/+серебро» и один пузырь реплики внизу
+	Run.add_glory(25)
+	Run.add_silver(6)
+	game.hud.show_odin_line(tr("Неплохо. Хугин, запиши."))
+	await wait(0.4)
+	await shot("05b_hud_gain_line")
 	p.mjolnir.throw_hammer()
 	p.rotation_target.y += PI * 0.9
 	await wait(0.15)
@@ -134,6 +140,13 @@ func _run() -> void:
 	await wait(0.3)
 	await shot("12_pause")
 	game.pause_menu.toggle()
+	await wait(0.1)
+	# П6: Tab — экран сборки (макет T3)
+	Run.room_rewards.assign(["combat", "anvil", "rest"])
+	game.build_screen.open()
+	await wait(0.4)
+	await shot("12b_build")
+	game.build_screen.close()
 	await wait(0.1)
 	# Реплики с id — на английском берутся из data/dialogues/en/odin.json
 	Dialogue.play_lines([{"id": "odin_intro_03", "speaker": "odin", "emotion": "smug", "text": "Там уже тысячу лет «всё решится». Посмотри на себя."},

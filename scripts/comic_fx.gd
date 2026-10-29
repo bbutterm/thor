@@ -49,6 +49,8 @@ const BIG_PRIORITY := 1000
 @export_range(0.0, 1.0) var routine_chance: float = 0.45
 @export var important_priority: int = 50
 ## Крупно на весь экран — только эти события (босс, высокий удар-приземление, ДОСТОЙНЕЙШИЙ!); остальные «big» — крупное слово у места удара
+## Крупные слова не опускаются ниже этой полосы снизу экрана, px (× размер текста): там пузырь реплик и линия HUD (П6)
+@export var bottom_reserved_px: float = 300.0
 @export var fullscreen_events: PackedStringArray = PackedStringArray(["boss_kill", "slam", "rank_4", "combo"])
 ## Крупное слово в мире (не на весь экран): масштаб относительно обычного
 @export var world_big_scale: float = 1.6

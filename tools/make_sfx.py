@@ -611,4 +611,19 @@ if not ONLY or any(name.startswith(prefix) for name in meat_names for prefix in 
     # Удар по броне босса: глухой «тынк» — короткий металл без звона и мягкий удар
     save("armor_tink", mix(lp(metal(0.22, 340), 2200) * 0.9, thump(0.1, 230, 130) * 0.6), 0.6)
 
+# --- П6 (NOW.md, партия 2): свист падения вместо шкалы высоты — петля ветра, громкость и высота — в игре ---
+if not ONLY or any("fall_wind".startswith(prefix) for prefix in ONLY):
+    rng = np.random.default_rng(291029)
+    n = int(SR * 2.0)
+    noise = rng.standard_normal(n)
+    # Узкая полоса шума с медленным «плаванием» тона — свист; концы сведены для бесшовной петли
+    wob = 1.0 + 0.08 * np.sin(2 * np.pi * np.arange(n) / n * 3)
+    whistle = bp(noise, 900, 1500) * wob
+    rush = lp(noise, 450) * 0.8
+    sig = whistle + rush
+    fade = int(SR * 0.05)
+    sig[:fade] *= np.linspace(0, 1, fade)
+    sig[-fade:] *= np.linspace(1, 0, fade)
+    save("fall_wind", sig, 0.6)
+
 print("Готово:", OUT)

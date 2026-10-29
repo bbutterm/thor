@@ -82,6 +82,8 @@ func update_motion(player: Player, input_dir: Vector2, on_floor: bool, delta: fl
 	# Линии скорости
 	_speed_pulse = maxf(0.0, _speed_pulse - real_delta * 3.0)
 	speed_lines = clampf(maxf(overspeed / 12.0, _speed_pulse), 0.0, 1.0)
+	# Падение с высоты — линии гуще с высотой (П6: высота без шкалы)
+	speed_lines = maxf(speed_lines, player.fall_feel)
 	if player.is_slamming:
 		speed_lines = 1.0
 

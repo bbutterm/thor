@@ -3,7 +3,8 @@ class_name VfxScreen
 ## Экранные эффекты VFX-комплекта (sprites/vfx/*, 1920×1080, растягиваются на экран):
 ## - линии скорости vfx_speed_lines — рывок, высокая скорость, супер-прыжок, падение и удар-приземление;
 ## - виньетка берсерка vfx_rage_vignette — высший ранг шкалы стиля (player/style_meter.gd), слабое мерцание у почти полной шкалы;
-## - золотое кольцо идеального хвата vfx_perfect_catch у руки (FX.perfect_catch из mjolnir_hand.gd).
+## - золотое кольцо идеального хвата vfx_perfect_catch у руки (FX.perfect_catch из mjolnir_hand.gd);
+## - молнии vfx_lightning_* на молоте в руке, пока падение выше big_slam_height (player.fall_charged, П6 — высота без шкалы).
 ## Слой под HUD (затемнение между залами его закрывает). Каждый кадр читает состояние игрока — хуков в player.gd нет.
 ## Рисуется стандартным 2D-материалом (TextureRect/Sprite2D, цвет — modulate): новых шейдеров и материалов нет.
 ## Создаёт Game._ready: VfxScreen.attach(game).
@@ -11,6 +12,7 @@ class_name VfxScreen
 const SPEED_TEX := "res://sprites/vfx/vfx_speed_lines.webp"
 const RAGE_TEX := "res://sprites/vfx/vfx_rage_vignette.webp"
 const CATCH_TEX := "res://sprites/vfx/vfx_perfect_catch.webp"
+const BOLT_TEX := "res://sprites/vfx/vfx_lightning_%02d.webp"
 
 static var instance: VfxScreen
 
@@ -56,7 +58,17 @@ static var instance: VfxScreen
 ## Сколько колец одновременно (пул)
 @export var catch_limit: int = 2
 
+@export_group("Заряд молота при падении")
+## Где молот в левой руке (доля экрана), размер молнии, px (при 1280×720), смена кадра, с
+@export var bolt_anchor: Vector2 = Vector2(0.21, 0.58)
+@export var bolt_size_px: float = 300.0
+@export var bolt_step: float = 0.06
+@export var bolt_color: Color = Color(0.65, 0.85, 1.0, 0.9)
+
 var player: Player
+var _bolts: Array[Sprite2D] = []
+var _bolt_tex: Array[Texture2D] = []
+var _bolt_t: float = 0.0
 var speed_rect: TextureRect
 var rage_rect: TextureRect
 var _catch: Array[Sprite2D] = []
@@ -99,6 +111,15 @@ func _ready() -> void:
 		sp.visible = false
 		add_child(sp)
 		_catch.append(sp)
+	for i in 4:
+		var path := BOLT_TEX % (i + 1)
+		if ResourceLoader.exists(path):
+			_bolt_tex.append(load(path))
+	for i in 2:
+		var b := Sprite2D.new()
+		b.visible = false
+		add_child(b)
+		_bolts.append(b)
 	if player:
 		CatchAssist.attach(self, player)
 	if player and player.style:
@@ -131,6 +152,11 @@ func warmup(frames: int = 10) -> void:
 		sp.visible = true
 		sp.modulate.a = 0.02
 		sp.position = get_viewport().get_visible_rect().size * 0.5
+	for i in _bolts.size():
+		if not _bolt_tex.is_empty():
+			_bolts[i].texture = _bolt_tex[i % _bolt_tex.size()]
+		_bolts[i].visible = true
+		_bolts[i].modulate.a = 0.02
 
 ## Кольцо идеального хвата: вспыхивает у руки (точка мира проецируется камерой), растёт и гаснет.
 func perfect_catch(world_pos: Vector3) -> void:
@@ -199,6 +225,8 @@ func _process(delta: float) -> void:
 		if _warm_frames == 0:
 			for sp in _catch:
 				sp.visible = false
+			for b in _bolts:
+				b.visible = false
 		return
 	var vp := get_viewport().get_visible_rect().size
 	# Линии скорости
@@ -221,6 +249,28 @@ func _process(delta: float) -> void:
 	if rage_rect.visible:
 		rage_rect.modulate.a = a
 		_scale_about_center(rage_rect, vp, 1.0 + rage_breathe_scale * (0.5 + 0.5 * sin(_t * TAU * rage_pulse_hz)) + _rage_flash * 0.04)
+
+	_bolt_tick(real, vp)
+
+## Падение выше big_slam_height — на молоте в руке пляшут молнии (кадр и поворот меняются каждые bolt_step с)
+func _bolt_tick(real: float, vp: Vector2) -> void:
+	var on := player != null and is_instance_valid(player) and player.fall_charged and not player.is_dead and not _bolt_tex.is_empty()
+	if not on:
+		for b in _bolts:
+			b.visible = false
+		return
+	_bolt_t -= real
+	if _bolt_t > 0.0:
+		return
+	_bolt_t = bolt_step
+	var k := vp.y / 720.0
+	for b in _bolts:
+		b.texture = _bolt_tex[randi() % _bolt_tex.size()]
+		b.visible = true
+		b.modulate = bolt_color
+		b.position = vp * bolt_anchor + Vector2(randf_range(-40, 40), randf_range(-50, 30)) * k
+		b.rotation = randf_range(-1.2, 1.2)
+		b.scale = Vector2.ONE * bolt_size_px * k / maxf(float(b.texture.get_width()), 1.0) * randf_range(0.7, 1.1)
 
 ## Масштаб полноэкранного прямоугольника относительно центра экрана (края уходят за экран).
 func _scale_about_center(r: Control, vp: Vector2, k: float) -> void:

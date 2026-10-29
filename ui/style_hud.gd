@@ -1,6 +1,6 @@
 extends Control
 class_name StyleHUD
-## Шкала стиля «ДОСТОЙНО!» (блок Б3, GDD 8, 18) — внизу по центру HUD вместо шкалы Ярости.
+## Шкала стиля «ДОСТОЙНО!» (блок Б3, GDD 8, 18) — справа в нижней линии HUD (П6, макет B; place()).
 ## Сверху — комикс-подпись ранга (Скуф → Сойдёт → Неплохо → Достойно → ДОСТОЙНЕЙШИЙ!) на рисованном «взрыве»
 ## комплекта (comic_burst_01..06, перекрашен в цвет ранга через modulate — без новых материалов), при повышении
 ## ранга подпись «бьёт» масштабом и меняет взрыв. Под ней — рамка hud_rage_frame + заливка hud_rage_fill
@@ -38,6 +38,7 @@ var _pulse: float = 0.0
 var _punch: float = 0.0
 var _burst_idx: int = 1
 var _shown_rank: int = -1
+var _box: VBoxContainer
 
 static func attach(hud: CanvasLayer, p: Player) -> StyleHUD:
 	if p == null or p.style == null:
@@ -69,6 +70,7 @@ func _build() -> void:
 	add_child(_vignette)
 
 	var box := VBoxContainer.new()
+	_box = box
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	box.offset_left = -bar_width * 0.5
@@ -160,6 +162,15 @@ func _draw_ticks() -> void:
 		var reached := style.active or style.rank >= r
 		_ticks.draw_line(Vector2(x, -2), Vector2(x, h + 2), Color(0, 0, 0, 0.85), 4.0)
 		_ticks.draw_line(Vector2(x, 0), Vector2(x, h), Color(1, 0.95, 0.75, 0.95) if reached else Color(1, 1, 1, 0.35), 2.0)
+
+## Встать в нижнюю линию HUD: от inner до outer px вправо от центра экрана (ширина = ширина шкалы)
+func place(inner: float, outer: float) -> void:
+	bar_width = outer - inner
+	_box.offset_left = inner
+	_box.offset_right = outer
+	_box.offset_top = -bar_width * 0.25 - caption_height - 10
+	_caption.custom_minimum_size = Vector2(bar_width, caption_height)
+	_bar.custom_minimum_size = Vector2(bar_width, bar_width * 0.25)
 
 func bind(s: StyleMeter) -> void:
 	style = s

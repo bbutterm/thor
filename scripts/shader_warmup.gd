@@ -140,8 +140,8 @@ func _build() -> void:
 		pl.weapons.warmup_viewmodel(FRAMES)
 	# Эффекты
 	var p := center + Vector3(0, 1.0, 0)
-	FX.damage_number(game, p, 12)
-	FX.damage_number(game, p, 40, Color(1, 0.4, 0.2), true)
+	FXBasic.damage_number(game, p, 12)
+	FXBasic.damage_number(game, p, 40, Color(1, 0.4, 0.2), true)
 	FX.lightning(game, p - right, p + right, 0.2)
 	FX.burst(game, p, 0.5, Color(1, 1, 1, 0.5), 0.2)
 	FX.ring(game, center, 1.0, Color(1, 1, 1, 0.8), 0.2)

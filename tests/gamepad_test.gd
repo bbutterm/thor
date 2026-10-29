@@ -427,19 +427,21 @@ func _test_main_menu_and_shop() -> void:
 	keyboard.pressed = true
 	GameSettings.note_input(keyboard)
 	await frames()
-	check(game.hud._hammer_label.text.contains("ПКМ"), "боевой HUD показывает клавиатуру/мышь")
+	var wh := game.hud.get_node_or_null("WeaponHUD") as WeaponHUD
+	check(wh != null and wh._hint.text.contains("Q"), "боевой HUD показывает клавиатуру/мышь («%s»)" % (wh._hint.text if wh else ""))
 	var pad := InputEventJoypadButton.new()
 	pad.button_index = JOY_BUTTON_A
 	pad.pressed = true
 	GameSettings.note_input(pad)
 	await frames()
-	check(game.hud._hammer_label.text.contains("LB"), "уже открытый HUD переключается на геймпад")
+	check(wh != null and not wh._hint.text.contains("Q") and wh._hint.text.contains(GameSettings.current_binding("weapon_switch")),
+		"уже открытый HUD переключается на геймпад («%s»)" % (wh._hint.text if wh else ""))
 	var rb := InputEventJoypadButton.new()
 	rb.button_index = JOY_BUTTON_RIGHT_SHOULDER
 	rb.pressed = true
 	GameSettings.rebind_pad("throw", rb)
 	await frames()
-	check(game.hud._hammer_label.text.contains("RB") and "mouse:2" in GameSettings.bindings("throw"), "HUD обновляется после переназначения, мышь сохранена")
+	check(Tutorial.key_name("throw").contains("RB") and "mouse:2" in GameSettings.bindings("throw"), "подсказка броска (кольцо хвата) обновляется после переназначения, мышь сохранена")
 	GameSettings.reset_pad_input()
 	Run.silver = 1000
 	game.rewards.open_shop()

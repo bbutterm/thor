@@ -109,7 +109,10 @@ static func reset_time() -> void:
 # FXBasic (fx_basic.gd)
 
 ## Всплывающая цифра урона в мире.
+## Цифры урона — только при настройке [hud] damage_numbers (по умолчанию выкл., П6: остаются комикс-слова)
 static func damage_number(parent: Node, pos: Vector3, amount: float, color: Color = Color(1, 0.9, 0.3), big: bool = false) -> void:
+	if not bool(GameSettings.get_value("hud", "damage_numbers")):
+		return
 	FXBasic.damage_number(parent, pos, amount, color, big)
 
 ## Молния между точками: текстурные ленты vfx_lightning_01..04 (по отрезку на cfg().lightning_segment м,

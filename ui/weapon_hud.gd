@@ -1,13 +1,16 @@
 extends Control
 class_name WeaponHUD
-## HUD оружия (GDD 18): два слота справа внизу на рамках комплекта (мили — с топорами, ренж — с прицелом;
-## активный — золотая «active»-рамка), в слоте иконка оружия (UISkin.weapon_icon), под ним уровень или
-## патроны; крупно «магазин / запас» у активного ренжа, полоса перезарядки, подсказка подбора «[E] …»
-## под прицелом. Строится кодом; подключается из HUD.bind_player.
+## HUD оружия (GDD 18, П6): два слота справа над шкалой стиля на рамках комплекта (мили — с топорами, ренж — с
+## прицелом; активный — золотая «active»-рамка), в слоте иконка оружия (UISkin.weapon_icon), под ним уровень или
+## патроны. Слоты видны только show_time с после смены/подбора, потом гаснут; «магазин / запас» и полоса
+## перезарядки — пока в руках ствол. Подсказка подбора «[E] …» — внизу над пузырём реплик (центр — только прицел).
+## Строится кодом; подключается из HUD.bind_player.
 
 ## Размер рамки слота (активный крупнее)
 @export var slot_size: float = 96.0
 @export var active_slot_size: float = 112.0
+## Сколько секунд видны слоты после смены/подбора оружия (П6)
+@export var show_time: float = 2.0
 
 var holder: WeaponHolder
 var _slots: Array[WeaponSlot] = []
@@ -18,6 +21,10 @@ var _ammo_label: Label
 var _reload_bar: ProgressBar
 var _prompt: Label
 var _hint: Label
+## Слоты с подписями и подсказкой клавиш — гаснут через show_time
+var _slots_box: VBoxContainer
+var _ammo_row: HBoxContainer
+var _slots_left: float = 0.0
 
 static func attach(hud: CanvasLayer, p: Player) -> WeaponHUD:
 	if p.weapons == null:
@@ -41,16 +48,23 @@ func _build() -> void:
 	var box := VBoxContainer.new()
 	box.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	box.offset_left = -440
-	box.offset_top = -230
+	box.offset_top = -380
 	box.offset_right = -16
-	box.offset_bottom = -10
+	box.offset_bottom = -150
 	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	box.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	box.alignment = BoxContainer.ALIGNMENT_END
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_theme_constant_override("separation", 2)
 	add_child(box)
+	_slots_box = VBoxContainer.new()
+	_slots_box.alignment = BoxContainer.ALIGNMENT_END
+	_slots_box.add_theme_constant_override("separation", 2)
+	_slots_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_slots_box.modulate.a = 0.0
+	box.add_child(_slots_box)
 	var ammo_row := HBoxContainer.new()
+	_ammo_row = ammo_row
 	ammo_row.alignment = BoxContainer.ALIGNMENT_END
 	ammo_row.add_theme_constant_override("separation", 10)
 	ammo_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -77,7 +91,7 @@ func _build() -> void:
 	row.alignment = BoxContainer.ALIGNMENT_END
 	row.add_theme_constant_override("separation", 0)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(row)
+	_slots_box.add_child(row)
 	for i in 2:
 		var v := VBoxContainer.new()
 		v.add_theme_constant_override("separation", -8)
@@ -112,21 +126,28 @@ func _build() -> void:
 		_skills.append(skill)
 	_hint = UIStyle.label("", 13, UIStyle.TEXT_DIM, 3)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	box.add_child(_hint)
+	_slots_box.add_child(_hint)
+	# Ammo — под слотами, у самой шкалы стиля
+	box.move_child(ammo_row, box.get_child_count() - 1)
 	_prompt = UIStyle.label("", 22, UIStyle.GOLD, 6)
-	_prompt.set_anchors_preset(Control.PRESET_CENTER)
+	_prompt.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.offset_left = -400
 	_prompt.offset_right = 400
-	_prompt.offset_top = 34
-	_prompt.offset_bottom = 100
+	_prompt.offset_top = -290
+	_prompt.offset_bottom = -246
+	_prompt.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_prompt)
 
 func bind(h: WeaponHolder) -> void:
 	holder = h
-	h.slots_changed.connect(_refresh)
-	h.active_changed.connect(func(_s: int) -> void: _refresh())
+	h.slots_changed.connect(func() -> void:
+		_refresh()
+		reveal())
+	h.active_changed.connect(func(_s: int) -> void:
+		_refresh()
+		reveal())
 	h.ammo_changed.connect(func(_m: int, _r: int) -> void: _refresh())
 	h.reload_changed.connect(_on_reload)
 	h.prompt_changed.connect(func(t: String) -> void: _prompt.text = t)
@@ -170,12 +191,24 @@ func _refresh() -> void:
 				_skills[i].text = tr("Приём: %s") % tr(it.def.skill_title)
 				_skills[i].visible = true
 	var cur := holder.current()
+	_ammo_row.visible = cur != null and cur.is_ranged()
 	if cur and cur.is_ranged():
 		_ammo_label.text = "%d / %d" % [cur.mag, cur.reserve]
 		_ammo_label.label_settings.font_color = UIStyle.BLOOD if cur.mag == 0 else UIStyle.TEXT
 	else:
 		_ammo_label.text = ""
 	_hint.text = tr("%s — сменить · %s — перезарядка") % [GameSettings.current_binding("weapon_switch"), GameSettings.current_binding("reload")]
+
+## Показать слоты на show_time (смена, подбор оружия)
+func reveal() -> void:
+	_slots_left = show_time
+	_slots_box.modulate.a = 1.0
+
+func _process(delta: float) -> void:
+	if _slots_left <= 0.0:
+		return
+	_slots_left = maxf(0.0, _slots_left - delta)
+	_slots_box.modulate.a = clampf(_slots_left / 0.4, 0.0, 1.0)
 
 func _on_setting_changed(section: String, _key: String) -> void:
 	if section in ["input", "pad_input", "input_device", "text"]:

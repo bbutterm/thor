@@ -93,6 +93,10 @@ func _place(w: ComicWords.ComicWord, rise: float, off: Vector2, rot: float) -> v
 	var m := cf.screen_margin_px
 	pos.x = vp.x * 0.5 if h.x * 2.0 + m * 2.0 > vp.x else clampf(pos.x, m + h.x, vp.x - m - h.x)
 	pos.y = vp.y * 0.5 if h.y * 2.0 + m * 2.0 > vp.y else clampf(pos.y, m + h.y, vp.y - m - h.y)
+	# Крупные слова — выше пузыря реплик и линии HUD внизу по центру (П6)
+	if (combo_lane or w.big) and not w.preview:
+		var floor_y := vp.y - cf.bottom_reserved_px * GameSettings.text_scale() - h.y
+		pos.y = minf(pos.y, maxf(floor_y, m + h.y))
 	w.position = pos
 
 ## Точка перед камерой на уровне удара (удар-приземление — под ногами, оттуда слово не видно).

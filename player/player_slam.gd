@@ -6,6 +6,7 @@ class_name PlayerSlam
 ## и тесты), здесь только логика. Доступ — player.slam; публичные функции есть и на Player.
 
 var p: Player
+var _wind: AudioStreamPlayer
 
 func _init(player: Player) -> void:
 	p = player
@@ -18,7 +19,7 @@ func can_start_slam() -> bool:
 		return true
 	return slam_surface_hit(p.slam_min_height).is_empty()
 
-## Ближайшая поверхность под ногами для проверки удара и его шкалы в HUD.
+## Ближайшая поверхность под ногами для проверки удара и ощущения высоты (fall_height).
 func slam_surface_hit(distance: float) -> Dictionary:
 	var q := PhysicsRayQueryParameters3D.create(p.global_position, p.global_position + Vector3.DOWN * distance,
 		p.collision_mask & Player.SLAM_SURFACE_MASK, [p.get_rid()])
@@ -147,8 +148,10 @@ func _do_slam_impact(height: float) -> void:
 	for h in p.body_handlers:
 		h.on_slam(p, power, p._last_slam_hits)
 	if height >= p.big_slam_height:
+		# Высота читается без шкалы (П6): большой удар — ещё «бум» и «Вот! ВОТ!» Одина (без лимита реплик)
+		Audio.sfx("hammer_boom_1", "sounds/sfx/slam.wav")
+		p.camera_fx.add_trauma(0.25)
 		Odin.say("big_slam")
-		Dialogue.thor_bark("slam", 0.6)
 
 ## Удар-приземление по деревянному мосту/настилу (Balcony со slam_breakable) — настил ломается (GDD 16).
 func _slam_break_floor(space: PhysicsDirectSpaceState3D, height: float) -> void:
@@ -185,3 +188,48 @@ func _slam_assist_tick() -> void:
 	elif not want and p._slam_assist_on:
 		p._slam_assist_on = false
 		FX._set_time_scale(1.0)
+
+## Высота падения до поверхности под ногами (м): от высшей точки полёта; 0 — на земле.
+func fall_height() -> float:
+	if p.is_on_floor() or p.is_dead:
+		return 0.0
+	var ground := p.global_position.y - 40.0
+	var hit := slam_surface_hit(40.0)
+	if not hit.is_empty():
+		ground = (hit.position as Vector3).y
+	return maxf(p._air_peak_y, p.global_position.y) - ground
+
+## Высота без шкалы (П6, NOW.md): при падении растут линии скорости и свист ветра (p.fall_feel 0..1),
+## выше big_slam_height молот в руке вспыхивает молнией (p.fall_charged; рисует VfxScreen) с треском.
+func _height_feel_tick(delta: float) -> void:
+	var target := 0.0
+	if not p.is_on_floor() and not p.is_dead and (p.velocity.y < -2.0 or p.is_slamming):
+		var h := fall_height()
+		target = clampf((h - p.fall_feel_min_height) / maxf(p.big_slam_height - p.fall_feel_min_height, 0.1), 0.0, 1.0)
+		if h >= p.big_slam_height and not p.fall_charged:
+			p.fall_charged = true
+			Audio.sfx("hammer_crackle", "sounds/sfx/lightning.wav")
+	elif p.is_on_floor():
+		p.fall_charged = false
+	p.fall_feel = move_toward(p.fall_feel, target, delta * (4.0 if target > p.fall_feel else 6.0))
+	_wind_tick()
+
+func _wind_tick() -> void:
+	if p.fall_feel <= 0.01:
+		if _wind and _wind.playing:
+			_wind.stop()
+		return
+	if _wind == null:
+		_wind = AudioStreamPlayer.new()
+		_wind.bus = &"SFX"
+		var st := load("res://sounds/sfx/fall_wind.wav") as AudioStreamWAV
+		if st == null:
+			return
+		st.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		st.loop_end = int(st.get_length() * st.mix_rate)
+		_wind.stream = st
+		p.add_child(_wind)
+	if not _wind.playing:
+		_wind.play()
+	_wind.volume_db = linear_to_db(clampf(p.fall_feel, 0.001, 1.0)) - 4.0
+	_wind.pitch_scale = 0.8 + 0.6 * p.fall_feel
