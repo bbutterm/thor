@@ -122,7 +122,11 @@ func _run() -> void:
 	check(_step_is(t, "doors"), "сигнал удара-приземления продвигает обучение")
 	game.rewards.doors_shown.emit([])
 	t._physics_process(0.0)
-	check(not t.active and Save.event_count("tutorial_done") == 1, "сигнал дверей завершает обычное обучение")
+	check(_step_is(t, "build") and t.active, "после дверей — урок «Tab — сборка»")
+	game.build_screen.open()
+	game.build_screen.close()
+	t._physics_process(0.0)
+	check(not t.active and Save.event_count("tutorial_done") == 1 and Save.event_count("tutorial_step_build") == 1, "открыл сборку по Tab — обычное обучение завершено")
 	game.room = normal_room
 	vertical.free()
 

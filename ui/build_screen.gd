@@ -9,6 +9,7 @@ class_name BuildScreen
 ## Создаёт Game._ready; открывает Game._unhandled_input (действие build_screen).
 
 signal closed
+signal opened
 
 ## Ширина колонки с портретом тела, px (при 1280×720)
 @export var portrait_width: float = 470.0
@@ -142,6 +143,7 @@ func open() -> void:
 	get_tree().paused = true
 	_opened_mouse = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	opened.emit()
 
 func close() -> void:
 	if not visible:

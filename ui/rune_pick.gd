@@ -65,6 +65,10 @@ func open(choices: Array[RuneDef], title: String = "") -> void:
 	_odin.visible = has_oath
 	if has_oath:
 		_odin.text = tr("Один: «%s»") % Odin.pick("oath_offer")
+		# Обучение: при первой клятве в выборе ворон объясняет, что это (пузырь на паузе спрятан — строкой здесь)
+		if Save.event_count("tutorial_oath") == 0 and Dialogue.has_pool("ravens.tutorial_oath"):
+			Save.bump_event("tutorial_oath")
+			_odin.text += "\n" + tr("Хугин: «%s»") % Dialogue.pool_text("ravens.tutorial_oath")
 	visible = true
 	if _cards.get_child_count() > 0:
 		(_cards.get_child(0) as Button).grab_focus.call_deferred()

@@ -3,7 +3,7 @@ class_name Tutorial
 ## Реплики воронов: ravens.tutorial_<шаг>, клавиши подставляются из текущих настроек.
 ## Пройденное учитывается сразу, даже если нужная подсказка ещё не дошла до очереди.
 
-const STEPS: Array[String] = ["move", "jump", "dash", "attack", "weapon_skill", "throw", "runes", "slam", "doors", "vertical"]
+const STEPS: Array[String] = ["move", "jump", "dash", "attack", "weapon_skill", "throw", "runes", "slam", "doors", "build", "vertical"]
 const NEW_STEPS: Array[String] = ["weapon_skill", "runes"]
 const VERTICAL_STEP := "vertical"
 
@@ -76,6 +76,9 @@ func _ready() -> void:
 				_mark("throw"))
 	if game.rewards and game.rewards.has_signal("doors_shown"):
 		game.rewards.doors_shown.connect(func(_d: Array) -> void: _mark("doors"))
+	# Tab — экран сборки (П6): открыл — урок пройден
+	if game.build_screen:
+		game.build_screen.opened.connect(func() -> void: _mark("build"))
 
 func _exit_tree() -> void:
 	_carry_hint_wait = maxf(0.0, _hint_wait)
