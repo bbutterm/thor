@@ -40,6 +40,7 @@ func _run() -> void:
 	_test_visit_outcomes()
 	_test_heimdall_visit_history()
 	_test_boss_death_reactions()
+	_test_boss_memory()
 	_test_mercenary_death_reactions()
 	_test_content()
 	_test_finale_gating()
@@ -327,6 +328,40 @@ func _test_heimdall_visit_history() -> void:
 	Save.reset()
 
 ## Имя Ярла в реакции соответствует точному источнику урона, а не общей категории boss.
+## Партия 12: боссы помнят прошлые бои — первая встреча, «счёт N:0», «ты меня бил», «в прошлый раз умер от…».
+func _test_boss_memory() -> void:
+	print("-- Память боссов")
+	for key: String in ["jarl", "sven", "hovding", "volva", "berserker"]:
+		var pool: String = key + ".intro"
+		var src: String = DialogueManager.BOSS_SOURCES[key]
+		Save.reset()
+		Dialogue.boss_memory(key)
+		var first := Dialogue.pool_lines(pool)
+		var first_conds: Array = []
+		var first_id := str((first[0] as Dictionary).get("id", "")) if not first.is_empty() else ""
+		for it in Dialogue.pools[pool]:
+			if str(((it.lines as Array)[0] as Dictionary).get("id", "")) == first_id:
+				first_conds = it.get("conditions", [])
+		check(not first.is_empty() and "boss_met == 0" in first_conds, "%s: первая встреча — своя реплика" % key)
+		Save.data.events["boss_met_" + key] = 3
+		Save.data.killed_by[src] = 2
+		Dialogue.boss_memory(key)
+		var seen_score := false
+		var seen_beaten := false
+		var seen_last := false
+		Save.data.events["boss_beaten_" + key] = 1
+		Save.data.last_run = {"won": false, "killed_by": "draugr_warrior"}
+		Dialogue.boss_memory(key)
+		for i in 40:
+			var l := Dialogue.pool_lines(pool)
+			var t := Dialogue.format_text(str((l[0] as Dictionary).get("text", ""))) if not l.is_empty() else ""
+			seen_score = seen_score or t.contains("2:0") or t.contains("Их уже 2")
+			seen_beaten = seen_beaten or (t != "" and not t.contains("{") and (t.contains("бил") or t.contains("взрывал") or t.contains("разбил") or t.contains("сбил") or t.contains("валил")))
+			seen_last = seen_last or t.contains("драугр-воин")
+		check(seen_score and seen_beaten and seen_last, "%s: помнит счёт (%s), свои поражения (%s) и кто убил в прошлый раз (%s)" % [key, seen_score, seen_beaten, seen_last])
+	Save.reset()
+	Dialogue._extra_ctx.clear()
+
 func _test_boss_death_reactions() -> void:
 	print("-- Реакции на Свена и Ярла")
 	var saved_pools: Dictionary = Dialogue.pools

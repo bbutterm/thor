@@ -36,6 +36,38 @@
 				"emotion": "happy",
 				"text": "Тор?! Мы же с тобой в одной лиге по пузу! Ничего личного!",
 				"id": "sven.intro.04"
+			},
+			{
+				"speaker": "sven",
+				"emotion": "happy",
+				"text": "Ик! Новый собутыльник? Нет? Тогда — бочкой по лбу!",
+				"conditions": ["boss_met == 0"],
+				"priority": 2,
+				"id": "sven.intro.m01"
+			},
+			{
+				"speaker": "sven",
+				"emotion": "happy",
+				"text": "Счёт {boss_beat_me}:0! За это надо выпить!",
+				"conditions": ["boss_beat_me >= 1"],
+				"priority": 1,
+				"id": "sven.intro.m02"
+			},
+			{
+				"speaker": "sven",
+				"emotion": "smug",
+				"text": "Ты меня уже взрывал. Я с тех пор ещё больше съел!",
+				"conditions": ["boss_beaten >= 1"],
+				"priority": 1,
+				"id": "sven.intro.m03"
+			},
+			{
+				"speaker": "sven",
+				"emotion": "smug",
+				"text": "Тебя ж в прошлый раз {last_killer} уделал! Ик! Слабак!",
+				"conditions": ["lost", "boss_met >= 1", "killed_by != miniboss_sven"],
+				"priority": 1,
+				"id": "sven.intro.m04"
 			}
 		],
 		"swell": [

@@ -30,6 +30,38 @@
 				"emotion": "happy",
 				"text": "Сам Тор? Отлично. Мои парни как раз заскучали.",
 				"id": "hovding.intro.03"
+			},
+			{
+				"speaker": "hovding",
+				"emotion": "angry",
+				"text": "Дружина, строй! К нам пожаловал бог. Без приглашения.",
+				"conditions": ["boss_met == 0"],
+				"priority": 2,
+				"id": "hovding.intro.m01"
+			},
+			{
+				"speaker": "hovding",
+				"emotion": "smug",
+				"text": "Мои хирдманы помнят тебя: счёт {boss_beat_me}:0.",
+				"conditions": ["boss_beat_me >= 1"],
+				"priority": 1,
+				"id": "hovding.intro.m02"
+			},
+			{
+				"speaker": "hovding",
+				"emotion": "angry",
+				"text": "Ты разбил мой строй однажды. Я добавил щитов.",
+				"conditions": ["boss_beaten >= 1"],
+				"priority": 1,
+				"id": "hovding.intro.m03"
+			},
+			{
+				"speaker": "hovding",
+				"emotion": "smug",
+				"text": "Говорят, тебя прикончил {last_killer}. Моя дружина делает это красивее.",
+				"conditions": ["lost", "boss_met >= 1", "killed_by != miniboss_hovding"],
+				"priority": 1,
+				"id": "hovding.intro.m04"
 			}
 		],
 		"horn": [

@@ -134,7 +134,7 @@ func _load_file(p: String) -> void:
 		for it in pl[k]:
 			var item: Dictionary = it if it is Dictionary else {"text": str(it)}
 			if not item.has("lines"):
-				item = {"lines": [item], "conditions": item.get("conditions", [])}
+				item = {"lines": [item], "conditions": item.get("conditions", []), "priority": item.get("priority", 0)}
 			item["_conds"] = _parse_all(item.get("conditions", []), "%s.%s" % [file_id, k])
 			items.append(item)
 		pools["%s.%s" % [file_id, k]] = items
@@ -186,6 +186,12 @@ func pool_lines(pool: String) -> Array:
 			ok.append(it)
 	if ok.is_empty():
 		return []
+	# «priority» у реплики пула (партия 12, память боссов): из подходящих берутся только самые приоритетные
+	var top := -INF
+	for it in ok:
+		top = maxf(top, float(it.get("priority", 0)))
+	if top > 0.0:
+		ok = ok.filter(func(it: Dictionary) -> bool: return float(it.get("priority", 0)) >= top)
 	var idx := randi() % ok.size()
 	if ok.size() > 1 and _last_pick.get(pool, -1) == items.find(ok[idx]):
 		idx = (idx + 1) % ok.size()
@@ -455,6 +461,29 @@ func on_run_start(body_id: String) -> void:
 	else:
 		Odin.say("run_start")
 
+## Память боссов (партия 12, как в Hades): ключ — имя файла реплик босса (jarl, sven, hovding, volva, berserker).
+## Перед интро — в контекст условий и подстановок: boss_met (сколько раз встречались), boss_beat_me (сколько раз
+## он убил Тора — Save.killed_by), boss_beaten (сколько раз Тор его победил), last_killer (кто убил в прошлый раз).
+const BOSS_SOURCES := {"jarl": "boss_jarl", "sven": "miniboss_sven", "hovding": "miniboss_hovding", "volva": "miniboss_volva", "berserker": "miniboss_berserker"}
+
+func boss_memory(key: String) -> void:
+	_extra_ctx["boss_met"] = Save.event_count("boss_met_" + key)
+	_extra_ctx["boss_beat_me"] = Save.killed_by_count(str(BOSS_SOURCES.get(key, key)))
+	_extra_ctx["boss_beaten"] = Save.event_count("boss_beaten_" + key)
+	_extra_ctx["boss_source"] = str(BOSS_SOURCES.get(key, key))
+	var by := str(Save.data.get("last_run", {}).get("killed_by", ""))
+	_extra_ctx["last_killer"] = I18n.t(str(RunTracker.SOURCE_NAMES.get(by, by)))
+
+## Интро босса с памятью: реплика пула по условиям, потом встреча засчитывается.
+func boss_intro_bark(key: String, pool: String) -> void:
+	boss_memory(key)
+	bark_pool(pool)
+	Save.bump_event("boss_met_" + key)
+
+## Босс побеждён — для памяти (boss_beaten).
+static func note_boss_beaten(key: String) -> void:
+	Save.bump_event("boss_beaten_" + key)
+
 ## Вход в зал босса: сцена знакомства в первый раз, потом — интро-пузырь босса.
 func on_boss_intro(boss_id: String = "jarl") -> bool:
 	_extra_ctx["boss"] = boss_id
@@ -463,13 +492,15 @@ func on_boss_intro(boss_id: String = "jarl") -> bool:
 		var sc := pick_scene("boss_intro")
 		if not sc.is_empty():
 			play_scene(sc)
+			Save.bump_event("boss_met_" + boss_id)
 			return true
-	bark_pool(boss_id + ".intro")
+	boss_intro_bark(boss_id, boss_id + ".intro")
 	return false
 
 ## Босс побеждён — фраза поражения пузырём.
 func on_boss_defeat(boss_id: String = "jarl") -> void:
 	Save.bump_event("boss_defeat")
+	note_boss_beaten(boss_id)
 	bark_pool(boss_id + ".defeat")
 
 ## Между забегами: реакция на смерть/победу (сцена или пул + ответ Тора). Ждёт конца.

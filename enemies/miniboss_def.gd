@@ -164,8 +164,10 @@ func apply(e: Enemy, hud: Node = null) -> void:
 	var dp := death_pool
 	var boss_id := id
 	# Один пузырь: сначала слова босса, через comment_delay — Один (или Тор после победы) про этого босса
+	var memory_key := intro_pool.get_slice(".", 0) if intro_pool != "" else boss_id
 	e.died.connect(func(_e: Enemy) -> void:
 		Run.add_glory(glory)
+		DialogueManager.note_boss_beaten(memory_key)  # память боссов (партия 12)
 		var spoke := false
 		if dp != "" and Dialogue.has_pool(dp):
 			Dialogue.bark_pool(dp)
@@ -176,7 +178,7 @@ func apply(e: Enemy, hud: Node = null) -> void:
 			else:
 				_odin(&"miniboss_death", boss_id)), CONNECT_ONE_SHOT)
 	if intro_pool != "" and Dialogue.has_pool(intro_pool):
-		Dialogue.bark_pool(intro_pool)
+		Dialogue.boss_intro_bark(memory_key, intro_pool)  # с памятью прошлых боёв (партия 12)
 		_after(e.get_tree() if e.is_inside_tree() else Engine.get_main_loop() as SceneTree, comment_delay, func() -> void: _odin(&"miniboss_start", boss_id))
 	else:
 		_odin(&"miniboss_start", boss_id)

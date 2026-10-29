@@ -24,6 +24,38 @@
 				"emotion": "happy",
 				"text": "Руны сказали: придёт рыжий и будет прыгать. Руны не врут.",
 				"id": "volva.intro.02"
+			},
+			{
+				"speaker": "volva",
+				"emotion": "smug",
+				"text": "Нити Норн шептали о тебе. Они смеялись.",
+				"conditions": ["boss_met == 0"],
+				"priority": 2,
+				"id": "volva.intro.m01"
+			},
+			{
+				"speaker": "volva",
+				"emotion": "smug",
+				"text": "Твоя смерть от моей руки — уже привычка: счёт {boss_beat_me}:0.",
+				"conditions": ["boss_beat_me >= 1"],
+				"priority": 1,
+				"id": "volva.intro.m02"
+			},
+			{
+				"speaker": "volva",
+				"emotion": "angry",
+				"text": "Ты сбил меня с высоты однажды. Огонь помнит.",
+				"conditions": ["boss_beaten >= 1"],
+				"priority": 1,
+				"id": "volva.intro.m03"
+			},
+			{
+				"speaker": "volva",
+				"emotion": "neutral",
+				"text": "Тебя забрал {last_killer}. Твоя нить стала короче, громовержец.",
+				"conditions": ["lost", "boss_met >= 1", "killed_by != miniboss_volva"],
+				"priority": 1,
+				"id": "volva.intro.m04"
 			}
 		],
 		"fire": [

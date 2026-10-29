@@ -24,6 +24,38 @@
 				"emotion": "smug",
 				"text": "Волчья шкура, волчьи зубы, волчий аппетит. Иди сюда.",
 				"id": "berserker.intro.02"
+			},
+			{
+				"speaker": "berserker",
+				"emotion": "happy",
+				"text": "Хо-хо! Мясо пришло само! Ко мне, ко мне!",
+				"conditions": ["boss_met == 0"],
+				"priority": 2,
+				"id": "berserker.intro.m01"
+			},
+			{
+				"speaker": "berserker",
+				"emotion": "happy",
+				"text": "Р-р-р! Счёт {boss_beat_me}:0! Ещё! ЕЩЁ!",
+				"conditions": ["boss_beat_me >= 1"],
+				"priority": 1,
+				"id": "berserker.intro.m02"
+			},
+			{
+				"speaker": "berserker",
+				"emotion": "angry",
+				"text": "Ты меня уже валил. Сегодня я злее!",
+				"conditions": ["boss_beaten >= 1"],
+				"priority": 1,
+				"id": "berserker.intro.m03"
+			},
+			{
+				"speaker": "berserker",
+				"emotion": "angry",
+				"text": "Тебя порвал {last_killer}? Это моя работа!",
+				"conditions": ["lost", "boss_met >= 1", "killed_by != miniboss_berserker"],
+				"priority": 1,
+				"id": "berserker.intro.m04"
 			}
 		],
 		"rage": [

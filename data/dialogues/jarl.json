@@ -107,6 +107,54 @@
 				"emotion": "happy",
 				"text": "Гость! Сейчас будет пир! Ты — главное блюдо!",
 				"id": "jarl.intro.04"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "angry",
+				"text": "Новенький? В мой длинный дом без поклона не входят!",
+				"conditions": ["boss_met == 0"],
+				"priority": 2,
+				"id": "jarl.intro.m01"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "smug",
+				"text": "Так вот ты какой, «бог грома». Пузатенький.",
+				"conditions": ["boss_met == 0"],
+				"priority": 2,
+				"id": "jarl.intro.m02"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "happy",
+				"text": "Счёт {boss_beat_me}:0 в мою пользу, громовержец. Добавим?",
+				"conditions": ["boss_beat_me >= 1"],
+				"priority": 1,
+				"id": "jarl.intro.m03"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "smug",
+				"text": "Я складываю твои шлемы у очага. Их уже {boss_beat_me}.",
+				"conditions": ["boss_beat_me >= 2"],
+				"priority": 1,
+				"id": "jarl.intro.m04"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "angry",
+				"text": "Ты меня уже бил. Больше не выйдет — я купил новый щит!",
+				"conditions": ["boss_beaten >= 1"],
+				"priority": 1,
+				"id": "jarl.intro.m05"
+			},
+			{
+				"speaker": "jarl",
+				"emotion": "smug",
+				"text": "Слышал, тебя в прошлый раз уложил {last_killer}. Позорище!",
+				"conditions": ["lost", "boss_met >= 1", "killed_by != boss_jarl"],
+				"priority": 1,
+				"id": "jarl.intro.m06"
 			}
 		],
 		"defeat": [
