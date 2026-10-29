@@ -210,7 +210,7 @@ func _fill() -> void:
 		var desc := rr.level_descriptions[lvl - 1] if lvl - 1 < rr.level_descriptions.size() else rr.description
 		if rr.oath and rr.oath_cost != "":
 			desc = tr(desc) + "\n" + tr("Цена: %s") % tr(rr.oath_cost)
-		_list.add_child(_entry(UISkin.rune_category_icon(rr.category), rr.glyph, ("☠ " if rr.cursed else "") + tr(rr.title),
+		_list.add_child(_entry(UISkin.rune_icon(rr), rr.glyph, ("☠ " if rr.cursed else "") + tr(rr.title),
 			tr("УР. %d") % lvl, tr(desc), rr.color, UIStyle.GOLD))
 	_path.nodes = path_nodes()
 	_path.queue_redraw()

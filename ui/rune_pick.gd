@@ -86,9 +86,9 @@ func _make_card(rune: RuneDef, index: int) -> Button:
 	var rarity := "epic" if rune.cursed else ("legendary" if lvl > 0 or rune.oath else "rare")
 	var b := SkinCard.make("card_rune", card_width, rune.color, rarity)
 	b.key_label.text = "[%d]" % (index + 1)
-	b.set_icon(UISkin.rune_category_icon(rune.category), rune.glyph, rune.color.lightened(0.25))
+	b.set_icon(UISkin.rune_icon(rune), rune.glyph, rune.color.lightened(0.25))
 	if rune.oath:
-		# Своя рамка клятвы: красная обводка карточки (иконки клятв владелец сгенерирует — пока runecat_*)
+		# Своя рамка клятвы: красная обводка карточки, иконка — картинка владельца (UISkin.rune_icon)
 		b.self_modulate = Color(1.0, 0.62, 0.55)
 		b.add_text(tr("КЛЯТВА НАВСЕГДА"), 13, OATH_COLOR, 4)
 	# Уровень (GDD 11: повторная руна повышает уровень 1–3) и описание следующего уровня

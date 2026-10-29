@@ -250,6 +250,19 @@ static func trait_icon(trait_id: String) -> Texture2D:
 static func rune_category_icon(category: String) -> Texture2D:
 	return texture(RUNE_CATEGORY_ICON.get(category, "runecat_" + category))
 
+## Иконка руны: у клятвы — своя картинка владельца (ключ = RuneDef.id), у остальных — категория
+static func rune_icon(rune: RuneDef) -> Texture2D:
+	if rune.oath and has(rune.id):
+		return texture(rune.id)
+	return rune_category_icon(rune.category)
+
+## Значок элиты по EliteModifier.id (картинки комплекта и владельца: elite_<ключ>); нет картинки — null
+const ELITE_ICON := {"armored": "elite_armor", "explosive": "elite_bomb", "fast": "elite_speed"}
+
+static func elite_icon(mod_id: String) -> Texture2D:
+	var key: String = ELITE_ICON.get(mod_id, "elite_" + mod_id)
+	return texture(key) if has(key) else null
+
 ## Общая тема интерфейса (строится один раз)
 static func theme() -> Theme:
 	if _theme:

@@ -124,7 +124,7 @@ func _test_all_combos(mods: Array[EliteModifier]) -> void:
 				ok += 1 if good0 else 0
 				continue
 			var good: bool = e.has_meta("elite") and str(e.get_meta("elite_mod")) == m.id and e.get_node_or_null("EliteLabel") != null \
-				and e.elite_handlers.size() == 1 and e.elite_glow.a > 0.0
+				and e.elite_handlers.size() == 1 and e.elite_glow.a > 0.0 and e.get_node_or_null("EliteIcon") is Sprite3D
 			e.take_hit(9999.0, Vector3.ZERO, "test")
 			await frames(3)
 			if good and (ew.get_ref() == null or e.is_dead):

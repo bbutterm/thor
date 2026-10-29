@@ -96,6 +96,25 @@ func _run() -> void:
 	game.hud.commands.request(&"dodge")
 	await wait(0.15)
 	await shot("05c_command_word")
+	# Партия 10: подложка «движения» и пузырь мини-босса с портретом владельца
+	game.hud.commands._last_time = -100.0
+	game.hud.commands._last_kind = ""
+	game.hud.commands.request(&"up")
+	Dialogue.bark({"speaker": "volva", "emotion": "neutral", "text": "Огонь помнит твоё имя, громовержец."})
+	await wait(0.4)
+	await shot("05d_command_move_bark")
+	game.hud.commands._left = 0.0
+	game.hud.commands.modulate.a = 0.0
+	game.hud.hide_odin_line()
+	# Элита с новым значком
+	var el := (load("res://enemies/grunt.tscn") as PackedScene).instantiate() as Enemy
+	Loot.make_elite(el, Loot.get_elite_modifier("magnet"))
+	el.process_mode = Node.PROCESS_MODE_DISABLED
+	game.add_child(el)
+	el.global_position = p.global_position + p.get_aim_forward() * Vector3(7, 0, 7)
+	await wait(0.3)
+	await shot("05e_elite_icon")
+	el.queue_free()
 	p.mjolnir.throw_hammer()
 	p.rotation_target.y += PI * 0.9
 	await wait(0.15)

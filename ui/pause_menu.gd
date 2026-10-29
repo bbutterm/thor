@@ -148,7 +148,7 @@ func _fill_journal() -> void:
 		var rr := r as RuneDef
 		var lvl := mini(counts[rr.id], Run.RUNE_MAX_LEVEL)
 		var desc := rr.level_descriptions[lvl - 1] if lvl - 1 < rr.level_descriptions.size() else rr.description
-		_journal.add_child(_entry(UISkin.rune_category_icon(rr.category), rr.glyph,
+		_journal.add_child(_entry(UISkin.rune_icon(rr), rr.glyph,
 			("☠ " if rr.cursed else "") + tr("%s  ур. %d") % [tr(rr.title), lvl], tr(desc), rr.color))
 
 func _entry(tex: Texture2D, glyph: String, title: String, desc: String, col: Color) -> Control:

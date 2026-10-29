@@ -62,23 +62,24 @@ func _ready() -> void:
 	current = self
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_preset(Control.PRESET_CENTER_TOP)
-	offset_left = -260
-	offset_right = 260
-	offset_top = 150
-	offset_bottom = 240
+	# Подложка владельца — 3 : 1 (1086×362), слово — по центру поверх
+	offset_left = -270
+	offset_right = 270
+	offset_top = 120
+	offset_bottom = 300
 	_plate = TextureRect.new()
 	_plate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_plate.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UIStyle.full_rect(_plate)
 	add_child(_plate)
-	_label = UIStyle.label("", 44, Color.WHITE, 10)
+	_label = UIStyle.label("", 50, Color.WHITE, 12)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	UIStyle.full_rect(_label)
 	add_child(_label)
 	modulate.a = 0.0
-	pivot_offset = Vector2(260, 45)
+	pivot_offset = Vector2(270, 90)
 
 func _exit_tree() -> void:
 	if current == self:
@@ -116,10 +117,14 @@ func _show(id: StringName, kind: String) -> void:
 	_label.text = tr(str(WORDS[id][0]))
 	var col: Color = KIND_COLOR[kind]
 	_label.label_settings.font_color = col.lightened(0.55)
+	_label.label_settings.outline_color = Color.BLACK
 	var path := PLATE_DIR % kind
 	if ResourceLoader.exists(path):
+		# На рисованной подложке — белое слово с тёмной обводкой цвета вида (светлое на светлом не читается)
 		_plate.texture = load(path)
 		_plate.modulate = Color.WHITE
+		_label.label_settings.font_color = Color.WHITE
+		_label.label_settings.outline_color = col.darkened(0.75)
 	else:
 		_plate.texture = UISkin.texture("comic_burst_0%d" % (1 + (hash(id) % 6 + 6) % 6))
 		_plate.modulate = Color(col, 0.95)

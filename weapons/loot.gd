@@ -115,6 +115,8 @@ static func maybe_make_elite(room: Node, enemy: Enemy, chance: float, max_per_ro
 
 ## Модификаторы элиты (enemies/elite/mods/*.tres, EliteModifier) — новый .tres подхватывается сам.
 const ELITE_MODS_DIR := "res://enemies/elite/mods/"
+## Размер значка элиты над подписью (в единицах pixel_size × ширина текстуры; подпись — 48 × 0.0011)
+static var elite_icon_px: float = 0.15
 static var _elite_mods: Array[EliteModifier] = []
 static var _all_elite_mods: Array[EliteModifier] = []
 
@@ -212,6 +214,21 @@ static func make_elite(enemy: Enemy, mod: EliteModifier = null) -> void:
 		label.font = font
 	label.position = Vector3(0, 2.8 * enemy.model_scale, 0)
 	enemy.add_child(label)
+	# Значок модификатора над подписью (картинки владельца elite_*): флаги как у подписи — тот же шейдер спрайта
+	var icon_tex := UISkin.elite_icon(mod.id)
+	if icon_tex:
+		var icon := Sprite3D.new()
+		icon.name = "EliteIcon"
+		icon.texture = icon_tex
+		icon.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		icon.no_depth_test = true
+		icon.fixed_size = true
+		icon.pixel_size = elite_icon_px / maxf(icon_tex.get_width(), 1.0)
+		icon.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		# Над подписью на постоянном расстоянии на экране: offset в пикселях текстуры × pixel_size (fixed_size)
+		icon.position = label.position
+		icon.offset = Vector2(0, icon_tex.get_height() * 0.8)
+		enemy.add_child(icon)
 	if mod.handler:
 		var h := mod.handler.new() as EliteHandler
 		if h:

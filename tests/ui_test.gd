@@ -85,6 +85,18 @@ func _test_skin() -> void:
 	check(UISkin.weapon_icon("rifle") != null and UISkin.weapon_icon("axe") != null and UISkin.trait_icon("fire_trail") != null
 		and UISkin.rune_category_icon("defense") != null and UISkin.rune_category_icon("mjolnir") != null,
 		"иконки оружия, трейтов и категорий рун находятся по id")
+	var oath_ok := true
+	for rp in DirAccess.get_files_at("res://run/runes"):
+		if rp.begins_with("oath_") and rp.ends_with(".tres"):
+			var od := load("res://run/runes/" + rp) as RuneDef
+			oath_ok = oath_ok and UISkin.rune_icon(od) == UISkin.texture(od.id) and UISkin.texture(od.id) != null
+	check(oath_ok, "у каждой клятвы своя иконка владельца")
+	check(UISkin.elite_icon("magnet") != null and UISkin.elite_icon("throw_shield") != null and UISkin.elite_icon("grounded") != null
+		and UISkin.elite_icon("explosive") != null, "значки элиты по id модификатора")
+	var boss_portraits := true
+	for sp in ["hovding", "berserker", "volva"]:
+		boss_portraits = boss_portraits and ResourceLoader.exists("res://sprites/portraits/%s_neutral.webp" % sp) and not Portrait.face_of(sp).is_empty()
+	check(boss_portraits, "портреты мини-боссов и точки лиц")
 	check(UISkin.trait_icon("sling") != null and UISkin.trait_icon("wind") != null
 		and UISkin.path("trait_sling") == "res://sprites/ui/icons/trait_sling.webp"
 		and UISkin.path("trait_wind") == "res://sprites/ui/icons/trait_wind.webp",
