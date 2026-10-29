@@ -602,6 +602,15 @@ if not ONLY or any("hammer_spin_loop".startswith(prefix) for prefix in ONLY):
     fade = np.minimum(1.0, np.minimum(np.arange(n), n - 1 - np.arange(n)) / 400.0)
     air = air * fade + np.roll(air, n // 2) * (1.0 - fade)
     save("hammer_spin_loop", mix(lp(tone, 900) * spin, air * spin * 0.35), 0.6)
+# --- Партия 12: «глоток» лечения от удара-приземления (бульк + тёплый тон вверх). Свой seed ---
+if not ONLY or any("heal_gulp".startswith(prefix) for prefix in ONLY):
+    rng = np.random.default_rng(291029 + 22)
+    tt = t(0.32)
+    f = np.linspace(260, 620, len(tt))
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    gulp = np.sin(ph) * np.exp(-tt * 9.0) + 0.5 * np.sin(2 * ph) * np.exp(-tt * 12.0)
+    bub = lp(rng.standard_normal(len(tt)), 700) * np.exp(-((tt - 0.05) / 0.03) ** 2) * 0.8
+    save("heal_gulp", mix(gulp, bub), 0.7)
 # --- П3/П4 (плейтест 28.10): мясо корма, мульти-килл, броня боссов; отдельный seed не меняет существующие звуки ---
 meat_names = ("gib_crunch_", "multikill_bass", "armor_tink")
 if not ONLY or any(name.startswith(prefix) for name in meat_names for prefix in ONLY):

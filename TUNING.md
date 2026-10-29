@@ -37,6 +37,8 @@
 | Здоровье | `heal_per_kill` | 3 | Лечение за убийство |
 | Толчки | `push_force` | 1.6 | Как сильно игрок толкает бочки |
 
+**Лечение от агрессии (партия 12; старое — F6 `FeelSwitch` `slam_heal`):** каждый враг, убитый ударом-приземлением, лечит Тора на `slam_kill_heal` 3 HP (с высоты `big_slam_height` — `slam_kill_heal_big` 6), не больше `slam_heal_cap` 25 за удар (множители лечения тела и клятв действуют); зелёная вспышка, звук `heal_gulp` (`tools/make_sfx.py`), «+N HP» над полосой здоровья. Пассивное лечение — отдых (`RunMap.rest_heal_fraction`) и руна «Лечение» — ×`passive_heal_mult` 0.7. Проверка — `slam_heal_test`; баланс — бот 5 забегов до/после (отчёт партии).
+
 ## Камера — `player/player.tscn`, узел **Head/Camera** (`player/camera_fx.gd`)
 
 `base_fov` 85, `fov_per_overspeed` 0.9 (FOV растёт от скорости), `shake_max_offset` 0.22, `shake_max_roll_deg` 4, `shake_decay` 1.8, `head_bob_enabled`, `head_bob_amount` 0.05, `strafe_tilt_enabled`, `strafe_tilt_deg` 2.5.

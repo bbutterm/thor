@@ -319,7 +319,7 @@ func _on_rune_picked(rune: RuneDef) -> void:
 	var reward_done := rewards.on_rune_picked(rune)
 	player.recalc_from_runes(Run)
 	if rune.id == "heal":
-		player.heal(Run.rune_value("heal"))  # уровень 1–3: 50 → 100 (у жреца ×2)
+		player.heal(Run.rune_value("heal") * player.passive_heal())  # уровень 1–3: 50 → 100 (у жреца ×2); партия 12 — ×0.7
 	if rune.oath and randf() < 0.5 and Dialogue.has_pool("thor.oath_taken"):
 		Dialogue.bark_pool("thor.oath_taken")  # Тор хвастается клятвой (П10, реплики на новое)
 	else:

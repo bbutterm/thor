@@ -60,6 +60,9 @@ var _offscreen: OffscreenIndicators
 var _odin_name: Label
 ## Всплывающие «+N СЛАВЫ» и «+N» серебра (П6): сумма за последние gain_show_time с
 var _glory_gain: Label
+var _heal_gain: Label
+var _heal_left: float = 0.0
+var _heal_acc: float = 0.0
 var _silver_gain: HBoxContainer
 var _silver_gain_label: Label
 var _glory_seen: int = 0
@@ -92,6 +95,7 @@ func _ready() -> void:
 func bind_player(p: Player) -> void:
 	player = p
 	player.health_changed.connect(_on_health_changed)
+	player.slam_healed.connect(_on_slam_healed)
 	player.dash_charges_changed.connect(_on_dash_changed)
 	player.hurt.connect(_on_hurt)
 	player.slam_unavailable.connect(func() -> void: toast(tr("НУЖЕН ВТОРОЙ ПРЫЖОК")))
@@ -161,6 +165,12 @@ func _build() -> void:
 	_anchor(_hp_bar, Control.PRESET_CENTER_BOTTOM, -row_half_width, -hp_bar_height - 8, -row_inner_gap, -8)
 	_hp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_hp_bar)
+	# «+N» зелёным над полосой HP — лечение ударом-приземлением (партия 12), на gain_show_time
+	_heal_gain = UIStyle.label("", 24, Color(0.45, 1.0, 0.5), 7)
+	_heal_gain.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_heal_gain.modulate.a = 0.0
+	_anchor(_heal_gain, Control.PRESET_CENTER_BOTTOM, -row_half_width, -hp_bar_height - 44, -row_inner_gap, -hp_bar_height - 8)
+	root.add_child(_heal_gain)
 	_hp_label = UIStyle.label("100", 18, UIStyle.TEXT, 6)
 	_hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -329,6 +339,9 @@ func _process(delta: float) -> void:
 	if _boss and is_instance_valid(_boss):
 		_boss_bar.value = maxf(0.0, _boss.health) / _boss.max_health
 	_glory_left = _fade_gain(_glory_gain, _glory_left, delta)
+	_heal_left = _fade_gain(_heal_gain, _heal_left, delta)
+	if _heal_left <= 0.0:
+		_heal_acc = 0.0
 	if _glory_left <= 0.0:
 		_glory_acc = 0
 	_silver_left = _fade_gain(_silver_gain, _silver_left, delta)
@@ -440,6 +453,15 @@ func _on_glory_changed(total: int) -> void:
 	_glory_left = gain_show_time
 	_glory_gain.modulate.a = 1.0
 	_punch(_glory_gain)
+
+func _on_slam_healed(amount: float) -> void:
+	if _heal_gain == null:
+		return
+	_heal_acc += amount
+	_heal_gain.text = "+%d HP" % int(round(_heal_acc))
+	_heal_left = gain_show_time
+	_heal_gain.modulate.a = 1.0
+	_punch(_heal_gain)
 
 func _on_silver_changed(total: int) -> void:
 	var gain := total - _silver_seen

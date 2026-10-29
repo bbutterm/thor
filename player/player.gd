@@ -15,6 +15,8 @@ signal died
 signal hurt(amount: float)
 signal slammed(power: float)
 signal slam_unavailable
+## Удар-приземление убил врагов — Тор полечился (партия 12, HUD показывает «+N»)
+signal slam_healed(amount: float)
 signal weapon_skill_landed(skill_id: String)
 signal weapon_skill_lunge_step(from: Vector3, to: Vector3)
 
@@ -161,6 +163,13 @@ signal weapon_skill_lunge_step(from: Vector3, to: Vector3)
 @export var heal_per_kill: float = 3.0
 ## Дополнительное лечение, если добил мили (GDD 8: +2 HP)
 @export var melee_kill_heal: float = 2.0
+## Лечение от агрессии (партия 12; старое — F6 FeelSwitch slam_heal): за каждого врага, убитого ударом-приземлением,
+## +slam_kill_heal HP (+slam_kill_heal_big с высоты big_slam_height), не больше slam_heal_cap за удар
+@export var slam_kill_heal: float = 3.0
+@export var slam_kill_heal_big: float = 6.0
+@export var slam_heal_cap: float = 25.0
+## Пассивное лечение (отдых, руна лечения) слабее: множитель (старое — 1.0)
+@export var passive_heal_mult: float = 0.7
 
 var health: float = 100.0
 var is_dead: bool = false
@@ -782,3 +791,8 @@ func recalc_from_runes(run: Node, full_heal: bool = false) -> void:
 ## совместимость → runes._rune_on_dash
 func _rune_on_dash() -> void:
 	runes._rune_on_dash()
+
+## Множитель пассивного лечения (отдых, руна «Лечение»): партия 12 — слабее; F6 (slam_heal) — как раньше
+func passive_heal() -> float:
+	return 1.0 if FeelSwitch.is_old(&"slam_heal") else passive_heal_mult
+

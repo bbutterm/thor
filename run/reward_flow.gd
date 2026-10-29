@@ -342,9 +342,10 @@ func _on_choice_picked(id: String) -> void:
 				game.rune_pick.open(ups.slice(0, 3), tr("УЛУЧШИТЬ РУНУ (+1 УРОВЕНЬ)"))
 				return
 			var p := game.player
-			p.heal(p.max_health * map().rest_heal_fraction)
+			var frac := map().rest_heal_fraction * p.passive_heal()  # партия 12: пассивное лечение слабее
+			p.heal(p.max_health * frac)
 			Audio.play("sounds/sfx/rune_pick.wav")
-			game.hud.toast(tr("ПОХЛЁБКА: +%d %% ЗДОРОВЬЯ") % int(map().rest_heal_fraction * 100))
+			game.hud.toast(tr("ПОХЛЁБКА: +%d %% ЗДОРОВЬЯ") % int(round(frac * 100)))
 		"loki":
 			_loki_result(id)
 	finish()

@@ -97,6 +97,7 @@ func _do_slam_impact(height: float) -> void:
 	var knock := p.slam_base_knockback + height * p.slam_knockback_per_meter
 	var center := p.global_position
 	p._last_slam_hits = 0
+	var slam_kills := 0
 	var space := p.get_world_3d().direct_space_state
 	_slam_break_floor(space, height)
 	var q := PhysicsShapeQueryParameters3D.new()
@@ -124,6 +125,8 @@ func _do_slam_impact(height: float) -> void:
 			p.deal_damage(c, damage * falloff, push, "slam")
 			if c is Enemy:
 				p._last_slam_hits += 1
+				if (c as Enemy).is_dead:
+					slam_kills += 1
 				# Руна «Оглушающий гром» — оглушение ударом-приземлением (берётся большее из стиля и руны)
 				var stun_time := maxf(p.slam_stun, Run.rune_value("stun_thunder"))
 				if stun_time > 0.0 and is_instance_valid(c) and c.has_method("stun"):
@@ -147,11 +150,28 @@ func _do_slam_impact(height: float) -> void:
 	p.slammed.emit(power)
 	for h in p.body_handlers:
 		h.on_slam(p, power, p._last_slam_hits)
+	_slam_heal(slam_kills, height)
 	if height >= p.big_slam_height:
 		# Высота читается без шкалы (П6): большой удар — ещё «бум» и «Вот! ВОТ!» Одина (без лимита реплик)
 		Audio.sfx("hammer_boom_1", "sounds/sfx/slam.wav")
 		p.camera_fx.add_trauma(0.25)
 		Odin.say("big_slam")
+
+## Лечение от агрессии (партия 12): враги, убитые этим ударом, лечат Тора; зелёная вспышка, «глоток», «+N» у HP.
+func _slam_heal(kills: int, height: float) -> void:
+	if kills <= 0 or p.is_dead or FeelSwitch.is_old(&"slam_heal"):
+		return
+	var per := p.slam_kill_heal_big if height >= p.big_slam_height else p.slam_kill_heal
+	var amount := minf(kills * per, p.slam_heal_cap)
+	var before := p.health
+	p.heal(amount)
+	var got := p.health - before
+	if got <= 0.01:
+		return
+	Perf.mark("slam_heal")
+	FX.burst(p.get_parent(), p.global_position + Vector3(0, 1.0, 0), 1.1, Color(0.4, 1.0, 0.5, 0.5), 0.3)
+	Audio.sfx("heal_gulp", "sounds/sfx/heal_gulp.wav")
+	p.slam_healed.emit(got)
 
 ## Удар-приземление по деревянному мосту/настилу (Balcony со slam_breakable) — настил ломается (GDD 16).
 func _slam_break_floor(space: PhysicsDirectSpaceState3D, height: float) -> void:

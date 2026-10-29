@@ -42,6 +42,9 @@
 
 Вьюмодель рук — слой отображения 2, отдельный SubViewport (`Head/Camera/ViewmodelContainer`). Руки комиксовой обводкой не обводятся (решение по кадрам).
 
+## Лечение от агрессии (партия 12)
+`PlayerSlam._slam_heal` после удара: убитые им враги → `heal` (`slam_kill_heal`/`_big`, предел `slam_heal_cap`), сигнал `Player.slam_healed` (HUD «+N HP» — `ui/hud.gd`, `_heal_gain`). Пассивное лечение — `Player.passive_heal()` (отдых в `RewardFlow`, руна «Лечение» в `Game`). F6 — `FeelSwitch` `slam_heal`. Тест `slam_heal_test`.
+
 ## Лестницы (П7)
 `Player.ladder` ставит/снимает `rooms/ladder.gd` (`Ladder`, Area3D); пока он есть — `PlayerJumps._process_gravity` без гравитации: «вперёд» — вверх, «назад» — вниз (`ladder_climb_speed`), прыжок срывает. Проверка — `reach_test` (мачта Причала, крыша рынка Деревни).
 
