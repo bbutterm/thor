@@ -2,11 +2,11 @@
 
 ## Актуальная сборка
 
-[Скачать Windows ZIP из main 6b279cd](ThorDostoynayaSmert-windows.zip?raw=1), распаковать и запустить `ThorDostoynayaSmert.exe`. [Отчёт и что проверить](REPORT_2026-10-29-p9.md) — партия 9 из `NOW.md`: слова-команды, обучение и реплики под новое, итоги забега на экране смерти/победы, чистка. В главном меню — **«Быстрая проверка»**.
+[Скачать Windows ZIP из main 60f7c30](ThorDostoynayaSmert-windows.zip?raw=1), распаковать и запустить `ThorDostoynayaSmert.exe`. [Отчёт и что проверить](REPORT_2026-10-30-night.md) — ночь 29→30.10: рисованные текстуры и арт владельца, дома MegaKit, залы-пути Причал и Деревня, молот как в God of War, лечение ударом-приземлением, роли врагов, память боссов. В главном меню — **«Быстрая проверка»** (F6 — старое/новое).
 
-Архив: 94 231 522 байт, SHA-256 `8f4d2318cf210795b10dcafbc272c297c42db0652d7617a292ebfcd5dde2e405`; внутри один EXE. На исходном коммите прошли 65 игровых тестовых сцен; экспортированная игра проходит самопроверку (зал и враги). Графику на настоящей Windows-видеокарте ещё нужно проверить.
+Архив: 94 768 620 байт, SHA-256 `0796f56bed0adfad5ebf67275fb4e3b5be0380cc60c233b614e25dca08bace02`; внутри один EXE. На исходном коммите прошли 68 игровых тестовых сцен; экспортированная игра проходит самопроверку (зал и враги). Графику на настоящей Windows-видеокарте ещё нужно проверить.
 
-Предыдущие версии: [1889959 — партия 5, клятвы и элита](ThorDostoynayaSmert-preview-1889959.zip?raw=1) ([отчёт](REPORT_2026-10-29-p5.md)), [af961c2 — П8 debug-панель](ThorDostoynayaSmert-preview-af961c2.zip?raw=1) ([отчёт](REPORT_2026-10-29-p8.md)), [5371187 — П6 интерфейс](ThorDostoynayaSmert-preview-5371187.zip?raw=1) ([отчёт](REPORT_2026-10-29-p6.md)), [36a25bb — партия 1](ThorDostoynayaSmert-preview-36a25bb.zip?raw=1) ([отчёт](REPORT_2026-10-29.md)), до них — [037f709](ThorDostoynayaSmert-preview-037f709.zip?raw=1).
+Предыдущие версии: [6b279cd — партия 9](ThorDostoynayaSmert-preview-6b279cd.zip?raw=1) ([отчёт](REPORT_2026-10-29-p9.md)), [1889959 — партия 5](ThorDostoynayaSmert-preview-1889959.zip?raw=1) ([отчёт](REPORT_2026-10-29-p5.md)), [af961c2 — П8 debug-панель](ThorDostoynayaSmert-preview-af961c2.zip?raw=1) ([отчёт](REPORT_2026-10-29-p8.md)), [5371187 — П6 интерфейс](ThorDostoynayaSmert-preview-5371187.zip?raw=1) ([отчёт](REPORT_2026-10-29-p6.md)), [36a25bb — партия 1](ThorDostoynayaSmert-preview-36a25bb.zip?raw=1) ([отчёт](REPORT_2026-10-29.md)), до них — [037f709](ThorDostoynayaSmert-preview-037f709.zip?raw=1).
 
 ## Предыдущая сборка 2a4461f
 
