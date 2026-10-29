@@ -377,6 +377,7 @@ func _build_interface(page: Control) -> void:
 	_header(page, "HUD")
 	_check(page, tr("Индикаторы врагов за экраном"), "hud", "offscreen")
 	_check(page, tr("Цифры урона"), "hud", "damage_numbers")
+	_check(page, tr("Слова-команды («КРУШИ!», «БЕГИ!»)"), "hud", "commands")
 	_slider(page, tr("Масштаб интерфейса"), "video", "ui_scale", 0.75, 1.5, 0.05, _pct)
 	_header(page, tr("КОМИКСОВЫЕ СЛОВА"))
 	_comic_rows(page)

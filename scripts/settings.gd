@@ -39,7 +39,7 @@ const DEFAULTS := {
 	"controls": {"mouse_sensitivity": 1.0, "gamepad_sensitivity": 1.0, "invert_y": false},
 	"video": {"fullscreen": false, "vsync": true, "max_fps": 0, "fov": 85.0, "shake": 1.0, "head_bob": true, "ui_scale": 1.0,
 		"outline": true, "outline_width": 1.0},
-	"hud": {"crosshair": "dot", "crosshair_size": 1.0, "crosshair_alpha": 0.85, "crosshair_color": "white", "offscreen": true, "damage_numbers": false},
+	"hud": {"crosshair": "dot", "crosshair_size": 1.0, "crosshair_alpha": 0.85, "crosshair_color": "white", "offscreen": true, "damage_numbers": false, "commands": true},
 	"text": {"text_scale": 1.0, "typing_speed": 1.0, "language": "ru"},
 	"access": {"colorblind": "off", "aim_assist": false, "slam_slowmo": false, "catch_assist": true},
 	"comic": {"enabled": true, "scale": 1.0, "page": true, "boss_card": true},

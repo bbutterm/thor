@@ -270,6 +270,7 @@ func _start_throw() -> void:
 			_humanoid.anim.play(full, 0.1, clampf(a.length * 0.55 / maxf(throw_windup, 0.1), 0.5, 3.0))
 
 func _release_arm() -> void:
+	CommandWords.cue(&"hit")  # без руки — окно урона
 	var from := global_position + Vector3(0, 2.4, 0) + global_transform.basis.z * 0.8
 	var target := player.global_position + Vector3(0, 1.0, 0) if player and is_instance_valid(player) else from + global_transform.basis.z * 10.0
 	var to := target - from

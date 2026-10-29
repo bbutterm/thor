@@ -152,6 +152,7 @@ func _run_act(delta: float) -> void:
 					if _humanoid:
 						_humanoid.play(anim_stun, 0.05)
 					set_act(Act.CHARGE_STUN)
+					CommandWords.cue(&"hit")  # врезался в стену — окно урона
 				2:
 					_barrel_on_back()
 					set_act(Act.CHARGE_END)

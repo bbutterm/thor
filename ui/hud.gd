@@ -70,6 +70,8 @@ var _glory_left: float = 0.0
 var _silver_left: float = 0.0
 ## Вспышка иконки связки
 var _combo_flash: HudIcon
+## Слова-команды «КРУШИ!», «БЕГИ!»… (ui/command_words.gd)
+var commands: CommandWords
 var _combo_left: float = 0.0
 var _combo_last: Dictionary = {}
 ## Для перевода на лету (смена языка из паузы): последние аргументы set_room и число врагов
@@ -105,6 +107,8 @@ func bind_player(p: Player) -> void:
 		_mjolnir_traits.player = p
 	if _offscreen:
 		_offscreen.player = p
+	if commands:
+		commands.player = p
 	# Слоты оружия (на 2 с при смене/подборе), патроны — пока в руках ствол, подсказка подбора — ui/weapon_hud.gd
 	WeaponHUD.attach(self, p)
 	# Шкала стиля «ДОСТОЙНО!» (ранг, комикс-подпись) справа в нижней линии — ui/style_hud.gd (блок Б3)
@@ -212,6 +216,11 @@ func _build() -> void:
 		_silver_gain.add_child(HudIcon.make(silver_icon, 30))
 	_silver_gain_label = UIStyle.label("", 22, SILVER_COLOR, 6)
 	_silver_gain.add_child(_silver_gain_label)
+
+	# Слова-команды (П10) — крупно по центру сверху
+	commands = CommandWords.new()
+	commands.name = "CommandWords"
+	root.add_child(commands)
 
 	# Полоса босса
 	_boss_box = VBoxContainer.new()

@@ -91,6 +91,11 @@ func _run() -> void:
 	game.hud.show_odin_line(tr("Неплохо. Хугин, запиши."))
 	await wait(0.4)
 	await shot("05b_hud_gain_line")
+	# П10: слово-команда
+	game.hud.commands._last_time = -100.0
+	game.hud.commands.request(&"dodge")
+	await wait(0.15)
+	await shot("05c_command_word")
 	p.mjolnir.throw_hammer()
 	p.rotation_target.y += PI * 0.9
 	await wait(0.15)

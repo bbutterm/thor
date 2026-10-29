@@ -261,6 +261,7 @@ func _knock_down(knockback: Vector3) -> void:
 	_tp_ring = null
 	_tp_target = Vector3.INF
 	set_act(Act.KNOCKED)
+	CommandWords.cue(&"hit")  # сбита молотом — окно урона
 	# С уступа — вниз: толчок наружу
 	var push := Vector3(knockback.x, 0, knockback.z)
 	push = push.normalized() if push.length() > 0.1 else -dir_to_player()

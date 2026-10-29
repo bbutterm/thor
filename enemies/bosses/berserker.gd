@@ -95,6 +95,7 @@ func _run_act(delta: float) -> void:
 
 func _start_vulnerable() -> void:
 	Perf.mark("berserker_window")
+	CommandWords.cue(&"hit")
 	series_done += 1
 	if _humanoid:
 		_humanoid.play(anim_stun, 0.1)

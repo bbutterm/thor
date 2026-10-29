@@ -191,6 +191,12 @@ func charge_wall_hit() -> void:
 # --- Телеграф: полоса на полу по направлению тарана ---
 
 func strip_show(dir: Vector3, length: float, alpha: float, color: Color = Color(1, 0.2, 0.1)) -> void:
+	# Телеграф тарана нацелен на Тора — «УВОРАЧИВАЙСЯ!» (П10; повторы гасит кулдаун слов)
+	if player and is_instance_valid(player):
+		var to := player.global_position - global_position
+		to.y = 0.0
+		if to.length() > 0.1 and to.length() <= length + 2.0 and dir.normalized().dot(to.normalized()) > 0.9:
+			CommandWords.cue(&"dodge")
 	if _strip == null or not is_instance_valid(_strip):
 		Perf.mark("boss_strip")
 		_strip = MeshInstance3D.new()
