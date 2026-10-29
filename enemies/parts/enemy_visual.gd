@@ -195,6 +195,35 @@ func _attach_weapon(kind_name: String) -> void:
 		sh.rotation_degrees = Vector3(0, 0, 90)
 		att2.add_child(sh)
 
+## Рога шамана (партия 12, роли): два конуса на кости головы; меш и материал — общие на всех (WeaponMeshes.mat).
+static var _horn_mesh: CylinderMesh
+func attach_horns() -> void:
+	var sk := enemy._humanoid.skeleton if enemy._humanoid else null
+	if sk == null:
+		return
+	var bone := "head" if sk.find_bone("head") >= 0 else ("Head" if sk.find_bone("Head") >= 0 else "")
+	if bone == "":
+		return
+	if _horn_mesh == null:
+		_horn_mesh = CylinderMesh.new()
+		_horn_mesh.top_radius = 0.004
+		_horn_mesh.bottom_radius = 0.045
+		_horn_mesh.height = 0.32
+		_horn_mesh.radial_segments = 8
+		_horn_mesh.rings = 1
+	var att := BoneAttachment3D.new()
+	att.name = "Horns"
+	att.bone_name = bone
+	sk.add_child(att)
+	for sx in [-1.0, 1.0]:
+		var h := MeshInstance3D.new()
+		h.mesh = _horn_mesh
+		h.material_override = WeaponMeshes.mat("stone")
+		h.position = Vector3(sx * 0.09, 0.2, 0.0)
+		h.rotation_degrees = Vector3(0, 0, -sx * 32.0)
+		h.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		att.add_child(h)
+
 func _build_procedural_model() -> Node3D:
 	var root := Node3D.new()
 	root.name = "Visual"

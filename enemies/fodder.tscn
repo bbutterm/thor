@@ -6,7 +6,7 @@
 radius = 0.4275
 height = 1.71
 
-[node name="Fodder" type="CharacterBody3D" unique_id=947664483]
+[node name="Fodder" type="CharacterBody3D" unique_id=876269274]
 collision_layer = 4
 collision_mask = 15
 floor_snap_length = 0.3
@@ -26,11 +26,14 @@ skin_tint = Color(0.5, 0.6, 0.62, 1)
 cloth_tint = Color(0.42, 0.4, 0.36, 1)
 eye_glow = Color(0.35, 0.75, 1, 1)
 weapon_pool = PackedStringArray()
+role_skin = Color(0.78, 0.78, 0.76, 1)
+role_shape = Vector3(0.9, 0.82, 0.9)
+role_parts = PackedStringArray()
 anim_idle = "Zombie_Idle_Loop"
 anim_move = "Zombie_Walk_Fwd_Loop"
 anim_attack = "Zombie_Scratch"
 anim_attack_hit_at = 0.45
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=2141502715]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=152848102]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.855, 0)
 shape = SubResource("CapsuleShape3D_bo2g5")

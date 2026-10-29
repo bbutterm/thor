@@ -6,7 +6,7 @@
 radius = 0.675
 height = 2.7
 
-[node name="Sven" type="CharacterBody3D" unique_id=1322699898]
+[node name="Sven" type="CharacterBody3D" unique_id=2102464145]
 collision_layer = 4
 collision_mask = 15
 floor_snap_length = 0.3
@@ -33,10 +33,11 @@ skin_tint = Color(0.55, 0.7, 0.6, 1)
 cloth_tint = Color(0.7, 0.5, 0.32, 1)
 eye_glow = Color(1, 0.7, 0.2, 1)
 weapon_pool = PackedStringArray()
+role_parts = PackedStringArray()
 anim_idle = "Zombie_Idle_Loop"
 anim_move = "Zombie_Walk_Fwd_Loop"
 anim_attack_hit_at = 0.45
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=1345742899]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=949052742]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
 shape = SubResource("CapsuleShape3D_8qevo")

@@ -6,7 +6,7 @@
 radius = 0.6075
 height = 2.43
 
-[node name="Hovding" type="CharacterBody3D" unique_id=318700050]
+[node name="Hovding" type="CharacterBody3D" unique_id=267274882]
 collision_layer = 4
 collision_mask = 15
 floor_snap_length = 0.3
@@ -35,11 +35,12 @@ cloth_tint = Color(0.62, 0.22, 0.18, 1)
 eye_glow = Color(1, 0.8, 0.3, 1)
 hand_weapon = "q_axe"
 weapon_pool = PackedStringArray()
+role_parts = PackedStringArray()
 anim_idle = "Sword_Idle"
 anim_attack = "Sword_Regular_C"
 anim_attack_hit_at = 0.35
 anim_slam = "Sword_Regular_C"
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=220234698]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=362746155]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.215, 0)
 shape = SubResource("CapsuleShape3D_o4yii")

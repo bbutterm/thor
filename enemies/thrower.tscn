@@ -6,7 +6,7 @@
 radius = 0.45
 height = 1.8
 
-[node name="Thrower" type="CharacterBody3D" unique_id=1818135788]
+[node name="Thrower" type="CharacterBody3D" unique_id=80676266]
 collision_layer = 4
 collision_mask = 15
 floor_snap_length = 0.3
@@ -27,12 +27,15 @@ cloth_tint = Color(0.5, 0.42, 0.68, 1)
 eye_glow = Color(0.75, 0.4, 1, 1)
 hand_weapon = "staff"
 weapon_pool = PackedStringArray()
+role_cloth = Color(1.45, 0.3, 0.22, 1)
+role_parts = PackedStringArray("parts/Female_Ranger_Head_Hood.gltf")
+role_part_tints = Array[Color]([Color(1.6, 0.22, 0.16, 1)])
 anim_idle = "Spell_Simple_Idle_Loop"
 anim_move_ref_speed = 1.5
 anim_attack = "Spell_Simple_Shoot"
 anim_attack_hit_at = 0.6
 anim_hit = "Hit_Head"
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=956381138]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=1245594799]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_lgq6k")

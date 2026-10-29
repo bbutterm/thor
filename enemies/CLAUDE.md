@@ -40,6 +40,9 @@
 ## Черты мобов (ночь 29.10, Н4, GDD 12.6)
 `traits/` — `EnemyTraitDef` (`enemy_trait_def.gd`, данные `traits/<id>.tres`), обработчик-узел `EnemyTraitHandler` (`enemy_trait_handler.gd`; хуки `_apply_stats`, `on_hit` ← сигнал `Enemy.hit_taken`, `_trait_tick`; прячет значок вдали), выдача и значок — `EnemyTraits` (`enemy_traits.gd`: `maybe_assign` из `Room._spawn_enemy` после элиты, `assign`, `handler_of`, `warmup_sample`). Черты: `coward` (бег через `Enemy._forced_move`), `furious`, `agile` (видит группу `mjolnir_projectiles`), `shouter`, `heavy` (`knock_resist`), `jumper` (`Enemy._leap_left` — горизонталь прыжка не гаснет в `EnemyMotion`). Новая черта — `.tres` + наследник `EnemyTraitHandler`. Метаданные врага `enemy_trait` = id. Тест `enemy_trait_test`.
 
+## Роли врагов различимы (партия 12)
+Группа «Роль (партия 12)» в `enemy.gd`: `role_cloth`/`role_skin` (цвет роли; у массовки — оттенки трёх яркостей, общие материалы `HumanoidModel._tinted`), `role_shape` (силуэт; масштаб покоя — `base_visual_scale()`, его же берут твины появления и замаха), `role_parts`/`role_part_tints` (капюшон стрелка, наплечники наёмника), `role_horns` (`EnemyVisual.attach_horns`, общий меш и `WeaponMeshes.mat("stone")`), `role_shield_scale`. Значения — `MODEL_LOOKS` генератора. F6 — `FeelSwitch` `enemy_roles` (`Enemy.roles_on()`). Кадры — `tests/crowd_shots.tscn -- <папка>` (новое и старое).
+
 ## Мини-босс
 `MinibossDef` — обычный враг с переопределёнными числами и `Kind.BOSS`; добавляется последней волной (`Room.add_wave`) в залах `Run.miniboss_rooms`, после него `Game` открывает выбор трейта, потом руны.
 

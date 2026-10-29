@@ -248,6 +248,18 @@ enum State { SPAWNING, CHASE, WINDUP, RECOVER, STUNNED, DEAD }
 @export var weapon_pool: PackedStringArray = []
 @export_range(0.0, 1.0) var shield_chance: float = 0.0
 
+@export_group("Роль (партия 12)")
+## Различимость по роли — цвет и силуэт (старое — F6 FeelSwitch enemy_roles): одежда и кожа цвета роли
+## (alpha 0 — не трогать), масштаб силуэта по осям, свои части одежды (капюшон, наплечники) с цветами,
+## рога на голове (шаман), щит крупнее. Материалы — общие (HumanoidModel._tinted: по одному на цвет).
+@export var role_cloth: Color = Color(0, 0, 0, 0)
+@export var role_skin: Color = Color(0, 0, 0, 0)
+@export var role_shape: Vector3 = Vector3.ONE
+@export var role_parts: PackedStringArray = []
+@export var role_part_tints: Array[Color] = []
+@export var role_horns: bool = false
+@export var role_shield_scale: float = 0.0
+
 @export_group("Анимации")
 @export var anim_spawn: String = "LayToIdle"
 @export var anim_idle: String = "Idle_Loop"
@@ -399,6 +411,8 @@ func _ready() -> void:
 		_humanoid.body = "base/Fodder_Midgard.glb" if kind == Kind.FODDER else model_body
 		_humanoid.outfit = "" if kind == Kind.FODDER else model_outfit
 		_humanoid.hair = "" if kind == Kind.FODDER else model_hair
+		var roles := roles_on()
+		var cloth := role_cloth if roles and role_cloth.a > 0.0 else cloth_tint
 		if randomize_look and kind != Kind.FODDER:
 			var rng := RandomNumberGenerator.new()
 			rng.randomize()
@@ -408,8 +422,10 @@ func _ready() -> void:
 			_humanoid.hair = ""
 			_humanoid.parts = look.parts
 			var tints: Array[Color] = []
-			for c in look.part_tints:
-				tints.append((c as Color) * cloth_tint)
+			for i in look.part_tints.size():
+				var c: Color = look.part_tints[i]
+				# Роль: все части одежды — оттенки цвета роли (3 яркости — 3 общих материала на роль)
+				tints.append(Color(cloth * [0.85, 1.0, 1.15][i % 3], 1.0) if cloth != cloth_tint else c * cloth_tint)
 			_humanoid.part_tints = tints
 			if not weapon_pool.is_empty():
 				hand_weapon = weapon_pool[rng.randi() % weapon_pool.size()]
@@ -417,10 +433,24 @@ func _ready() -> void:
 			if kind == Kind.GRUNT and rng.randf() < spear_chance:
 				hand_weapon = "q_spear"
 		_humanoid.skin_tint = Color.WHITE if kind == Kind.FODDER else skin_tint
-		_humanoid.cloth_tint = cloth_tint
+		_humanoid.cloth_tint = cloth
+		if roles and role_skin.a > 0.0:
+			_humanoid.skin_tint = role_skin
+		if roles and not role_parts.is_empty() and not randomize_look:
+			var parts := _humanoid.parts.duplicate()
+			var pt: Array[Color] = _humanoid.part_tints.duplicate()
+			for i in role_parts.size():
+				parts.append(role_parts[i])
+				pt.append(role_part_tints[i] if i < role_part_tints.size() else cloth)
+			_humanoid.parts = parts
+			_humanoid.part_tints = pt
+		if roles and role_shield_scale > 0.0:
+			shield_scale = role_shield_scale
 		_humanoid.eye_glow = Color(0, 0, 0, 0) if kind == Kind.FODDER else eye_glow
 		add_child(_humanoid)
-		_humanoid.scale = Vector3.ONE * model_scale
+		_humanoid.scale = base_visual_scale()
+		if roles and role_horns:
+			visual.attach_horns()
 		_visual = _humanoid
 		if hand_weapon != "":
 			visual._attach_weapon(hand_weapon)
@@ -444,7 +474,7 @@ func _ready() -> void:
 		# Процедурная заглушка: вырастаем из-под земли
 		_visual.scale = Vector3(0.1, 0.1, 0.1)
 		var tw := create_tween()
-		tw.tween_property(_visual, "scale", Vector3.ONE * model_scale, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_visual, "scale", base_visual_scale(), 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_setup_special()
 	# Множители мобов debug-панели (П8) — после элиты/мини-босса, которые меняют ХП сразу после спавна
 	DebugBalance.apply_enemy.call_deferred(self)
@@ -705,8 +735,8 @@ func _begin_windup(slam: bool) -> void:
 			_humanoid.anim.play(full, 0.08, clampf(hit_t / maxf(wt, 0.05), 0.3, 4.0))
 	elif _visual:
 		var tw := create_tween()
-		tw.tween_property(_visual, "scale", Vector3(1.12, 0.88, 1.12) * model_scale, 0.15)
-		tw.tween_property(_visual, "scale", Vector3(0.95, 1.08, 0.95) * model_scale, maxf(0.05, (boss_slam_windup if slam else windup_time) - 0.15))
+		tw.tween_property(_visual, "scale", Vector3(1.12, 0.88, 1.12) * base_visual_scale(), 0.15)
+		tw.tween_property(_visual, "scale", Vector3(0.95, 1.08, 0.95) * base_visual_scale(), maxf(0.05, (boss_slam_windup if slam else windup_time) - 0.15))
 
 ## Сигнал нужен в начале именно этого замаха, чтобы оставалось время среагировать.
 func _warning_is_timely(serial: int) -> bool:
@@ -717,7 +747,7 @@ func _execute_attack() -> void:
 	_cooldown = attack_cooldown
 	if _visual and _humanoid == null:
 		var tw := create_tween()
-		tw.tween_property(_visual, "scale", Vector3.ONE * model_scale, 0.12).set_trans(Tween.TRANS_BACK)
+		tw.tween_property(_visual, "scale", base_visual_scale(), 0.12).set_trans(Tween.TRANS_BACK)
 	var mode := _attack_mode
 	_attack_mode = &""
 	if mode != &"" and kind != Kind.BOSS and ranged.execute(mode):
@@ -1097,3 +1127,12 @@ func _update_visual_feedback(delta: float) -> void:
 ## совместимость → visual._set_overlay
 func _set_overlay(flash: float, glow: float) -> void:
 	visual._set_overlay(flash, glow)
+
+## Роли врагов различимы по цвету и силуэту (партия 12); F6 (FeelSwitch enemy_roles) — как раньше
+static func roles_on() -> bool:
+	return not FeelSwitch.is_old(&"enemy_roles")
+
+## Масштаб модели в покое: model_scale × силуэт роли (role_shape)
+func base_visual_scale() -> Vector3:
+	return Vector3.ONE * model_scale * (role_shape if roles_on() else Vector3.ONE)
+

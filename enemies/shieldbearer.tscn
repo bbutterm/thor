@@ -6,7 +6,7 @@
 radius = 0.486
 height = 1.944
 
-[node name="Shieldbearer" type="CharacterBody3D" unique_id=575670122]
+[node name="Shieldbearer" type="CharacterBody3D" unique_id=1538877237]
 collision_layer = 4
 collision_mask = 15
 floor_snap_length = 0.3
@@ -29,11 +29,15 @@ cloth_tint = Color(0.5, 0.52, 0.58, 1)
 eye_glow = Color(0.4, 0.85, 1, 1)
 hand_weapon = "q_sword"
 weapon_pool = PackedStringArray()
+role_cloth = Color(1.5, 1, 0.32, 1)
+role_shape = Vector3(1.25, 1.02, 1.2)
+role_parts = PackedStringArray()
+role_shield_scale = 2.1
 anim_idle = "Idle_Shield_Loop"
 anim_move_ref_speed = 1.5
 anim_attack = "Shield_OneShot"
 anim_attack_hit_at = 0.4
 
-[node name="Collider" type="CollisionShape3D" parent="." unique_id=889259171]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=1274593658]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.972, 0)
 shape = SubResource("CapsuleShape3D_ucqia")

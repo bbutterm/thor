@@ -14,6 +14,8 @@ const MODEL_LOOKS := {
 		"weapon_pool": ["q_axe", "q_sword"],
 		"anim_spawn": "LayToIdle", "anim_idle": "Zombie_Idle_Loop", "anim_move": "Zombie_Walk_Fwd_Loop", "anim_move_ref_speed": 1.6,
 		"anim_attack": "Zombie_Scratch", "anim_attack_hit_at": 0.45, "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+		# Партия 12 (роли): обычный, синеватая броня
+		"role_cloth": Color(0.6, 0.85, 1.45),
 	},
 	"thrower": {
 		"model_body": "base/Superhero_Female_FullBody.gltf", "model_outfit": "outfits/Female_Ranger.gltf", "model_hair": "",
@@ -21,6 +23,8 @@ const MODEL_LOOKS := {
 		"hand_weapon": "staff",
 		"anim_spawn": "LayToIdle", "anim_idle": "Spell_Simple_Idle_Loop", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.5,
 		"anim_attack": "Spell_Simple_Shoot", "anim_attack_hit_at": 0.6, "anim_hit": "Hit_Head", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+		# Партия 12 (роли): красный капюшон
+		"role_cloth": Color(1.45, 0.3, 0.22), "role_parts": ["parts/Female_Ranger_Head_Hood.gltf"], "role_part_tints": [Color(1.6, 0.22, 0.16)],
 	},
 	"boss": {
 		"model_body": "base/Superhero_Male_FullBody.gltf", "model_outfit": "outfits/Male_Peasant.gltf", "model_hair": "hair/Hair_Beard.gltf",
@@ -76,6 +80,8 @@ const MODEL_LOOKS := {
 		"hand_weapon": "", "randomize_look": false, "shield_chance": 0.0,
 		"anim_spawn": "LayToIdle", "anim_idle": "Zombie_Idle_Loop", "anim_move": "Zombie_Walk_Fwd_Loop", "anim_move_ref_speed": 1.6,
 		"anim_attack": "Zombie_Scratch", "anim_attack_hit_at": 0.45, "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+		# Партия 12 (роли): мелкий, приземистый, серый
+		"role_skin": Color(0.78, 0.78, 0.76), "role_shape": Vector3(0.9, 0.82, 0.9),
 	},
 	# Раздутый: толстый (bloat_fatness), желчно-зелёный, раздувается к взрыву
 	"bloated": {
@@ -92,6 +98,8 @@ const MODEL_LOOKS := {
 		"hand_weapon": "q_sword", "randomize_look": false, "shield_chance": 0.0,
 		"anim_spawn": "LayToIdle", "anim_idle": "Idle_Shield_Loop", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.5,
 		"anim_attack": "Shield_OneShot", "anim_attack_hit_at": 0.4, "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+		# Партия 12 (роли): широкий, огромный щит, ржаво-жёлтый
+		"role_cloth": Color(1.5, 1.0, 0.32), "role_shape": Vector3(1.25, 1.02, 1.2), "role_shield_scale": 2.1,
 	},
 	# Шаман: зелёное свечение, посох
 	"shaman": {
@@ -100,6 +108,8 @@ const MODEL_LOOKS := {
 		"hand_weapon": "q_staff", "randomize_look": false, "shield_chance": 0.0,
 		"anim_spawn": "LayToIdle", "anim_idle": "Spell_Simple_Idle_Loop", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.5,
 		"anim_attack": "Spell_Simple_Shoot", "anim_attack_hit_at": 0.6, "anim_hit": "Hit_Head", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+		# Партия 12 (роли): высокий, посох и рога, зелёное свечение
+		"role_cloth": Color(0.45, 1.3, 0.5), "role_shape": Vector3(0.95, 1.16, 0.95), "role_horns": true,
 	},
 	# Наёмник Локи — смертный (обычная кожа, без свечения глаз), с автоматом
 	"merc": {
@@ -108,6 +118,8 @@ const MODEL_LOOKS := {
 		"hand_weapon": "gun_smg", "randomize_look": false, "shield_chance": 0.0,
 		"anim_spawn": "LayToIdle", "anim_idle": "Pistol_Idle_Loop", "anim_move": "Walk_Loop", "anim_move_ref_speed": 1.5,
 		"anim_attack": "Pistol_Aim_Neutral", "anim_attack_hit_at": 0.95, "anim_hit": "Hit_Chest", "anim_stun": "Hit_Knockback", "anim_death": "Death01",
+		# Партия 12 (роли): зелёно-золотой (наплечники — золото)
+		"role_cloth": Color(0.45, 1.1, 0.4), "role_parts": ["parts/Male_Ranger_Acc_Pauldron.gltf"], "role_part_tints": [Color(1.7, 1.3, 0.35)],
 	},
 }
 
@@ -173,7 +185,14 @@ func build_enemies() -> void:
 			e.set(prop, extra[prop])
 		var look: Dictionary = MODEL_LOOKS[key]
 		for prop in look:
-			e.set(prop, look[prop])
+			if prop == "role_parts":
+				e.set(prop, PackedStringArray(look[prop]))
+			elif prop == "role_part_tints":
+				var tints: Array[Color] = []
+				tints.assign(look[prop])
+				e.set(prop, tints)
+			else:
+				e.set(prop, look[prop])
 		e.collision_layer = SceneBuilder.ENEMY_L
 		e.collision_mask = SceneBuilder.WORLD | SceneBuilder.PLAYER_L | SceneBuilder.ENEMY_L | SceneBuilder.PROPS_L
 		e.floor_snap_length = 0.3
