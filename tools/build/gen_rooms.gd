@@ -128,6 +128,28 @@ func _watchtower(parent: Node, name: String, center: Vector3, mat: Material, wit
 		gen._box(tower, "Rail_%d" % int(sx), Vector3(sx * 1.32, 4.35, 0), Vector3(0.12, 0.12, 2.5), mat, false)
 	gen._box(tower, "RailSouth", Vector3(0, 4.35, 1.32), Vector3(2.5, 0.12, 0.12), mat, false)
 
+## Лестница: Area3D Ladder (Тор лезет, пока внутри и жмёт «вперёд»), над верхом — запас 1.2 м, чтобы сойти на площадку;
+## вид — две тетивы и ступеньки через 0.4 м (без коллизии). bottom — середина низа, лицом к +Z при yaw 0.
+func _ladder(parent: Node, name: String, bottom: Vector3, height: float, yaw: float, mat: Material) -> void:
+	var a := Area3D.new()
+	a.name = name
+	a.set_script(load("res://rooms/ladder.gd"))
+	a.position = bottom
+	a.rotation_degrees = Vector3(0, yaw, 0)
+	parent.add_child(a)
+	var cs := CollisionShape3D.new()
+	cs.name = "Shape"
+	var bs := BoxShape3D.new()
+	bs.size = Vector3(1.0, height + 1.2, 1.0)
+	cs.shape = bs
+	cs.position = Vector3(0, (height + 1.2) * 0.5, 0.25)
+	a.add_child(cs)
+	for sx in [-0.4, 0.4]:
+		gen._box(a, "Rail%d" % int(sx * 10), Vector3(sx, height * 0.5 + 0.3, 0), Vector3(0.09, height + 0.6, 0.09), mat, false)
+	var n := int(height / 0.4)
+	for i in n:
+		gen._box(a, "Rung%d" % i, Vector3(0, 0.35 + i * 0.4, 0), Vector3(0.8, 0.07, 0.07), mat, false)
+
 ## Пологие проходы: [центр, размер, наклон X, материал, необязательный поворот Y], углы в градусах.
 func _build_ramps(parent: Node, ramps: Array, mats: Dictionary, plank_path: String = "") -> void:
 	if ramps.is_empty():
@@ -170,6 +192,13 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		root.set_meta("exit_y", exit_y)
 	if d.has("enemy_fall_y"):
 		root.set_meta("enemy_fall_y", float(d.enemy_fall_y))
+	# П7 «зал как путь»: двери видны с порога под решёткой, точки появления светятся заранее, вода
+	if d.get("doors_early", false):
+		root.set_meta("doors_early", true)
+	if d.has("spawn_telegraph"):
+		root.set("spawn_telegraph", float(d.spawn_telegraph))
+	if d.has("water"):
+		root.set_meta("water_y", float(d.water[1]))
 	var w: float = d.w
 	var dep: float = d.d
 	var h := 6.0
@@ -279,13 +308,35 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 	exit.add_child(es)
 	root.add_child(exit)
 
-	# Точка появления игрока — у южной стены, лицом к двери
+	# Точка появления игрока — у южной стены, лицом к двери ("spawn_pos" — своя точка входа)
 	var spawn := Marker3D.new()
 	spawn.name = "PlayerSpawn"
 	spawn.position = Vector3(0, float(d.get("spawn_y", 0.0)) + 0.1, dep / 2 - 2.5)
 	if d.get("spawn_y", 0.0) > 0.0:
 		spawn.position = Vector3(-w / 2 + 4, float(d.spawn_y) + 0.1, dep / 2 - 2.5)
+	if d.has("spawn_pos"):
+		spawn.position = (d.spawn_pos as Vector3) + Vector3(0, 0.1, 0)
 	root.add_child(spawn)
+
+	# Вода (П7): [прямоугольники XZ, уровень] — плоскость общего материала water под проёмами пола
+	if d.has("water"):
+		var wnode := Node3D.new()
+		wnode.name = "Water"
+		root.add_child(wnode)
+		var wmat := load("res://rooms/materials/water.tres") as Material
+		for k in (d.water[0] as Array).size():
+			var r: Rect2 = d.water[0][k]
+			var pm := PlaneMesh.new()
+			pm.size = r.size
+			gen._mesh(wnode, "Surface%d" % k, pm, Vector3(r.position.x + r.size.x * 0.5, float(d.water[1]) + 0.35, r.position.y + r.size.y * 0.5), wmat)
+	# Лестницы (П7): [низ, высота, поворот Y] — объём Ladder (rooms/ladder.gd) и брусья без коллизии
+	var ladders: Array = d.get("ladders", [])
+	if not ladders.is_empty():
+		var lnode := Node3D.new()
+		lnode.name = "Ladders"
+		root.add_child(lnode)
+		for k in ladders.size():
+			_ladder(lnode, "Ladder%d" % k, ladders[k][0], float(ladders[k][1]), float(ladders[k][2]), mats.wood)
 
 	# Маркеры врагов
 	var spawns := Node3D.new()

@@ -21,6 +21,9 @@ const ICON_HEIGHT := 4.95
 var reward: RewardDef
 var reward_id: String = ""
 var used: bool = false
+## Закрыта решёткой до конца боя (П7: двери видны с порога; Room мета doors_early) — вход не срабатывает
+var locked: bool = false
+var _grate: Node3D
 var _icon: Node3D
 var _portal: MeshInstance3D
 var _circle: MeshInstance3D
@@ -148,8 +151,44 @@ func appear(delay: float = 0.0) -> void:
 func trigger_position() -> Vector3:
 	return global_position + Vector3(0, 0.3, 0)
 
+## Решётка в проёме: брусья из общего меша и общего материала дерева залов (без новых материалов)
+func lock() -> void:
+	locked = true
+	if _grate:
+		return
+	_grate = Node3D.new()
+	_grate.name = "Grate"
+	add_child(_grate)
+	var mat := load("res://rooms/materials/woodtrim.tres") as Material
+	for i in 5:
+		_grate.add_child(_bar(Vector3(-0.64 + i * 0.32, 1.38, 0.12), Vector3(0.09, 2.75, 0.09), mat))
+	for y in [0.55, 1.6, 2.5]:
+		_grate.add_child(_bar(Vector3(0, y, 0.12), Vector3(1.6, 0.1, 0.1), mat))
+
+func _bar(pos: Vector3, size: Vector3, mat: Material) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.mesh = FX.shared_mesh("box")
+	mi.material_override = mat
+	mi.position = pos
+	mi.scale = size
+	return mi
+
+## Бой окончен: решётка уходит вверх; если Тор уже стоит в проёме — вход сразу.
+func unlock(delay: float = 0.0) -> void:
+	locked = false
+	if _grate:
+		var g := _grate
+		_grate = null
+		var tw := g.create_tween()
+		tw.tween_interval(delay)
+		tw.tween_property(g, "position:y", 3.2, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+		tw.tween_callback(g.queue_free)
+	if _area and not has_meta("warmup"):
+		for b in _area.get_overlapping_bodies():
+			_on_body_entered(b)
+
 func _on_body_entered(body: Node) -> void:
-	if used or not body is Player:
+	if used or locked or not body is Player:
 		return
 	used = true
 	entered.emit(self)

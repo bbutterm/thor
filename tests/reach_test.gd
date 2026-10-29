@@ -187,12 +187,21 @@ func _run() -> void:
 		fails += 1
 
 	# Новые планировки Мидгарда (GDD 16): от пола на верхний ярус — бегом вперёд с прыжками (залезание на уступ)
-	await _climb("res://rooms/room_07.tscn", Vector3(-1.5, 0.1, 2), -PI / 2, 2.1, "причал: сходни → палуба драккара 2.2 м")
-	await _climb("res://rooms/room_07.tscn", Vector3(-8, 0.1, 9.5), 0.0, 2.9, "причал: склад на берегу 3 м")
+	# П7 «зал как путь»: весь путь от входа к дверям одним движением по точкам, короткие пути и лестницы
+	await _route("res://rooms/room_07.tscn", Vector3.INF, [Vector3(-2, 0, 17.6), Vector3(-2, 1, 12), Vector3(-2, 1, -2), Vector3(4.9, 3, -2),
+		Vector3(7, 3, -8.5), Vector3(7, 6, -18.6), Vector3(0, 6, -21.2)], "причал: берег → пирс → палуба → башня-ворота 6 м")
+	await _route("res://rooms/room_07.tscn", Vector3(-10, 2.1, 9), [Vector3(-10, 2, 5), Vector3(-10, 2, -7.6), Vector3(-10, 6, -18.6)],
+		"причал (короткий путь): склад → мост → пандус на башню")
+	await _climb("res://rooms/room_07.tscn", Vector3(-10, 0.1, 15.2), 0.0, 1.9, "причал: берег → склад 2 м (уступ)")
+	await _ladder_up("res://rooms/room_07.tscn", Vector3(7, 3.1, 0.9), 0.0, 7.9, "причал: лестница на мачту 8 м")
+	await _route("res://rooms/room_09.tscn", Vector3.INF, [Vector3(3, 0, 14.2), Vector3(12.2, 2, 14.2), Vector3(12, 2, 11.8), Vector3(8, 2, 3.3),
+		Vector3(-3.4, 4, 3.3), Vector3(-3.4, 4, 0), Vector3(0, 4, -2.6), Vector3(0, 6, -8.6), Vector3(0, 6, -21)],
+		"деревня: набережная → рынок → площадь → двор 6 м")
+	await _ladder_up("res://rooms/room_09.tscn", Vector3(-7.2, 2.1, 8), PI / 2, 4.9, "деревня: лестница на крышу рынка 5 м")
+	await _route("res://rooms/room_09.tscn", Vector3(-11, 5.1, 6.5), [Vector3(-11, 5, 1.8), Vector3(-11, 7, -1), Vector3(-11, 7, -4.6), Vector3(-11, 6, -10)],
+		"деревня (короткий путь): мост с крыши → крыша площади 7 м → двор")
 	await _climb("res://rooms/room_08.tscn", Vector3(-3, 0.1, 6), PI / 2, 1.9, "колизей: ступень → терраса 2 м")
 	await _climb("res://rooms/room_08.tscn", Vector3(-11, 2.1, -3), 0.0, 3.9, "колизей: терраса → ложа 4 м")
-	await _climb("res://rooms/room_09.tscn", Vector3(-3, 0.1, 6), PI / 2, 2.9, "деревня: ящик → крыша дома 3 м")
-	await _climb("res://rooms/room_09.tscn", Vector3(-5, 0.1, 1.5), 0.0, 2.9, "деревня: ящик → крыша дома с мостом 3 м")
 	await _walk_room10_ramp(Vector3(-10, 0.1, 10.4), 0.0, 2.9, "яма → средний ярус")
 	await _walk_room10_ramp(Vector3(-6.8, 3.1, -1.6), PI, 6.5, "средний → верхний помост")
 	await _walk_room10_ramp(Vector3(9, 3.1, -6.4), PI, 6.5, "средний ярус → вышка")
@@ -203,6 +212,79 @@ func _run() -> void:
 	await _tower11_slam()
 	FX.reset_time()
 	get_tree().quit(1 if fails > 0 else 0)
+
+## Путь по точкам (П7): от start (Vector3.INF — точка входа зала) бежим к каждой точке, прыгаем, если упёрлись;
+## точка взята, если ближе 0.9 м по горизонтали и не ниже её высоты − 0.3 м. Вода и враги выключены (физика зала стоит).
+func _route(room: String, start: Vector3, points: Array, what: String) -> void:
+	var g := await _start(room)
+	g.room.set_physics_process(false)
+	g.room._spawn_queue.clear()
+	var p := g.player
+	if start != Vector3.INF:
+		p.global_position = g.room.to_global(start)
+	p.velocity = Vector3.ZERO
+	await frames(10)
+	var done := 0
+	var stuck := 0
+	var last := p.global_position
+	for i in 60 * 40:
+		if done >= points.size():
+			break
+		var target: Vector3 = points[done]
+		var here := g.room.to_local(p.global_position)
+		var flat := Vector2(target.x - here.x, target.z - here.z)
+		if flat.length() < 0.9 and here.y >= target.y - 0.3 and p.is_on_floor():
+			done += 1
+			continue
+		p.rotation_target = Vector2(0, atan2(-flat.x, -flat.y))
+		Input.action_press("move_forward")
+		await get_tree().physics_frame
+		if i % 15 == 0:
+			stuck = stuck + 1 if p.global_position.distance_to(last) < 0.5 else 0
+			last = p.global_position
+		# Упёрся (уступ, край) — прыжок; на спаде — второй
+		if stuck >= 2 and p.is_on_floor():
+			Input.action_press("jump")
+		elif not p.is_on_floor() and p.velocity.y < 0.5 and stuck >= 2:
+			Input.action_press("jump")
+		else:
+			Input.action_release("jump")
+		if g.room.to_local(p.global_position).y < -3.0:
+			break
+	Input.action_release("move_forward")
+	Input.action_release("jump")
+	var ok := done >= points.size()
+	print("[%s] %s: точек %d из %d (y=%.2f)" % ["OK" if ok else "FAIL", what, done, points.size(), g.room.to_local(p.global_position).y])
+	if not ok:
+		fails += 1
+
+## Лестница (rooms/ladder.gd): вперёд без прыжков, пока не окажемся на площадке не ниже min_y.
+func _ladder_up(room: String, local: Vector3, yaw: float, min_y: float, what: String) -> void:
+	var g := await _start(room)
+	g.room.set_physics_process(false)
+	g.room._spawn_queue.clear()
+	var p := g.player
+	p.global_position = g.room.to_global(local)
+	p.velocity = Vector3.ZERO
+	p.rotation_target = Vector2(0, yaw)
+	await frames(10)
+	Input.action_press("move_forward")
+	var ok := false
+	var top := 0.0
+	for i in 60 * 6:
+		await get_tree().physics_frame
+		var y := g.room.to_local(p.global_position).y
+		top = maxf(top, y)
+		# Наверху — отпустить «вперёд» через полсекунды (как игрок, сошедший на площадку)
+		if p.ladder == null and y >= min_y and i % 30 == 29:
+			Input.action_release("move_forward")
+		if p.is_on_floor() and y >= min_y:
+			ok = true
+			break
+	Input.action_release("move_forward")
+	print("[%s] %s (y=%.2f)" % ["OK" if ok else "FAIL", what, top])
+	if not ok:
+		fails += 1
 
 ## Встать в точку зала (локальные координаты), смотреть по yaw и бежать вперёд с прыжками, пока не окажемся
 ## на высоте >= min_y на земле (залезание на уступ, двойной прыжок).

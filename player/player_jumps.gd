@@ -59,6 +59,13 @@ func _process_jump(on_floor: bool) -> void:
 		p._jump_buffer_left = 0.0
 
 func _process_gravity(on_floor: bool, delta: float) -> void:
+	# На лестнице (Ladder): без гравитации, вперёд — вверх, назад — вниз; прыжок срывает с неё (скорость прыжка сохраняется)
+	if p.ladder and is_instance_valid(p.ladder) and p.velocity.y <= p.ladder_climb_speed + 0.01:
+		var up := Input.get_axis("move_back", "move_forward") if p.input_enabled else 0.0
+		p.velocity.y = up * p.ladder_climb_speed if absf(up) > 0.2 else 0.0
+		if on_floor and p.velocity.y < 0.0:
+			p.velocity.y = -0.5
+		return
 	if on_floor and p.velocity.y <= 0.0:
 		p.velocity.y = -0.5
 		return

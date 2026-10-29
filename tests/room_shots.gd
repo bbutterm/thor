@@ -5,7 +5,10 @@ extends Node
 var out_dir := "user://room_shots"
 var rooms: Array[String] = ["room_07", "room_08", "room_09"]
 const EXTRA_VIEWS := {
-	"room_09": [[Vector3(-2, 2.2, 1), Vector3(-9, 2.5, -5), "c_dom_sz"], [Vector3(2, 2.2, 1), Vector3(9, 2.5, -5), "d_dom_sv"],
+	# П7 «зал как путь»: вид сверху (сравнить со схемой) и с палубы
+	"room_07": [[Vector3(0.5, 42, 14), Vector3(0, 0, -3), "c_sverhu"], [Vector3(4, 4.8, 2), Vector3(0, 6, -20), "d_paluba"]],
+	"room_09": [[Vector3(0.5, 44, 14), Vector3(0, 0, -3), "g_sverhu"], [Vector3(-2, 1.7, 17.3), Vector3(0, 8, -22), "h_porog"],
+		[Vector3(-2, 2.2, 1), Vector3(-9, 2.5, -5), "c_dom_sz"], [Vector3(2, 2.2, 1), Vector3(9, 2.5, -5), "d_dom_sv"],
 		[Vector3(-2, 2.2, 0), Vector3(-9, 2.5, 6), "e_dom_yz"], [Vector3(2, 2.2, 0), Vector3(9, 2.2, 6), "f_dom_yv"]],
 }
 

@@ -85,6 +85,8 @@ signal weapon_skill_lunge_step(from: Vector3, to: Vector3)
 @export var ledge_min_height: float = 0.75
 @export var ledge_max_height: float = 2.2
 @export var ledge_climb_time: float = 0.3
+## Лестница (rooms/ladder.gd, П7 «зал как путь»): скорость подъёма/спуска (м/с), вперёд — вверх, назад — вниз
+@export var ladder_climb_speed: float = 4.5
 ## С ренжем в руке залезание дольше (GDD 7.4)
 @export var ledge_climb_ranged_mult: float = 1.5
 ## Отскок от стены в воздухе: сколько раз до касания земли, сила от стены и вверх
@@ -194,6 +196,8 @@ var _bounce_window_left: float = 0.0
 var _bounce_boost_velocity: float = 0.0
 var _stomp_cooldown: float = 0.0
 var is_climbing: bool = false
+## Лестница, на которой стоит Тор (её Area3D ставит и снимает сама; null — нет)
+var ladder: Node3D
 var _climb_t: float = 0.0
 var _climb_time: float = 0.3
 var _climb_from: Vector3

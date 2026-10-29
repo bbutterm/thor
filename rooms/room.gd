@@ -53,6 +53,14 @@ signal wave_started(index: int)
 @export_range(0.1, 20.0, 0.1) var entry_max_drop: float = 5.0
 @export_range(1.0, 30.0, 0.5) var entry_max_distance: float = 10.0
 @export_range(0.05, 1.0, 0.01) var entry_arrival_tolerance: float = 0.18
+## П7 «зал как путь»: точки появления волны светятся и звучат за столько секунд до врагов (0 — сразу, как раньше);
+## точка за спиной — стрелка у края экрана (группа spawn_telegraphs, ui/offscreen_indicators.gd)
+@export_range(0.0, 3.0, 0.1) var spawn_telegraph: float = 0.0
+@export var spawn_telegraph_color: Color = Color(1.0, 0.45, 0.2)
+
+@export_group("Вода")
+## Мета зала water_y (генератор: "water_y"): Тор ниже этой высоты — в воде: урон и обратно на сушу
+@export var water_damage: float = 10.0
 
 @export_group("Навигация ярусов")
 ## Участвует только зал с узлом EnemyNavigation. Частота распределена между врагами.
@@ -115,6 +123,8 @@ var _wave_time: float = 0.0
 var _advance_pending: bool = false
 var _nav_jump_holders: Dictionary = {}  # instance id → WeakRef
 var _nav_supported_parts: Dictionary = {}  # instance id настила → регионы и связи
+## Последняя точка, где Тор стоял на суше (для возврата из воды)
+var _last_dry: Vector3 = Vector3.INF
 
 @onready var spawns: Node3D = $Spawns
 @onready var door: Node3D = get_node_or_null("Door")
@@ -229,11 +239,43 @@ func _spawn_wave(index: int) -> void:
 	_wave_time = 0.0
 	_advance_pending = false
 	_spawn_timer = 0.0
+	if spawn_telegraph > 0.0:
+		var seen := {}
+		for m in markers:
+			var key: Node3D = (m.get_parent() as Node3D) if (m as Node).has_meta("squad_offset") else m as Node3D
+			if not seen.has(key):
+				seen[key] = true
+				_telegraph(key.global_position)
+
+## Свет и звук в точке появления за spawn_telegraph секунд (общие эффекты FX, без новых материалов).
+func _telegraph(pos: Vector3) -> void:
+	var t := Node3D.new()
+	t.name = "SpawnTelegraph"
+	t.set_meta("transient", true)
+	add_child(t)
+	t.global_position = pos
+	t.add_to_group("spawn_telegraphs")
+	var l := OmniLight3D.new()
+	l.light_color = spawn_telegraph_color
+	l.light_energy = 2.2
+	l.omni_range = 4.5
+	l.position = Vector3(0, 1.2, 0)
+	t.add_child(l)
+	FX.ring(self, pos + Vector3(0, 0.1, 0), 1.4, spawn_telegraph_color, spawn_telegraph * 0.5)
+	get_tree().create_timer(spawn_telegraph * 0.5, false).timeout.connect(func() -> void:
+		if is_instance_valid(t):
+			FX.ring(self, t.global_position + Vector3(0, 0.1, 0), 1.0, spawn_telegraph_color, spawn_telegraph * 0.5))
+	Audio.play("sounds/sfx/hazard_warn.wav")
+	var tw := t.create_tween()
+	tw.tween_property(l, "light_energy", 0.0, spawn_telegraph + 0.3).set_ease(Tween.EASE_IN)
+	tw.tween_callback(t.queue_free)
 
 func _physics_process(delta: float) -> void:
 	if _started and not _is_cleared:
 		_wave_time += delta
 		_check_next_wave()
+	if has_meta("water_y"):
+		_water_tick()
 	if _spawn_queue.is_empty():
 		return
 	_spawn_timer -= delta
@@ -250,6 +292,8 @@ func _physics_process(delta: float) -> void:
 			_spawn_queue.pop_front()
 			continue
 		var marker := front as Node3D
+		if _wave_time < spawn_telegraph:
+			break  # точки появления ещё светятся (spawn_telegraph)
 		if float(marker.get_meta("not_before", 0.0)) > _wave_time:
 			break  # засада отряда ещё не вышла
 		var marker_batch := clampi(int(marker.get_meta("entry_batch", spawn_batch)), 1, maxi(1, spawn_batch))
@@ -520,3 +564,21 @@ func _spawn_chest() -> void:
 	if pos == Vector3.INF:
 		pos = get_spawn_transform().origin + get_spawn_transform().basis.z * -4.0
 	Loot.on_room_cleared(self, pos, chest_chance)
+
+## Вода (мета water_y): Тор ниже уровня — урон water_damage и обратно в последнюю сухую точку.
+func _water_tick() -> void:
+	var p := _player if _player and is_instance_valid(_player) else get_tree().get_first_node_in_group("player") as Player
+	if p == null or p.is_dead:
+		return
+	var y := to_local(p.global_position).y
+	var water_y := float(get_meta("water_y"))
+	if p.is_on_floor() and y > water_y + 0.4:
+		_last_dry = p.global_position
+	elif y < water_y and _last_dry != Vector3.INF:
+		Perf.mark("water_fall")
+		FX.burst(self, p.global_position, 1.6, Color(0.6, 0.8, 1.0), 0.4)
+		p.global_position = _last_dry + Vector3(0, 0.3, 0)
+		p.velocity = Vector3.ZERO
+		RunTracker.note_damage("water")
+		p.take_damage(water_damage, Vector3.ZERO)
+

@@ -81,6 +81,9 @@ func start_room(room: Room, player: Player) -> void:
 		room.start(player)
 		if trial and is_instance_valid(trial):
 			trial.start(player)
+		# П7 «зал как путь»: двери-награды видны с порога, закрыты решёткой до конца боя
+		if Run.doors_enabled and bool(room.get_meta("doors_early", false)) and not Run.is_boss_room():
+			show_doors(true)
 
 func _start_peaceful(room: Room) -> void:
 	match Run.current_reward():
@@ -379,9 +382,16 @@ func _on_trait_reroll() -> void:
 # --- Двери ---
 
 ## Поставить 2–3 двери с наградами у северной стены зала (у старой двери).
-func show_doors() -> void:
+## locked — с решёткой (ранний показ, П7); повторный вызов после награды поднимает решётки.
+func show_doors(locked: bool = false) -> void:
 	var room := game.room
 	if room == null or Run.is_boss_room():
+		return
+	if not locked and not doors.is_empty() and is_instance_valid(doors[0]) and (doors[0] as RewardDoor).locked:
+		for i in doors.size():
+			if is_instance_valid(doors[i]):
+				(doors[i] as RewardDoor).unlock(0.12 * i)
+		_doors_opened(doors.size())
 		return
 	Perf.mark("doors_show")
 	var offers := Run.roll_door_offers()
@@ -406,13 +416,21 @@ func show_doors() -> void:
 		room.add_child(d)
 		d.global_position = ground
 		d.rotation.y = 0.0
-		d.appear(0.12 * i)
+		if locked:
+			d.lock()
+		else:
+			d.appear(0.12 * i)
 		d.entered.connect(_on_door_entered)
 		doors.append(d)
 	# Следующий зал (ларёк — свой) грузим в фоне, пока игрок выбирает. В headless
 	# пропускаем фоновый запрос из-за гонки RID в Dummy-рендерере; вход загрузит сцену сам.
 	if DisplayServer.get_name() != "headless" and "shop" in offers and Run.map and ResourceLoader.exists(Run.map.shop_scene):
 		ResourceLoader.load_threaded_request(Run.map.shop_scene, "", true)
+	if not locked:
+		_doors_opened(n)
+
+## Двери открыты (сразу или после решёток): звук, подсказка, Один, сигнал (обучение, тесты).
+func _doors_opened(n: int) -> void:
 	Audio.play("sounds/sfx/door_open.wav")
 	game.hud.toast(tr("ВЫБЕРИ ДВЕРЬ") if n > 1 else tr("ДВЕРЬ ОТКРЫТА — ВПЕРЁД!"))
 	if n > 1:

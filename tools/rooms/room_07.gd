@@ -1,30 +1,65 @@
 extends RefCounted
 ## Описание зала room_07 «Причал с драккаром» для генератора (tools/build_scenes.gd → room_defs, 7-й в списке).
 ## Формат ключей — комментарий над room_defs() в tools/build_scenes.gd и rooms/CLAUDE.md.
+## П7 «зал как путь», схема A docs/mockups/room_07_pier_A_chosen.png (старая раскладка — rooms/quick_old/room_07_old.tscn,
+## F6 в «Быстрой проверке»).
 
 const K = preload("res://tools/rooms/room_kit.gd")
 
 static func def() -> Dictionary:
-	# 7. Причал с драккаром (GDD 16) — корабль (модель Quaternius Pirate Kit поверх невидимой коллизии: палуба 2.2 м,
-	# нос 3.2 м), склад на берегу 3 м. Наверх: сходни-ящики 1.1 м → палуба (залезание), прыжковая руна у склада.
+	# Путь с юга на север ~40 м: берег (0 м) → пирс (1 м) → палуба драккара (3 м) → башня-ворота (6 м) с дверями.
+	# Мачта с площадкой 8 м (лестница с палубы) — точка для удара-приземления на палубу. Короткий путь: прыжковая
+	# руна на берегу → склад (2 м) → мост-настил (ломается ударом) → пандус на башню. Вокруг — вода фьорда:
+	# сбитый в воду враг гибнет, Тор теряет 10 HP и возвращается на сушу.
 	return {
-		"file": "room_07", "title": "Причал с драккаром", "w": 26.0, "d": 30.0, "max_alive": 20,
+		"file": "room_07", "title": "Причал с драккаром", "w": 30.0, "d": 46.0, "max_alive": 20,
+		"exit_y": 6.0,
+		"doors_early": true,
+		"spawn_telegraph": 1.0,
+		"spawn_pos": Vector3(0, 0, 20.5),
+		# Вода: всё к северу от берега, кроме блоков (пирс, склад, корабль, башня стоят на дне)
+		"floor_openings": [[Vector2(0, -2.0), Vector2(29.6, 32.0)]],
+		"water": [[Rect2(-15, -18, 30, 32)], -0.9],
+		"enemy_fall_y": -0.5,
 		"blocks": [
-			[Vector3(6, 1.1, 0), Vector3(5, 2.2, 15), "none"],
-			[Vector3(6, 1.6, -9.0), Vector3(3, 3.2, 2), "none"],
-			[Vector3(2.0, 0.55, 2), Vector3(3, 1.1, 2), "wood"],
-			[Vector3(2.0, 0.55, -5), Vector3(3, 1.1, 2), "wood"],
-			[Vector3(-8, 1.5, 4), Vector3(8, 3, 6), "stone_dark"],
+			# 0 пирс 1 м
+			[Vector3(-2, 0.5, 1), Vector3(4, 1, 26), "wood"],
+			# 1 склад на воде 2 м (короткий путь)
+			[Vector3(-10, 1, 10), Vector3(6, 2, 7), "stone_dark"],
+			# 2 мост-настил со склада к пандусу башни (ломается ударом-приземлением)
+			[Vector3(-10, 1.85, -0.75), Vector3(1.8, 0.3, 14.5), "wood"],
+			# 3 палуба драккара 3 м (вид — модель корабля)
+			[Vector3(7, 1.5, -2), Vector3(5, 3, 15), "none"],
+			# 4 башня-ворота 6 м с дверями-наградами (выход — коридор на её высоте)
+			[Vector3(0, 3, -20.5), Vector3(24, 6, 5), "stone_dark"],
+			# 5 площадка мачты 8 м
+			[Vector3(7, 7.72, -2.2), Vector3(3, 0.56, 3.0), "wood"],
+			# 6 мачта за лестницей (упор, чтобы лезть, а не уходить под площадку)
+			[Vector3(7, 5.5, -0.55), Vector3(1.2, 5.0, 0.3), "none"],
 		],
 		"pillars": [],
-		"models": [["res://assets/quaternius/pirate/Ship_Large.gltf", Vector3(6, K.SHIP_Y, 0), 90.0, 1.0]],
-		"jump_pads": [[Vector3(-3, 0, 9), 8.0]],
+		# Пандусы: берег → пирс, пирс → палуба (сходни), палуба → башня, мост склада → башня
+		"ramps": [
+			[Vector3(-2, 0.5, 15.5), Vector3(4, 0.24, 3.2), 18.43, "wood"],
+			[Vector3(2.25, 2.0, -2), Vector3(2.4, 0.24, 4.95), 24.0, "wood", -90.0],
+			[Vector3(7, 4.5, -13.75), Vector3(3, 0.24, 9.05), 19.44, "wood"],
+			[Vector3(-10, 4.0, -13.0), Vector3(1.8, 0.24, 10.8), 21.8, "wood"],
+		],
+		"ladders": [[Vector3(7, 3.0, 0.0), 5.0, 0.0]],
+		"models": [["res://assets/quaternius/pirate/Ship_Large.gltf", Vector3(7, K.SHIP_Y + 0.8, -2), 90.0, 1.0],
+			["res://assets/quaternius/pirate/Ship_Small.gltf", Vector3(-7, -0.5, -11), 30.0, 1.0]],
+		"jump_pads": [[Vector3(-10, 0, 16.5), 8.0]],
 		"enemies": [
-			# П3: 16 + 16 (было 16 + 18 + 19).
-			["grunt", Vector3(-4, 0, -6), 0], ["grunt", Vector3(-8, 0, -6), 0], ["thrower", Vector3(6, 2.3, 5), 0], ["bloated", Vector3(-9, 0, -9), 0], ["grunt", Vector3(6, 2.3, -4), 0],
-			["fodder", Vector3(-4, 0, -2), 0, 6, 1.75], ["fodder", Vector3(-5, 0, -10), 0, 5, 1.625],
-			["shaman", Vector3(-8, 3.1, 4), 1], ["shieldbearer", Vector3(-2, 0, -8), 1], ["grunt", Vector3(6, 2.3, -4), 1], ["grunt", Vector3(6, 2.3, 5.5), 1], ["grunt", Vector3(-9, 0, -9), 1],
-			["fodder", Vector3(-4, 0, -4), 1, 6, 1.75], ["fodder", Vector3(-5, 0, -10), 1, 5, 1.625]],
-		"props": [["barrel", Vector3(-11, 0, -2)], ["barrel", Vector3(-10, 0, -1)], ["barrel", Vector3(-11, 0, 0)], ["crate", Vector3(-4, 0, 6)], ["crate", Vector3(-4, 0.92, 6)],
-			["barrel", Vector3(5, 2.2, 6)], ["barrel", Vector3(7, 2.2, -3)], ["crate", Vector3(-11, 3.0, 6)], ["barrel", Vector3(-1, 0, -11)]],
+			# Волна 1 — на берегу у входа (12)
+			["grunt", Vector3(-6, 0, 16), 0], ["grunt", Vector3(6, 0, 16), 0], ["bloated", Vector3(10, 0, 18), 0],
+			["fodder", Vector3(-5, 0, 18), 0, 5, 1.6], ["fodder", Vector3(5, 0, 19), 0, 4, 1.4],
+			# Волна 2 — на пирсе: лезут из воды с обеих сторон (12)
+			["grunt", Vector3(-3.5, 1.05, 4), 1], ["grunt", Vector3(-0.5, 1.05, -2), 1], ["shieldbearer", Vector3(-2, 1.05, -9), 1],
+			["fodder", Vector3(-3.5, 1.05, 8), 1, 4, 0.5], ["fodder", Vector3(-0.5, 1.05, 0), 1, 5, 0.5],
+			# Волна 3 — на палубе: с носа корабля и с лодки (10); метатель — на башне
+			["shaman", Vector3(7, 3.05, -8), 2], ["grunt", Vector3(6, 3.05, 3), 2], ["grunt", Vector3(8, 3.05, -6), 2],
+			["thrower", Vector3(-4, 6.05, -19.5), 2], ["fodder", Vector3(7, 3.05, -4), 2, 6, 1.2]],
+		"props": [["barrel", Vector3(-12, 0, 20)], ["barrel", Vector3(-11, 0, 21)], ["crate", Vector3(12, 0, 15)], ["crate", Vector3(12, 0.92, 15)],
+			["barrel", Vector3(6, 3.0, 4)], ["barrel", Vector3(8, 3.0, -7)], ["crate", Vector3(-11, 2.0, 12)], ["barrel", Vector3(-1, 1.0, 10)],
+			["barrel", Vector3(3, 6.0, -20)]],
 	}

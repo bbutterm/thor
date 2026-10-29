@@ -103,10 +103,21 @@ func _collect() -> void:
 		if not behind and inner.has_point(sp):
 			continue
 		list.append([dist, e, sp, behind])
+	# Точки появления волны (Room.spawn_telegraph, П7): за краем экрана — красная стрелка
+	for n in get_tree().get_nodes_in_group("spawn_telegraphs"):
+		var pos := (n as Node3D).global_position + Vector3.UP * 1.0
+		var dist := pos.distance_to(cam.global_position)
+		var behind := cam.is_position_behind(pos)
+		if absf((to_cam * pos).z) < 0.05:
+			pos -= cam_back * 0.1
+		var sp := cam.unproject_position(pos)
+		if not behind and inner.has_point(sp):
+			continue
+		list.append([minf(dist, 1.0), null, sp, behind])
 	list.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
 	for i in mini(list.size(), max_count):
 		var dist: float = list[i][0]
-		var e: Enemy = list[i][1]
+		var e: Enemy = list[i][1] as Enemy
 		var sp: Vector2 = list[i][2]
 		var dir := sp - center
 		# За спиной проекция зеркальна — разворачиваем
@@ -123,7 +134,10 @@ func _collect() -> void:
 		var t := clampf(dist / max_distance, 0.0, 1.0)
 		var sz := lerpf(near_size, far_size, t)
 		var col := Color(1, 1, 1, lerpf(1.0, 0.45, t))
-		if e.kind == Enemy.Kind.BOSS:
+		if e == null:
+			col = Color(1.0, 0.35, 0.2, 1.0)
+			sz = near_size * 1.1
+		elif e.kind == Enemy.Kind.BOSS:
 			col = Color(1.0, 0.85, 0.4, col.a)
 			sz *= 1.25
 		shown.append([p, ang, sz, col])

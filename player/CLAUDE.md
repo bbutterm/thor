@@ -42,6 +42,9 @@
 
 Вьюмодель рук — слой отображения 2, отдельный SubViewport (`Head/Camera/ViewmodelContainer`). Руки комиксовой обводкой не обводятся (решение по кадрам).
 
+## Лестницы (П7)
+`Player.ladder` ставит/снимает `rooms/ladder.gd` (`Ladder`, Area3D); пока он есть — `PlayerJumps._process_gravity` без гравитации: «вперёд» — вверх, «назад» — вниз (`ladder_climb_speed`), прыжок срывает. Проверка — `reach_test` (мачта Причала, крыша рынка Деревни).
+
 ## Типовые задачи
 - Новый трюк для шкалы стиля → ключ в `style_tuning.tres` `points` + `StyleMeter.event(&"…")` в месте трюка.
 - Новое «ощущенческое» число → `@export` + строка в `TUNING.md`.
