@@ -48,6 +48,11 @@ var _finished: bool = false
 var _pending_ranged_kill: bool = false
 ## Зал (Run.room_index), в котором Тора последний раз ранили, — для «Достойно!» за зал без урона
 var hurt_room: int = -1
+## Итоги забега (П10, экран смерти/победы): поимки молота, из них идеальные, лучший ранг стиля, удары-приземления
+var catches: int = 0
+var perfect_catches: int = 0
+var best_rank: int = 0
+var slams: int = 0
 
 ## Подключает трекер к сцене игры. Возвращает созданный узел.
 static func attach(game: Node, p: Player) -> RunTracker:
@@ -98,6 +103,12 @@ func _ready() -> void:
 	pending_source = ""
 	if player:
 		player.hurt.connect(_on_hurt)
+		player.slammed.connect(func(_p: float) -> void: slams += 1)
+		if player.mjolnir:
+			player.mjolnir.caught.connect(func() -> void: catches += 1)
+			player.mjolnir.perfect_catch.connect(func() -> void: perfect_catches += 1)
+		if player.style:
+			player.style.rank_changed.connect(func(r: int, _prev: int) -> void: best_rank = maxi(best_rank, r))
 	_last_kills = Run.kills
 	if Run.has_signal("kill_registered"):
 		Run.kill_registered.connect(_on_kill_registered)
@@ -183,6 +194,10 @@ func result(won: bool) -> Dictionary:
 		"kills": Run.kills,
 		"best_streak": Run.best_streak,
 		"body": Run.body.id if Run.body else "",
+		"catches": catches,
+		"perfect_catches": perfect_catches,
+		"best_rank": best_rank,
+		"slams": slams,
 	}
 
 func _death_source() -> String:

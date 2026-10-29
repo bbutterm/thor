@@ -302,10 +302,30 @@ func _test_run_through_doors() -> void:
 
 	# 8. Босс
 	check(Run.is_boss_room(), "финальный зал — босс")
+	var tk := game.tracker
+	var c0 := tk.catches
+	var p0 := tk.perfect_catches
+	var s0 := tk.slams
+	game.player.mjolnir.caught.emit()
+	game.player.mjolnir.perfect_catch.emit()
+	game.player.slammed.emit(0.5)
+	game.player.mjolnir.force_return_instant()
+	check(tk.catches == c0 + 1 and tk.perfect_catches == p0 + 1 and tk.slams == s0 + 1, "итоги считают хваты, идеальные и удары; служебный возврат — не хват")
 	await wait(1.0)
 	await _kill_all(game.room)
 	await wait(2.5)
 	check(Run.won and game.end_screen.visible, "победа после босса")
+	# Итоги забега на экране победы: время, хваты «из скольких», ранг, удары; сборка с рунами и оружием
+	var es := game.end_screen
+	var stats_txt: String = es._stats.text
+	check(stats_txt.find("Время:") >= 0 and stats_txt.find("Идеальные хваты: %d из %d" % [game.tracker.perfect_catches, game.tracker.catches]) >= 0
+		and stats_txt.find("Лучший ранг:") >= 0 and stats_txt.find("Удары-приземления:") >= 0, "итоги забега на экране победы")
+	var build_txt := ""
+	for c in es._build.get_children():
+		if c is Label:
+			build_txt += (c as Label).text + "\n"
+	check(build_txt.find("СБОРКА") >= 0 and build_txt.find("Руны") >= 0 and build_txt.find("Клятвы") >= 0
+		and build_txt.find(game.player.weapons.melee.title()) >= 0, "сборка на экране победы: молот, руны, клятвы, оружие")
 	print("    награды залов: ", ", ".join(Run.room_rewards))
 
 func _finish() -> void:

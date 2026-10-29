@@ -391,10 +391,10 @@ func _show_end(victory: bool) -> void:
 	_ending = true
 	if _cancel_room_load():
 		LoadingScreen.finish(get_tree())
-	tracker.finish(victory)
+	var stats := tracker.finish(victory)
 	FX.reset_time()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	end_screen.show_result(victory)
+	end_screen.show_result(victory, stats)
 
 ## После итога забега: диалог у дивана (Dialogue.after_run) → «План тренировок» → новый забег.
 func _after_run() -> void:

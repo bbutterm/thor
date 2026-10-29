@@ -8,7 +8,7 @@
 - Слова-команды (П10): `command_words.gd` (`CommandWords`, создаёт `HUD._build`, `hud.commands`) — «КРУШИ!/ЛОВИ!/БЕЙ!/ДОБЕЙ!» (жёлтые), «ВПЕРЁД!/ВВЕРХ!/ПРЫГАЙ!» (синие), «БЕГИ!/СЗАДИ!/УВОРАЧИВАЙСЯ!» (красные) крупно по центру сверху на `show_time` 0.8 с, не чаще `gap` 3 с, опасность перебивает; подложка `sprites/ui/commands/plate_<action|move|danger>.webp` или `comic_burst`; из игры — `CommandWords.cue(id)` (волна, окна боссов, таран `BossEnemy.strip_show`), остальное — опрос `_poll`; выключатель `[hud] commands`. Тест `command_words_test`.
 - Debug-панель баланса (F1, П8): `debug_panel.gd` (`DebugPanelUI`) — вид; логика, файл и список параметров — `scripts/debug/debug_panel.gd` (см. `scripts/CLAUDE.md`).
 - Выбор: `rune_pick.gd`, `trait_pick.gd`, `choice_pick.gd`, `body_select.gd`, `training_plan.gd`, `shop.gd` (`ShopScreen`), `combo_announce.gd`.
-- Меню и экраны: `main_menu.gd`, `pause_menu.gd`, `end_screen.gd`, `settings_panel.gd`, `loading_screen.gd`, `screen_art.gd`, `comic_insert.gd`, `boss_card.gd`, `comic_page.gd`.
+- Меню и экраны: `main_menu.gd`, `pause_menu.gd`, `end_screen.gd` (`EndScreen.show_result(victory, RunTracker.result())`: слева итоги — время, убийства, идеальные хваты «из скольких», лучший ранг, удары-приземления, залы, Слава; справа сборка — Мьёльнир, руны, клятвы, оружие; причина смерти — строкой под вердиктом), `settings_panel.gd`, `loading_screen.gd`, `screen_art.gd`, `comic_insert.gd`, `boss_card.gd`, `comic_page.gd`.
 - Диалоги: `dialogue_box.gd`, `portrait.gd`, `bark_bubble.gd` (тот же единственный пузырь внизу по центру, что у Одина: `WIDTH`/`BOTTOM`, `hide_now`).
 - Скин: `ui_skin.gd`, `skin_style_box.gd`, `skin_card.gd`; `color_filter.gdshader` — фильтр цветовой слепоты.
 

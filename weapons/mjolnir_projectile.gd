@@ -466,6 +466,7 @@ func catch() -> void:
 		return
 	_caught = true
 	if not is_clone:
+		hand.caught.emit()
 		hand.on_caught()
 	queue_free()
 

@@ -16,6 +16,8 @@ signal throw_blocked(left: float)
 ## Итог попытки хвата для подсказки (ui/catch_assist.gd): &"perfect", &"early" (нажал раньше окна), &"late" (позже); offset — на сколько секунд
 signal catch_timing(result: StringName, offset: float)
 signal traits_changed
+## Молот пойман рукой (шлёт снаряд в catch(); служебный возврат — нет) — для итогов забега
+signal caught
 
 @export_group("Бросок")
 ## Скорость броска (П2: 32 → 45 — «как выстрел из пушки»; старое — F6 hammer_power)

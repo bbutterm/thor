@@ -896,15 +896,15 @@ msgstr "Unworthy"
 msgid "Мидгард"
 msgstr "Midgard"
 
-#: run/run_tracker.gd:206
+#: run/run_tracker.gd:221
 msgid "Убил: %s · продержался %d:%02d"
 msgstr "Killed by: %s · lasted %d:%02d"
 
-#: run/run_tracker.gd:209
+#: run/run_tracker.gd:224
 msgid " (рекорд скорости, но не тот)"
 msgstr " (a speed record, but the wrong kind)"
 
-#: run/run_tracker.gd:211
+#: run/run_tracker.gd:226
 msgid " · со стрелялкой в руке"
 msgstr " · with a boom-stick in hand"
 
@@ -2147,10 +2147,6 @@ msgstr "Shop prices ×"
 msgid "Слава за врага ×"
 msgstr "Glory per enemy ×"
 
-#: scripts/debug/debug_panel.gd:21
-msgid "Мьёльнир"
-msgstr "Mjolnir"
-
 #: scripts/debug/debug_panel.gd:22
 msgid "КД после поимки"
 msgstr "Cooldown after catch"
@@ -2994,32 +2990,93 @@ msgstr "Right stick scrolls the log."
 msgid "Асгард · диван Тора"
 msgstr "Asgard · Thor's couch"
 
-#: ui/end_screen.gd:52
+#: ui/end_screen.gd:100
+msgid "Тело: %s"
+msgstr "Body: %s"
+
+#: ui/end_screen.gd:101
+msgid "Время: %d:%02d"
+msgstr "Time: %d:%02d"
+
+#: ui/end_screen.gd:102
+msgid "Убито врагов: %d (лучшая серия %d)"
+msgstr "Enemies killed: %d (best streak %d)"
+
+#: ui/end_screen.gd:103
+msgid "Идеальные хваты: %d из %d"
+msgstr "Perfect catches: %d of %d"
+
+#: ui/end_screen.gd:104
+msgid "Лучший ранг: %s"
+msgstr "Best rank: %s"
+
+#: ui/end_screen.gd:105
+msgid "Удары-приземления: %d"
+msgstr "Ground slams: %d"
+
+#: ui/end_screen.gd:106
+msgid "Пройдено залов: %d из %d"
+msgstr "Halls cleared: %d of %d"
+
+#: ui/end_screen.gd:107
+msgid "Слава: %d"
+msgstr "Glory: %d"
+
+#: ui/end_screen.gd:115
+msgid "СБОРКА"
+msgstr "BUILD"
+
+#: ui/end_screen.gd:118
+msgid "%s ур. %d"
+msgstr "%s lv. %d"
+
+#: ui/end_screen.gd:119
+#: scripts/debug/debug_panel.gd:21
+msgid "Мьёльнир"
+msgstr "Mjolnir"
+
+#: ui/end_screen.gd:119
+msgid "без трейтов"
+msgstr "no traits"
+
+#: ui/end_screen.gd:135
+msgid "Руны"
+msgstr "Runes"
+
+#: ui/end_screen.gd:136
+msgid "Клятвы"
+msgstr "Oaths"
+
+#: ui/end_screen.gd:144
+msgid "Оружие"
+msgstr "Weapons"
+
+#: ui/end_screen.gd:65
 msgid "К Одину ▸"
 msgstr "To Odin ▸"
 
-#: ui/end_screen.gd:55
+#: ui/end_screen.gd:68
 #: ui/training_plan.gd:138
 #: scenes/game.gd:409
 #: scenes/game.gd:418
 msgid "В меню"
 msgstr "To menu"
 
-#: ui/end_screen.gd:64
+#: ui/end_screen.gd:80
 msgid "ЗАЧЁТ СДАН!"
 msgstr "EXAM PASSED!"
 
-#: ui/end_screen.gd:68
+#: ui/end_screen.gd:84
 msgid "ТЫ ПАЛ"
 msgstr "YOU HAVE FALLEN"
 
-#: ui/end_screen.gd:71
+#: ui/end_screen.gd:87
 msgid "Вердикт Одина: %s"
 msgstr "Odin's verdict: %s"
 
-#: ui/end_screen.gd:73
-msgid "Тело: %s\nСлава: %d\nУбито врагов: %d\nЛучшая серия: %d\nПройдено залов: %d из %d\nРун собрано: %d"
-msgstr "Body: %s\nGlory: %d\nEnemies killed: %d\nBest streak: %d\nRooms cleared: %d of %d\nRunes collected: %d"
+#: ui/end_screen.gd:99
+msgid "ИТОГИ ЗАБЕГА"
+msgstr "RUN SUMMARY"
 
 #: ui/hud.gd:310
 #: ui/hud.gd:439
@@ -4259,6 +4316,9 @@ msgstr "Axe"
 
 # --- Ключи, которых не нашёл сборщик (динамические строки или устаревшие; --prune удалит) ---
 
+msgid "Тело: %s\nСлава: %d\nУбито врагов: %d\nЛучшая серия: %d\nПройдено залов: %d из %d\nРун собрано: %d"
+msgstr "Body: %s\nGlory: %d\nEnemies killed: %d\nBest streak: %d\nRooms cleared: %d of %d\nRunes collected: %d"
+
 msgid "Тело «Трусливый гонец»: 3 рывка, ×2 урона в спину."
 msgstr "Body “Timid Courier”: 3 dashes, ×2 backstab damage."
 
@@ -4318,9 +4378,6 @@ msgstr "RETURNING · CATCH!"
 
 msgid "Врагов: %d"
 msgstr "Enemies: %d"
-
-msgid "Тело: %s"
-msgstr "Body: %s"
 
 msgid "Шкала высоты удара-приземления"
 msgstr "Ground slam height meter"
