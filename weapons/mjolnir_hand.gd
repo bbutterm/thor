@@ -43,6 +43,25 @@ signal caught
 @export var return_accel: float = 70.0
 ## Насколько резко молот поворачивает к руке на возврате (дуга)
 @export var return_turn_accel: float = 140.0
+@export_group("Возврат как в God of War (партия 12)")
+## Старое — FeelSwitch hammer_gow (F6): прямой разворот без гула на снаряде, без подтягивания и предела времени
+## Из любой точки молот прилетает не дольше (с): скорость возврата не ниже «длина дуги / это время»
+@export var return_time_max: float = 1.5
+## Дуга: увод вбок в начале возврата (доля к направлению на руку; молот виден на экране)
+@export_range(0.0, 1.0, 0.05) var return_arc_side: float = 0.4
+## Подтягивание к врагу на пути: конус вдоль полёта (град), дальность (м), сила поворота к врагу (0..1)
+@export var return_aim_cone: float = 20.0
+@export var return_aim_range: float = 8.0
+@export_range(0.0, 1.0, 0.05) var return_aim_strength: float = 0.55
+## Пока цель в конусе — доворот в столько раз резче обычного разворота к руке
+@export var return_aim_turn: float = 4.0
+## Гул на самом молоте (AudioStreamPlayer3D): высота тона по скорости, громкость в полёте / на возврате (дБ)
+@export var hum_pitch_min: float = 0.75
+@export var hum_pitch_max: float = 1.9
+@export var hum_volume_out: float = -12.0
+@export var hum_volume_return: float = -1.0
+@export_group("")
+
 ## Отскоки от стен до того, как воткнуться/вернуться (база 0; Рикошет добавляет)
 @export var max_wall_bounces: int = 0
 
@@ -541,6 +560,10 @@ func _grant_perfect() -> void:
 ## Новая сила молота (П2) включена — не старое под F6 (FeelSwitch hammer_power)
 func powered() -> bool:
 	return not FeelSwitch.is_old(&"hammer_power")
+
+## Возврат «как в God of War» (партия 12): дуга, подтягивание к врагам, предел времени, гул на снаряде
+func gow_return() -> bool:
+	return not FeelSwitch.is_old(&"hammer_gow")
 
 ## Число силы: новое значение или старое из OLD_POWER (F6)
 func pw(new_value: float, old_key: StringName) -> float:

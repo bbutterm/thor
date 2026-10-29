@@ -590,6 +590,18 @@ if not ONLY or any(name.startswith(prefix) for name in hammer_names for prefix i
     save("hammer_return_hum", mix(lp(hum, 1500), whoosh(0.6, 300, 2400) * 0.6), 0.65)
     # Низ броска: «вуф» под владельческий «вжух»
     save("hammer_throw_low", mix(thump(0.3, 90, 40) * 1.2, lp(rng.standard_normal(int(SR * 0.3)), 250) * env(int(SR * 0.3), 0.005, 2.0) * 0.6), 0.8)
+# --- Партия 12 (уроки God of War): бесшовная петля гула вращающегося молота (высоту тона меняет игра). Свой seed ---
+if not ONLY or any("hammer_spin_loop".startswith(prefix) for prefix in ONLY):
+    rng = np.random.default_rng(291029 + 12)
+    # 0.5 с: целое число периодов у тона (110/220/330 Гц) и у «вжух-вжух» вращения (8 Гц) — стык петли не слышен
+    tt = t(0.5)
+    tone = np.sin(2 * np.pi * 110 * tt) + 0.45 * np.sin(2 * np.pi * 220 * tt) + 0.2 * np.sin(2 * np.pi * 330 * tt)
+    spin = 0.55 + 0.45 * np.sin(2 * np.pi * 8 * tt) ** 2
+    n = len(tt)
+    air = lp(rng.standard_normal(n), 1800)
+    fade = np.minimum(1.0, np.minimum(np.arange(n), n - 1 - np.arange(n)) / 400.0)
+    air = air * fade + np.roll(air, n // 2) * (1.0 - fade)
+    save("hammer_spin_loop", mix(lp(tone, 900) * spin, air * spin * 0.35), 0.6)
 # --- П3/П4 (плейтест 28.10): мясо корма, мульти-килл, броня боссов; отдельный seed не меняет существующие звуки ---
 meat_names = ("gib_crunch_", "multikill_bass", "armor_tink")
 if not ONLY or any(name.startswith(prefix) for name in meat_names for prefix in ONLY):

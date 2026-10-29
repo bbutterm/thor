@@ -355,6 +355,103 @@ func _run() -> void:
 	hand.catch_cooldown = 0.0
 	hand.reset_cooldown()
 	await _test_catch_perk(hand, assist)
+	await _test_gow(hand)
 
 	print("=== ИТОГ CATCH: %d OK, %d FAIL ===" % [ok, fail])
 	get_tree().quit(1 if fail > 0 else 0)
+
+## Партия 12 (God of War): возврат не дольше return_time_max из любой точки, по дуге, подтягивание к врагу на пути
+## (не сквозь стену), гул на самом молоте; F6 (hammer_gow) — старое.
+func _far_return(hand: MjolnirHand, offset: Vector3) -> MjolnirProjectile:
+	hand.force_return_instant()
+	await wait(0.25)
+	hand.reset_cooldown()
+	hand.throw_hammer()
+	var proj := hand.projectile
+	if proj == null:
+		return null
+	proj.global_position = hand.hand_point() + offset
+	proj.vel = offset.normalized() * 5.0
+	proj.start_return(true)
+	return proj
+
+func _test_gow(hand: MjolnirHand) -> void:
+	print("-- Возврат как в God of War (партия 12)")
+	var p := game.player
+	var fwd := -p.global_transform.basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	var proj := await _far_return(hand, fwd * 30.0 + Vector3.UP * 2.0)
+	check(proj != null and proj._hum != null and proj._hum.playing, "гул — пространственный источник на самом молоте")
+	var t0 := Time.get_ticks_msec()
+	var start := proj.global_position
+	var end := hand.hand_point()
+	var dev := 0.0
+	var frames_n := 0
+	var pitch_lo := 99.0
+	var pitch_hi := 0.0
+	while not hand.in_hand and frames_n < 240:
+		await get_tree().physics_frame
+		frames_n += 1
+		if is_instance_valid(proj) and not hand.in_hand:
+			var x := proj.global_position
+			var seg := end - start
+			var k := clampf((x - start).dot(seg) / seg.length_squared(), 0.0, 1.0)
+			dev = maxf(dev, x.distance_to(start + seg * k))
+			if proj._hum:
+				pitch_lo = minf(pitch_lo, proj._hum.pitch_scale)
+				pitch_hi = maxf(pitch_hi, proj._hum.pitch_scale)
+	var secs := frames_n / 60.0
+	check(hand.in_hand and secs <= hand.return_time_max + 0.05, "с 30 м — в руке за %.2f с (≤ %.1f)" % [secs, hand.return_time_max])
+	check(dev >= 1.0, "возврат по дуге: отход от прямой %.1f м" % dev)
+	check(pitch_hi > pitch_lo + 0.1, "тон гула растёт со скоростью (%.2f → %.2f)" % [pitch_lo, pitch_hi])
+	# Подтягивание: враг чуть в стороне от пути — молот доворачивает и бьёт
+	var en := game.room.spawn_extra("grunt", p.global_position + fwd * 7.0)
+	await wait(0.2)
+	if en:
+		en.set_physics_process(false)
+		var hp0 := en.health
+		proj = await _far_return(hand, fwd * 14.0 + Vector3.UP * 0.3)
+		var closest := 99.0
+		var pulled := 0
+		for i in 120:
+			if hand.in_hand or not is_instance_valid(proj) or not is_instance_valid(en):
+				break
+			var th := (hand.hand_point() - proj.global_position).normalized()
+			if not proj._return_dir(proj.global_position, th).is_equal_approx(th):
+				pulled += 1
+			closest = minf(closest, proj.global_position.distance_to(en.global_position + Vector3.UP))
+			await get_tree().physics_frame
+		print("    (ближе всего к врагу %.2f м, кадров с подтягиванием %d)" % [closest, pulled])
+		await _wait_caught(hand)
+		check(is_instance_valid(en) and (en.health < hp0 or en.is_dead), "враг у пути возврата — молот подтянулся и попал (%.0f → %.0f)" % [hp0, en.health if is_instance_valid(en) else 0.0])
+		# Стена между молотом и врагом — не тянет
+		proj = await _far_return(hand, fwd * 14.0 + Vector3.UP * 0.3)
+		if proj:
+			var wall := StaticBody3D.new()
+			var cs := CollisionShape3D.new()
+			var bs := BoxShape3D.new()
+			bs.size = Vector3(0.4, 6, 6)
+			cs.shape = bs
+			wall.add_child(cs)
+			game.room.add_child(wall)
+			var mid := (proj.global_position + en.global_position + Vector3.UP) * 0.5
+			wall.global_position = mid
+			wall.look_at(en.global_position + Vector3.UP, Vector3.UP)
+			wall.rotate_object_local(Vector3.UP, PI / 2)
+			await get_tree().physics_frame
+			await get_tree().physics_frame
+			var to_hand := (hand.hand_point() - proj.global_position).normalized()
+			proj.vel = (en.global_position + Vector3.UP - proj.global_position).normalized() * 10.0
+			check(proj._return_dir(proj.global_position, to_hand).is_equal_approx(to_hand), "враг за стеной — молот не тянет в стену")
+			wall.queue_free()
+			await _wait_caught(hand)
+		if is_instance_valid(en):
+			en.queue_free()
+	# Старое (F6): без гула на снаряде и без предела
+	FeelSwitch.set_old(&"hammer_gow", true)
+	proj = await _far_return(hand, fwd * 12.0)
+	check(proj != null and proj._hum == null and proj._return_floor == 0.0, "F6 — старый возврат (без гула и предела)")
+	await _wait_caught(hand)
+	FeelSwitch.set_old(&"hammer_gow", false)
+

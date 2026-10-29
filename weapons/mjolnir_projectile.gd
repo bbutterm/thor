@@ -66,6 +66,13 @@ var _bolt_t: float = 0.0
 var _bolt_from: Vector3 = Vector3.INF
 var _crackle_t: float = 0.0
 var _redirected: bool = false
+## Партия 12: возврат не дольше hand.return_time_max (нижняя граница скорости), гул на снаряде
+var _return_floor: float = 0.0
+var _gow: bool = false
+var _hum: AudioStreamPlayer3D
+## Последний вызов _return_dir тянул к врагу — доворот сильнее (return_aim_turn)
+var _aiming: bool = false
+const HUM_STREAM := "res://sounds/sfx/hammer_spin_loop.wav"
 const HIT_RADIUS := 0.6
 
 func launch(owner_hand: MjolnirHand, origin: Vector3, velocity_: Vector3) -> void:
@@ -80,6 +87,7 @@ func launch(owner_hand: MjolnirHand, origin: Vector3, velocity_: Vector3) -> voi
 	_auto_return_after = float(hand.trait_modify(&"auto_return_after", hand.auto_return_after))
 	_stuck_auto_return = float(hand.trait_modify(&"stuck_auto_return", hand.stuck_auto_return))
 	_build_visual()
+	_start_hum()
 	_trait(&"on_throw", [self])
 
 ## Копия-молот веера (Два молота): летит по своей траектории, возвращается и исчезает у руки.
@@ -218,9 +226,24 @@ func start_return(by_player: bool = false) -> void:
 	_spin_speed = hand.pw(hand.spin_speed, &"spin")
 	if vel.length() < 0.1:
 		vel = (hand.hand_point() - global_position).normalized() * 0.1
+	_gow = hand.gow_return() and not is_clone
+	_return_floor = 0.0
+	if _gow:
+		var to_hand := hand.hand_point() - global_position
+		var dist := to_hand.length()
+		# Длина дуги ~1.3 прямой; запас 10 % на разворот — из любой точки не дольше return_time_max
+		_return_floor = dist * 1.3 / maxf(hand.return_time_max * 0.9, 0.2)
+		# Дуга: сразу к руке, но с уводом вбок (справа от прямой, видно на экране) и чуть вверх; разгон «от Тора»
+		# гасится — иначе молот уходит широкой петлёй и мимо врагов на пути. Из стены — ещё немного от поверхности.
+		var side := to_hand.cross(Vector3.UP)
+		if side.length() > 0.01 and dist > 3.0:
+			var dir := to_hand / dist + side.normalized() * hand.return_arc_side + Vector3.UP * 0.1
+			if was_stuck:
+				dir += stuck_normal * 0.3
+			vel = dir.normalized() * _return_speed(0.0)
 	Audio.play("sounds/weapon_change.ogg")
-	if hand.powered() and not is_clone:
-		# П2: гул с нарастающей высотой — молот разгоняется к руке
+	if hand.powered() and not is_clone and not _gow:
+		# П2: гул с нарастающей высотой — молот разгоняется к руке (в новом — гул на самом снаряде, _hum_tick)
 		Audio.play("sounds/sfx/hammer_return_hum.wav")
 		FX.sparks(get_parent(), global_position, Color(0.6, 0.88, 1.0), 10, 5.0)
 	_trait(&"on_recall_start", [self, by_player])
@@ -230,6 +253,7 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 	_time += delta
+	_hum_tick()
 	if _mesh_root and state != State.STUCK:
 		if state == State.HOVER:
 			_mesh_root.rotate(Vector3.UP, delta * _spin_speed * 0.5)
@@ -418,19 +442,84 @@ func _step_return(delta: float) -> void:
 	var target := hand.hand_point()
 	var to_target := target - global_position
 	var dist := to_target.length()
-	var speed := hand.return_speed_at(return_time)
+	var speed := _return_speed(return_time)
 	if dist < maxf(1.3, speed * delta * 1.5) or return_time > 4.0:
 		catch()
 		return
-	var desired := to_target / dist * speed
+	var desired := _return_dir(global_position, to_target / dist) * speed
 	# Сначала молот разворачивается по дуге, со временем «притяжение» к руке растёт — орбиты невозможны
-	var steer := hand.return_turn_accel / speed * (1.0 + return_time * 4.0)
+	var steer := hand.return_turn_accel / speed * (1.0 + return_time * 4.0) * (hand.return_aim_turn if _aiming else 1.0)
 	vel = vel.lerp(desired, clampf(1.0 - exp(-steer * delta), 0.0, 1.0))
 	vel = vel.normalized() * speed
 	var from := global_position
 	var to := from + vel * delta
 	_sweep_hits(from, to)
 	global_position = to
+
+## Скорость возврата через t с: разгон руки, но не ниже предела времени (партия 12)
+func _return_speed(t: float) -> float:
+	return maxf(hand.return_speed_at(t), _return_floor)
+
+## Направление к руке с подтягиванием к врагу (партия 12): ближайший живой враг в конусе return_aim_cone вдоль
+## полёта, не дальше return_aim_range, ещё не задетый этим броском; стена между — не тянет (лучом по миру).
+## Последний метр-два — строго к руке. check_walls = false — для прогноза catch_eta (без лучей).
+func _return_dir(pos: Vector3, to_hand_dir: Vector3, check_walls: bool = true) -> Vector3:
+	_aiming = false
+	if not _gow or hand.return_aim_strength <= 0.0:
+		return to_hand_dir
+	# «Вдоль пути» — между текущим курсом и направлением на руку (на дуге курс отклонён от оставшегося пути)
+	var fwd := (vel.normalized() + to_hand_dir).normalized() if vel.length() > 0.1 else to_hand_dir
+	var cos_cone := cos(deg_to_rad(hand.return_aim_cone))
+	var best: Enemy = null
+	var best_d := hand.return_aim_range
+	for n in get_tree().get_nodes_in_group("enemies"):
+		var e := n as Enemy
+		if e == null or e.is_dead or hit_ids.has(e.get_instance_id()):
+			continue
+		var to_e := e.global_position + Vector3.UP * 1.0 - pos
+		var d := to_e.length()
+		if d < 0.5 or d > best_d or fwd.dot(to_e / d) < cos_cone:
+			continue
+		best = e
+		best_d = d
+	if best == null:
+		return to_hand_dir
+	var aim := best.global_position + Vector3.UP * 1.0
+	if check_walls:
+		var q := PhysicsRayQueryParameters3D.create(pos, aim, 1)
+		if not get_world_3d().direct_space_state.intersect_ray(q).is_empty():
+			return to_hand_dir
+	_aiming = true
+	return to_hand_dir.lerp((aim - pos).normalized(), hand.return_aim_strength).normalized()
+
+## Гул на самом молоте (партия 12, God of War): пространственный источник, высота тона растёт со скоростью;
+## на возврате громче — слышно, откуда и когда прилетит. Старое (F6 hammer_gow) — без него.
+func _start_hum() -> void:
+	if is_clone or hand == null or not hand.gow_return() or not ResourceLoader.exists(HUM_STREAM):
+		return
+	_hum = AudioStreamPlayer3D.new()
+	_hum.name = "Hum"
+	_hum.stream = load(HUM_STREAM)
+	_hum.bus = "SFX"
+	_hum.unit_size = 7.0
+	_hum.max_distance = 60.0
+	_hum.volume_db = hand.hum_volume_out
+	add_child(_hum)
+	_hum.play()
+
+func _hum_tick() -> void:
+	if _hum == null:
+		return
+	if state == State.STUCK or _caught:
+		if _hum.playing:
+			_hum.stop()
+		return
+	if not _hum.playing:
+		_hum.play()
+	var k := clampf(vel.length() / maxf(hand.return_speed_max, 1.0), 0.0, 1.0)
+	_hum.pitch_scale = lerpf(hand.hum_pitch_min, hand.hum_pitch_max, k)
+	var target := hand.hum_volume_return if state == State.RETURN else hand.hum_volume_out
+	_hum.volume_db = lerpf(_hum.volume_db, target, 0.15)
 
 ## Сколько секунд до поимки (−1 — молот не летит к руке). Для подсказки хвата (ui/catch_assist.gd).
 ## Обычный возврат прокручивается вперёд теми же шагами, что _step_return (дуга разворота учтена, рука — на месте);
@@ -448,13 +537,14 @@ func catch_eta() -> float:
 	var t := return_time
 	var eta := 0.0
 	for i in 240:
-		var speed := hand.return_speed_at(t)
+		var speed := _return_speed(t)
 		var to_t := target - pos
 		var dist := to_t.length()
 		if dist < maxf(1.3, speed * dt * 1.5) or t > 4.0:
 			return eta
-		var steer := hand.return_turn_accel / speed * (1.0 + t * 4.0)
-		v2 = v2.lerp(to_t / dist * speed, clampf(1.0 - exp(-steer * dt), 0.0, 1.0)).normalized() * speed
+		var aim_dir := _return_dir(pos, to_t / dist, false)
+		var steer := hand.return_turn_accel / speed * (1.0 + t * 4.0) * (hand.return_aim_turn if _aiming else 1.0)
+		v2 = v2.lerp(aim_dir * speed, clampf(1.0 - exp(-steer * dt), 0.0, 1.0)).normalized() * speed
 		pos += v2 * dt
 		t += dt
 		eta += dt
