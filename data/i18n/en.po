@@ -198,6 +198,10 @@ msgstr "Fast"
 msgid "Огненный"
 msgstr "Fiery"
 
+#: enemies/elite/mods/grounded.tres (title)
+msgid "Заземлённый"
+msgstr "Grounded"
+
 #: enemies/elite/mods/ice.tres (title)
 msgid "Ледяной"
 msgstr "Icy"
@@ -205,6 +209,10 @@ msgstr "Icy"
 #: enemies/elite/mods/summoner.tres (title)
 msgid "Призыватель"
 msgstr "Summoner"
+
+#: enemies/elite/mods/throw_shield.tres (title)
+msgid "Щит от бросков"
+msgstr "Throw Shield"
 
 #: enemies/elite/mods/vampire.tres (title)
 msgid "Вампир"
@@ -688,6 +696,10 @@ msgid "ПРИВАЛ"
 msgstr "REST STOP"
 
 #: run/reward_flow.gd:271
+msgid "Клятва воина: на отдыхе нет лечения"
+msgstr "Warrior's Oath: no healing at rest"
+
+#: run/reward_flow.gd:271
 msgid "Лечение %d %% (+%d HP)"
 msgstr "Heals %d %% (+%d HP)"
 
@@ -695,83 +707,83 @@ msgstr "Heals %d %% (+%d HP)"
 msgid "Похлёбка"
 msgstr "Stew"
 
-#: run/reward_flow.gd:272
+#: run/reward_flow.gd:273
 msgid "Нет рун для улучшения"
 msgstr "No runes to upgrade"
 
-#: run/reward_flow.gd:272
+#: run/reward_flow.gd:273
 msgid "Точить руну"
 msgstr "Sharpen a Rune"
 
-#: run/reward_flow.gd:272
+#: run/reward_flow.gd:273
 msgid "Улучшить руну на 1 уровень"
 msgstr "Upgrade a rune by 1 level"
 
-#: run/reward_flow.gd:287
+#: run/reward_flow.gd:288
 msgid "Кровь за сталь"
 msgstr "Blood for Steel"
 
-#: run/reward_flow.gd:287
+#: run/reward_flow.gd:288
 msgid "−%d %% здоровья → легендарное оружие (ур. 3)"
 msgstr "−%d %% health → legendary weapon (lv. 3)"
 
-#: run/reward_flow.gd:288
+#: run/reward_flow.gd:289
 msgid "%d %%: две руны. Иначе −%d %% здоровья"
 msgstr "%d %%: two runes. Otherwise −%d %% health"
 
-#: run/reward_flow.gd:288
+#: run/reward_flow.gd:289
 msgid "Кости Локи"
 msgstr "Loki's Dice"
 
-#: run/reward_flow.gd:288
+#: run/reward_flow.gd:289
 msgid "Проклятая руна: %s"
 msgstr "Cursed rune: %s"
 
-#: run/reward_flow.gd:289
+#: run/reward_flow.gd:290
 msgid "Локи обидится. Ненадолго."
 msgstr "Loki will be offended. Briefly."
 
-#: run/reward_flow.gd:289
+#: run/reward_flow.gd:290
 msgid "Отказаться"
 msgstr "Refuse"
 
-#: run/reward_flow.gd:291
+#: run/reward_flow.gd:292
 msgid "Проклятая руна или риск. Подписывай, не читая."
 msgstr "A cursed rune or a gamble. Sign without reading."
 
-#: run/reward_flow.gd:291
+#: run/reward_flow.gd:292
 msgid "СДЕЛКА ЛОКИ"
 msgstr "LOKI'S DEAL"
 
-#: run/reward_flow.gd:306
+#: run/reward_flow.gd:307
 msgid "ЛЕГЕНДАРНОЕ ОРУЖИЕ — ЗА ПОЛОВИНУ ЗДОРОВЬЯ"
 msgstr "LEGENDARY WEAPON — FOR HALF YOUR HEALTH"
 
-#: run/reward_flow.gd:315
+#: run/reward_flow.gd:316
 msgid "КОСТИ: %s"
 msgstr "DICE: %s"
 
-#: run/reward_flow.gd:319
+#: run/reward_flow.gd:320
 msgid "КОСТИ: НЕ ПОВЕЗЛО"
 msgstr "DICE: NO LUCK"
 
-#: run/reward_flow.gd:325
+#: run/reward_flow.gd:326
 msgid "☠ %s — ПРОКЛЯТАЯ РУНА"
 msgstr "☠ %s — CURSED RUNE"
 
-#: run/reward_flow.gd:338
+#: run/reward_flow.gd:339
 msgid "УЛУЧШИТЬ РУНУ (+1 УРОВЕНЬ)"
 msgstr "UPGRADE A RUNE (+1 LEVEL)"
 
-#: run/reward_flow.gd:343
+#: run/reward_flow.gd:344
 msgid "ПОХЛЁБКА: +%d %% ЗДОРОВЬЯ"
 msgstr "STEW: +%d %% HEALTH"
 
-#: run/reward_flow.gd:416
+#: run/reward_flow.gd:417
 msgid "ВЫБЕРИ ДВЕРЬ"
 msgstr "CHOOSE A DOOR"
 
-#: run/reward_flow.gd:416
+#: run/reward_flow.gd:417
 msgid "ДВЕРЬ ОТКРЫТА — ВПЕРЁД!"
 msgstr "DOOR OPEN — GO!"
 
@@ -864,17 +876,17 @@ msgstr "A challenge from Odin, Hild or Loki → lots of Glory or a special rune"
 msgid "Испытание"
 msgstr "Trial"
 
-#: run/run_manager.gd:359
-#: run/run_manager.gd:362
+#: run/run_manager.gd:371
+#: run/run_manager.gd:374
 msgid "Вальхалла ждёт"
 msgstr "Valhalla awaits"
 
-#: run/run_manager.gd:364
+#: run/run_manager.gd:376
 #: player/style_meter.gd:27
 msgid "Сойдёт"
 msgstr "It'll do"
 
-#: run/run_manager.gd:365
+#: run/run_manager.gd:377
 msgid "Недостоин"
 msgstr "Unworthy"
 
@@ -1269,6 +1281,97 @@ msgstr "Run speed +25%"
 #: run/runes/njord_wind.tres (title)
 msgid "Ветер Ньёрда"
 msgstr "Njord's Wind"
+
+#: run/runes/oath_fury.tres (description)
+#: run/runes/oath_fury.tres (level_descriptions)
+msgid "+40 % урона"
+msgstr "+40% damage"
+
+#: run/runes/oath_fury.tres (oath_cost)
+msgid "Лечение вдвое слабее"
+msgstr "Healing is halved"
+
+#: run/runes/oath_fury.tres (title)
+msgid "Клятва ярости"
+msgstr "Oath of Fury"
+
+#: run/runes/oath_hammer.tres (description)
+#: run/runes/oath_hammer.tres (level_descriptions)
+msgid "Мьёльнир +60 % урона"
+msgstr "Mjolnir +60% damage"
+
+#: run/runes/oath_hammer.tres (oath_cost)
+msgid "Оружие в руке −30 % урона"
+msgstr "Hand weapon −30% damage"
+
+#: run/runes/oath_hammer.tres (title)
+msgid "Клятва молота"
+msgstr "Oath of the Hammer"
+
+#: run/runes/oath_pride.tres (description)
+#: run/runes/oath_pride.tres (level_descriptions)
+msgid "+50 % Славы"
+msgstr "+50% Glory"
+
+#: run/runes/oath_pride.tres (oath_cost)
+msgid "Первый удар в зале — двойной"
+msgstr "First hit in each room is doubled"
+
+#: run/runes/oath_pride.tres (title)
+msgid "Клятва гордыни"
+msgstr "Oath of Pride"
+
+#: run/runes/oath_sky.tres (description)
+#: run/runes/oath_sky.tres (level_descriptions)
+msgid "Удар-приземление ×2"
+msgstr "Ground slam ×2"
+
+#: run/runes/oath_sky.tres (oath_cost)
+msgid "Руны копятся только поимкой молота"
+msgstr "Runes recharge only by catching the hammer"
+
+#: run/runes/oath_sky.tres (title)
+msgid "Клятва небес"
+msgstr "Oath of the Sky"
+
+#: run/runes/oath_storm.tres (description)
+#: run/runes/oath_storm.tres (level_descriptions)
+msgid "Идеальный хват — молния по всем рядом"
+msgstr "Perfect catch — lightning on everyone nearby"
+
+#: run/runes/oath_storm.tres (oath_cost)
+msgid "Промах хвата — −10 ХП"
+msgstr "Missed catch — −10 HP"
+
+#: run/runes/oath_storm.tres (title)
+msgid "Клятва бури"
+msgstr "Oath of the Storm"
+
+#: run/runes/oath_warrior.tres (description)
+#: run/runes/oath_warrior.tres (level_descriptions)
+msgid "Зал без урона — руна +1 уровень"
+msgstr "Room without damage — a rune +1 level"
+
+#: run/runes/oath_warrior.tres (oath_cost)
+msgid "На отдыхе нет лечения"
+msgstr "No healing at rest"
+
+#: run/runes/oath_warrior.tres (title)
+msgid "Клятва воина"
+msgstr "Warrior's Oath"
+
+#: run/runes/oath_wind.tres (description)
+#: run/runes/oath_wind.tres (level_descriptions)
+msgid "+25 % скорости и +1 руна"
+msgstr "+25% speed and +1 rune"
+
+#: run/runes/oath_wind.tres (oath_cost)
+msgid "−25 % здоровья"
+msgstr "−25% health"
+
+#: run/runes/oath_wind.tres (title)
+msgid "Клятва ветра"
+msgstr "Oath of the Wind"
 
 #: run/runes/raven_eye.tres (description)
 #: run/runes/raven_eye.tres (level_descriptions)
@@ -1912,22 +2015,26 @@ msgstr "The first rune of each run starts at level 2."
 msgid "Утренняя зарядка"
 msgstr "Morning Exercises"
 
-#: scenes/game.gd:288
+#: scenes/game.gd:250
+msgid "КЛЯТВА ВОИНА: %s +1"
+msgstr "WARRIOR'S OATH: %s +1"
+
+#: scenes/game.gd:295
 msgid "приём"
 msgstr "technique"
 
-#: scenes/game.gd:288
+#: scenes/game.gd:295
 #: weapons/mjolnir_traits/earth.tres (group)
 #: weapons/mjolnir_traits/fire.tres (group)
 #: weapons/mjolnir_traits/ice.tres (group)
 msgid "стихия"
 msgstr "element"
 
-#: scenes/game.gd:288
+#: scenes/game.gd:295
 msgid "уровень %d"
 msgstr "level %d"
 
-#: scenes/game.gd:329
+#: scenes/game.gd:336
 msgid "Дверь открыта — вперёд!"
 msgstr "Door open — go!"
 
@@ -2614,10 +2721,15 @@ msgid "Рун пока нет — Норны ждут зачистки зала.
 msgstr "No runes yet — the Norns are waiting for a cleared room."
 
 #: ui/build_screen.gd:210
+#: ui/rune_pick.gd:100
+msgid "Цена: %s"
+msgstr "Price: %s"
+
+#: ui/build_screen.gd:212
 msgid "УР. %d"
 msgstr "LV. %d"
 
-#: ui/build_screen.gd:233
+#: ui/build_screen.gd:235
 msgid "Ты здесь"
 msgstr "You are here"
 
@@ -2851,8 +2963,8 @@ msgstr "To Odin ▸"
 
 #: ui/end_screen.gd:55
 #: ui/training_plan.gd:138
-#: scenes/game.gd:399
-#: scenes/game.gd:408
+#: scenes/game.gd:406
+#: scenes/game.gd:415
 msgid "В меню"
 msgstr "To menu"
 
@@ -3036,15 +3148,23 @@ msgstr "What's new in this build. In the room press F6 to compare with the old v
 msgid "Попробовать"
 msgstr "Try it"
 
-#: ui/rune_pick.gd:12
+#: ui/rune_pick.gd:15
 msgid "НОРНЫ ПРЕДЛАГАЮТ РУНУ"
 msgstr "THE NORNS OFFER A RUNE"
 
-#: ui/rune_pick.gd:38
+#: ui/rune_pick.gd:41
 msgid "Выбери руну: мышь, 1 / 2 / 3 или геймпад"
 msgstr "Choose a rune: mouse, 1 / 2 / 3 or gamepad"
 
-#: ui/rune_pick.gd:81
+#: ui/rune_pick.gd:67
+msgid "Один: «%s»"
+msgstr "Odin: “%s”"
+
+#: ui/rune_pick.gd:89
+msgid "КЛЯТВА НАВСЕГДА"
+msgstr "OATH FOREVER"
+
+#: ui/rune_pick.gd:97
 msgid "☠ Проклятие Локи\n"
 msgstr "☠ Loki's curse\n"
 
@@ -3742,7 +3862,7 @@ msgstr "Sword"
 msgid "Выпад и парирование"
 msgstr "Lunge and Parry"
 
-#: weapons/loot.gd:215
+#: weapons/loot.gd:221
 #: scripts/shader_warmup.gd:244
 msgid "Элита"
 msgstr "Elite"
@@ -3958,6 +4078,7 @@ msgid "Радиус 9 м."
 msgstr "9 m radius."
 
 #: weapons/mjolnir_traits/magnet.tres (title)
+#: enemies/elite/mods/magnet.tres (title)
 msgid "Магнит"
 msgstr "Magnet"
 
@@ -4092,6 +4213,30 @@ msgid "Топор"
 msgstr "Axe"
 
 # --- Ключи, которых не нашёл сборщик (динамические строки или устаревшие; --prune удалит) ---
+
+msgid "Оружие правой руки −30 % урона"
+msgstr "Right-hand weapon −30% damage"
+
+msgid "Первый пропущенный удар в каждом зале — двойной"
+msgstr "The first hit you take in each room is doubled"
+
+msgid "На земле руны не копятся — только поимкой молота"
+msgstr "Runes don't recharge on the ground — only by catching the hammer"
+
+msgid "Идеальный хват бьёт молнией всех рядом (25 урона, 7 м)"
+msgstr "A perfect catch strikes everyone nearby with lightning (25 damage, 7 m)"
+
+msgid "Промах хвата (рано или поздно) — −10 ХП Тору"
+msgstr "A missed catch (early or late) costs Thor 10 HP"
+
+msgid "Зал без полученного урона — случайная руна +1 уровень"
+msgstr "A room cleared without taking damage — a random rune +1 level"
+
+msgid "Снять нельзя до конца забега"
+msgstr "Cannot be removed until the run ends"
+
+msgid "КЛЯТВА ОДИНА"
+msgstr "ODIN'S OATH"
 
 msgid "СЛАВА 0"
 msgstr "GLORY 0"

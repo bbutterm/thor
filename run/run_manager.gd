@@ -61,6 +61,8 @@ const TRIALS_DIR := "res://run/trials/"
 ## После каких залов (индекс с 0) в зале появляется мини-босс — последней волной; за него выбор трейта
 ## (с картой мира — RunMap.miniboss_room: Мидгард — 4-й зал, индекс 3)
 @export var miniboss_rooms: PackedInt32Array = [3]
+## Клятва Одина (С3) в выборе рун после зала — примерно в каждом третьем выборе
+@export_range(0.0, 1.0) var oath_chance: float = 0.33
 ## Какой мини-босс (MinibossDef) в этом забеге — выбирает _pick_miniboss из miniboss_pool при start_run
 @export var miniboss_def_path: String = "res://enemies/minibosses/fat_sven.tres"
 ## Мини-боссы Мидгарда (GDD 14.1): 4-й зал берёт случайного, без повтора подряд в соседних забегах
@@ -245,6 +247,7 @@ func add_glory(amount: int) -> void:
 	var mult := body.glory_mult if body else 1.0
 	# Руна «Слава предков» (GDD 11)
 	mult *= 1.0 + rune_value("ancestor_glory")
+	mult *= Oaths.glory_mult()  # Клятва гордыни
 	glory += int(round(amount * mult))
 	glory_changed.emit(glory)
 
@@ -293,7 +296,7 @@ func register_player_hit() -> void:
 const RUNE_MAX_LEVEL := 3
 
 func add_rune(rune: RuneDef) -> void:
-	if rune_level(rune.id) >= RUNE_MAX_LEVEL:
+	if rune_level(rune.id) >= (1 if rune.oath else RUNE_MAX_LEVEL):
 		return
 	runes.append(rune)
 	runes_changed.emit(runes)
@@ -338,15 +341,24 @@ func rune_value(id: String, b: bool = false) -> float:
 			return v * rune_power if not b else v
 
 ## Обычный выбор рун: не проклятые, с механикой, открытые, ещё не на максимальном уровне.
-func random_rune_choices(count: int = 3) -> Array[RuneDef]:
+## allow_oath — обычный выбор после зала (двери «Руна»): клятва Одина (С3) — одна карточка из трёх с шансом oath_chance
+func random_rune_choices(count: int = 3, allow_oath: bool = false) -> Array[RuneDef]:
 	# Закрытые в «Плане тренировок» руны не выпадают (Save.is_in_pool)
 	# Руны без механики (implemented = false) не выпадают
 	var pool := all_runes.filter(func(r: RuneDef) -> bool:
-		return r.implemented and not r.cursed and rune_level(r.id) < RUNE_MAX_LEVEL and Save.is_in_pool("rune", r.id))
+		return r.implemented and not r.cursed and not r.oath and rune_level(r.id) < RUNE_MAX_LEVEL and Save.is_in_pool("rune", r.id))
 	pool.shuffle()
 	var out: Array[RuneDef] = []
 	for i in mini(count, pool.size()):
 		out.append(pool[i])
+	if allow_oath and count >= 3 and randf() < oath_chance:
+		var oaths := all_runes.filter(func(r: RuneDef) -> bool: return r.oath and r.implemented and rune_level(r.id) == 0)
+		if not oaths.is_empty():
+			var o: RuneDef = oaths[randi() % oaths.size()]
+			if out.size() >= count:
+				out[count - 1] = o
+			else:
+				out.append(o)
 	return out
 
 ## Проклятая руна Локи (особые события — сделка Локи): ещё не взятая, или null.

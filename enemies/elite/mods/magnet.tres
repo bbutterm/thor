@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EliteModifier" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://enemies/elite/elite_modifier.gd" id="1_m"]
+[ext_resource type="Script" path="res://enemies/elite/magnet.gd" id="2_h"]
+
+[resource]
+script = ExtResource("1_m")
+id = "magnet"
+title = "Магнит"
+color = Color(0.55, 0.6, 1.0, 1)
+handler = ExtResource("2_h")
+magnet_radius = 9.0
+magnet_pull = 18.0

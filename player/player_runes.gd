@@ -15,8 +15,8 @@ func recalc_from_runes(run: Node, full_heal: bool = false) -> void:
 	var base_hp := body.max_health if body else p.max_health
 	var old_max := p.max_health
 	# Руны по уровням (GDD 11, Run.rune_value: уровень 1–3, у жреца ×2)
-	p.max_health = base_hp + run.rune_value("max_health")
-	p.dash_charges_max = (body.dash_charges if body else p.dash_charges_base) + int(run.rune_value("dash_charge")) + int(run.rune_value("loki_spin"))
+	p.max_health = (base_hp + run.rune_value("max_health")) * Oaths.max_health_mult()  # Клятва ветра: −25 %
+	p.dash_charges_max = (body.dash_charges if body else p.dash_charges_base) + int(run.rune_value("dash_charge")) + int(run.rune_value("loki_spin")) + Oaths.extra_dash()
 	p._rune_dash_recharge_mult = run.rune_value("dash_charge", true) if run.rune_level("dash_charge") > 0 else 1.0
 	p.axe.damage_mult = (body.axe_damage_mult if body else 1.0) * (1.0 + run.rune_value("axe_damage"))
 	p.mjolnir.damage_mult = (body.hammer_damage_mult if body else 1.0) * (1.0 + run.rune_value("hammer_power"))
@@ -46,7 +46,7 @@ func _rune_damage_mult(target: Object, source: String) -> float:
 		to_p.y = 0
 		if to_p.length() > 0.01 and e.global_transform.basis.z.dot(to_p.normalized()) < -0.35:
 			m *= Run.rune_value("loki_backstab")
-	return m
+	return m * Oaths.damage_mult(source)  # клятвы Одина (С3): ярость, небеса, молот
 
 ## Крит (GDD 8): базовые 5 % + «Глаз ворона». Молнии, огонь и стены не критуют.
 func _roll_crit(source: String) -> bool:

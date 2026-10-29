@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RuneDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://run/rune_def.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+id = "oath_wind"
+title = "Клятва ветра"
+description = "+25 % скорости и +1 руна"
+glyph = "ᚱ"
+color = Color(0.95, 0.3, 0.22, 1)
+category = "movement"
+level_descriptions = PackedStringArray("+25 % скорости и +1 руна")
+implemented = true
+level_values = PackedFloat32Array(0.25, 1)
+level_values_b = PackedFloat32Array(0.25)
+value_kind = "add"
+oath = true
+oath_cost = "−25 % здоровья"

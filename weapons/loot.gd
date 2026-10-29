@@ -116,19 +116,25 @@ static func maybe_make_elite(room: Node, enemy: Enemy, chance: float, max_per_ro
 ## Модификаторы элиты (enemies/elite/mods/*.tres, EliteModifier) — новый .tres подхватывается сам.
 const ELITE_MODS_DIR := "res://enemies/elite/mods/"
 static var _elite_mods: Array[EliteModifier] = []
+static var _all_elite_mods: Array[EliteModifier] = []
 
+## Пул случайной элиты — только enabled (С5: Огненный, Ледяной, Быстрый выключены, файлы оставлены)
 static func elite_modifiers() -> Array[EliteModifier]:
-	if _elite_mods.is_empty():
+	if _all_elite_mods.is_empty():
 		for f in ResourceLoader.list_directory(ELITE_MODS_DIR):
 			var clean := f.trim_suffix(".remap")
 			if clean.ends_with(".tres"):
 				var m := load(ELITE_MODS_DIR + clean) as EliteModifier
-				if m and m.enabled:
-					_elite_mods.append(m)
+				if m:
+					_all_elite_mods.append(m)
+					if m.enabled:
+						_elite_mods.append(m)
 	return _elite_mods
 
+## Любой модификатор по id, в том числе выключенный из пула
 static func get_elite_modifier(id: String) -> EliteModifier:
-	for m in elite_modifiers():
+	elite_modifiers()
+	for m in _all_elite_mods:
 		if m.id == id:
 			return m
 	return null

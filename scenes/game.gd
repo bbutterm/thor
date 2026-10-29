@@ -85,6 +85,7 @@ func _ready() -> void:
 	DebugPanel.register(&"player", player)
 	DebugPanel.register(&"mjolnir", player.mjolnir)
 	DebugPanel.register(&"camera", player.camera_fx)
+	Oaths.attach(player)  # Клятва бури: молния на идеальном хвате, ХП за промах
 	player.died.connect(_on_player_died)
 	Run.kill_streak.connect(_on_kill_streak)
 	rune_pick.picked.connect(_on_rune_picked)
@@ -208,6 +209,7 @@ func _finish_room_load() -> void:
 	# Новый зал — Мьёльнир в руке сам (автовозврата нет, П5), без перезарядки
 	player.mjolnir.on_room_start()
 	player.on_room_start()  # пассивки тела «на зал» (скальд: первый удар не ранит)
+	Oaths.on_room_start()  # клятвы Одина: первый удар в зале, зал без урона
 	_release_room_hold()
 	room.cleared.connect(_on_room_cleared)
 	room.exit_reached.connect(_on_exit_reached)
@@ -241,6 +243,11 @@ func _finish_room_load() -> void:
 
 func _on_room_cleared() -> void:
 	Run.add_glory(Run.glory_room_clear)
+	# Клятва воина: зал без полученного урона — случайная руна +1 уровень
+	var vow := Oaths.on_room_cleared()
+	if vow:
+		player.recalc_from_runes(Run)
+		hud.toast(tr("КЛЯТВА ВОИНА: %s +1") % tr(vow.title).to_upper())
 	# Следующий зал грузим в фоне, пока игрок выбирает руну. Dummy-рендерер может
 	# повреждать RID при одновременной загрузке и создании ресурсов; в headless
 	# сцена будет загружена обычным load при входе.
@@ -273,7 +280,7 @@ func _offer_rune() -> void:
 	if Run.doors_enabled:
 		rewards.grant()
 		return
-	var choices := Run.random_rune_choices(3)
+	var choices := Run.random_rune_choices(3, true)
 	if choices.is_empty():
 		room.open_door()
 	else:
@@ -313,7 +320,7 @@ func _on_rune_picked(rune: RuneDef) -> void:
 	player.recalc_from_runes(Run)
 	if rune.id == "heal":
 		player.heal(Run.rune_value("heal"))  # уровень 1–3: 50 → 100 (у жреца ×2)
-	Odin.say("rune_pick")
+	Odin.say("oath_taken" if rune.oath else "rune_pick")
 	Audio.play("sounds/sfx/rune_pick.wav")
 	if reward_done:
 		_after_reward()

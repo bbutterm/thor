@@ -462,7 +462,7 @@ func _update_timers(delta: float) -> void:
 	_stomp_cooldown = maxf(0.0, _stomp_cooldown - delta)
 	_slam_hint_left = maxf(0.0, _slam_hint_left - delta)
 	_climb_check_cooldown = maxf(0.0, _climb_check_cooldown - delta)
-	if dash_charges < dash_charges_max and is_on_floor() and not skills._weapon_skill_enemy_only_floor() and not is_climbing:
+	if dash_charges < dash_charges_max and is_on_floor() and not skills._weapon_skill_enemy_only_floor() and not is_climbing and Oaths.ground_recharge():
 		_dash_recharge_timer += delta
 		if _dash_recharge_timer >= dash_recharge * weapon_dash_recharge_mult() * _rune_dash_recharge_mult:
 			_dash_recharge_timer = 0.0
@@ -498,7 +498,7 @@ func _setup_weapons() -> void:
 
 ## Скорость бега с учётом оружия в руке.
 func effective_move_speed() -> float:
-	return move_speed * weapon_move_mult() * (style.current_speed_mult() if style else 1.0) * (1.0 + Run.rune_value("njord_wind")) * maxf(weapon_skill_speed_mult, 0.0)
+	return move_speed * weapon_move_mult() * (style.current_speed_mult() if style else 1.0) * (1.0 + Run.rune_value("njord_wind")) * Oaths.speed_mult() * maxf(weapon_skill_speed_mult, 0.0)
 
 func weapon_move_mult() -> float:
 	var m := weapons.move_speed_mult() if weapons else 1.0

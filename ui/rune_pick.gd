@@ -9,6 +9,9 @@ var _cards: HBoxContainer
 var _root: Control
 var _open_time: float = 0.0
 var _title: Label
+## Реплика Одина под заголовком, если в выборе клятва (С3)
+var _odin: Label
+const OATH_COLOR := Color(1.0, 0.32, 0.25)
 const DEFAULT_TITLE := "НОРНЫ ПРЕДЛАГАЮТ РУНУ"
 ## Видимая ширина карточки (высота — по пропорциям card_rune)
 @export var card_width: float = 300.0
@@ -38,6 +41,10 @@ func _ready() -> void:
 	var hint := UIStyle.label(tr("Выбери руну: мышь, 1 / 2 / 3 или геймпад"), 18, UIStyle.TEXT_DIM, 4)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(hint)
+	_odin = UIStyle.label("", 18, Color(1.0, 0.82, 0.5), 4)
+	_odin.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_odin.visible = false
+	vb.add_child(_odin)
 	_cards = HBoxContainer.new()
 	_cards.add_theme_constant_override("separation", 22)
 	_cards.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -53,6 +60,11 @@ func open(choices: Array[RuneDef], title: String = "") -> void:
 		c.queue_free()
 	for i in choices.size():
 		_cards.add_child(_make_card(choices[i], i))
+	# Клятва в выборе — Один предлагает её вслух (пузырь на паузе спрятан, поэтому строкой здесь)
+	var has_oath := choices.any(func(r: RuneDef) -> bool: return r.oath)
+	_odin.visible = has_oath
+	if has_oath:
+		_odin.text = tr("Один: «%s»") % Odin.pick("oath_offer")
 	visible = true
 	if _cards.get_child_count() > 0:
 		(_cards.get_child(0) as Button).grab_focus.call_deferred()
@@ -67,10 +79,14 @@ func open(choices: Array[RuneDef], title: String = "") -> void:
 ## название и описание следующего уровня в окне; проклятые — рамка «epic», с уровнем — «legendary».
 func _make_card(rune: RuneDef, index: int) -> Button:
 	var lvl := Run.rune_level(rune.id)
-	var rarity := "epic" if rune.cursed else ("legendary" if lvl > 0 else "rare")
+	var rarity := "epic" if rune.cursed else ("legendary" if lvl > 0 or rune.oath else "rare")
 	var b := SkinCard.make("card_rune", card_width, rune.color, rarity)
 	b.key_label.text = "[%d]" % (index + 1)
 	b.set_icon(UISkin.rune_category_icon(rune.category), rune.glyph, rune.color.lightened(0.25))
+	if rune.oath:
+		# Своя рамка клятвы: красная обводка карточки (иконки клятв владелец сгенерирует — пока runecat_*)
+		b.self_modulate = Color(1.0, 0.62, 0.55)
+		b.add_text(tr("КЛЯТВА НАВСЕГДА"), 13, OATH_COLOR, 4)
 	# Уровень (GDD 11: повторная руна повышает уровень 1–3) и описание следующего уровня
 	var title_txt := tr(rune.title) + ("  %d → %d" % [lvl, lvl + 1] if lvl > 0 else "")
 	b.add_text(title_txt, 19, rune.color.lightened(0.45), 5)
@@ -79,7 +95,9 @@ func _make_card(rune: RuneDef, index: int) -> Button:
 		desc = tr(rune.level_descriptions[lvl])
 	if rune.cursed:
 		desc = tr("☠ Проклятие Локи\n") + desc
-	b.add_text(desc, 15, UIStyle.TEXT, 3)
+	b.add_text(desc, 14 if rune.oath else 15, UIStyle.TEXT, 3)
+	if rune.oath and rune.oath_cost != "":
+		b.add_text(tr("Цена: %s") % tr(rune.oath_cost), 14, OATH_COLOR, 3)
 	b.pressed.connect(func() -> void: choose(index))
 	return b
 

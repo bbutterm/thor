@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RuneDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://run/rune_def.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+id = "oath_pride"
+title = "Клятва гордыни"
+description = "+50 % Славы"
+glyph = "ᛟ"
+color = Color(0.95, 0.3, 0.22, 1)
+category = "meta"
+level_descriptions = PackedStringArray("+50 % Славы")
+implemented = true
+level_values = PackedFloat32Array(0.5)
+level_values_b = PackedFloat32Array(2.0)
+value_kind = "add"
+oath = true
+oath_cost = "Первый удар в зале — двойной"

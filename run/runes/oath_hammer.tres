@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RuneDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://run/rune_def.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+id = "oath_hammer"
+title = "Клятва молота"
+description = "Мьёльнир +60 % урона"
+glyph = "ᚦ"
+color = Color(0.95, 0.3, 0.22, 1)
+category = "mjolnir"
+level_descriptions = PackedStringArray("Мьёльнир +60 % урона")
+implemented = true
+level_values = PackedFloat32Array(0.6)
+level_values_b = PackedFloat32Array(0.3)
+value_kind = "add"
+oath = true
+oath_cost = "Оружие в руке −30 % урона"

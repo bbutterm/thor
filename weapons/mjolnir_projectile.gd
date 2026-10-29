@@ -565,6 +565,9 @@ func _hit_impact(en: Enemy) -> void:
 ## Кто останавливает летящий «туда» молот: боссы, тяжёлые (Раздутый), щитоносцы (если бросок не пробивает).
 ## Корм и бойцов молот пробивает и летит дальше.
 func stops_hammer(en: Enemy) -> bool:
+	# Элита «Щит от бросков» (С5) — молот отскакивает всегда
+	if en.has_meta(&"elite_hammer_shield"):
+		return true
 	if not hand.stopped_by_heavy or FeelSwitch.is_old(&"hammer_recall"):
 		return false
 	match en.kind:

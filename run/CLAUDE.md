@@ -6,7 +6,7 @@
 - `tutorial.gd` (`Tutorial`, узел в сцене игры) — обучение в первом зале первых забегов: шаги `Tutorial.STEPS`, реплики `ravens.tutorial_<шаг>` (`{key_<действие>}` → клавиша из InputMap; `Tutorial.key_name(действие)`), пройдено — событие `tutorial_done` в сохранении.
 - `run_tracker.gd` (`RunTracker`, узел в сцене игры) — время забега, причина смерти, бой-реплики «ДВИГАЙСЯ!»/мульти-килл/«Скуф…»/«Позорище» (добил ренжем).
 - Тела: `body_def.gd` (`BodyDef`: стиль движения, пассивка, изъян, цена, `dash_charges`), `bodies/`, `movement/<стиль>.tres` (`MovementProfile`, см. `player/CLAUDE.md`), `passive_def.gd` + `passives/*.tres|.gd`, `body_trait_handler.gd`.
-- Руны: `rune_def.gd` + `runes/` (`RuneDef`: категория, уровни, `implemented`).
+- Руны: `rune_def.gd` + `runes/` (`RuneDef`: категория, уровни, `implemented`). **Клятвы Одина** (С3): `RuneDef.oath` + `oath_cost`, 7 файлов `runes/oath_*.tres`, эффекты — `oaths.gd` (`Oaths`: однострочные вызовы в уроне, лечении, рунах на земле, Славе, первом ударе в зале, здоровье/скорости, хвате — `Oaths.attach`, зале без урона, отдыхе); в выборе — `random_rune_choices(3, allow_oath = true)` (только обычная руна после зала, шанс `oath_chance`), карточка — `ui/rune_pick.gd`, реплики `odin.oath_offer` / `odin.oath_taken`.
 - Структура забега: `run_map.gd`, `maps/`, `reward_def.gd`, `rewards/`, `reward_flow.gd`.
 - Экономика: `economy.gd` + `economy.tres`, `silver.gd`, `silver_coin.gd`, `barrel_watch.gd`, `heal_orb.gd`, `shop.gd`, `shop_item_def.gd`, `shop/`.
 - Испытания: `trial_def.gd`, `trials/`, `trial_runner.gd`.

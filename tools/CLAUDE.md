@@ -30,6 +30,9 @@
 ## Баланс из debug-панели (П8)
 `apply_balance.py <balance.json>` — таблица «поле — было — стало — файл:строка» (`--check` — код 1 при неизвестных ключах, `--write` — значения `@export` по умолчанию, `.tres` стиля/экономики и строки `TUNING.md`); глобальные множители (`enemy_mult`, `econ_mult`, `waves_mult`) не переносит — решает владелец. Самотест — `python3 tools/test_apply_balance.py` (образец `tools/testdata/balance_sample.json`).
 
+## Ветки на GitHub (П9)
+`cleanup_branches.sh [--run]` — 16 веток с коммитами вне `main` → метки `archive/<ветка>` и удаление, 7 уже влитых — удаление; без `--run` только печатает. Запускать у себя: из облачной сессии GitHub не даёт пушить метки и удалять ветки (403).
+
 ## Локализация
 `i18n_extract.py` (ключи `tr()` → `data/i18n/en.po`; `--check` — отчёт), `i18n_dialogues.py [--check]` (шаблоны и покрытие `data/dialogues/en/`). Правила — корневой `CLAUDE.md`.
 

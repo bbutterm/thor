@@ -69,7 +69,7 @@ func _run() -> void:
 	print("-- Данные и уровни")
 	var impl := 0
 	for r in Run.all_runes:
-		if r.implemented and not r.cursed:
+		if r.implemented and not r.cursed and not r.oath:
 			impl += 1
 			if r.level_values.size() != 3:
 				check(false, "у руны %s три значения уровней" % r.id)
@@ -215,7 +215,134 @@ func _run() -> void:
 	give("loki_spin", 1)
 	check(p.dash_charges_max >= 3, "Вертушка Локи: +2 рывка")
 	clear_runes()
+	await _test_oaths(p, e)
 	_finish()
+
+## Клятвы Одина (С3): 7 штук, в выборе примерно 1 из 3, уровень один, каждый плюс и цена
+func _test_oaths(p: Player, e: Enemy) -> void:
+	print("-- Клятвы Одина")
+	var oaths := Run.all_runes.filter(func(r: RuneDef) -> bool: return r.oath)
+	check(oaths.size() == 7 and oaths.all(func(r: RuneDef) -> bool: return r.oath_cost != "" and r.implemented), "7 клятв, у каждой цена (%d)" % oaths.size())
+	seed(777)
+	var with_oath := 0
+	var plain_oath := 0
+	for i in 300:
+		var ch := Run.random_rune_choices(3, true)
+		var n := ch.filter(func(r: RuneDef) -> bool: return r.oath).size()
+		if n > 0:
+			with_oath += 1
+		if n > 1:
+			check(false, "в выборе не больше одной клятвы")
+		plain_oath += Run.random_rune_choices(3).filter(func(r: RuneDef) -> bool: return r.oath).size()
+	check(with_oath > 70 and with_oath < 130, "клятва примерно в каждом третьем выборе (%d из 300)" % with_oath)
+	check(plain_oath == 0, "в ларьке/наградах без allow_oath клятв нет")
+	give("oath_fury", 2)
+	check(Run.rune_level("oath_fury") == 1, "клятва — один уровень, снять/поднять нельзя")
+	var ch2 := Run.random_rune_choices(3, true)
+	check(not ch2.any(func(r: RuneDef) -> bool: return r.id == "oath_fury"), "взятая клятва больше не предлагается")
+	# Ярость: +40 % урона, лечение вдвое слабее
+	p.health = p.max_health
+	var h0 := e.health
+	p.deal_damage(e, 10.0, Vector3.ZERO, "melee")
+	var with_fury := h0 - e.health
+	clear_runes()
+	h0 = e.health
+	p.deal_damage(e, 10.0, Vector3.ZERO, "melee")
+	var base := h0 - e.health
+	check(absf(with_fury / base - 1.4) < 0.02, "Клятва ярости: урон ×1.4 (%.1f / %.1f)" % [with_fury, base])
+	p.health = p.max_health * 0.5
+	var hp := p.health
+	p.heal(10.0)
+	var heal_base := p.health - hp
+	give("oath_fury")
+	p.health = p.max_health * 0.5
+	hp = p.health
+	p.heal(10.0)
+	check(absf((p.health - hp) - heal_base * 0.5) < 0.01, "Клятва ярости: лечение вдвое слабее")
+	clear_runes()
+	# Небеса: удар-приземление ×2, на земле руны не копятся
+	h0 = e.health
+	p.deal_damage(e, 10.0, Vector3.ZERO, "slam")
+	var slam_base := h0 - e.health
+	give("oath_sky")
+	h0 = e.health
+	p.deal_damage(e, 10.0, Vector3.ZERO, "slam")
+	check(absf((h0 - e.health) / slam_base - 2.0) < 0.02, "Клятва небес: удар-приземление ×2")
+	p.dash_charges = 0
+	await wait(p.dash_recharge * 1.5)
+	check(p.dash_charges == 0, "Клятва небес: на земле руны не копятся")
+	clear_runes()
+	p.dash_charges = p.dash_charges_max
+	# Молот: Мьёльнир +60 %, правая рука −30 % (сравниваем при том же здоровье — у Берсерка урон зависит от него)
+	p.health = p.max_health
+	h0 = e.health
+	p.deal_damage(e, 10.0, Vector3.ZERO, "hammer")
+	var hb := h0 - e.health
+	h0 = e.health
+	p.deal_damage(e, 10.0, Vector3.ZERO, "melee")
+	var mb := h0 - e.health
+	give("oath_hammer")
+	p.health = p.max_health
+	h0 = e.health
+	p.deal_damage(e, 10.0, Vector3.ZERO, "hammer")
+	var hm := h0 - e.health
+	h0 = e.health
+	p.deal_damage(e, 10.0, Vector3.ZERO, "melee")
+	var mm := h0 - e.health
+	check(absf(hm / hb - 1.6) < 0.02 and absf(mm / mb - 0.7) < 0.02, "Клятва молота: молот ×1.6 (%.1f / %.1f), рука ×0.7 (%.1f / %.1f)" % [hm, hb, mm, mb])
+	clear_runes()
+	# Буря: идеальный хват — молния по всем рядом; промах хвата — −10 ХП
+	give("oath_storm")
+	var near := dummy(4.0)
+	h0 = near.health
+	p.mjolnir.perfect_catch.emit()
+	check(near.health < h0, "Клятва бури: идеальный хват бьёт молнией рядом")
+	p.health = p.max_health
+	p._invuln_left = 0.0
+	hp = p.health
+	p.mjolnir.catch_timing.emit(&"early", -0.2)
+	check(absf((hp - p.health) - 10.0) < 0.5, "Клятва бури: промах хвата — −10 ХП")
+	near.queue_free()
+	clear_runes()
+	# Гордыня: +50 % Славы, первый удар в зале двойной
+	var g0 := Run.glory
+	Run.add_glory(100)
+	var glory_base := Run.glory - g0
+	give("oath_pride")
+	g0 = Run.glory
+	Run.add_glory(100)
+	check(absf(float(Run.glory - g0) / glory_base - 1.5) < 0.02, "Клятва гордыни: +50 % Славы")
+	Oaths.on_room_start()
+	p.health = p.max_health
+	p._invuln_left = 0.0
+	hp = p.health
+	p.take_damage(10.0)
+	var first := hp - p.health
+	p._invuln_left = 0.0
+	hp = p.health
+	p.take_damage(10.0)
+	check(absf(first - (hp - p.health) * 2.0) < 0.5, "Клятва гордыни: первый удар в зале двойной (%.1f / %.1f)" % [first, hp - p.health])
+	clear_runes()
+	# Ветер: +25 % скорости и +1 руна, −25 % здоровья
+	var sp0 := p.effective_move_speed()
+	var hpmax0 := p.max_health
+	var dash0 := p.dash_charges_max
+	give("oath_wind")
+	check(absf(p.effective_move_speed() / sp0 - 1.25) < 0.01 and p.dash_charges_max == dash0 + 1 and absf(p.max_health / hpmax0 - 0.75) < 0.01,
+		"Клятва ветра: скорость ×1.25, +1 руна, здоровье ×0.75")
+	clear_runes()
+	# Воин: зал без урона — случайная руна +1; на отдыхе нет лечения
+	give("max_health")
+	give("oath_warrior")
+	Oaths.on_room_start()
+	var up := Oaths.on_room_cleared()
+	check(up != null and up.id == "max_health" and Run.rune_level("max_health") == 2, "Клятва воина: зал без урона — руна +1 уровень")
+	Oaths.on_room_start()
+	p._invuln_left = 0.0
+	p.take_damage(5.0)
+	check(Oaths.on_room_cleared() == null, "получил урон — без награды")
+	check(not Oaths.rest_heals(), "Клятва воина: на отдыхе нет лечения")
+	clear_runes()
 
 func _fire_count() -> int:
 	var n := 0

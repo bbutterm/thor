@@ -47,6 +47,9 @@ static func of(e: Node, create: bool = false) -> ElementStatus:
 	var en := e as Enemy
 	if en == null or not is_instance_valid(en):
 		return null
+	# Элита «Заземлённый» (С5): стихии Мьёльнира на него не действуют
+	if en.has_meta(&"elite_grounded"):
+		return null
 	var s := en.get_node_or_null(NODE_NAME) as ElementStatus
 	if s == null and create and not en.is_dead:
 		s = ElementStatus.new()

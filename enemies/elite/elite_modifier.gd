@@ -15,6 +15,11 @@ class_name EliteModifier
 @export var enabled: bool = true
 @export var weight: float = 1.0
 
+@export_group("Магнит")
+## Тянет летящий молот: радиус (м) и сила разворота скорости (доля за секунду)
+@export var magnet_radius: float = 0.0
+@export var magnet_pull: float = 0.0
+
 @export_group("Быстрый")
 @export var speed_mult: float = 1.0
 

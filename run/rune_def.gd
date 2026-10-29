@@ -21,4 +21,9 @@ class_name RuneDef
 @export_enum("add", "mult", "interval") var value_kind: String = "add"
 ## Проклятая руна Локи: сильный плюс и смешной минус, выпадает только в особых событиях (сделка Локи)
 @export var cursed: bool = false
+## Клятва Одина (С3): большой плюс и явная цена; в выборе рун — одна карточка из трёх примерно в каждом
+## третьем выборе (RunManager.oath_chance), уровень один, снять нельзя. Эффекты — run/oaths.gd
+@export var oath: bool = false
+## Цена клятвы — красной строкой на карточке
+@export var oath_cost: String = ""
 

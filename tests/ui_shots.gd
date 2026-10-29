@@ -109,6 +109,14 @@ func _run() -> void:
 	game.rune_pick._open_time = -10.0
 	game.rune_pick.choose(0)
 	await wait(0.1)
+	# С3: карточка клятвы Одина в выборе рун
+	var with_oath: Array[RuneDef] = [Run.rune_def("bear_skin"), Run.rune_def("fenrir_fang"), Run.rune_def("oath_storm")]
+	game.rune_pick.open(with_oath)
+	await wait(0.3)
+	await shot("08b_rune_pick_oath")
+	game.rune_pick.visible = false
+	get_tree().paused = false
+	await wait(0.1)
 	var traits := Run.random_mjolnir_trait_choices(3)
 	if not traits.is_empty():
 		game.trait_pick.open(traits)

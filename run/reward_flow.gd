@@ -166,7 +166,7 @@ func finish() -> void:
 
 func _offer_runes(mode: String) -> void:
 	rune_mode = mode
-	var choices := Run.random_rune_choices(3)
+	var choices := Run.random_rune_choices(3, mode == "rune")
 	if choices.is_empty():
 		finish()
 		return
@@ -255,7 +255,7 @@ func upgradable_runes() -> Array[RuneDef]:
 	var out: Array[RuneDef] = []
 	var seen := {}
 	for r in Run.runes:
-		if seen.has(r.id) or r.id == "heal":
+		if seen.has(r.id) or r.id == "heal" or r.oath:
 			continue
 		seen[r.id] = true
 		if Run.rune_level(r.id) < map().rune_max_level:
@@ -268,7 +268,8 @@ func _offer_rest() -> void:
 	var ups := upgradable_runes()
 	_choice_kind = "rest"
 	choice.open(tr("ПРИВАЛ"), tr("Один разрешил пять минут. Выбери одно."), [
-		{"id": "heal", "title": tr("Похлёбка"), "desc": tr("Лечение %d %% (+%d HP)") % [int(map().rest_heal_fraction * 100), heal], "glyph": "ᚹ", "color": Color(0.45, 1.0, 0.55)},
+		{"id": "heal", "title": tr("Похлёбка"), "desc": (tr("Лечение %d %% (+%d HP)") % [int(map().rest_heal_fraction * 100), heal]) if Oaths.rest_heals() else tr("Клятва воина: на отдыхе нет лечения"),
+			"glyph": "ᚹ", "color": Color(0.45, 1.0, 0.55), "enabled": Oaths.rest_heals()},
 		{"id": "upgrade", "title": tr("Точить руну"), "desc": tr("Улучшить руну на 1 уровень") if not ups.is_empty() else tr("Нет рун для улучшения"), "glyph": "ᚱ", "color": Color(0.55, 0.8, 1.0), "enabled": not ups.is_empty()},
 	], "odin", "neutral")
 

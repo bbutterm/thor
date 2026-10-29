@@ -26,6 +26,7 @@ func take_damage(amount: float, knockback: Vector3 = Vector3.ZERO, ignore_invuln
 		RunTracker.pending_source = ""
 		return
 	amount = _rune_on_damaged(amount)
+	amount = Oaths.on_damaged(amount)  # Клятва гордыни: первый удар в зале двойной; учёт «зал без урона»
 	if amount <= 0.0:
 		p._invuln_left = 0.25
 		return
@@ -59,6 +60,7 @@ func pay_health(amount: float) -> void:
 func heal(amount: float) -> void:
 	# Изъян Берсерка: лечение −50 %
 	amount *= float(p.modify_stat(&"heal_mult", 1.0))
+	amount *= Oaths.heal_mult()  # Клятва ярости
 	p.health = minf(p.max_health, p.health + amount)
 	p.health_changed.emit(p.health, p.max_health)
 

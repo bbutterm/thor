@@ -86,9 +86,12 @@ func _run() -> void:
 	await _clear()
 	var mods := Loot.elite_modifiers()
 	var ids := mods.map(func(m: EliteModifier) -> String: return m.id)
-	check(mods.size() == 7, "7 модификаторов (%s)" % ", ".join(ids))
-	for want in ["fire", "ice", "armored", "fast", "explosive", "vampire", "summoner"]:
-		check(want in ids, "есть модификатор %s" % want)
+	check(mods.size() == 7, "в пуле 7 модификаторов (%s)" % ", ".join(ids))
+	for want in ["magnet", "throw_shield", "grounded", "armored", "explosive", "vampire", "summoner"]:
+		check(want in ids, "в пуле модификатор %s" % want)
+	# С5: Огненный, Ледяной, Быстрый — из пула убраны, файлы и поведение оставлены
+	for gone in ["fire", "ice", "fast"]:
+		check(gone not in ids and Loot.get_elite_modifier(gone) != null, "%s — не в пуле, но файл есть" % gone)
 	await _test_all_combos(mods)
 	await _test_each_hits(mods)
 	await _test_armored()
@@ -98,6 +101,9 @@ func _run() -> void:
 	await _test_explosive()
 	await _test_summoner()
 	await _test_fire()
+	await _test_magnet()
+	await _test_throw_shield()
+	await _test_grounded()
 	await _test_drop_and_rules()
 	_finish()
 
@@ -175,6 +181,60 @@ func _test_armored() -> void:
 	p.equip(Loot.get_def("axe"), 1, false)
 	p.weapons.switch_to(WeaponHolder.MELEE, true)
 	e2.take_hit(9999.0, Vector3.ZERO, "test")
+	await _clear()
+
+## Магнит: брошенный мимо молот разворачивается в элиту и попадает
+func _test_magnet() -> void:
+	print("-- Магнит")
+	var e := _elite("grunt", Loot.get_elite_modifier("magnet"), Vector3(4, 0, -6))
+	e.set_physics_process(false)
+	await frames(30)
+	var hp := e.health
+	var hand := p.mjolnir
+	hand.catch_cooldown = 0.0
+	p.rotation_target = Vector2(0, 0)
+	p.rotation.y = 0.0
+	hand.throw_hammer()
+	var hit := await wait_until(2.0, func() -> bool: return not is_instance_valid(e) or e.health < hp)
+	check(hit, "бросок прямо, элита сбоку (4 м) — молот притянуло и он попал")
+	hand.force_return_instant()
+	if is_instance_valid(e):
+		e.take_hit(9999.0, Vector3.ZERO, "test")
+	await _clear()
+
+## Щит от бросков: молот не ранит и отскакивает, мили и удар-приземление — да
+func _test_throw_shield() -> void:
+	print("-- Щит от бросков")
+	var e := _elite("grunt", Loot.get_elite_modifier("throw_shield"), Vector3(0, 0, -6))
+	e.set_physics_process(false)
+	await frames(30)
+	var hp := e.health
+	e.take_hit(40.0, Vector3.ZERO, "hammer")
+	check(is_equal_approx(e.health, hp), "молот не ранит")
+	e.take_hit(20.0, Vector3.ZERO, "melee")
+	e.take_hit(20.0, Vector3.ZERO, "slam")
+	check(is_equal_approx(e.health, hp - 40.0), "мили и удар-приземление — полный урон")
+	var proj := MjolnirProjectile.new()
+	proj.hand = p.mjolnir
+	check(proj.stops_hammer(e), "молот отскакивает от щита")
+	proj.free()
+	e.take_hit(9999.0, Vector3.ZERO, "test")
+	await _clear()
+
+## Заземлённый: стихии молота не действуют (урон стихии и состояния), молот — да
+func _test_grounded() -> void:
+	print("-- Заземлённый")
+	var e := _elite("grunt", Loot.get_elite_modifier("grounded"), Vector3(0, 0, -6))
+	e.set_physics_process(false)
+	await frames(30)
+	var hp := e.health
+	for src in ["fire", "ice", "lightning"]:
+		e.take_hit(15.0, Vector3.ZERO, src)
+	check(is_equal_approx(e.health, hp), "огонь, лёд, молния — без урона")
+	check(ElementStatus.of(e, true) == null, "состояния стихий не вешаются")
+	e.take_hit(15.0, Vector3.ZERO, "hammer")
+	check(is_equal_approx(e.health, hp - 15.0), "сам молот бьёт")
+	e.take_hit(9999.0, Vector3.ZERO, "test")
 	await _clear()
 
 func _test_fast() -> void:
