@@ -13,7 +13,8 @@ signal line_spoken(text: String)
 ## «combo» — связка стихии и приёма Мьёльнира (блок Б4): редкое событие на экране выбора
 ## «boss_armor» — подсказка «молотом!» при первом ударе мили по броне босса (П4): раз за бой, без лимита
 ## «big_slam» — «Вот! ВОТ!» на удар-приземление с big_slam_height: им читается высота вместо шкалы (П6)
-const EXEMPT := ["run_start", "boss_start", "miniboss_start", "miniboss_death", "victory", "death", "berserk", "rank_top", "combo", "boss_armor", "big_slam"]
+## «elite» — первая встреча с новой элитой (Магнит, Щит от бросков, Заземлённый): раз за всё время
+const EXEMPT := ["run_start", "boss_start", "miniboss_start", "miniboss_death", "victory", "death", "berserk", "rank_top", "combo", "boss_armor", "big_slam", "elite"]
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS

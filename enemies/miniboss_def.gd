@@ -56,6 +56,8 @@ class_name MinibossDef
 ## Пулы data/dialogues (пузырь в углу): при появлении и при смерти; пусто — не говорит
 @export var intro_pool: String = "sven.intro"
 @export var death_pool: String = "sven.death"
+## Через сколько секунд после слов босса комментирует Один/Тор (один пузырь за раз)
+@export var comment_delay: float = 2.6
 
 ## Добавить залу волну с мини-боссом (и свитой). hud — для подсказки при появлении (может быть null).
 func add_to_room(room: Room, hud: Node = null) -> void:
@@ -160,13 +162,36 @@ func apply(e: Enemy, hud: Node = null) -> void:
 		if e._visual:
 			e._visual.scale = Vector3(fatness, 1.0, fatness) * model_scale, CONNECT_ONE_SHOT)
 	var dp := death_pool
+	var boss_id := id
+	# Один пузырь: сначала слова босса, через comment_delay — Один (или Тор после победы) про этого босса
 	e.died.connect(func(_e: Enemy) -> void:
 		Run.add_glory(glory)
+		var spoke := false
 		if dp != "" and Dialogue.has_pool(dp):
 			Dialogue.bark_pool(dp)
-		Odin.say("miniboss_death"), CONNECT_ONE_SHOT)
-	Odin.say("miniboss_start")
+			spoke = true
+		_after(e.get_tree(), comment_delay if spoke else 0.0, func() -> void:
+			if randf() < 0.5 and Dialogue.has_pool("thor.miniboss_win_" + boss_id):
+				Dialogue.bark_pool("thor.miniboss_win_" + boss_id)
+			else:
+				_odin(&"miniboss_death", boss_id)), CONNECT_ONE_SHOT)
 	if intro_pool != "" and Dialogue.has_pool(intro_pool):
 		Dialogue.bark_pool(intro_pool)
+		_after(e.get_tree() if e.is_inside_tree() else Engine.get_main_loop() as SceneTree, comment_delay, func() -> void: _odin(&"miniboss_start", boss_id))
+	else:
+		_odin(&"miniboss_start", boss_id)
 	if hud and hud.has_method("toast"):
 		hud.call("toast", title + "!")
+
+## Реплика Одина про этого мини-босса (пул odin.<событие>_<id>), иначе общая
+static func _odin(event: StringName, boss_id: String) -> void:
+	var specific := "%s_%s" % [event, boss_id]
+	Odin.say(specific if Dialogue.has_pool("odin." + specific) else str(event))
+
+static func _after(tree: SceneTree, delay: float, cb: Callable) -> void:
+	if tree == null:
+		return
+	if delay <= 0.0:
+		cb.call()
+	else:
+		tree.create_timer(delay).timeout.connect(cb)

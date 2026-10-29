@@ -190,6 +190,12 @@ static func make_elite(enemy: Enemy, mod: EliteModifier = null) -> void:
 	if mod == null:
 		return
 	enemy.set_meta("elite_mod", mod.id)
+	# Первая встреча с новой элитой (С5) — Один подсказывает, что с ней делать
+	if Dialogue.has_pool("odin.elite_" + mod.id) and Save.event_count("seen_elite_" + mod.id) == 0:
+		Save.bump_event("seen_elite_" + mod.id)
+		var pool := mod.id
+		enemy.ready.connect(func() -> void:
+			enemy.get_tree().create_timer(0.8).timeout.connect(func() -> void: Odin.say("elite_" + pool)), CONNECT_ONE_SHOT)
 	# Подпись модификатора — как цифры урона (тот же шрифт и флаги Label3D: уже прогретый шейдер)
 	var label := Label3D.new()
 	label.name = "EliteLabel"
