@@ -272,33 +272,32 @@ func _house_loft_roof(root: Node3D, name: String, center: Vector3, size: Vector3
 	if recipe == "tile":
 		_model(root, name + "_roof", QV + "Roof_RoundTiles_6x6.gltf", pos, rot, scl)
 		return
-	# Солома/доски: свой меш-ресурс (замена материала у детей вставленной gltf-сцены в .tscn не сохраняется)
+	# Солома/доски: общий меш-ресурс крыши (замена материала у детей вставленной gltf-сцены в .tscn не сохраняется),
+	# покрытие — surface_override_material самого узла (узел свой, сохраняется в сцене)
 	var mi := MeshInstance3D.new()
 	mi.name = name + "_roof"
-	mi.mesh = _roof_mesh(recipe)
+	mi.mesh = _roof_mesh()
+	mi.set_surface_override_material(1, _world_tex_mat("roof_thatch", "thatch", Color(1, 0.96, 0.9), 0.35) if recipe == "thatch" \
+		else _world_tex_mat("roof_planks", "wood_planks_painted", Color(0.92, 0.88, 0.84), 0.3))
 	mi.position = pos
 	mi.rotation_degrees = rot
 	mi.scale = scl
 	root.add_child(mi)
 
-## Копия меша крыши 6x6 с другим покрытием: rooms/meshes/roof_<recipe>.res (балки — общий woodtrim, скат —
-## рисованная текстура трипланаром по миру). Один ресурс на вид — общий для всех домов.
-var _roof_meshes := {}
-func _roof_mesh(recipe: String) -> Mesh:
-	if _roof_meshes.has(recipe):
-		return _roof_meshes[recipe]
+## Копия меша крыши 6x6 (rooms/meshes/roof_6x6.res): балки — общий woodtrim, скат — покрытие узла. Одна на все дома.
+var _roof: Mesh
+func _roof_mesh() -> Mesh:
+	if _roof:
+		return _roof
 	var src := (load(QV + "Roof_RoundTiles_6x6.gltf") as PackedScene).instantiate()
 	var mesh := ((src.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D).mesh as ArrayMesh).duplicate() as ArrayMesh
 	src.free()
-	var cover := _world_tex_mat("roof_thatch", "thatch", Color(1, 0.96, 0.9), 0.35) if recipe == "thatch" \
-		else _world_tex_mat("roof_planks", "wood_planks_painted", Color(0.92, 0.88, 0.84), 0.3)
 	mesh.surface_set_material(0, load("res://rooms/materials/woodtrim.tres") as Material)
-	mesh.surface_set_material(1, cover)
-	mesh.resource_name = "roof_" + recipe
-	var path := "res://rooms/meshes/roof_%s.res" % recipe
+	mesh.resource_name = "roof_6x6"
+	var path := "res://rooms/meshes/roof_6x6.res"
 	ResourceSaver.save(mesh, path)
 	mesh.take_over_path(path)
-	_roof_meshes[recipe] = mesh
+	_roof = mesh
 	return mesh
 
 ## Открытая терраса: перила по краям плоской крыши (кроме одной стороны — туда залезают), бочонок-кадка.
