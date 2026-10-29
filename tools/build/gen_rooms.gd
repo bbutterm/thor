@@ -336,8 +336,8 @@ func _build_room(d: Dictionary, boss: bool) -> void:
 		root.add_child(hnode)
 		for i in houses.size():
 			var hb: Array = d.blocks[houses[i][0]]
-			var h: Array = houses[i]
-			gen._house(hnode, "House%d" % i, hb[0], hb[1], h[1], h[2] if h.size() > 2 else "Plaster", h[3] if h.size() > 3 else {})
+			var hd: Array = houses[i]
+			gen._house(hnode, "House%d" % i, hb[0], hb[1], hd[1], hd[2] if hd.size() > 2 else "Plaster", hd[3] if hd.size() > 3 else {})
 
 	# Декоративные модели (без коллизии): [путь к сцене, позиция, поворот по Y (град), масштаб]
 	var models: Array = d.get("models", [])

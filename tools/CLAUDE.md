@@ -2,6 +2,7 @@
 
 ## Генератор сцен (`build_scenes.gd`)
 - Генерирует сцены игрока, врагов, бочек, **обычных боевых залов** (`room_defs()`: `rooms/room_01…09.tscn`), зала-ларька (`shop_room_def()`), UI и `scenes/game.tscn`. Меняешь их структуру — правь генератор и перезапускай: `godot --headless --path . res://tools/build_scenes.tscn`. Коммить только намеренно изменённые .tscn: генератор переписывает `unique_id` в негенерируемых по смыслу сценах — такой шум откатывай **по одному файлу**, никогда не всю папку.
+- `tools/regen.sh` — генератор + откат шума `unique_id` в сценах без изменений по сути (остаются только намеренно изменённые).
 - **Ручные сцены** — `MANUAL_SCENES` (`rooms/boss_arena.tscn`, `rooms/sven_arena.tscn`; новые арены — туда же): генератор их не создаёт и не перезаписывает (`_save` отказывается, проверка — `tests/generator_test.tscn`).
 - **Устройство** (этап 4 рефакторинга): `build_scenes.gd` (`SceneBuilder`) — порядок сборки (`_ready`), `MANUAL_SCENES` и `_save`, общие помощники (`_mat`, `_tex_mat`, `_world_tex_mat`, `_model`, `_wall_row`, `_house`, `_box`, `_balcony`, `_cyl`, `_mesh`), список залов `ROOM_DATA` → `room_defs()`, `shop_room_def()`. Сборщики — `RefCounted`-компоненты `build/` (доступ `gen.<имя>`, общие помощники — `gen._box(...)`):
 

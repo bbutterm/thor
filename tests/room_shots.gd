@@ -4,6 +4,10 @@ extends Node
 
 var out_dir := "user://room_shots"
 var rooms: Array[String] = ["room_07", "room_08", "room_09"]
+const EXTRA_VIEWS := {
+	"room_09": [[Vector3(-2, 2.2, 1), Vector3(-9, 2.5, -5), "c_dom_sz"], [Vector3(2, 2.2, 1), Vector3(9, 2.5, -5), "d_dom_sv"],
+		[Vector3(-2, 2.2, 0), Vector3(-9, 2.5, 6), "e_dom_yz"], [Vector3(2, 2.2, 0), Vector3(9, 2.2, 6), "f_dom_yv"]],
+}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -97,6 +101,13 @@ func _run() -> void:
 			p.rotation_target = Vector2(atan2(to.y, Vector2(to.x, to.z).length()), atan2(-to.x, -to.z))
 			await wait(0.4)
 			await shot("%s_b_obzor" % r)
+			# Крупные планы (дома MegaKit, П11): [глаз, цель, имя] в координатах зала
+			if EXTRA_VIEWS.has(r):
+				var vm := p.get_node("Head/Camera/ViewmodelContainer") as CanvasItem
+				vm.visible = false
+				for v in EXTRA_VIEWS[r]:
+					await view_at(game, v[0], v[1], "%s_%s" % [r, v[2]])
+				vm.visible = true
 	get_tree().quit()
 
 func view_at(game: Game, eye_local: Vector3, target_local: Vector3, name: String) -> void:

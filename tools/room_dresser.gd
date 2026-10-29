@@ -93,6 +93,21 @@ const SURFACES := {
 		"overlay_top": 0.4, "macro_strength": 0.18},
 }
 
+## Рисованные текстуры владельца (партия 10.1, 29.10): поверх SURFACES — земля, брусчатка, доски; параметры, на которых
+## смотрелось хорошо по кадрам «было/стало». Старые значения (SURFACES без этой таблицы) — F6 в «Быстрой проверке»
+## (data/quick_check_old_materials.json, scripts/quick_textures.gd).
+const PAINTED_DIRT := MT + "dirt_straw_painted.webp"
+const PAINTED_STONE := MT + "cobblestone_painted.webp"
+const PAINTED_WOOD := MT + "wood_planks_painted.webp"
+const PAINTED := {
+	"surface_floor_dirt": [PAINTED_DIRT, 0.2], "slice_dirt": [PAINTED_DIRT, 0.2], "surface_ground": [PAINTED_DIRT, 0.18],
+	"surface_stone": [PAINTED_STONE, 0.28], "slice_stone": [PAINTED_STONE, 0.28],
+	"surface_floor_brick": [PAINTED_STONE, 0.35], "slice_floor_brick": [PAINTED_STONE, 0.35],
+	"surface_pillar": [PAINTED_STONE, 0.3], "slice_pillar": [PAINTED_STONE, 0.3], "surface_rock": [PAINTED_STONE, 0.3], "slice_rock": [PAINTED_STONE, 0.3],
+	"surface_plank": [PAINTED_WOOD, 0.3], "slice_plank": [PAINTED_WOOD, 0.3], "surface_wood": [PAINTED_WOOD, 0.3], "slice_wood": [PAINTED_WOOD, 0.3],
+}
+const PAINTED_PARAMS := {"detail_mix": 0.0, "macro_strength": 0.12, "overlay_amount": 0.08, "normal_strength": 0.0, "tint": Color(1, 1, 1)}
+
 ## Декали на пол (assets/decals/): ключ → [вес, мин. размер, макс. размер]
 const FLOOR_DECALS := {
 	"slam_crack_small": [3.0, 1.2, 2.0], "slam_crack_medium": [2.0, 1.8, 2.8], "slam_crack_large": [0.6, 2.6, 3.4],
@@ -113,7 +128,11 @@ static func build_assets() -> void:
 		m.resource_name = key
 		m.shader = shader
 		m.set_shader_parameter("noise_tex", noise)
-		var spec: Dictionary = SURFACES[key]
+		var spec: Dictionary = (SURFACES[key] as Dictionary).duplicate()
+		if PAINTED.has(key):
+			spec.merge(PAINTED_PARAMS, true)
+			spec["albedo_tex"] = PAINTED[key][0]
+			spec["uv_scale"] = PAINTED[key][1]
 		for p in spec:
 			var v: Variant = spec[p]
 			m.set_shader_parameter(p, load(v) if v is String else v)

@@ -20,7 +20,9 @@ static func def() -> Dictionary:
 			[Vector3(-5, 0.5, -1.5), Vector3(2, 1, 2), "wood"],
 		],
 		"pillars": [],
-		"houses": [[0, "s", "Plaster"], [1, "s", "UnevenBrick"], [2, "e", "UnevenBrick"], [3, "w", "Plaster"]],
+		# П11: рецепты домов MegaKit — черепица, солома, доски, терраса (крыши на столбах над плоской крышей)
+		"houses": [[0, "s", "Plaster", {"recipe": "tile"}], [1, "s", "UnevenBrick", {"recipe": "thatch"}],
+			[2, "e", "UnevenBrick", {"recipe": "planks"}], [3, "w", "Plaster", {"recipe": "terrace"}]],
 		# Улица деревни — утоптанная земля с соломой (assets/textures/midgard/dirt_straw)
 		"floor_tex": "dirt_straw",
 		"jump_pads": [[Vector3(0, 0, 3), 8.0]],

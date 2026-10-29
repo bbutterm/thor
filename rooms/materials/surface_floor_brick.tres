@@ -1,16 +1,16 @@
 [gd_resource type="ShaderMaterial" format=3]
 
 [ext_resource type="Shader" path="res://shaders/world_surface.gdshader" id="1_e0x5u"]
+[ext_resource type="Texture2D" path="res://assets/textures/midgard/cobblestone_painted.webp" id="2_ounyt"]
 [ext_resource type="Texture2D" path="res://assets/quaternius/village/T_Noise_Terrain.png" id="3_x1np0"]
 [ext_resource type="Texture2D" path="res://assets/quaternius/village/T_Brick_Normal.png" id="4_6fi17"]
 [ext_resource type="Texture2D" path="res://assets/textures/midgard/dirt_straw.webp" id="5_ounyt"]
-[ext_resource type="Texture2D" path="res://assets/textures/midgard/cobblestone_painted.webp" id="9_painted"]
 
 [resource]
 resource_name = "surface_floor_brick"
 render_priority = 0
 shader = ExtResource("1_e0x5u")
-shader_parameter/albedo_tex = ExtResource("9_painted")
+shader_parameter/albedo_tex = ExtResource("2_ounyt")
 shader_parameter/normal_tex = ExtResource("4_6fi17")
 shader_parameter/normal_strength = 0.0
 shader_parameter/tint = Color(1, 1, 1, 1)

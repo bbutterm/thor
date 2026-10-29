@@ -12,7 +12,6 @@ import re
 GUARDED_ART = (
     "assets/decor/banner_emblems.webp",
     "assets/decor/shield_paints.webp",
-    "assets/textures/midgard/thatch.webp",
 )
 
 

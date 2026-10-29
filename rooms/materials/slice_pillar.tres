@@ -1,15 +1,15 @@
 [gd_resource type="ShaderMaterial" format=3]
 
 [ext_resource type="Shader" path="res://shaders/world_surface.gdshader" id="1_wcnah"]
+[ext_resource type="Texture2D" path="res://assets/textures/midgard/cobblestone_painted.webp" id="2_wcnah"]
 [ext_resource type="Texture2D" path="res://assets/quaternius/village/T_Noise_Terrain.png" id="3_xpt3h"]
 [ext_resource type="Texture2D" path="res://assets/quaternius/village/T_UnevenBrick_Normal.png" id="4_2o73j"]
-[ext_resource type="Texture2D" path="res://assets/textures/midgard/cobblestone_painted.webp" id="9_painted"]
 
 [resource]
 resource_name = "slice_pillar"
 render_priority = 0
 shader = ExtResource("1_wcnah")
-shader_parameter/albedo_tex = ExtResource("9_painted")
+shader_parameter/albedo_tex = ExtResource("2_wcnah")
 shader_parameter/normal_tex = ExtResource("4_2o73j")
 shader_parameter/normal_strength = 0.0
 shader_parameter/tint = Color(1, 1, 1, 1)

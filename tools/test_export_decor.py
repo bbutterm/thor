@@ -49,9 +49,9 @@ class ExportDecorTest(unittest.TestCase):
         self.assertTrue(any("banner_emblems.webp" in issue for issue in issues), issues)
 
     def test_split_path_key_in_script_is_rejected(self):
-        text = 'var texture = load(MIDGARD_TEXTURES + "thatch.webp")\n'
+        text = 'var texture = load(DECOR + "shield_paints.webp")\n'
         issues = self.check(GUARDED_ART, ("rooms/new.gd", text))
-        self.assertTrue(any("thatch.webp" in issue for issue in issues), issues)
+        self.assertTrue(any("shield_paints.webp" in issue for issue in issues), issues)
 
     def test_uid_reference_is_rejected(self):
         issues = self.check(GUARDED_ART, ("rooms/new.tscn", 'uid="uid://fixture0"'))
@@ -60,9 +60,9 @@ class ExportDecorTest(unittest.TestCase):
     def test_gltf_dependency_is_also_scanned(self):
         gltf = self.root / "assets/example/model.gltf"
         gltf.parent.mkdir(parents=True)
-        gltf.write_text('{"images": [{"uri": "thatch.webp"}]}', encoding="utf-8")
+        gltf.write_text('{"images": [{"uri": "shield_paints.webp"}]}', encoding="utf-8")
         issues = self.check(GUARDED_ART)
-        self.assertTrue(any("model.gltf" in issue and "thatch.webp" in issue for issue in issues), issues)
+        self.assertTrue(any("model.gltf" in issue and "shield_paints.webp" in issue for issue in issues), issues)
 
     def test_wildcard_exclusion_cannot_hide_use(self):
         issues = self.check(["assets/decor/*.webp"], ("rooms/new.tscn", 'art = "banner_emblems"'))

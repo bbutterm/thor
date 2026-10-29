@@ -137,7 +137,7 @@ func _tex_mat(key: String, tex: String, tint: Color = Color.WHITE, uv: float = 0
 ## Рисованные текстуры Мидгарда (assets/textures/midgard/, комплект владельца) вместо текстур Quaternius — только там,
 ## где по кадрам стало лучше (PROGRESS.md «Графика мира»): каменные блоки — stone_wall (те же рисованные камни,
 ## что у стен MegaKit, но подробнее RockTrim). Пол зала — ключ "floor_tex" (деревня — dirt_straw). Доски wood_floor
-## на блоках и полу хуже WoodTrim/Brick (плоские ящики без кромок, рыжий пол двора) — не применены; thatch — некуда (крыш нет).
+## на блоках и полу хуже WoodTrim/Brick (плоские ящики без кромок, рыжий пол двора) — не применены; thatch — солома крыш домов (П11).
 const MIDGARD_BLOCKS := {"stone_dark": "stone_wall"}
 const MT := "res://assets/textures/midgard/"
 
@@ -267,13 +267,39 @@ func _house_loft_roof(root: Node3D, name: String, center: Vector3, size: Vector3
 	var w := size.x if along_z else size.z
 	var l := size.z if along_z else size.x
 	var scl := Vector3(w / 6.0, w / 6.0 * 0.7, l / 6.0)
-	var roof := _model(root, name + "_roof", QV + "Roof_RoundTiles_6x6.gltf", Vector3(center.x, top + LOFT_HEIGHT, center.z),
-		Vector3(0, 0 if along_z else 90, 0), scl)
-	if recipe != "tile":
-		var mat := _world_tex_mat("roof_thatch", "thatch", Color(1, 0.96, 0.9), 0.35) if recipe == "thatch" \
-			else _world_tex_mat("roof_planks", "wood_planks_painted", Color(0.92, 0.88, 0.84), 0.3)
-		for mi in roof.find_children("*", "MeshInstance3D", true, false):
-			(mi as MeshInstance3D).set_surface_override_material(1, mat)
+	var pos := Vector3(center.x, top + LOFT_HEIGHT, center.z)
+	var rot := Vector3(0, 0 if along_z else 90, 0)
+	if recipe == "tile":
+		_model(root, name + "_roof", QV + "Roof_RoundTiles_6x6.gltf", pos, rot, scl)
+		return
+	# Солома/доски: свой меш-ресурс (замена материала у детей вставленной gltf-сцены в .tscn не сохраняется)
+	var mi := MeshInstance3D.new()
+	mi.name = name + "_roof"
+	mi.mesh = _roof_mesh(recipe)
+	mi.position = pos
+	mi.rotation_degrees = rot
+	mi.scale = scl
+	root.add_child(mi)
+
+## Копия меша крыши 6x6 с другим покрытием: rooms/meshes/roof_<recipe>.res (балки — общий woodtrim, скат —
+## рисованная текстура трипланаром по миру). Один ресурс на вид — общий для всех домов.
+var _roof_meshes := {}
+func _roof_mesh(recipe: String) -> Mesh:
+	if _roof_meshes.has(recipe):
+		return _roof_meshes[recipe]
+	var src := (load(QV + "Roof_RoundTiles_6x6.gltf") as PackedScene).instantiate()
+	var mesh := ((src.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D).mesh as ArrayMesh).duplicate() as ArrayMesh
+	src.free()
+	var cover := _world_tex_mat("roof_thatch", "thatch", Color(1, 0.96, 0.9), 0.35) if recipe == "thatch" \
+		else _world_tex_mat("roof_planks", "wood_planks_painted", Color(0.92, 0.88, 0.84), 0.3)
+	mesh.surface_set_material(0, load("res://rooms/materials/woodtrim.tres") as Material)
+	mesh.surface_set_material(1, cover)
+	mesh.resource_name = "roof_" + recipe
+	var path := "res://rooms/meshes/roof_%s.res" % recipe
+	ResourceSaver.save(mesh, path)
+	mesh.take_over_path(path)
+	_roof_meshes[recipe] = mesh
+	return mesh
 
 ## Открытая терраса: перила по краям плоской крыши (кроме одной стороны — туда залезают), бочонок-кадка.
 func _house_terrace(root: Node3D, name: String, center: Vector3, size: Vector3, top: float, rng: RandomNumberGenerator) -> void:
