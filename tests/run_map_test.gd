@@ -4,7 +4,7 @@ extends Node
 ##  • наборы дверей: 2–3 разные награды, к мини-боссу и боссу — одна дверь, частоты — по таблице GDD,
 ##    тихие залы не подряд, ларёк — гарантированно (если зал-ларёк уже есть);
 ##  • забег через разные двери до босса: Элита → оружие + Слава, Сундук → сундук, Мини-босс → трейт + руна,
-##    Отдых → лечение 40 %, Локи → половина HP за оружие ур. 3, Фрейя → руна сразу ур. 2, Босс → победа.
+##    Отдых → лечение 40 % × 0.7 (партия 12), Локи → половина HP за оружие ур. 3, Фрейя → руна сразу ур. 2, Босс → победа.
 ## godot --headless --path . --fixed-fps 60 res://tests/run_map_test.tscn
 
 const DoorHelper := preload("res://tests/door_helper.gd")
@@ -257,7 +257,9 @@ func _test_run_through_doors() -> void:
 	check(game.rewards.choice.visible, "выбор: похлёбка или руна")
 	var hp0 := p.health
 	await DoorHelper.resolve_reward(get_tree(), game, "heal")
-	check(absf(p.health - minf(p.max_health, hp0 + p.max_health * 0.4 * float(p.modify_stat(&"heal_mult", 1.0)))) < 1.0, "лечение 40 %% (%.0f → %.0f из %.0f)" % [hp0, p.health, p.max_health])
+	# Партия 12: пассивное лечение слабее (Player.passive_heal: 40 % × 0.7 = 28 %)
+	var rest := 0.4 * p.passive_heal()
+	check(absf(p.health - minf(p.max_health, hp0 + p.max_health * rest * float(p.modify_stat(&"heal_mult", 1.0)))) < 1.0, "лечение %.0f %% (%.0f → %.0f из %.0f)" % [rest * 100.0, hp0, p.health, p.max_health])
 	check(game.rewards.doors.size() == 2, "после отдыха — двери")
 	await DoorHelper.take_door(get_tree(), game, game.rewards.doors.map(func(d: RewardDoor) -> String: return d.reward_id).find("loki"))
 
