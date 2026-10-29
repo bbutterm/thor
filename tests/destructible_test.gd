@@ -97,7 +97,8 @@ func _run() -> void:
 	Destructible.surprise_chance_override = 0.0
 	# Обычные слова комикса в игре — через раз; тест проверяет каждое
 	(get_tree().root.get_node("ComicFX") as Node).set("routine_chance", 1.0)
-	await _start(["res://rooms/room_09.tscn", Run.BOSS_SCENE])
+	# Ровная площадь старой деревни (до П7 — снимок rooms/quick_old/room_09_old.tscn): точки пропсов ниже рассчитаны на неё
+	await _start(["res://rooms/quick_old/room_09_old.tscn", Run.BOSS_SCENE])
 	await clear_props()
 	_test_data()
 	await _test_melee()
@@ -545,7 +546,8 @@ func _test_debris() -> void:
 		row.append(spawn(CRATE, Vector3(-4 + i * 4, 0, 1)))
 	await wait(0.3)
 	for d in row:
-		d.smash(Vector3(0, 2, -6), "melee")
+		if is_instance_valid(d):  # бочку рядом мог задеть обломок соседа
+			d.smash(Vector3(0, 2, -6), "melee")
 	await get_tree().physics_frame
 	var first := PropDebris.live_count()
 	check(first >= 6 * 4 and first <= t.debris_limit, "обломки: %d (4–8 на пропс, ≤ %d)" % [first, t.debris_limit])
@@ -557,7 +559,8 @@ func _test_debris() -> void:
 		row.append(spawn(BARREL if i % 2 == 0 else CRATE, Vector3(-9 + i * 2, 0, 2)))
 	await wait(0.3)
 	for d in row:
-		d.smash(Vector3(0, 2, -6), "melee")
+		if is_instance_valid(d):  # бочку рядом мог задеть обломок соседа
+			d.smash(Vector3(0, 2, -6), "melee")
 	await get_tree().physics_frame
 	check(PropDebris.live_count() <= t.debris_limit, "обломков в зале не больше лимита: %d ≤ %d" % [PropDebris.live_count(), t.debris_limit])
 	check(PropDebris.cached_meshes().size() == meshes0, "меши обломков общие — не растут (%d → %d)" % [meshes0, PropDebris.cached_meshes().size()])

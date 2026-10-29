@@ -50,15 +50,16 @@ static func def() -> Dictionary:
 			["res://assets/quaternius/pirate/Ship_Small.gltf", Vector3(-7, -0.5, -11), 30.0, 1.0]],
 		"jump_pads": [[Vector3(-10, 0, 16.5), 8.0]],
 		"enemies": [
-			# Волна 1 — на берегу у входа (12)
-			["grunt", Vector3(-6, 0, 16), 0], ["grunt", Vector3(6, 0, 16), 0], ["bloated", Vector3(10, 0, 18), 0],
-			["fodder", Vector3(-5, 0, 18), 0, 5, 1.6], ["fodder", Vector3(5, 0, 19), 0, 4, 1.4],
+			# П3-состав каждой волны: 60–70 % корма пачками 5–8, 1–2 особых (generator_test).
+			# Волна 1 — на берегу у входа (11)
+			["grunt", Vector3(-6, 0, 16), 0], ["grunt", Vector3(6, 0, 16), 0], ["grunt", Vector3(-9, 0, 19), 0], ["bloated", Vector3(10, 0, 18), 0],
+			["fodder", Vector3(-3, 0, 17), 0, 7, 1.8],
 			# Волна 2 — на пирсе: лезут из воды с обеих сторон (12)
-			["grunt", Vector3(-3.5, 1.05, 4), 1], ["grunt", Vector3(-0.5, 1.05, -2), 1], ["shieldbearer", Vector3(-2, 1.05, -9), 1],
-			["fodder", Vector3(-3.5, 1.05, 8), 1, 4, 0.5], ["fodder", Vector3(-0.5, 1.05, 0), 1, 5, 0.5],
+			["grunt", Vector3(-3.5, 1.05, 4), 1], ["grunt", Vector3(-0.5, 1.05, -2), 1], ["grunt", Vector3(-3.5, 1.05, -6), 1], ["shieldbearer", Vector3(-2, 1.05, -9), 1],
+			["fodder", Vector3(-2, 1.05, 6), 1, 8, 0.6],
 			# Волна 3 — на палубе: с носа корабля и с лодки (10); метатель — на башне
 			["shaman", Vector3(7, 3.05, -8), 2], ["grunt", Vector3(6, 3.05, 3), 2], ["grunt", Vector3(8, 3.05, -6), 2],
-			["thrower", Vector3(-4, 6.05, -19.5), 2], ["fodder", Vector3(7, 3.05, -4), 2, 6, 1.2]],
+			["thrower", Vector3(-4, 6.05, -19.5), 2], ["fodder", Vector3(7, 3.05, -3), 2, 6, 1.2]],
 		"props": [["barrel", Vector3(-12, 0, 20)], ["barrel", Vector3(-11, 0, 21)], ["crate", Vector3(12, 0, 15)], ["crate", Vector3(12, 0.92, 15)],
 			["barrel", Vector3(6, 3.0, 4)], ["barrel", Vector3(8, 3.0, -7)], ["crate", Vector3(-11, 2.0, 12)], ["barrel", Vector3(-1, 1.0, 10)],
 			["barrel", Vector3(3, 6.0, -20)]],

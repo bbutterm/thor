@@ -49,13 +49,14 @@ static func def() -> Dictionary:
 		"jump_pads": [[Vector3(6.5, 4, -1.5), 8.0]],
 		"floor_tex": "dirt_straw",
 		"enemies": [
+			# П3-состав каждой волны: 60–70 % корма пачками 5–8, 1–2 особых (generator_test).
 			# Волна 1 — набережная: с лодок (11)
-			["grunt", Vector3(-8, 0, 16), 0], ["grunt", Vector3(8, 0, 16.5), 0], ["grunt", Vector3(12, 0, 15), 0],
-			["fodder", Vector3(-12, 0, 16), 0, 5, 1.2], ["fodder", Vector3(3, 0, 17), 0, 3, 0.8],
+			["grunt", Vector3(-8, 0, 16), 0], ["grunt", Vector3(8, 0, 16.5), 0], ["grunt", Vector3(12, 0, 15), 0], ["bloated", Vector3(-13, 0, 15), 0],
+			["fodder", Vector3(-11, 0, 16), 0, 7, 1.4],
 			# Волна 2 — рынок: из дверей домов (12)
 			["grunt", Vector3(-7, 2.05, 10), 1], ["grunt", Vector3(7.5, 2.05, 9), 1], ["shieldbearer", Vector3(0, 2.05, 6), 1],
-			["bloated", Vector3(-4, 2.05, 4), 1], ["fodder", Vector3(-7, 2.05, 6), 1, 4, 1.0], ["fodder", Vector3(7.5, 2.05, 6), 1, 4, 1.0],
-			# Волна 3 — площадь: из-за крыш и из ворот двора (11)
+			["bloated", Vector3(-4, 2.05, 4), 1], ["fodder", Vector3(-7, 2.05, 6), 1, 8, 1.2],
+			# Волна 3 — площадь: из-за крыш и из ворот двора (10)
 			["thrower", Vector3(11, 7.05, -3), 2], ["shaman", Vector3(0, 6.05, -11), 2], ["grunt", Vector3(-5, 4.05, -4), 2],
 			["grunt", Vector3(5, 4.05, -5), 2], ["fodder", Vector3(-3, 6.05, -10), 2, 6, 1.4]],
 		"props": [["barrel", Vector3(-13, 0, 14.5)], ["barrel", Vector3(13, 0, 17)], ["crate", Vector3(-3, 2.0, 11)], ["crate", Vector3(4, 2.0, 11.5)],
