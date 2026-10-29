@@ -51,12 +51,6 @@ static func panel(bg: Color = STONE, border: Color = Color(GOLD, 0.6), kind: Str
 		p.add_theme_stylebox_override("panel", panel_style(bg, border))
 	return p
 
-## Старая плоская панель (карточки, ячейки, где рамка комплекта не по размеру)
-static func flat_panel(bg: Color = STONE, border: Color = Color(GOLD, 0.6)) -> PanelContainer:
-	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", panel_style(bg, border))
-	return p
-
 ## kind — картинка комплекта: main (основная), secondary (второстепенная), danger (опасное действие)
 static func button(text: String, size: int = 24, kind: String = "main") -> Button:
 	var b := Button.new()

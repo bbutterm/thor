@@ -58,10 +58,6 @@ func _ready() -> void:
 		_fill_rect = Rect2(Vector2.ZERO, _src)
 	resized.connect(queue_redraw)
 
-## Ширина при заданной высоте (для раскладки)
-func width_for_height(h: float) -> float:
-	return _src.x * h / maxf(_src.y, 1.0) if _src.y > 0 else h * 4.0
-
 ## Масштаб и смещение картинки внутри контрола (вписываем с сохранением пропорций)
 func _fit() -> Array:
 	var k := minf(size.x / _src.x, size.y / _src.y)

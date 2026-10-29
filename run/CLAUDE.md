@@ -33,7 +33,7 @@
 - Проверка: `run_map_test`.
 
 ## Серебро и ларёк (блок К)
-- Серебро — `Run.silver`, сгорает с новым забегом. Источники — `silver.gd` (`Silver.drop/on_enemy_died`, числа в `economy.tres`): враги через `Loot.on_enemy_died`, бочки — `barrel_watch.gd` (узел в `RewardFlow`; бочка «разбита», если отброшена быстрее порога; для пропсов без скрипта `Destructible`), сундук — строка в `weapons/chest.gd`. Монета — `silver_coin.gd` (общий меш-диск и материал `FX`). Счётчик — `ui/silver_hud.gd` (встраивается под Славу в HUD).
+- Серебро — `Run.silver`, сгорает с новым забегом. Источники — `silver.gd` (`Silver.drop/on_enemy_died`, числа в `economy.tres`): враги через `Loot.on_enemy_died`, бочки — `barrel_watch.gd` (узел в `RewardFlow`; бочка «разбита», если отброшена быстрее порога; для пропсов без скрипта `Destructible`), сундук — строка в `weapons/chest.gd`. Монета — `silver_coin.gd` (общий меш-диск и материал `FX`). В бою счётчика нет: всплывашка «+N» серебра в HUD (`ui/hud.gd`), итог — на экране сборки (Tab) и в ларьке.
 - Ларёк: зал `rooms/shop_room.tscn` (генератор: `shop_room_def()` + узел `ShopStall`), ларёк и гномы — `rooms/shop_stall.gd` (собирается при запуске, E у прилавка), товары — `shop/*.tres` (`ShopItemDef`), логика — `shop.gd` (`Shop.price/buy/reaction_pool`), экран — `ui/shop.gd` (`ShopScreen`, `RewardFlow.open_shop()`). Реплики — `data/dialogues/dwarves.json` (пулы `shop_*`, `eitri`, сцена `dwarves_shop_first`).
 - Проверка: `shop_test`.
 
