@@ -2,11 +2,11 @@
 
 ## Актуальная сборка
 
-[Скачать Windows ZIP из main 5371187](ThorDostoynayaSmert-windows.zip?raw=1), распаковать и запустить `ThorDostoynayaSmert.exe`. [Отчёт и что проверить](REPORT_2026-10-29-p6.md) — партия 2 из `NOW.md`, П6: интерфейс по макетам (HUD внизу по центру, Tab — экран сборки). В главном меню — **«Быстрая проверка»**.
+[Скачать Windows ZIP из main af961c2](ThorDostoynayaSmert-windows.zip?raw=1), распаковать и запустить `ThorDostoynayaSmert.exe`. [Отчёт и что проверить](REPORT_2026-10-29-p8.md) — партия 3 из `NOW.md`, П8: debug-панель баланса (F1). В главном меню — **«Быстрая проверка»**.
 
-Архив: 94 220 924 байт, SHA-256 `d3bfe8ced36af6ce3d05de6cdaebe9b3007d02bc80cae71ab5de0ab4dd8920f3`; внутри один EXE. На исходном коммите прошли 63 игровые тестовые сцены; экспортированная игра проходит самопроверку (зал и враги). Графику на настоящей Windows-видеокарте ещё нужно проверить.
+Архив: 94 263 749 байт, SHA-256 `1d13d175777c22971d297e9a0d5055dc06a0c4229fc85f6934a96493f57951f1`; внутри один EXE. На исходном коммите прошли 64 игровые тестовые сцены; экспортированная игра проходит самопроверку (зал и враги). Графику на настоящей Windows-видеокарте ещё нужно проверить.
 
-Предыдущая версия: [Windows ZIP 36a25bb — партия 1](ThorDostoynayaSmert-preview-36a25bb.zip?raw=1) ([отчёт](REPORT_2026-10-29.md)), до неё — [037f709](ThorDostoynayaSmert-preview-037f709.zip?raw=1).
+Предыдущие версии: [5371187 — П6 интерфейс](ThorDostoynayaSmert-preview-5371187.zip?raw=1) ([отчёт](REPORT_2026-10-29-p6.md)), [36a25bb — партия 1](ThorDostoynayaSmert-preview-36a25bb.zip?raw=1) ([отчёт](REPORT_2026-10-29.md)), до них — [037f709](ThorDostoynayaSmert-preview-037f709.zip?raw=1).
 
 ## Предыдущая сборка 2a4461f
 
