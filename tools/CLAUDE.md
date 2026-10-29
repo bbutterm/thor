@@ -27,6 +27,9 @@
 - `mdx2glb.py` — WC3 .mdx → .glb (рисованное оружие). `make_arm_texture.py` — кожа рук с татуировками. `build_fodder_model.py` — модель корма.
 - `preview_assets.tscn` — витрина ассетов (команда — `tests/CLAUDE.md`).
 
+## Баланс из debug-панели (П8)
+`apply_balance.py <balance.json>` — таблица «поле — было — стало — файл:строка» (`--check` — код 1 при неизвестных ключах, `--write` — значения `@export` по умолчанию, `.tres` стиля/экономики и строки `TUNING.md`); глобальные множители (`enemy_mult`, `econ_mult`, `waves_mult`) не переносит — решает владелец. Самотест — `python3 tools/test_apply_balance.py` (образец `tools/testdata/balance_sample.json`).
+
 ## Локализация
 `i18n_extract.py` (ключи `tr()` → `data/i18n/en.po`; `--check` — отчёт), `i18n_dialogues.py [--check]` (шаблоны и покрытие `data/dialogues/en/`). Правила — корневой `CLAUDE.md`.
 

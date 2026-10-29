@@ -30,6 +30,7 @@ func recalc_from_runes(run: Node, full_heal: bool = false) -> void:
 	else:
 		p.health = minf(p.max_health, p.health + maxf(0.0, p.max_health - old_max))
 		p.dash_charges = mini(p.dash_charges + 1, p.dash_charges_max)
+	DebugPanel.reapply(&"player")  # значения debug-панели (П8) поверх пересчёта рун
 	p._emit_all()
 
 ## Множитель урона от рун: «Нож в спину Локи» (удар мили в спину), проклятые руны Локи.

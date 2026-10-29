@@ -446,6 +446,8 @@ func _ready() -> void:
 		var tw := create_tween()
 		tw.tween_property(_visual, "scale", Vector3.ONE * model_scale, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_setup_special()
+	# Множители мобов debug-панели (П8) — после элиты/мини-босса, которые меняют ХП сразу после спавна
+	DebugBalance.apply_enemy.call_deferred(self)
 
 ## Запуск входа из метаданных маркера. Непроверенный путь возвращает false.
 func begin_spawn_entry(mode: String, target: Vector3, tuning: Dictionary = {}) -> bool:

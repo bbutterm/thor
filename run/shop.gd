@@ -52,6 +52,7 @@ static func price(game: Game, it: ShopItemDef) -> int:
 		if game and game.player:
 			p *= float(game.player.modify_stat(&"sharpen_cost_mult", 1.0))  # «Своя наковальня» Кузнеца — ×0.5
 	p *= 1.0 - clampf(Save.perk("shop_discount"), 0.0, 0.9)
+	p *= DebugBalance.econ.shop_price  # «Цены ларька ×» debug-панели (П8; без панели ×1)
 	return int(round(p))
 
 ## Трейты Мьёльнира, которые можно улучшить.

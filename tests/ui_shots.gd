@@ -141,6 +141,12 @@ func _run() -> void:
 	await shot("12_pause")
 	game.pause_menu.toggle()
 	await wait(0.1)
+	# П8: debug-панель баланса (F1) поверх боя
+	DebugPanel.set_open(true)
+	await wait(0.4)
+	await shot("12c_debug_panel")
+	DebugPanel.set_open(false)
+	await wait(0.1)
 	# П6: Tab — экран сборки (макет T3)
 	Run.room_rewards.assign(["combat", "anvil", "rest"])
 	game.build_screen.open()

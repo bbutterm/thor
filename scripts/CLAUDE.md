@@ -20,6 +20,10 @@
 | `dialogue_manager.gd` + `dialogue/*.gd` | `Dialogue` (авто; класс `DialogueManager`) | сцены-новеллы и пулы реплик |
 | `save_game.gd` | `Save` (авто) | сохранение |
 | `i18n.gd` | `I18n` | язык, `I18n.t()` в статических функциях |
+| `debug/debug_panel.gd` + `debug/debug_balance.gd` | `DebugPanel` (авто) + `DebugBalance` | debug-панель баланса F1 (П8) и глобальные множители |
+
+## Debug-панель баланса (П8, ТЗ `DEBUG_PANEL.md`)
+Только где «Быстрая проверка» (`DebugPanel.available()` = `QuickCheck.available()`; в тестах `force_off` — как релиз). F1 — панель (вид `ui/debug_panel.gd`, `DebugPanelUI`; игра идёт, `player.input_enabled = false`), F2 — пауза, ползунок времени — `DebugBalance.time_mult` (умножается в `FXTime._set_time_scale`, хит-стоп поверх). Источники регистрируются `DebugPanel.register(ключ, объект)`: `player`/`mjolnir`/`camera` — `Game._ready` после тела, `room` — `Room._ready`, `style` — копия `StyleTuning` (`StyleMeter._ready`), `economy` — `Silver.cfg()`, множители — `DebugBalance.enemy/econ/waves`; изменённое — `DebugPanel.overrides` («источник.поле», поле может быть `rank_points[2]` или `points/slam`) накладывается при регистрации и после `recalc_from_runes` (`reapply`). Слой A — `DebugPanel.TABS` (новый параметр — строка туда), слой B «Все параметры» — числовые `@export` источников `AUTO_SOURCES` сами (`export_props`). Множители мобов — `DebugBalance.apply_enemy` (отложенно из `Enemy._ready`), корм — `Room.start`, цены — `Shop.price`, Слава — `Run.register_kill`. Файл — `user://debug/balance.json` (+ `balance_<имя>.json`), при старте подхватывается (плашка «Баланс из файла»); в код — `tools/apply_balance.py`. Тест `debug_panel_test`.
 
 ## Эффекты (`fx.gd`)
 **Устройство** (этап 5 рефакторинга): `FX` — фасад, все вызовы в игре — `FX.xxx`; в `fx.gd` — всё состояние (`static var`), константы, `tree()` и однострочные обёртки. Реализация — статические модули `fx/` (их зовут только `FX` и друг друга):

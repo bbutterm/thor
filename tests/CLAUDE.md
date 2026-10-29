@@ -43,6 +43,7 @@ i18n_test         # локализация, в т. ч. русские литер
 combat_clock_test # боевые часы Run.combat_clock
 tower_test        # подъём на вышки
 bot_test, bot_control_test, bot_*_test       # бот-плейтест
+debug_panel_test  # debug-панель F1/F2 (П8): живые значения, множители мобов, файл, пресеты, «Все параметры», пауза и время
 ```
 Остальные (`dialogue_test`, `save_test`, `tutorial_test`, `gamepad_test`, `portrait_*`, `horde_*`, `fodder_*`, `headless_*`, `report_test`, …) — по имени.
 

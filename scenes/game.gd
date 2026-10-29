@@ -81,6 +81,10 @@ func _ready() -> void:
 		Run.start_run()
 	Run.body = Save.apply_permanent_to_body(Run.body)  # открытия «навсегда»: +HP, +рывок, скорость
 	player.apply_body_and_runes(Run.body, Run)
+	# Debug-панель (П8): числа игрока, молота и камеры — после тела (тело переопределяет часть движения)
+	DebugPanel.register(&"player", player)
+	DebugPanel.register(&"mjolnir", player.mjolnir)
+	DebugPanel.register(&"camera", player.camera_fx)
 	player.died.connect(_on_player_died)
 	Run.kill_streak.connect(_on_kill_streak)
 	rune_pick.picked.connect(_on_rune_picked)
@@ -126,7 +130,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("pause") and not _ending and not rune_pick.visible and not trait_pick.visible and not rewards.is_screen_open():
 		pause_menu.toggle()
 		get_viewport().set_input_as_handled()
-	elif event is InputEventMouseButton and event.pressed and not get_tree().paused and not _ending:
+	elif event is InputEventMouseButton and event.pressed and not get_tree().paused and not _ending and not DebugPanel.is_open():
 		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 

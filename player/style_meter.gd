@@ -53,6 +53,10 @@ var _worthy_retry: float = 0.0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
+	# Debug-панель (П8) крутит копию чисел стиля — .tres на диске не трогаем
+	if DebugPanel.available():
+		tuning = tuning.duplicate(true)
+		DebugPanel.register(&"style", tuning)
 	current = self
 	if player == null:
 		player = get_parent() as Player

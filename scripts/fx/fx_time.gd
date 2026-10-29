@@ -71,7 +71,8 @@ static func _set_time_scale(s: float) -> void:
 	if f != FX._scale_frame:
 		FX._scale_frame = f
 		FX._scale_before = Engine.time_scale
-	Engine.time_scale = s
+	# Скорость времени debug-панели (П8) — множитель поверх хит-стопа и замедлений
+	Engine.time_scale = s * DebugBalance.time_mult
 
 static func reset_time() -> void:
 	FX._hitstop_left = 0.0

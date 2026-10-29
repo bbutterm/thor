@@ -255,6 +255,8 @@ func register_kill(finisher: bool, wall_splat: bool, is_boss: bool, source: Stri
 	best_streak = maxi(best_streak, streak)
 	# База — Слава за врага по GDD 15.2 (корм 1, боец 3, особый 5, элита 15); враги без описания — glory_per_kill
 	var amount := glory_per_kill if base_glory < 0 else base_glory
+	# «Слава за врага ×» debug-панели (П8; без панели ×1)
+	amount = int(round(amount * DebugBalance.econ.glory))
 	if finisher:
 		amount += glory_combo_finisher_bonus
 	if wall_splat:

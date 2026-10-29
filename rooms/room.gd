@@ -122,6 +122,7 @@ var _nav_supported_parts: Dictionary = {}  # instance id настила → ре
 @onready var enemy_navigation: Node3D = get_node_or_null("EnemyNavigation") as Node3D
 
 func _ready() -> void:
+	DebugPanel.register(&"room", self)  # debug-панель (П8): волны текущего зала
 	if enemy_navigation != null:
 		_bind_navigation_breakables()
 	if exit_area:
@@ -219,6 +220,8 @@ func _spawn_wave(index: int) -> void:
 		var c := maxi(1, int(m.get_meta("count", 1)))
 		if legacy and str(m.get_meta("kind", "")) == "fodder":
 			c = maxi(1, roundi(c * legacy_fodder_mult))
+		if str(m.get_meta("kind", "")) == "fodder" and not is_equal_approx(DebugBalance.waves.fodder_count, 1.0):
+			c = maxi(1, roundi(c * DebugBalance.waves.fodder_count))  # «Количество корма ×» debug-панели (П8)
 		for k in c:
 			_spawn_queue.append(m)
 		n += c

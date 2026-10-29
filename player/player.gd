@@ -578,6 +578,7 @@ func deal_damage(target: Object, amount: float, knock: Vector3, source: String) 
 		(target as Destructible).take_hit(amount, knock, source)
 		return amount
 	var dmg := amount * outgoing_damage_mult(target, source) * runes._rune_damage_mult(target, source)
+	DebugBalance.note_damage(dmg)
 	var crit := runes._roll_crit(source)
 	if crit:
 		dmg *= crit_mult
