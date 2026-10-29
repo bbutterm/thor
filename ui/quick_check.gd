@@ -7,12 +7,12 @@ class_name QuickCheck
 
 signal closed
 
-## Пункты партии: что поменялось, где попробовать, какое оружие дать
+## Пункты партии: что поменялось, где попробовать, какое оружие дать; old_room — старая сцена зала (F6 перезапускает зал)
 const ITEMS := [
+	{"title": "Рисованные текстуры залов", "text": "Земля, брусчатка и доски — рисованные текстуры владельца. F6 — старые текстуры.", "room": "res://rooms/room_08.tscn", "weapon": "axe"},
+	{"title": "Дома деревни из MegaKit", "text": "Крыши (черепица, солома, доски), ставни, двери с навесами, заборы и телеги. F6 — старая деревня.", "room": "res://rooms/room_09.tscn", "weapon": "axe", "old_room": "res://rooms/quick_old/room_09_old.tscn"},
 	{"title": "Перезарядка молота — после поимки", "text": "Обычная поимка — 1,5 с, идеальный хват — сразу можно бросать.", "room": "res://rooms/room_01.tscn", "weapon": "axe"},
 	{"title": "Возврат молота — только по ПКМ", "text": "Молот летит сквозь толпу, промах — втыкается в землю. Вернуть — ПКМ ещё раз.", "room": "res://rooms/room_04.tscn", "weapon": "axe"},
-	{"title": "Молот — разрушительный", "text": "Быстрее бросок и возврат, сильный отброс, ударная волна, сочный удар.", "room": "res://rooms/room_08.tscn", "weapon": "axe"},
-	{"title": "Меньше врагов, но мясо", "text": "До ~20 врагов на экране, корм разлетается на куски.", "room": "res://rooms/room_09.tscn", "weapon": "sword"},
 	{"title": "Боссы не падают от спама мили", "text": "Простые удары по боссу — вполсилы; молот и удар-приземление — полный урон.", "room": "boss", "weapon": "axe"},
 ]
 
@@ -22,14 +22,22 @@ static var active: bool = false
 static func available() -> bool:
 	return OS.has_feature("playtest") or OS.is_debug_build()
 
+## Пункт, который сейчас проверяют (F6 у пункта с old_room перезапускает зал в старой сцене)
+static var current: int = -1
+
 ## Вход в зал пункта i: короткий «забег» из одного зала, без сюжетных сцен и обучения.
-static func start(tree: SceneTree, i: int) -> void:
+## keep_switch — не сбрасывать «старое/новое» (перезапуск зала по F6).
+static func start(tree: SceneTree, i: int, keep_switch: bool = false) -> void:
 	var item: Dictionary = ITEMS[i]
 	active = true
-	FeelSwitch.set_all_old(false)
+	current = i
+	if not keep_switch:
+		FeelSwitch.set_all_old(false)
 	Dialogue.in_run_scenes = false
 	Run.start_run()
 	var room: String = Run.BOSS_SCENE if item.room == "boss" else str(item.room)
+	if FeelSwitch.is_old(&"hammer_cooldown") and item.has("old_room") and ResourceLoader.exists(str(item.old_room)):
+		room = str(item.old_room)
 	Run.room_order.assign([room, room])
 	Run.set_meta("quick_check_weapon", str(item.weapon))
 	tree.change_scene_to_file("res://scenes/game.tscn")
@@ -39,6 +47,7 @@ static func finish() -> void:
 	if not active:
 		return
 	active = false
+	current = -1
 	FeelSwitch.set_all_old(false)
 	Dialogue.in_run_scenes = true
 	if Run.has_meta("quick_check_weapon"):
@@ -116,6 +125,10 @@ class Overlay extends CanvasLayer:
 			FeelSwitch.set_all_old(not FeelSwitch.is_old(&"hammer_cooldown"))
 			_refresh()
 			get_viewport().set_input_as_handled()
+			# Пункт со старой сценой зала — перезапустить зал в другой раскладке
+			if QuickCheck.current >= 0 and QuickCheck.ITEMS[QuickCheck.current].has("old_room"):
+				get_tree().paused = false
+				QuickCheck.start(get_tree(), QuickCheck.current, true)
 
 	func _refresh() -> void:
 		var old := FeelSwitch.is_old(&"hammer_cooldown")

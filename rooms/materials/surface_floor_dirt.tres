@@ -1,32 +1,32 @@
 [gd_resource type="ShaderMaterial" format=3]
 
 [ext_resource type="Shader" path="res://shaders/world_surface.gdshader" id="1_b17gr"]
-[ext_resource type="Texture2D" path="res://assets/textures/midgard/dirt_straw.webp" id="2_tv0ec"]
 [ext_resource type="Texture2D" path="res://assets/quaternius/village/T_Noise_Terrain.png" id="3_q62ht"]
 [ext_resource type="Texture2D" path="res://assets/quaternius/village/T_UnevenBrick_BaseColor.png" id="4_tv0ec"]
+[ext_resource type="Texture2D" path="res://assets/textures/midgard/dirt_straw_painted.webp" id="9_painted"]
 
 [resource]
 resource_name = "surface_floor_dirt"
 render_priority = 0
 shader = ExtResource("1_b17gr")
-shader_parameter/albedo_tex = ExtResource("2_tv0ec")
-shader_parameter/normal_strength = null
-shader_parameter/tint = Color(0.92, 0.9, 0.88, 1)
-shader_parameter/uv_scale = 0.3
+shader_parameter/albedo_tex = ExtResource("9_painted")
+shader_parameter/normal_strength = 0.0
+shader_parameter/tint = Color(1, 1, 1, 1)
+shader_parameter/uv_scale = 0.2
 shader_parameter/roughness_base = null
 shader_parameter/blend_sharpness = null
 shader_parameter/noise_tex = ExtResource("3_q62ht")
-shader_parameter/detail_mix = null
+shader_parameter/detail_mix = 0.0
 shader_parameter/detail_scale = null
 shader_parameter/detail_angle = null
 shader_parameter/antitile_scale = null
 shader_parameter/macro_scale = null
-shader_parameter/macro_strength = 0.35
+shader_parameter/macro_strength = 0.12
 shader_parameter/macro_tint = null
 shader_parameter/overlay_color = Color(0.78, 0.74, 0.7, 1)
 shader_parameter/overlay_tex = ExtResource("4_tv0ec")
 shader_parameter/overlay_uv = 0.45
-shader_parameter/overlay_amount = 0.3
+shader_parameter/overlay_amount = 0.08
 shader_parameter/overlay_scale = 0.07
 shader_parameter/overlay_softness = 0.08
 shader_parameter/overlay_top = 0.0

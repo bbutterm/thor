@@ -1,6 +1,6 @@
 extends Node
 ## Кадры залов: вид от входа и обзор сверху (для проверки планировок глазами).
-## xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/room_shots.tscn -- <папка> [room_07 room_08 …]
+## xvfb-run -a godot --path . --fixed-fps 60 --rendering-method gl_compatibility --resolution 1280x720 res://tests/room_shots.tscn -- <папка> [room_07 room_08 …] [old]
 
 var out_dir := "user://room_shots"
 var rooms: Array[String] = ["room_07", "room_08", "room_09"]
@@ -18,6 +18,10 @@ func _ready() -> void:
 		out_dir = args[0]
 	if args.size() > 1:
 		rooms.assign(args.slice(1))
+	# «old» среди залов — старые текстуры (партия 10.1, как F6 в «Быстрой проверке»)
+	if "old" in rooms:
+		rooms.erase("old")
+		QuickTextures.apply(true)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	_run.call_deferred()
 
